@@ -1,0 +1,27 @@
+// ============================================================
+// Imtihan — Firestore Security Rules
+// Paste this into Firebase Console > Firestore > Rules
+// ============================================================
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ─── Users ────────────────────────────────────────────────
+    match /users/{userId} {
+      // A user can read/write only their own profile
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+
+      // ─── Exams ──────────────────────────────────────────────
+      match /exams/{examId} {
+        // A user can read/write only their own exams
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+    }
+
+    // No other reads/writes allowed
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
