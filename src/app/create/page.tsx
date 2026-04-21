@@ -43,7 +43,24 @@ export default function CreatePage() {
 
   useEffect(() => {
     setProfiles(getClassProfiles());
+    // Restore description + uploaded file if the user navigated back here
+    const savedDesc = sessionStorage.getItem("imtihan_description");
+    if (savedDesc) setDescription(savedDesc);
+    const savedFileRaw = sessionStorage.getItem("imtihan_uploaded_file");
+    if (savedFileRaw) {
+      try { setUploadedFile(JSON.parse(savedFileRaw) as UploadedFile); } catch { /* ignore */ }
+    }
   }, []);
+
+  // Persist the draft as the user types so nothing is lost on back-navigation.
+  useEffect(() => {
+    if (description) sessionStorage.setItem("imtihan_description", description);
+  }, [description]);
+
+  useEffect(() => {
+    if (uploadedFile) sessionStorage.setItem("imtihan_uploaded_file", JSON.stringify(uploadedFile));
+    else sessionStorage.removeItem("imtihan_uploaded_file");
+  }, [uploadedFile]);
 
   const charCount = description.length;
   const isReady = description.trim().length >= 20;

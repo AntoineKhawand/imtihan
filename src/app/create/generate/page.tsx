@@ -30,6 +30,11 @@ export default function GeneratePage() {
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
   const [bankToast, setBankToast] = useState<string | null>(null);
 
+  function persistExercises(next: Exercise[], ctx: ExamContext | null = context, tmpl: string = templateId) {
+    sessionStorage.setItem("imtihan_exercises", JSON.stringify(next));
+    if (ctx) sessionStorage.setItem("imtihan_exercises_key", JSON.stringify({ c: ctx, t: tmpl }));
+  }
+
   useEffect(() => {
     const raw = sessionStorage.getItem("imtihan_context");
     const tmpl = sessionStorage.getItem("imtihan_templateId") ?? "classic";
@@ -38,6 +43,22 @@ export default function GeneratePage() {
       const ctx = JSON.parse(raw) as ExamContext;
       setContext(ctx);
       setTemplateId(tmpl);
+
+      // If the user already generated exercises and navigates back, restore them
+      // instead of hammering the Gemini API again.
+      const cachedEx = sessionStorage.getItem("imtihan_exercises");
+      const cachedKey = sessionStorage.getItem("imtihan_exercises_key");
+      const currentKey = JSON.stringify({ c: ctx, t: tmpl });
+      if (cachedEx && cachedKey === currentKey) {
+        try {
+          const parsed = JSON.parse(cachedEx) as Exercise[];
+          if (parsed.length > 0) { setExercises(parsed); setStatus("done"); }
+        } catch { /* ignore */ }
+      } else if (cachedEx && cachedKey !== currentKey) {
+        // Context/template changed — cached exercises are stale.
+        sessionStorage.removeItem("imtihan_exercises");
+        sessionStorage.removeItem("imtihan_exercises_key");
+      }
     } catch { router.replace("/create"); }
   }, [router]);
 

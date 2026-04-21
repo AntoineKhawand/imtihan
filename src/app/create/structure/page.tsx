@@ -25,6 +25,60 @@ const TEMPLATES = [
   { id: "formal", label: "Formal" },
 ];
 
+function TemplateSkeleton({ templateId }: { templateId: string }) {
+  const wrapperClasses = "w-full h-28 bg-[var(--bg-subtle)] rounded-md p-3 border border-[var(--border)] space-y-2 group-hover:border-[var(--border-strong)] transition-colors duration-300";
+  const lineClasses = "bg-[var(--border-strong)]/60 rounded-sm";
+
+  if (templateId === 'modern') {
+    return (
+      <div className={wrapperClasses}>
+        <div className="flex items-start gap-2.5">
+          <div className="w-4 h-12 bg-[var(--accent)]/50 rounded mt-0.5"></div>
+          <div className="flex-1 space-y-1.5 pt-1">
+            <div className={`${lineClasses} h-2 w-1/2`}></div>
+            <div className={`${lineClasses} h-1.5 w-3/4`}></div>
+          </div>
+        </div>
+        <div className="space-y-1 pl-[26px]">
+          <div className={`${lineClasses} h-1.5 w-full`}></div>
+          <div className={`${lineClasses} h-1.5 w-5/6`}></div>
+          <div className={`${lineClasses} h-1.5 w-full`}></div>
+        </div>
+      </div>
+    );
+  }
+
+  if (templateId === 'formal') {
+    return (
+      <div className={wrapperClasses}>
+        <div className={`${lineClasses} h-2 w-2/3 mx-auto`}></div>
+        <div className="bg-[var(--border)] h-px w-full !my-2.5"></div>
+        <div className="space-y-1">
+          <div className={`${lineClasses} h-1.5 w-1/4`}></div>
+          <div className={`${lineClasses} h-1.5 w-full`}></div>
+          <div className={`${lineClasses} h-1.5 w-5/6`}></div>
+        </div>
+        <div className="space-y-1 pt-2">
+          <div className={`${lineClasses} h-1.5 w-1/4`}></div>
+          <div className={`${lineClasses} h-1.5 w-full`}></div>
+        </div>
+      </div>
+    );
+  }
+
+  // Default to 'classic'
+  return <div className={wrapperClasses}>
+    <div className={`${lineClasses} h-2 w-1/2 mx-auto`}></div>
+    <div className={`${lineClasses} h-1.5 w-1/3 mx-auto !mt-1.5`}></div>
+    <div className="space-y-1 pt-3">
+      <div className={`${lineClasses} h-1.5 w-full`}></div>
+      <div className={`${lineClasses} h-1.5 w-5/6`}></div>
+      <div className={`${lineClasses} h-1.5 w-full`}></div>
+      <div className={`${lineClasses} h-1.5 w-3/4`}></div>
+    </div>
+  </div>;
+}
+
 export default function StructurePage() {
   const router = useRouter();
   const [context, setContext] = useState<StructureContext | null>(null);
@@ -126,7 +180,9 @@ export default function StructurePage() {
                       label={template.label}
                       selected={context.templateId === template.id}
                       onSelect={() => update("templateId", template.id)}
-                    />
+                    >
+                      <TemplateSkeleton templateId={template.id} />
+                    </TemplateCard>
                   ))}
                 </div>
              </div>

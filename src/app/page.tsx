@@ -462,22 +462,25 @@ export default function LandingPage() {
       {/* ── PRICING ──────────────────────────────────────────────────── */}
       <section id="pricing" className="px-6 md:px-10 py-24 border-t border-[var(--border)]">
         <div className="max-w-5xl mx-auto">
-          <div className="mb-16">
+          <div className="text-center mb-16">
             <p className="text-xs uppercase tracking-widest text-[var(--accent)] font-medium mb-4">Pricing</p>
-            <h2 className="serif text-display-lg text-[var(--text)]">
-              Start free, upgrade when<br />you&apos;re convinced
+            <h2 className="serif text-display-lg text-[var(--text)] text-balance">
+              Start free, upgrade when you&apos;re convinced
             </h2>
+            <p className="text-sm text-[var(--text-secondary)] mt-4 max-w-md mx-auto">
+              Simple pricing for individuals. For school-wide licenses, get in touch.
+            </p>
           </div>
-          <div className="grid md:grid-cols-2 gap-5 max-w-2xl">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 items-start">
             {/* Free */}
-            <div className="card p-8 hover:-translate-y-1 hover:shadow-xl hover:shadow-black/[0.03] transition-all duration-300">
+            <div className="card p-8 flex flex-col h-full hover:-translate-y-1 hover:shadow-xl hover:shadow-black/[0.03] transition-all duration-300">
               <p className="text-xs uppercase tracking-wider text-[var(--text-tertiary)] font-medium mb-4">Free</p>
               <div className="serif text-4xl font-light text-[var(--text)] mb-1">$0</div>
               <p className="text-sm text-[var(--text-secondary)] mb-6">3 exams to try everything</p>
               <ul className="space-y-3 mb-8 text-sm text-[var(--text-secondary)]">
                 {[
                   "3 complete exams + corrigés",
-                  "All 4 curricula & 32 subjects",
+                  "All curricula & subjects",
                   "Word + PDF export",
                   "Version A/B generation",
                 ].map((f) => (
@@ -487,6 +490,7 @@ export default function LandingPage() {
                   </li>
                 ))}
               </ul>
+              <div className="mt-auto" />
               <Link
                 href="/create"
                 className="w-full flex items-center justify-center gap-2 h-10 rounded-xl border border-[var(--border)] text-sm font-medium text-[var(--text)] hover:border-[var(--border-strong)] hover:bg-[var(--bg-subtle)] active:scale-[0.98] transition-all duration-300"
@@ -496,8 +500,8 @@ export default function LandingPage() {
             </div>
 
             {/* Pro */}
-            <div className="relative card p-8 border-[var(--accent)]/80 ring-1 ring-[var(--accent)]/10 bg-[var(--accent-light)] shadow-md hover:-translate-y-1 hover:shadow-xl hover:shadow-[var(--accent)]/15 transition-all duration-300">
-              <div className="absolute -top-3 left-6 px-3 py-1 rounded-full bg-[var(--accent)] text-white text-xs font-medium shadow-md shadow-[var(--accent)]/20">
+            <div className="relative card p-8 border-[var(--accent)]/80 ring-2 ring-[var(--accent)]/20 bg-[var(--accent-light)] shadow-lg shadow-[var(--accent)]/10 flex flex-col h-full hover:-translate-y-1 hover:shadow-xl hover:shadow-[var(--accent)]/20 transition-all duration-300">
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-[var(--accent)] text-white text-xs font-medium shadow-md shadow-[var(--accent)]/20">
                 Most popular
               </div>
               <p className="text-xs uppercase tracking-wider text-[var(--accent)] font-medium mb-4">Pro</p>
@@ -508,7 +512,7 @@ export default function LandingPage() {
               <ul className="space-y-3 mb-8 text-sm text-[var(--text-secondary)]">
                 {[
                   "Unlimited exams + corrigés",
-                  "All 4 curricula & 32 subjects",
+                  "All curricula & subjects",
                   "Exam library — saved forever",
                   "Priority AI generation",
                   "Email delivery",
@@ -520,11 +524,40 @@ export default function LandingPage() {
                   </li>
                 ))}
               </ul>
+              <div className="mt-auto" />
               <Link
                 href="/create"
                 className="w-full flex items-center justify-center gap-2 h-10 rounded-xl bg-[var(--accent)] text-white text-sm font-medium hover:bg-[var(--accent)]/90 active:scale-[0.98] transition-all duration-300 shadow-sm hover:shadow-md hover:shadow-[var(--accent)]/20"
               >
-                Start free trial <ArrowRight size={14} />
+                Upgrade to Pro <ArrowRight size={14} />
+              </Link>
+            </div>
+
+            {/* Schools */}
+            <div className="card p-8 flex flex-col h-full md:col-span-2 lg:col-span-1 hover:-translate-y-1 hover:shadow-xl hover:shadow-black/[0.03] transition-all duration-300">
+              <p className="text-xs uppercase tracking-wider text-[var(--text-tertiary)] font-medium mb-4">Schools</p>
+              <div className="serif text-4xl font-light text-[var(--text)] mb-1">Custom</div>
+              <p className="text-sm text-[var(--text-secondary)] mb-6">For departments and institutions</p>
+              <ul className="space-y-3 mb-8 text-sm text-[var(--text-secondary)]">
+                {[
+                  "Everything in Pro",
+                  "Centralized billing",
+                  "Multiple teacher accounts",
+                  "Shared question bank (v2)",
+                  "Dedicated support",
+                ].map((f) => (
+                  <li key={f} className="flex items-center gap-2.5">
+                    <span className="w-4 h-4 rounded-full bg-[var(--bg-subtle)] border border-[var(--border)] text-[var(--text-secondary)] flex items-center justify-center text-xs flex-shrink-0">✓</span>
+                    {f}
+                  </li>
+                ))}
+              </ul>
+              <div className="mt-auto" />
+              <Link
+                href="/contact"
+                className="w-full flex items-center justify-center gap-2 h-10 rounded-xl border border-[var(--border)] text-sm font-medium text-[var(--text)] hover:border-[var(--border-strong)] hover:bg-[var(--bg-subtle)] active:scale-[0.98] transition-all duration-300"
+              >
+                Contact sales
               </Link>
             </div>
           </div>
