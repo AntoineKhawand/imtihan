@@ -55,10 +55,24 @@ export default function RegisterPage() {
     setError(null);
     try {
       const provider = new GoogleAuthProvider();
+      provider.setCustomParameters({ prompt: "select_account" });
       await signInWithPopup(auth, provider);
       router.push("/create");
-    } catch {
-      setError("Google sign-up failed. Please try again.");
+    } catch (err: unknown) {
+      const e = err as { code?: string; message?: string };
+      const code = e.code ?? "";
+      console.error("[Google sign-up]", code, e.message);
+      if (code === "auth/popup-closed-by-user" || code === "auth/cancelled-popup-request") {
+        setError(null);
+      } else if (code === "auth/popup-blocked") {
+        setError("Popup blocked by your browser. Allow popups for this site and retry.");
+      } else if (code === "auth/unauthorized-domain") {
+        setError("This domain isn't authorized in Firebase. Add it under Auth → Settings → Authorized domains.");
+      } else if (code === "auth/operation-not-allowed") {
+        setError("Google sign-in is disabled. Enable it in Firebase Console → Authentication → Sign-in method.");
+      } else {
+        setError(`Google sign-up failed: ${code || e.message || "unknown error"}`);
+      }
     } finally {
       setGoogleLoading(false);
     }

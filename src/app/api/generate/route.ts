@@ -64,39 +64,91 @@ function extractJSON(raw: string): string {
 }
 
 /**
- * Multi-strategy JSON parser that handles common LLM quirks:
- * 1. Parse as-is (Gemini followed instructions perfectly)
- * 2. Fix lone backslashes that aren't valid JSON escapes (most common LaTeX issue: \alpha, \vec, etc.)
- * 3. Fix ALL lone backslashes including \f, \b ambiguous ones (aggressive fallback)
+ * Walk the text char-by-char with string-awareness. Inside a string literal:
+ * - escape raw newlines / tabs / carriage returns that must be \n \t \r in JSON
+ * - escape lone backslashes that aren't part of a valid JSON escape sequence
+ * - leave already-valid escapes alone
+ * Outside a string literal, normalize smart quotes to regular quotes and
+ * strip trailing commas before } or ].
  */
+function sanitizeJSON(input: string): string {
+  // Normalize smart quotes and non-breaking spaces globally first.
+  let text = input
+    .replace(/[\u201C\u201D\u201E]/g, '"')
+    .replace(/[\u2018\u2019\u201A]/g, "'")
+    .replace(/\u00A0/g, " ");
+
+  let out = "";
+  let inString = false;
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+
+    if (!inString) {
+      if (ch === '"') { inString = true; out += ch; continue; }
+      // strip trailing commas: `, }` or `, ]`
+      if (ch === ",") {
+        let j = i + 1;
+        while (j < text.length && /\s/.test(text[j])) j++;
+        if (text[j] === "}" || text[j] === "]") continue;
+      }
+      out += ch;
+      continue;
+    }
+
+    // inside a string literal
+    if (ch === "\\") {
+      const next = text[i + 1];
+      const validEscapes = '"\\/bfnrtu';
+      if (next !== undefined && validEscapes.includes(next)) {
+        out += ch + next;
+        i++;
+      } else {
+        out += "\\\\"; // lone backslash (e.g. \alpha) → double it
+      }
+      continue;
+    }
+    if (ch === '"') { inString = false; out += ch; continue; }
+    if (ch === "\n") { out += "\\n"; continue; }
+    if (ch === "\r") { out += "\\r"; continue; }
+    if (ch === "\t") { out += "\\t"; continue; }
+    // other control chars → drop
+    const code = ch.charCodeAt(0);
+    if (code < 0x20) continue;
+    out += ch;
+  }
+
+  // If we ended mid-string (truncated output), close the string.
+  if (inString) out += '"';
+
+  // If braces/brackets don't balance (truncation), pad with closers.
+  let depthObj = 0, depthArr = 0, inStr = false, esc = false;
+  for (let i = 0; i < out.length; i++) {
+    const c = out[i];
+    if (esc) { esc = false; continue; }
+    if (c === "\\" && inStr) { esc = true; continue; }
+    if (c === '"') { inStr = !inStr; continue; }
+    if (inStr) continue;
+    if (c === "{") depthObj++;
+    else if (c === "}") depthObj--;
+    else if (c === "[") depthArr++;
+    else if (c === "]") depthArr--;
+  }
+  while (depthObj-- > 0) out += "}";
+  while (depthArr-- > 0) out += "]";
+
+  return out;
+}
+
 function robustParse(text: string): unknown {
-  // Strategy 1: clean parse
   try { return JSON.parse(text); } catch { /* continue */ }
-
-  // Strategy 2: fix backslashes not part of a valid JSON escape sequence
-  // Valid: \", \\, \/, \b, \f, \n, \r, \t, \uXXXX
+  try { return JSON.parse(sanitizeJSON(text)); } catch { /* continue */ }
+  // Legacy fallback: brute-force double all lone backslashes globally.
   try {
-    const fixed = text.replace(/\\(?!["\\\/bfnrtu])/g, "\\\\");
-    return JSON.parse(fixed);
-  } catch { /* continue */ }
-
-  // Strategy 3: fix ALL backslashes that aren't already doubled
-  // Converts \frac → \\frac, handles \f ambiguity by brute-force
-  try {
-    const fixed = text
-      .replace(/\\{2,}/g, "\\\\")          // normalise multiple backslashes → \\
-      .replace(/\\(?!["\\\/bfnrtu])/g, "\\\\"); // fix remaining lone ones
-    return JSON.parse(fixed);
-  } catch { /* continue */ }
-
-  // Strategy 4: strip control characters that can invalidate JSON, then retry
-  try {
-    const fixed = text
-      .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, " ")  // strip non-printable except \t \n \r
+    const fixed = sanitizeJSON(text)
+      .replace(/\\{2,}/g, "\\\\")
       .replace(/\\(?!["\\\/bfnrtu])/g, "\\\\");
     return JSON.parse(fixed);
   } catch { /* continue */ }
-
   throw new Error("All JSON parse strategies failed");
 }
 
@@ -135,6 +187,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // The SDK exposes both `stream` and a `response` promise. We only consume
+    // `stream`; attach a noop catch to `response` so a stream-parse failure
+    // doesn't surface as an unhandledRejection after we've already closed the
+    // SSE response to the client.
+    if (streamResult?.response && typeof streamResult.response.catch === "function") {
+      streamResult.response.catch((err: unknown) => {
+        console.warn("[/api/generate] streamResult.response rejected:", (err as Error)?.message ?? err);
+      });
+    }
+
     const encoder = new TextEncoder();
     const readable = new ReadableStream({
       async start(controller) {
@@ -164,7 +226,9 @@ export async function POST(request: NextRequest) {
             encoder.encode(`data: ${JSON.stringify({ done: true, exercises })}\n\n`)
           );
         } catch (err) {
-          console.error("[/api/generate] JSON parse failed. First 500 chars:", accumulated.slice(0, 500));
+          console.error("[/api/generate] JSON parse failed. Length:", accumulated.length);
+          console.error("[/api/generate] First 400 chars:", accumulated.slice(0, 400));
+          console.error("[/api/generate] Last 400 chars:", accumulated.slice(-400));
           console.error("[/api/generate] Parse error:", err);
           controller.enqueue(
             encoder.encode(`data: ${JSON.stringify({ done: true, error: "Failed to parse generated exercises. Please try again." })}\n\n`)

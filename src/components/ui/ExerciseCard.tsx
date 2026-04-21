@@ -322,7 +322,11 @@ export function ExerciseCard({
                 <p className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-1.5">Partial credit</p>
                 <ul className="space-y-1 text-xs text-[var(--text-secondary)]">
                   {rubric.partialCredit.map((p, i) => (
-                    <li key={i}><strong>{p.scenario}:</strong> {p.award}</li>
+                    <li key={i}>
+                      <strong dangerouslySetInnerHTML={{ __html: renderContent(p.scenario) }} />
+                      <span>: </span>
+                      <span dangerouslySetInnerHTML={{ __html: renderContent(p.award) }} />
+                    </li>
                   ))}
                 </ul>
               </div>
@@ -332,7 +336,11 @@ export function ExerciseCard({
                 <p className="text-xs font-semibold text-[var(--warning)] uppercase tracking-wider mb-1.5">Common errors</p>
                 <ul className="space-y-1 text-xs text-[var(--text-secondary)]">
                   {rubric.commonErrors.map((e, i) => (
-                    <li key={i}><strong>{e.error}:</strong> {e.penalty}</li>
+                    <li key={i}>
+                      <strong dangerouslySetInnerHTML={{ __html: renderContent(e.error) }} />
+                      <span>: </span>
+                      <span dangerouslySetInnerHTML={{ __html: renderContent(e.penalty) }} />
+                    </li>
                   ))}
                 </ul>
               </div>
@@ -374,7 +382,7 @@ export function ExerciseCard({
                   {exercise.solution.commonMistakes.map((m, i) => (
                     <li key={i} className="flex gap-2 text-sm text-[var(--text-secondary)]">
                       <span className="text-[var(--warning)] flex-shrink-0">⚠</span>
-                      {m}
+                      <span dangerouslySetInnerHTML={{ __html: renderContent(m) }} />
                     </li>
                   ))}
                 </ul>

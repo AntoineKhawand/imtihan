@@ -34,6 +34,9 @@ export default function ExportPage() {
   const [emailSent, setEmailSent] = useState(false);
   const [email, setEmail] = useState("");
   const [showEmail, setShowEmail] = useState(false);
+  const [emailSending, setEmailSending] = useState(false);
+  const [emailError, setEmailError] = useState<string | null>(null);
+  const [emailIncludeSolution, setEmailIncludeSolution] = useState(true);
   const [variant, setVariant] = useState<"A" | "B">("A");
   const [exportLanguage, setExportLanguage] = useState<"french" | "english" | "arabic">("french");
   const [examSeed] = useState(() => shortId());
@@ -108,6 +111,69 @@ export default function ExportPage() {
       }
     } finally {
       setDownloading(null);
+    }
+  }
+
+  async function handleSendEmail() {
+    if (!context || !exercises.length || !email) return;
+    setEmailSending(true);
+    setEmailError(null);
+    try {
+      const exportExercises = variant === "B" ? buildVersionB(exercises, examSeed) : exercises;
+      const exportContext = { ...context, language: exportLanguage };
+
+      // 1. Generate the .docx via /api/export.
+      const res = await fetch("/api/export", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          context: exportContext,
+          exercises: exportExercises,
+          format: "word",
+          includeAnswerKey: emailIncludeSolution,
+          header: { schoolName, className, teacherName, date: examDate },
+        }),
+      });
+      if (!res.ok) throw new Error(`Export failed (${res.status})`);
+
+      // 2. Convert to base64 for the email attachment.
+      const buf = await res.arrayBuffer();
+      const bytes = new Uint8Array(buf);
+      let binary = "";
+      for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+      const fileBase64 = btoa(binary);
+
+      const subject = SUBJECT_LABELS[context.subject]?.fr ?? context.subject;
+      const suffix = variant === "B" ? "_VersionB" : "";
+      const fileName = `Imtihan_${subject}_${context.levelId}${suffix}.docx`;
+
+      // 3. Send via /api/email.
+      const mailRes = await fetch("/api/email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          to: email,
+          subject: `${subject} — ${context.levelId} (${variant === "B" ? "Version B" : "Version A"})`,
+          message: emailIncludeSolution
+            ? "Exam with full corrigé attached."
+            : "Exam attached (without corrigé).",
+          fileBase64,
+          fileName,
+          mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        }),
+      });
+
+      const data = await mailRes.json();
+      if (!mailRes.ok || !data.success) {
+        throw new Error(data.error ?? `Email send failed (${mailRes.status})`);
+      }
+
+      setEmailSent(true);
+      if (!savedToLibrary) saveExamToLibrary();
+    } catch (err) {
+      setEmailError(err instanceof Error ? err.message : "Could not send email. Try again.");
+    } finally {
+      setEmailSending(false);
     }
   }
 
@@ -353,22 +419,42 @@ export default function ExportPage() {
               <Plus size={14} className={cn("text-[var(--text-tertiary)] transition-transform duration-200", showEmail && "rotate-45")} />
             </button>
             {showEmail && (
-              <div className="mt-4 flex gap-3">
-                <Input
-                  placeholder="teacher@school.edu.lb"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="flex-1"
-                />
-                <Button
-                  variant="secondary"
-                  size="md"
-                  onClick={() => setEmailSent(true)}
-                  disabled={!email || emailSent}
-                >
-                  {emailSent ? "Sent ✓" : "Send"}
-                </Button>
+              <div className="mt-4 space-y-3">
+                <div className="flex gap-3">
+                  <Input
+                    placeholder="teacher@school.edu.lb"
+                    type="email"
+                    value={email}
+                    onChange={(e) => { setEmail(e.target.value); setEmailSent(false); setEmailError(null); }}
+                    className="flex-1"
+                  />
+                  <Button
+                    variant="secondary"
+                    size="md"
+                    onClick={handleSendEmail}
+                    disabled={!email || emailSent || emailSending}
+                    loading={emailSending}
+                  >
+                    {emailSent ? "Sent ✓" : "Send"}
+                  </Button>
+                </div>
+                <label className="flex items-center gap-2 text-xs text-[var(--text-secondary)] cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={emailIncludeSolution}
+                    onChange={(e) => setEmailIncludeSolution(e.target.checked)}
+                    className="w-3.5 h-3.5 rounded border-[var(--border)] text-[var(--accent)] focus:ring-[var(--accent)]"
+                  />
+                  Include corrigé (answers + methodology)
+                </label>
+                {emailError && (
+                  <p className="text-xs text-[var(--danger)] leading-relaxed">{emailError}</p>
+                )}
+                {emailSent && (
+                  <p className="text-xs text-[var(--accent)]">
+                    Email sent to {email}. Attachment includes the {emailIncludeSolution ? "full corrigé" : "exam only"}.
+                  </p>
+                )}
               </div>
             )}
           </div>
