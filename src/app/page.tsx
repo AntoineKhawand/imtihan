@@ -167,7 +167,7 @@ export default function LandingPage() {
           </div>
 
           {/* Headline */}
-          <h1 className="serif text-display-2xl text-[var(--text)] text-balance leading-[0.95] tracking-tight mb-5">
+          <h1 className="serif text-display-2xl text-[var(--text)] text-balance leading-[0.95] tracking-tighter mb-5">
             Exam generation
             <br />
             <span className="italic text-transparent bg-clip-text bg-gradient-to-r from-[var(--accent)] to-emerald-400">for Lebanese teachers.</span>
@@ -184,7 +184,7 @@ export default function LandingPage() {
           <div className="flex flex-col sm:flex-row gap-3">
             <Link
               href="/create"
-              className="inline-flex items-center justify-center gap-2 h-12 px-7 rounded-xl bg-[var(--accent)] text-white text-base font-medium hover:bg-[var(--accent)]/90 active:scale-[0.98] transition-all duration-300 shadow-[0_0_15px_rgba(26,94,63,0.2)] hover:shadow-[0_0_25px_rgba(26,94,63,0.35)]"
+              className="inline-flex items-center justify-center gap-2 h-12 px-7 rounded-xl bg-[var(--accent)] text-white text-base font-medium hover:bg-[var(--accent)]/90 active:scale-[0.98] transition-all duration-300 shadow-[0_0_15px_rgba(26,94,63,0.2)] hover:shadow-[0_0_25px_rgba(26,94,63,0.35)] ring-1 ring-inset ring-white/20"
             >
               Create your first exam <ArrowRight size={16} />
             </Link>
@@ -236,7 +236,7 @@ export default function LandingPage() {
                 {i < HOW_IT_WORKS.length - 1 && (
                   <div className="hidden md:block absolute top-5 left-[calc(100%+0.75rem)] w-6 border-t border-dashed border-[var(--border-strong)]" />
                 )}
-                <div className="card p-6 h-full bg-[var(--surface)] hover:-translate-y-1 hover:shadow-xl hover:shadow-black/[0.03] transition-all duration-300 group">
+                <div className="card p-6 h-full bg-[var(--surface)] hover:-translate-y-1 hover:shadow-xl hover:shadow-black/[0.05] transition-all duration-300 group ring-1 ring-black/[0.02]">
                   <div className="flex items-center gap-3 mb-4">
                     <div className="w-9 h-9 rounded-xl bg-[var(--accent)] flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform duration-300">
                       <step.Icon size={16} className="text-white" />
@@ -260,7 +260,7 @@ export default function LandingPage() {
             <h2 className="serif text-display-lg text-[var(--text)]">One sentence.<br />A complete exam.</h2>
           </div>
 
-          <div className="relative rounded-3xl border border-[var(--border)] bg-[var(--surface)] overflow-hidden shadow-2xl shadow-black/[0.06]">
+          <div className="relative rounded-3xl border border-[var(--border)]/80 bg-[var(--surface)] overflow-hidden shadow-[0_30px_60px_-15px_rgba(0,0,0,0.1)] ring-1 ring-black/[0.03]">
             {/* Browser chrome */}
             <div className="flex items-center gap-2 px-4 h-10 border-b border-[var(--border)] bg-[var(--bg-subtle)]">
               <div className="w-2.5 h-2.5 rounded-full bg-red-400/80 shadow-sm" />
@@ -343,7 +343,7 @@ export default function LandingPage() {
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {SUBJECT_CATEGORIES.map((cat) => (
-              <div key={cat.label} className="card p-5 flex flex-col gap-4 bg-[var(--surface)] hover:-translate-y-1 hover:shadow-xl hover:shadow-black/[0.03] transition-all duration-300">
+              <div key={cat.label} className="card p-5 flex flex-col gap-4 bg-[var(--surface)] hover:-translate-y-1 hover:shadow-xl hover:shadow-black/[0.05] transition-all duration-300 ring-1 ring-black/[0.02]">
                 <div className="flex items-center gap-2.5">
                   <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${cat.color}`}>
                     <cat.Icon size={16} />
@@ -379,7 +379,7 @@ export default function LandingPage() {
             {FEATURES.map((f, i) => (
               <div
                 key={f.title}
-                className="card p-8 group hover:-translate-y-1 hover:shadow-xl hover:shadow-black/[0.04] transition-all duration-300"
+                className="card p-8 group hover:-translate-y-1 hover:shadow-xl hover:shadow-black/[0.05] transition-all duration-300 ring-1 ring-black/[0.02]"
                 style={{ animationDelay: `${i * 100}ms` }}
               >
                 <div className="w-10 h-10 rounded-xl bg-[var(--accent-light)] text-[var(--accent)] flex items-center justify-center mb-5 group-hover:scale-110 transition-transform">
@@ -396,6 +396,7 @@ export default function LandingPage() {
       {/* ── CURRICULA STRIP ──────────────────────────────────────────── */}
       <section className="relative px-6 md:px-10 py-16 bg-gradient-to-br from-[var(--accent)] to-[#0d3422] overflow-hidden border-y border-emerald-900/30">
         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-emerald-400/10 blur-[100px] rounded-full translate-x-1/3 -translate-y-1/3 pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-emerald-600/15 blur-[120px] rounded-full -translate-x-1/3 translate-y-1/3 pointer-events-none" />
         <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-8">
           <div className="relative z-10">
             <p className="text-emerald-200 text-xs uppercase tracking-widest font-medium mb-2">Supported curricula</p>
@@ -425,7 +426,7 @@ export default function LandingPage() {
           <p className="text-xs uppercase tracking-widest text-[var(--accent)] font-medium mb-12">What teachers say</p>
           <div className="grid md:grid-cols-3 gap-5">
             {TESTIMONIALS.map((t) => (
-              <div key={t.name} className="card bg-[var(--surface)] p-7 flex flex-col justify-between gap-5 hover:-translate-y-1 hover:shadow-xl hover:shadow-black/[0.03] transition-all duration-300">
+              <div key={t.name} className="card bg-[var(--surface)] p-7 flex flex-col justify-between gap-5 hover:-translate-y-1 hover:shadow-xl hover:shadow-black/[0.04] transition-all duration-300 ring-1 ring-black/[0.02]">
                 <div>
                   <div className="flex gap-0.5 mb-4">
                     {[...Array(5)].map((_, i) => (
@@ -481,7 +482,7 @@ export default function LandingPage() {
             </div>
 
             {/* Pro */}
-            <div className="relative card p-8 border-[var(--accent)] bg-[var(--accent-light)] shadow-sm hover:-translate-y-1 hover:shadow-xl hover:shadow-[var(--accent)]/10 transition-all duration-300">
+            <div className="relative card p-8 border-[var(--accent)]/80 ring-1 ring-[var(--accent)]/10 bg-[var(--accent-light)] shadow-md hover:-translate-y-1 hover:shadow-xl hover:shadow-[var(--accent)]/15 transition-all duration-300">
               <div className="absolute -top-3 left-6 px-3 py-1 rounded-full bg-[var(--accent)] text-white text-xs font-medium shadow-md shadow-[var(--accent)]/20">
                 Most popular
               </div>

@@ -3,10 +3,16 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, FileText, FileDown, Mail, BookOpen, CheckCircle2, Plus, Sparkles, Eye, EyeOff } from "lucide-react";
+import { ArrowLeft, FileText, FileDown, Mail, BookOpen, CheckCircle2, Plus, Sparkles, Eye, EyeOff, Save, Shuffle, Globe } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/FormElements";
-import { cn, SUBJECT_LABELS, LANGUAGE_LABELS } from "@/lib/utils";
+import { cn, SUBJECT_LABELS, LANGUAGE_LABELS, shortId } from "@/lib/utils";
+import {
+  getSchoolSettings, saveSchoolSettings,
+  saveExam, buildExamTitle,
+  type SavedExam,
+} from "@/lib/storage";
+import { buildVersionB } from "@/lib/variant";
 import type { ExamContext, Exercise } from "@/types/exam";
 import { StepIndicator, StepLabel } from "@/app/create/page";
 
@@ -14,7 +20,9 @@ export default function ExportPage() {
   const router = useRouter();
   const [context, setContext] = useState<ExamContext | null>(null);
   const [exercises, setExercises] = useState<Exercise[]>([]);
+  const [templateId, setTemplateId] = useState("classic");
 
+  // Header fields — pre-filled from saved school settings
   const [schoolName, setSchoolName] = useState("");
   const [className, setClassName] = useState("");
   const [teacherName, setTeacherName] = useState("");
@@ -26,28 +34,55 @@ export default function ExportPage() {
   const [emailSent, setEmailSent] = useState(false);
   const [email, setEmail] = useState("");
   const [showEmail, setShowEmail] = useState(false);
+  const [variant, setVariant] = useState<"A" | "B">("A");
+  const [exportLanguage, setExportLanguage] = useState<"french" | "english" | "arabic">("french");
+  const [examSeed] = useState(() => shortId());
+
+  // Track whether we've saved to the library
+  const [savedToLibrary, setSavedToLibrary] = useState(false);
 
   useEffect(() => {
     const ctxRaw = sessionStorage.getItem("imtihan_context");
     const exRaw = sessionStorage.getItem("imtihan_exercises");
+    const tmpl = sessionStorage.getItem("imtihan_templateId") ?? "classic";
     if (!ctxRaw || !exRaw) { router.replace("/create"); return; }
     try {
-      setContext(JSON.parse(ctxRaw));
+      const ctx = JSON.parse(ctxRaw) as ExamContext;
+      setContext(ctx);
       setExercises(JSON.parse(exRaw));
+      setTemplateId(tmpl);
+      setExportLanguage(ctx.language);
     } catch { router.replace("/create"); }
+
+    // Pre-fill school settings from localStorage
+    const settings = getSchoolSettings();
+    if (settings) {
+      setSchoolName(settings.schoolName ?? "");
+      setTeacherName(settings.teacherName ?? "");
+    }
   }, [router]);
+
+  // Auto-save school settings whenever they change
+  useEffect(() => {
+    if (schoolName || teacherName) {
+      saveSchoolSettings({ schoolName, teacherName });
+    }
+  }, [schoolName, teacherName]);
 
   async function handleDownload(format: "word" | "pdf") {
     if (!context || !exercises.length) return;
     setDownloading(format);
 
     try {
+      const exportExercises = variant === "B" ? buildVersionB(exercises, examSeed) : exercises;
+      const exportContext = { ...context, language: exportLanguage };
+
       const res = await fetch("/api/export", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          context,
-          exercises,
+          context: exportContext,
+          exercises: exportExercises,
           format,
           includeAnswerKey,
           header: { schoolName, className, teacherName, date: examDate },
@@ -61,13 +96,35 @@ export default function ExportPage() {
       const a = document.createElement("a");
       a.href = url;
       const subject = SUBJECT_LABELS[context.subject]?.fr ?? context.subject;
-      a.download = `Imtihan_${subject}_${context.levelId}.${format === "word" ? "docx" : "pdf"}`;
+      const suffix = variant === "B" ? "_VersionB" : "";
+      a.download = `Imtihan_${subject}_${context.levelId}${suffix}.${format === "word" ? "docx" : "pdf"}`;
       a.click();
       URL.revokeObjectURL(url);
       setDownloaded(format);
+
+      // Save to library on first download
+      if (!savedToLibrary) {
+        saveExamToLibrary();
+      }
     } finally {
       setDownloading(null);
     }
+  }
+
+  function saveExamToLibrary() {
+    if (!context || !exercises.length) return;
+    const exam: SavedExam = {
+      id: shortId(),
+      title: buildExamTitle(context),
+      context,
+      exercises,
+      header: { schoolName, className, teacherName, date: examDate },
+      templateId,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    };
+    saveExam(exam);
+    setSavedToLibrary(true);
   }
 
   if (!context) {
@@ -136,7 +193,7 @@ export default function ExportPage() {
           <div className="card p-6 space-y-4">
             <div>
               <h3 className="font-semibold text-[var(--text)] mb-0.5">Exam header</h3>
-              <p className="text-xs text-[var(--text-secondary)]">Optional — appears at the top of exported files.</p>
+              <p className="text-xs text-[var(--text-secondary)]">Appears at the top of exported files. School name &amp; teacher are remembered.</p>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Input label="School name" placeholder="École Évangélique du Liban" value={schoolName} onChange={(e) => setSchoolName(e.target.value)} />
@@ -148,7 +205,7 @@ export default function ExportPage() {
 
           {/* Download options */}
           <div className="card p-6 space-y-4">
-            <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center justify-between gap-4 flex-wrap">
               <h3 className="font-semibold text-[var(--text)]">Download</h3>
               {/* Corrigé toggle */}
               <button
@@ -163,6 +220,53 @@ export default function ExportPage() {
                 {includeAnswerKey ? <Eye size={11} /> : <EyeOff size={11} />}
                 {includeAnswerKey ? "Includes corrigé" : "Exam only"}
               </button>
+            </div>
+
+            {/* Variant + language */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="rounded-xl border border-[var(--border)] p-3">
+                <div className="flex items-center gap-2 mb-2">
+                  <Shuffle size={12} className="text-[var(--text-secondary)]" />
+                  <span className="text-xs font-medium text-[var(--text-secondary)]">Variant</span>
+                </div>
+                <div className="flex gap-1">
+                  {(["A", "B"] as const).map((v) => (
+                    <button
+                      key={v}
+                      onClick={() => setVariant(v)}
+                      className={cn(
+                        "flex-1 text-xs px-3 py-1.5 rounded-lg border transition-all",
+                        variant === v
+                          ? "bg-[var(--accent)] text-white border-[var(--accent)]"
+                          : "border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--border-strong)]"
+                      )}
+                    >
+                      Version {v}
+                    </button>
+                  ))}
+                </div>
+                <p className="text-[10px] text-[var(--text-tertiary)] mt-1.5">
+                  {variant === "B" ? "Exercises and sub-questions reordered." : "Original exercise order."}
+                </p>
+              </div>
+              <div className="rounded-xl border border-[var(--border)] p-3">
+                <div className="flex items-center gap-2 mb-2">
+                  <Globe size={12} className="text-[var(--text-secondary)]" />
+                  <span className="text-xs font-medium text-[var(--text-secondary)]">Language</span>
+                </div>
+                <select
+                  value={exportLanguage}
+                  onChange={(e) => setExportLanguage(e.target.value as typeof exportLanguage)}
+                  className="w-full text-xs px-2.5 py-1.5 rounded-lg border border-[var(--border)] bg-[var(--surface)] text-[var(--text)] focus:outline-none focus:border-[var(--accent)]"
+                >
+                  <option value="french">Français</option>
+                  <option value="english">English</option>
+                  <option value="arabic">العربية</option>
+                </select>
+                <p className="text-[10px] text-[var(--text-tertiary)] mt-1.5">
+                  Headers &amp; labels only. Exercise content stays in its source language.
+                </p>
+              </div>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <button
@@ -217,6 +321,23 @@ export default function ExportPage() {
                 )}
               </button>
             </div>
+
+            {/* Manual save to library */}
+            {!savedToLibrary && (
+              <button
+                onClick={saveExamToLibrary}
+                className="w-full flex items-center justify-center gap-2 py-2.5 text-sm text-[var(--text-secondary)] hover:text-[var(--accent)] border border-dashed border-[var(--border)] hover:border-[var(--accent)] rounded-xl transition-colors"
+              >
+                <Save size={13} />
+                Save to my library (without downloading)
+              </button>
+            )}
+            {savedToLibrary && (
+              <div className="flex items-center justify-center gap-2 py-2 text-sm text-[var(--accent)]">
+                <CheckCircle2 size={14} />
+                Saved to your library
+              </div>
+            )}
           </div>
 
           {/* Email */}

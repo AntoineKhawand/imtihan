@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { getGeminiStreamingModel, withRetry, geminiErrorMessage, isRetryableError } from "@/lib/gemini";
+import { withRetryAndFallback, geminiErrorMessage, isRetryableError } from "@/lib/gemini";
 import { buildGenerateSystemPrompt, buildGenerateUserPrompt } from "@/lib/prompts/generate";
 
 const ExamContextSchema = z.object({
@@ -113,15 +113,15 @@ export async function POST(request: NextRequest) {
     }
 
     const { context } = parsed.data;
-    const model = getGeminiStreamingModel();
 
     const systemPrompt = buildGenerateSystemPrompt(context);
     const userPrompt = buildGenerateUserPrompt(context);
 
-    // Streaming response via Gemini — retry on 503/429
-    let streamResult: Awaited<ReturnType<typeof model.generateContentStream>>;
+    // Streaming response via Gemini — retry on 503/429, fallback to 2.0-flash
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let streamResult: any;
     try {
-      streamResult = await withRetry(() =>
+      streamResult = await withRetryAndFallback((model) =>
         model.generateContentStream({
           systemInstruction: systemPrompt,
           contents: [{ role: "user", parts: [{ text: userPrompt }] }],

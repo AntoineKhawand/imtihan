@@ -1,12 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ArrowRight, Sparkles, Lightbulb, Upload, X } from "lucide-react";
+import { ArrowLeft, Sparkles, Lightbulb, Upload, X, BookOpen, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Dropzone } from "@/components/ui/Dropzone";
-import { cn } from "@/lib/utils";
+import { cn, shortId } from "@/lib/utils";
+import {
+  getClassProfiles, saveClassProfile, deleteClassProfile,
+  type ClassProfile,
+} from "@/lib/storage";
 
 interface UploadedFile {
   name: string;
@@ -32,8 +36,45 @@ export default function CreatePage() {
   const [error, setError] = useState<string | null>(null);
   const [activeExample, setActiveExample] = useState<number | null>(null);
 
+  // Class profiles (saved curriculum+level+subject combos)
+  const [profiles, setProfiles] = useState<ClassProfile[]>([]);
+  const [showProfileForm, setShowProfileForm] = useState(false);
+  const [newProfileName, setNewProfileName] = useState("");
+
+  useEffect(() => {
+    setProfiles(getClassProfiles());
+  }, []);
+
   const charCount = description.length;
   const isReady = description.trim().length >= 20;
+
+  function applyProfile(p: ClassProfile) {
+    const text = `Examen pour ${p.name}, curriculum ${p.curriculumId.replace("-", " ")}, niveau ${p.levelId}, en ${p.language === "french" ? "français" : p.language === "english" ? "anglais" : "arabe"}. `;
+    setDescription(text);
+    setActiveExample(null);
+  }
+
+  function addProfileFromCurrent() {
+    if (!newProfileName.trim()) return;
+    const profile: ClassProfile = {
+      id: shortId(),
+      name: newProfileName.trim(),
+      curriculumId: "bac-libanais",
+      levelId: "terminale-s",
+      subject: "mathematics",
+      language: "french",
+      createdAt: Date.now(),
+    };
+    saveClassProfile(profile);
+    setProfiles([profile, ...profiles]);
+    setNewProfileName("");
+    setShowProfileForm(false);
+  }
+
+  function removeProfile(id: string) {
+    deleteClassProfile(id);
+    setProfiles(profiles.filter((p) => p.id !== id));
+  }
 
   async function handleAnalyze() {
     if (!isReady) return;
@@ -109,12 +150,13 @@ export default function CreatePage() {
           </div>
 
           {/* Textarea */}
-          <div className="mb-5">
+          <div className="mb-5 relative group">
+            <div className="absolute -inset-0.5 bg-gradient-to-r from-[var(--accent)]/0 via-[var(--accent)]/10 to-[var(--accent)]/0 rounded-2xl blur opacity-0 group-focus-within:opacity-100 transition-opacity duration-500" />
             <div className={cn(
-              "relative rounded-2xl border bg-[var(--surface)] transition-all duration-300 shadow-sm focus-within:ring-4 focus-within:ring-[var(--accent)]/15 focus-within:border-[var(--accent)]/70",
+              "relative rounded-2xl border bg-[var(--surface)]/80 backdrop-blur-sm transition-all duration-300 shadow-sm focus-within:ring-4 focus-within:ring-[var(--accent)]/15 focus-within:border-[var(--accent)]/70",
               description.length > 0
                 ? "border-[var(--accent)] shadow-[0_0_20px_rgba(26,94,63,0.08)]"
-                : "border-[var(--border)] hover:border-[var(--border-strong)]"
+                : "border-[var(--border)] hover:border-[var(--border-strong)] hover:shadow-md"
             )}>
               <textarea
                 value={description}
@@ -149,8 +191,8 @@ export default function CreatePage() {
                   className={cn(
                     "text-xs px-3 py-1.5 rounded-full border transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]",
                     activeExample === i
-                      ? "border-[var(--accent)] text-[var(--accent)] bg-[var(--accent-light)]"
-                      : "border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--border-strong)] hover:text-[var(--text)]"
+                      ? "border-[var(--accent)] text-[var(--accent)] bg-[var(--accent-light)] shadow-sm"
+                      : "border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--border-strong)] hover:text-[var(--text)] hover:shadow-sm hover:bg-[var(--bg-subtle)]"
                   )}
                 >
                   {ex.label}
@@ -158,6 +200,78 @@ export default function CreatePage() {
               ))}
             </div>
           </div>
+
+          {/* Saved class profiles */}
+          {(profiles.length > 0 || showProfileForm) && (
+            <div className="mb-6">
+              <div className="flex items-center justify-between mb-2.5">
+                <p className="text-xs text-[var(--text-tertiary)] inline-flex items-center gap-1.5">
+                  <BookOpen size={10} /> Your saved classes
+                </p>
+                <button
+                  onClick={() => setShowProfileForm(!showProfileForm)}
+                  className="text-xs text-[var(--accent)] hover:underline"
+                >
+                  {showProfileForm ? "Cancel" : "+ Add class"}
+                </button>
+              </div>
+
+              {showProfileForm && (
+                <div className="mb-3 flex gap-2">
+                  <input
+                    value={newProfileName}
+                    onChange={(e) => setNewProfileName(e.target.value)}
+                    placeholder="e.g. Terminale S · Physique"
+                    className="flex-1 h-9 px-3 rounded-lg border border-[var(--border)] bg-[var(--surface)] text-sm text-[var(--text)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]"
+                  />
+                  <button
+                    onClick={addProfileFromCurrent}
+                    disabled={!newProfileName.trim()}
+                    className="text-xs px-3 py-1.5 rounded-lg bg-[var(--accent)] text-white font-medium hover:bg-[var(--accent-hover)] transition-colors disabled:opacity-50"
+                  >
+                    Save
+                  </button>
+                </div>
+              )}
+
+              {profiles.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {profiles.map((p) => (
+                    <div
+                      key={p.id}
+                      className="group inline-flex items-center gap-1 border border-[var(--border)] rounded-full bg-[var(--bg-subtle)] hover:border-[var(--border-strong)] transition-colors"
+                    >
+                      <button
+                        onClick={() => applyProfile(p)}
+                        className="text-xs pl-3 pr-2 py-1.5 text-[var(--text-secondary)] hover:text-[var(--text)]"
+                      >
+                        {p.name}
+                      </button>
+                      <button
+                        onClick={() => removeProfile(p.id)}
+                        className="pr-2.5 py-1.5 text-[var(--text-tertiary)] opacity-0 group-hover:opacity-100 hover:text-[var(--danger)] transition-all"
+                      >
+                        <Trash2 size={10} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Add first profile hint (when empty) */}
+          {profiles.length === 0 && !showProfileForm && (
+            <div className="mb-6">
+              <button
+                onClick={() => setShowProfileForm(true)}
+                className="text-xs text-[var(--text-tertiary)] hover:text-[var(--accent)] inline-flex items-center gap-1.5 transition-colors"
+              >
+                <BookOpen size={11} />
+                + Save a class profile for quick reuse next time
+              </button>
+            </div>
+          )}
 
           {/* Upload */}
           <div className="mb-8">
@@ -186,7 +300,7 @@ export default function CreatePage() {
             disabled={!isReady}
             loading={isAnalyzing}
             size="lg"
-            className="w-full"
+            className="w-full shadow-md shadow-[var(--accent)]/10 ring-1 ring-inset ring-white/20"
             icon={isAnalyzing ? undefined : <Sparkles size={15} />}
             iconPosition="right"
           >

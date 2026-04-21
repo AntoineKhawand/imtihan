@@ -1,83 +1,68 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Plus, BookOpen, Clock, Award, Search, Sparkles, FileText, Copy, Trash2, ChevronRight } from "lucide-react";
+import { Plus, BookOpen, Clock, Award, Search, Sparkles, FileText, Copy, Trash2, ChevronRight, Bookmark, Users } from "lucide-react";
 import { Button } from "@/components/ui/Button";
-import { cn, formatDate, SUBJECT_LABELS } from "@/lib/utils";
-import { FREE_EXAM_LIMIT } from "@/lib/utils";
-
-// Stub data — replace with Firestore in production
-const STUB_EXAMS = [
-  {
-    id: "1",
-    title: "Physique — Terminale S",
-    subject: "physics",
-    curriculum: "Bac Libanais",
-    level: "terminale-s",
-    exerciseCount: 3,
-    totalPoints: 20,
-    duration: 120,
-    language: "french",
-    createdAt: Date.now() - 86400000,
-    difficulty: { easy: 1, medium: 1, hard: 1 },
-  },
-  {
-    id: "2",
-    title: "Mathématiques — Première",
-    subject: "mathematics",
-    curriculum: "Bac Français",
-    level: "premiere-fr",
-    exerciseCount: 4,
-    totalPoints: 20,
-    duration: 60,
-    language: "french",
-    createdAt: Date.now() - 86400000 * 3,
-    difficulty: { easy: 1, medium: 2, hard: 1 },
-  },
-  {
-    id: "3",
-    title: "IB Chemistry HL — Organic",
-    subject: "chemistry",
-    curriculum: "IB Diploma",
-    level: "dp-hl",
-    exerciseCount: 5,
-    totalPoints: 50,
-    duration: 90,
-    language: "english",
-    createdAt: Date.now() - 86400000 * 7,
-    difficulty: { easy: 1, medium: 2, hard: 2 },
-  },
-];
+import { cn, formatDate, SUBJECT_LABELS, FREE_EXAM_LIMIT, shortId } from "@/lib/utils";
+import { getSavedExams, deleteExam, saveExam, type SavedExam } from "@/lib/storage";
 
 const SUBJECT_ICONS: Record<string, string> = {
-  physics: "⚛",
-  mathematics: "∑",
-  chemistry: "⚗",
-  biology: "🧬",
-  philosophy: "💭",
-  history: "📜",
-  english: "📖",
-  french: "📝",
+  physics: "⚛", mathematics: "∑", chemistry: "⚗", biology: "🧬",
+  philosophy: "💭", history: "📜", english: "📖", french: "📝",
+  arabic: "ع", informatics: "💻", economics: "📈", svt: "🌿",
+  geography: "🗺", accounting: "🧾", psychology: "🧠",
 };
 
 export default function DashboardPage() {
+  const [exams, setExams] = useState<SavedExam[]>([]);
   const [query, setQuery] = useState("");
+  const [mounted, setMounted] = useState(false);
 
-  const examsGenerated = STUB_EXAMS.length;
-  const isFreeTier = true;
-  const quotaUsed = examsGenerated;
-  const quotaRemaining = Math.max(0, FREE_EXAM_LIMIT - quotaUsed);
+  useEffect(() => {
+    setExams(getSavedExams());
+    setMounted(true);
+  }, []);
 
-  const filtered = STUB_EXAMS.filter((e) => {
+  function handleDelete(id: string) {
+    deleteExam(id);
+    setExams((prev) => prev.filter((e) => e.id !== id));
+  }
+
+  function handleDuplicate(exam: SavedExam) {
+    const copy: SavedExam = {
+      ...exam,
+      id: shortId(),
+      title: exam.title + " (copy)",
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    };
+    saveExam(copy);
+    setExams((prev) => [copy, ...prev]);
+  }
+
+  const filtered = exams.filter((e) => {
     if (!query.trim()) return true;
     const q = query.toLowerCase();
     return (
       e.title.toLowerCase().includes(q) ||
-      e.curriculum.toLowerCase().includes(q) ||
-      (SUBJECT_LABELS[e.subject]?.fr ?? "").toLowerCase().includes(q)
+      e.context.curriculumId.toLowerCase().includes(q) ||
+      (SUBJECT_LABELS[e.context.subject]?.fr ?? "").toLowerCase().includes(q)
     );
   });
+
+  const examsGenerated = exams.length;
+  const totalExercises = exams.reduce((s, e) => s + e.exercises.length, 0);
+  const quotaUsed = examsGenerated;
+  const quotaRemaining = Math.max(0, FREE_EXAM_LIMIT - quotaUsed);
+
+  if (!mounted) {
+    return (
+      <div className="min-h-screen bg-[var(--bg)] flex items-center justify-center">
+        <div className="w-8 h-8 rounded-full border-2 border-[var(--accent)] border-t-transparent animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[var(--bg)]">
@@ -90,6 +75,12 @@ export default function DashboardPage() {
           <span className="font-semibold text-[var(--text)] text-sm tracking-tight">Imtihan</span>
         </Link>
         <div className="flex items-center gap-3">
+          <Link href="/bank">
+            <Button variant="secondary" size="sm" icon={<Bookmark size={13} />}>Bank</Button>
+          </Link>
+          <Link href="/community">
+            <Button variant="secondary" size="sm" icon={<Users size={13} />}>Community</Button>
+          </Link>
           <Link href="/create">
             <Button size="sm" icon={<Plus size={13} />}>New exam</Button>
           </Link>
@@ -108,7 +99,7 @@ export default function DashboardPage() {
         <div className="grid grid-cols-3 gap-4 mb-8">
           {[
             { label: "Exams created", value: examsGenerated },
-            { label: "Total exercises", value: STUB_EXAMS.reduce((s, e) => s + e.exerciseCount, 0) },
+            { label: "Total exercises", value: totalExercises },
             { label: "Hours saved", value: Math.round(examsGenerated * 1.5) },
           ].map((stat) => (
             <div key={stat.label} className="card p-4 text-center">
@@ -119,25 +110,23 @@ export default function DashboardPage() {
         </div>
 
         {/* Free tier quota */}
-        {isFreeTier && (
-          <div className="card p-4 mb-6 flex items-center gap-4">
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-[var(--text)] mb-2">
-                Free plan — <span className="text-[var(--accent)]">{quotaRemaining} exam{quotaRemaining !== 1 ? "s" : ""}</span> remaining
-              </p>
-              <div className="flex items-center gap-2">
-                <div className="flex-1 h-1.5 rounded-full bg-[var(--border)]">
-                  <div
-                    className="h-full rounded-full bg-[var(--accent)] transition-all"
-                    style={{ width: `${(quotaUsed / FREE_EXAM_LIMIT) * 100}%` }}
-                  />
-                </div>
-                <span className="text-xs text-[var(--text-tertiary)] tabular-nums flex-shrink-0">{quotaUsed}/{FREE_EXAM_LIMIT}</span>
+        <div className="card p-4 mb-6 flex items-center gap-4">
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-[var(--text)] mb-2">
+              Free plan — <span className="text-[var(--accent)]">{quotaRemaining} exam{quotaRemaining !== 1 ? "s" : ""}</span> remaining
+            </p>
+            <div className="flex items-center gap-2">
+              <div className="flex-1 h-1.5 rounded-full bg-[var(--border)]">
+                <div
+                  className="h-full rounded-full bg-[var(--accent)] transition-all"
+                  style={{ width: `${Math.min(100, (quotaUsed / FREE_EXAM_LIMIT) * 100)}%` }}
+                />
               </div>
+              <span className="text-xs text-[var(--text-tertiary)] tabular-nums flex-shrink-0">{quotaUsed}/{FREE_EXAM_LIMIT}</span>
             </div>
-            <Button variant="secondary" size="sm">Upgrade to Pro</Button>
           </div>
-        )}
+          <Button variant="secondary" size="sm">Upgrade to Pro</Button>
+        </div>
 
         {/* Search */}
         <div className="relative mb-5">
@@ -158,7 +147,7 @@ export default function DashboardPage() {
             <p className="font-medium text-[var(--text)] mb-1">No results for &quot;{query}&quot;</p>
             <p className="text-sm text-[var(--text-secondary)]">Try a different subject or curriculum name.</p>
           </div>
-        ) : STUB_EXAMS.length === 0 ? (
+        ) : exams.length === 0 ? (
           <div className="card p-14 flex flex-col items-center justify-center text-center">
             <div className="w-14 h-14 rounded-2xl bg-[var(--accent-light)] flex items-center justify-center mb-5">
               <Sparkles size={24} className="text-[var(--accent)]" />
@@ -174,7 +163,12 @@ export default function DashboardPage() {
         ) : (
           <div className="space-y-3">
             {filtered.map((exam) => (
-              <ExamRow key={exam.id} exam={exam} />
+              <ExamRow
+                key={exam.id}
+                exam={exam}
+                onDelete={handleDelete}
+                onDuplicate={handleDuplicate}
+              />
             ))}
           </div>
         )}
@@ -184,10 +178,51 @@ export default function DashboardPage() {
   );
 }
 
-function ExamRow({ exam }: { exam: typeof STUB_EXAMS[0] }) {
+function ExamRow({
+  exam,
+  onDelete,
+  onDuplicate,
+}: {
+  exam: SavedExam;
+  onDelete: (id: string) => void;
+  onDuplicate: (exam: SavedExam) => void;
+}) {
   const [open, setOpen] = useState(false);
-  const icon = SUBJECT_ICONS[exam.subject] ?? "📄";
-  const totalDiff = exam.difficulty.easy + exam.difficulty.medium + exam.difficulty.hard;
+  const [downloading, setDownloading] = useState<"word" | "pdf" | null>(null);
+  const icon = SUBJECT_ICONS[exam.context.subject] ?? "📄";
+
+  const diffCount = exam.exercises.reduce(
+    (acc, e) => { acc[e.difficulty] = (acc[e.difficulty] ?? 0) + 1; return acc; },
+    {} as Record<string, number>
+  );
+  const totalEx = exam.exercises.length;
+
+  async function handleDownload(format: "word" | "pdf") {
+    setDownloading(format);
+    try {
+      const res = await fetch("/api/export", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          context: exam.context,
+          exercises: exam.exercises,
+          format,
+          includeAnswerKey: true,
+          header: exam.header ?? {},
+        }),
+      });
+      if (!res.ok) return;
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${exam.title}.${format === "word" ? "docx" : "pdf"}`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } finally {
+      setDownloading(null);
+    }
+  }
 
   return (
     <div className="card overflow-hidden">
@@ -199,10 +234,10 @@ function ExamRow({ exam }: { exam: typeof STUB_EXAMS[0] }) {
         <div className="flex-1 min-w-0">
           <p className="font-medium text-[var(--text)] truncate">{exam.title}</p>
           <div className="flex items-center gap-3 mt-0.5 flex-wrap">
-            <span className="text-xs text-[var(--text-tertiary)]">{exam.curriculum}</span>
+            <span className="text-xs text-[var(--text-tertiary)] capitalize">{exam.context.curriculumId.replace("-", " ")}</span>
             <span className="text-xs text-[var(--text-tertiary)]">·</span>
             <span className="text-xs text-[var(--text-tertiary)] inline-flex items-center gap-1">
-              <Award size={10} /> {exam.totalPoints} pts
+              <Award size={10} /> {exam.exercises.reduce((s, e) => s + e.points, 0)} pts
             </span>
             <span className="text-xs text-[var(--text-tertiary)]">·</span>
             <span className="text-xs text-[var(--text-tertiary)] inline-flex items-center gap-1">
@@ -225,38 +260,50 @@ function ExamRow({ exam }: { exam: typeof STUB_EXAMS[0] }) {
       {open && (
         <div className="border-t border-[var(--border)] bg-[var(--bg-subtle)] p-4 space-y-4">
           {/* Difficulty bar */}
-          <div>
-            <p className="text-xs text-[var(--text-tertiary)] mb-2">Difficulty breakdown</p>
-            <div className="flex h-2 rounded-full overflow-hidden gap-px mb-1.5">
-              {exam.difficulty.easy > 0 && (
-                <div className="bg-emerald-500" style={{ width: `${(exam.difficulty.easy / totalDiff) * 100}%` }} />
-              )}
-              {exam.difficulty.medium > 0 && (
-                <div className="bg-amber-500" style={{ width: `${(exam.difficulty.medium / totalDiff) * 100}%` }} />
-              )}
-              {exam.difficulty.hard > 0 && (
-                <div className="bg-red-500" style={{ width: `${(exam.difficulty.hard / totalDiff) * 100}%` }} />
-              )}
+          {totalEx > 0 && (
+            <div>
+              <p className="text-xs text-[var(--text-tertiary)] mb-2">Difficulty breakdown</p>
+              <div className="flex h-2 rounded-full overflow-hidden gap-px mb-1.5">
+                {(diffCount.easy ?? 0) > 0 && <div className="bg-emerald-500" style={{ width: `${((diffCount.easy ?? 0) / totalEx) * 100}%` }} />}
+                {(diffCount.medium ?? 0) > 0 && <div className="bg-amber-500" style={{ width: `${((diffCount.medium ?? 0) / totalEx) * 100}%` }} />}
+                {(diffCount.hard ?? 0) > 0 && <div className="bg-red-500" style={{ width: `${((diffCount.hard ?? 0) / totalEx) * 100}%` }} />}
+              </div>
+              <div className="flex gap-3 text-[11px] text-[var(--text-tertiary)]">
+                {(diffCount.easy ?? 0) > 0 && <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />{diffCount.easy} easy</span>}
+                {(diffCount.medium ?? 0) > 0 && <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-amber-500" />{diffCount.medium} medium</span>}
+                {(diffCount.hard ?? 0) > 0 && <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-red-500" />{diffCount.hard} hard</span>}
+              </div>
             </div>
-            <div className="flex gap-3 text-[11px] text-[var(--text-tertiary)]">
-              <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />{exam.difficulty.easy} easy</span>
-              <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-amber-500" />{exam.difficulty.medium} medium</span>
-              <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-red-500" />{exam.difficulty.hard} hard</span>
-            </div>
-          </div>
+          )}
 
           {/* Actions */}
           <div className="flex flex-wrap gap-2">
-            <button className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--border-strong)] hover:text-[var(--text)] transition-colors">
-              <FileText size={11} /> Download Word
+            <button
+              onClick={() => handleDownload("word")}
+              disabled={!!downloading}
+              className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--border-strong)] hover:text-[var(--text)] transition-colors disabled:opacity-50"
+            >
+              {downloading === "word" ? <div className="w-3 h-3 rounded-full border border-current border-t-transparent animate-spin" /> : <FileText size={11} />}
+              Download Word
             </button>
-            <button className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--border-strong)] hover:text-[var(--text)] transition-colors">
-              <FileText size={11} /> Download PDF
+            <button
+              onClick={() => handleDownload("pdf")}
+              disabled={!!downloading}
+              className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--border-strong)] hover:text-[var(--text)] transition-colors disabled:opacity-50"
+            >
+              {downloading === "pdf" ? <div className="w-3 h-3 rounded-full border border-current border-t-transparent animate-spin" /> : <FileText size={11} />}
+              Download PDF
             </button>
-            <button className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--border-strong)] hover:text-[var(--text)] transition-colors">
+            <button
+              onClick={() => onDuplicate(exam)}
+              className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--border-strong)] hover:text-[var(--text)] transition-colors"
+            >
               <Copy size={11} /> Duplicate
             </button>
-            <button className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border border-red-200 text-red-500 hover:bg-red-50 transition-colors ml-auto">
+            <button
+              onClick={() => onDelete(exam.id)}
+              className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border border-red-200 text-red-500 hover:bg-red-50 transition-colors ml-auto"
+            >
               <Trash2 size={11} /> Delete
             </button>
           </div>

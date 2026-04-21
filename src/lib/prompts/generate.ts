@@ -59,6 +59,15 @@ CRITICAL RULES:
 4. MATH NOTATION — JSON REQUIRES DOUBLE-ESCAPED BACKSLASHES: write \\frac, \\sqrt, \\alpha, \\vec, \\int, etc. (two backslashes). Single backslash LaTeX like \frac or \alpha is INVALID inside a JSON string and will crash the parser. Always use $\\frac{a}{b}$ not $\frac{a}{b}$.
 5. OUTPUT FORMAT: Start your response with [ and end with ]. Output ONLY the raw JSON array — zero prose, zero markdown fences, zero explanation before or after.
 
+SOLUTION QUALITY — this is what makes Imtihan valuable. The methodology must be a true STEP-BY-STEP corrigé a student can learn from:
+- Write the methodology as numbered steps ("**Étape 1 :** ..."  or "**Step 1:** ..." depending on language).
+- Each step states WHAT is done and WHY (the physical/mathematical principle invoked, not just arithmetic).
+- Show intermediate results explicitly — do not skip algebra; a weak student must be able to follow.
+- Identify the formula or theorem cited before applying it, with proper LaTeX.
+- End with a boxed final answer formatted "$\\\\boxed{...}$" and units where applicable.
+- commonMistakes: 2–3 realistic errors a student at this level might make, not trivial slips.
+- For multi-part exercises, repeat this structure per sub-question.
+
 JSON schema for each exercise:
 {
   "id": string,

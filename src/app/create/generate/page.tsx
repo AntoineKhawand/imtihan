@@ -3,12 +3,15 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, ArrowRight, Sparkles, RotateCcw, X } from "lucide-react";
+import { ArrowLeft, ArrowRight, Sparkles, RotateCcw, X, BookmarkCheck } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { ExerciseCard } from "@/components/ui/ExerciseCard";
-import { cn, shortId } from "@/lib/utils";
+import { ExerciseEditor } from "@/components/ui/ExerciseEditor";
+import { shortId } from "@/lib/utils";
+import { saveToBank, type BankExercise } from "@/lib/storage";
 import type { ExamContext, Exercise } from "@/types/exam";
 import { StepIndicator, StepLabel } from "@/app/create/page";
+import { getChapter } from "@/data/curricula";
 
 type GenerationStatus = "idle" | "generating" | "done" | "error";
 
@@ -22,6 +25,10 @@ export default function GeneratePage() {
   const [error, setError] = useState<string | null>(null);
   const [regeneratingId, setRegeneratingId] = useState<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
+
+  const [editingExercise, setEditingExercise] = useState<Exercise | null>(null);
+  const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
+  const [bankToast, setBankToast] = useState<string | null>(null);
 
   useEffect(() => {
     const raw = sessionStorage.getItem("imtihan_context");
@@ -111,6 +118,7 @@ export default function GeneratePage() {
   }
 
   async function handleRegenerate(id: string, targetDifficulty?: "easy" | "medium" | "hard") {
+    if (!context) return;
     setRegeneratingId(id);
     try {
       const res = await fetch("/api/generate", {
@@ -173,14 +181,54 @@ export default function GeneratePage() {
     });
   }
 
-  const streamProgress = streamText.length;
+  function handleEdit(exercise: Exercise) {
+    setEditingExercise(exercise);
+  }
 
-  // Difficulty breakdown for analytics
+  function handleEditorSave(updated: Exercise) {
+    setExercises((prev) => {
+      const next = prev.map((e) => e.id === updated.id ? updated : e);
+      sessionStorage.setItem("imtihan_exercises", JSON.stringify(next));
+      return next;
+    });
+    setEditingExercise(null);
+  }
+
+  function handleSaveToBank(exercise: Exercise) {
+    if (!context || savedIds.has(exercise.id)) return;
+    const entry: BankExercise = {
+      id: shortId(),
+      exercise,
+      subject: context.subject,
+      curriculumId: context.curriculumId,
+      language: context.language,
+      savedAt: Date.now(),
+      tags: exercise.chapterIds ?? [],
+    };
+    saveToBank(entry);
+    setSavedIds((prev) => new Set([...prev, exercise.id]));
+    setBankToast(`Exercise ${exercise.number} saved to your bank`);
+    setTimeout(() => setBankToast(null), 2500);
+  }
+
+  const streamProgress = streamText.length;
   const difficultyCount = exercises.reduce(
     (acc, ex) => { acc[ex.difficulty] = (acc[ex.difficulty] ?? 0) + 1; return acc; },
     {} as Record<string, number>
   );
   const totalEx = exercises.length;
+
+  const chapterCoverage: Array<{ id: string; name: string; count: number; missing: boolean }> = [];
+  if (context && context.curriculumId !== "university") {
+    const counts = new Map<string, number>();
+    for (const ex of exercises) for (const cid of ex.chapterIds ?? []) counts.set(cid, (counts.get(cid) ?? 0) + 1);
+    for (const cid of context.chapterIds) {
+      const ch = getChapter(context.curriculumId, context.levelId, context.subject, cid);
+      const name = ch ? (ch.name.fr ?? ch.name.en ?? cid) : cid;
+      const count = counts.get(cid) ?? 0;
+      chapterCoverage.push({ id: cid, name, count, missing: count === 0 });
+    }
+  }
 
   return (
     <div className="min-h-screen bg-[var(--bg)] flex flex-col">
@@ -207,7 +255,7 @@ export default function GeneratePage() {
               <h1 className="serif text-display-lg text-[var(--text)] mb-2">Your exam</h1>
               {status === "done" && (
                 <p className="text-[var(--text-secondary)] text-sm">
-                  {exercises.length} exercise{exercises.length !== 1 ? "s" : ""} generated. Regenerate, adjust, or remove any before exporting.
+                  {exercises.length} exercise{exercises.length !== 1 ? "s" : ""} generated. Edit, regenerate, or save individual questions to your bank.
                 </p>
               )}
               {status === "generating" && (
@@ -226,10 +274,8 @@ export default function GeneratePage() {
             )}
           </div>
 
-          {/* Generating state */}
           {status === "generating" && (
             <div className="space-y-4">
-              {/* Progress banner */}
               <div className="flex items-center gap-3 p-5 rounded-2xl bg-[var(--accent-light)] border border-[var(--accent)]/30">
                 <div className="relative flex-shrink-0">
                   <Sparkles size={16} className="text-[var(--accent)]" />
@@ -246,13 +292,8 @@ export default function GeneratePage() {
                 )}
               </div>
 
-              {/* Skeleton cards */}
               {[...Array(context?.exerciseCount ?? 3)].map((_, i) => (
-                <div
-                  key={i}
-                  className="card p-6"
-                  style={{ opacity: 1 - i * 0.15 }}
-                >
+                <div key={i} className="card p-6" style={{ opacity: 1 - i * 0.15 }}>
                   <div className="flex gap-3 mb-5">
                     <div className="skeleton w-9 h-9 rounded-xl flex-shrink-0" />
                     <div className="space-y-2 flex-1 pt-1">
@@ -272,7 +313,6 @@ export default function GeneratePage() {
             </div>
           )}
 
-          {/* Error state */}
           {status === "error" && (
             <div className="space-y-4">
               <div className="flex items-start gap-3 p-5 rounded-2xl bg-red-50 border border-red-200">
@@ -286,10 +326,37 @@ export default function GeneratePage() {
             </div>
           )}
 
-          {/* Done — analytics bar */}
+          {status === "done" && exercises.length > 0 && chapterCoverage.length > 0 && (
+            <div className="card p-4 mb-3">
+              <p className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-2.5">Chapter coverage</p>
+              <div className="flex flex-wrap gap-1.5">
+                {chapterCoverage.map((c) => (
+                  <span
+                    key={c.id}
+                    className={
+                      c.missing
+                        ? "inline-flex items-center gap-1.5 text-xs px-2 py-0.5 rounded-full border border-red-300 bg-red-50 text-red-600 dark:bg-red-950/20"
+                        : "inline-flex items-center gap-1.5 text-xs px-2 py-0.5 rounded-full border border-[var(--border)] bg-[var(--bg-subtle)] text-[var(--text-secondary)]"
+                    }
+                    title={c.missing ? "No exercise covers this chapter yet" : `${c.count} exercise${c.count > 1 ? "s" : ""}`}
+                  >
+                    {c.name}
+                    <span className={c.missing ? "text-red-500 font-semibold" : "text-[var(--text-tertiary)]"}>
+                      {c.missing ? "!" : `×${c.count}`}
+                    </span>
+                  </span>
+                ))}
+              </div>
+              {chapterCoverage.some((c) => c.missing) && (
+                <p className="text-[11px] text-red-600 mt-2">
+                  Some chapters have no exercise — regenerate individual questions to adjust coverage.
+                </p>
+              )}
+            </div>
+          )}
+
           {status === "done" && exercises.length > 0 && (
             <div className="card p-4 mb-6 flex items-center gap-5 flex-wrap">
-              {/* Difficulty bar */}
               <div className="flex-1 min-w-[160px]">
                 <div className="flex h-2 rounded-full overflow-hidden gap-px mb-2">
                   {difficultyCount.easy > 0 && (
@@ -314,7 +381,6 @@ export default function GeneratePage() {
                   )}
                 </div>
               </div>
-              {/* Stats */}
               <div className="flex gap-5 text-xs text-[var(--text-secondary)] flex-shrink-0">
                 <span><strong className="text-[var(--text)]">{exercises.reduce((s, e) => s + e.points, 0)}</strong> pts total</span>
                 <span><strong className="text-[var(--text)]">{exercises.reduce((s, e) => s + (e.estimatedMinutes ?? 0), 0)}</strong> min est.</span>
@@ -322,7 +388,6 @@ export default function GeneratePage() {
             </div>
           )}
 
-          {/* Done — exercises list */}
           {status === "done" && (
             <div className="space-y-4">
               {exercises.map((exercise, i) => (
@@ -337,6 +402,9 @@ export default function GeneratePage() {
                     language={context?.language ?? "french"}
                     onRegenerate={handleRegenerate}
                     onRemove={handleRemove}
+                    onEdit={handleEdit}
+                    onSaveToBank={handleSaveToBank}
+                    savedToBank={savedIds.has(exercise.id)}
                     isRegenerating={regeneratingId === exercise.id}
                   />
                 </div>
@@ -357,6 +425,21 @@ export default function GeneratePage() {
           )}
         </div>
       </main>
+
+      {editingExercise && (
+        <ExerciseEditor
+          exercise={editingExercise}
+          onSave={handleEditorSave}
+          onClose={() => setEditingExercise(null)}
+        />
+      )}
+
+      {bankToast && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2.5 px-4 py-3 bg-[var(--text)] text-[var(--bg)] text-sm font-medium rounded-xl shadow-lg animate-fade-up">
+          <BookmarkCheck size={14} />
+          {bankToast}
+        </div>
+      )}
     </div>
   );
 }

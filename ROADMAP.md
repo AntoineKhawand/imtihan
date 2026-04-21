@@ -27,16 +27,16 @@
 - ✅ Root layout
 - ✅ Landing page — hero, features, testimonials, pricing
 - ✅ Step 1 — Describe + upload
-- 🔨 Step 2 — Confirm context (auto-filled form, editable)
-- 📋 Step 3 — Structure (difficulty mix, template, Version A/B)
-- 📋 Step 4 — Generate & refine (streaming preview, per-exercise actions)
+- ✅ Step 2 — Confirm context (auto-filled form, editable)
+- ✅ Step 3 — Structure & Style (header, difficulty, template, Version B)
+- 🔨 Step 4 — Generate & refine (streaming preview, per-exercise actions)
 - 📋 Step 5 — Export (Word + PDF download)
 
 ### UI — Components
 - ✅ Button
 - ✅ Dropzone
-- 📋 Input, Select, Slider, Toggle
-- 📋 ExerciseCard (preview + actions)
+- 🔨 Input, Select, Slider, Toggle
+- 🔨 ExerciseCard (preview + actions)
 - 📋 Skeleton loaders
 - 📋 Toast notifications (sonner)
 

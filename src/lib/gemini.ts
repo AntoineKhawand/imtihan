@@ -19,23 +19,27 @@ function getGenAI(): GoogleGenerativeAI {
  */
 const NO_THINKING = { thinkingConfig: { thinkingBudget: 0 } } as unknown as GenerationConfig;
 
-/** Non-streaming model — for /api/analyze */
-export function getGeminiModel(): GenerativeModel {
+export const GEMINI_MODEL_PRIMARY  = "gemini-2.5-flash";
+export const GEMINI_MODEL_FALLBACK = "gemini-2.0-flash";
+/** @deprecated use GEMINI_MODEL_PRIMARY */
+export const GEMINI_MODEL = GEMINI_MODEL_PRIMARY;
+
+function getModel(modelId: string): GenerativeModel {
   return getGenAI().getGenerativeModel({
-    model: GEMINI_MODEL,
+    model: modelId,
     generationConfig: NO_THINKING,
   });
+}
+
+/** Non-streaming model — for /api/analyze */
+export function getGeminiModel(modelId = GEMINI_MODEL_PRIMARY): GenerativeModel {
+  return getModel(modelId);
 }
 
 /** Streaming model — for /api/generate */
-export function getGeminiStreamingModel(): GenerativeModel {
-  return getGenAI().getGenerativeModel({
-    model: GEMINI_MODEL,
-    generationConfig: NO_THINKING,
-  });
+export function getGeminiStreamingModel(modelId = GEMINI_MODEL_PRIMARY): GenerativeModel {
+  return getModel(modelId);
 }
-
-export const GEMINI_MODEL = "gemini-2.5-flash";
 
 /**
  * Detect whether a Gemini error is a transient overload / rate-limit.
@@ -96,10 +100,49 @@ export async function withRetry<T>(
     } catch (err) {
       lastErr = err;
       if (!isRetryableError(err) || attempt === maxAttempts) throw err;
-      const delay = baseDelayMs * Math.pow(2, attempt - 1); // 2s, 4s, 8s
+      // Cap the delay to 8 seconds max to prevent serverless function timeouts
+      const delay = Math.min(baseDelayMs * Math.pow(2, attempt - 1), 8000);
       console.warn(`[Gemini] Attempt ${attempt} failed (retryable). Retrying in ${delay}ms…`);
       await sleep(delay);
     }
+  }
+  throw lastErr;
+}
+
+/**
+ * Like withRetry, but automatically falls back to GEMINI_MODEL_FALLBACK
+ * if the primary model is still overloaded after all attempts.
+ *
+ * `buildFn` receives the model instance to use and returns the promise.
+ */
+export async function withRetryAndFallback<T>(
+  buildFn: (model: GenerativeModel) => Promise<T>,
+  attemptsPerModel = 3,
+  baseDelayMs = 2000
+): Promise<T> {
+  const models = [GEMINI_MODEL_PRIMARY, GEMINI_MODEL_FALLBACK];
+  let lastErr: unknown;
+
+  for (const modelId of models) {
+    const model = getModel(modelId);
+    let usedFallback = modelId !== GEMINI_MODEL_PRIMARY;
+    if (usedFallback) console.warn(`[Gemini] Switching to fallback model: ${modelId}`);
+
+    for (let attempt = 1; attempt <= attemptsPerModel; attempt++) {
+      try {
+        return await buildFn(model);
+      } catch (err) {
+        lastErr = err;
+        if (!isRetryableError(err)) throw err; // non-retryable — bail immediately
+        if (attempt < attemptsPerModel) {
+          // Cap the delay to 8 seconds max to prevent serverless function timeouts
+          const delay = Math.min(baseDelayMs * Math.pow(2, attempt - 1), 8000);
+          console.warn(`[Gemini/${modelId}] Attempt ${attempt} failed. Retrying in ${delay}ms…`);
+          await sleep(delay);
+        }
+      }
+    }
+    // All attempts for this model exhausted — try next model (if any)
   }
   throw lastErr;
 }

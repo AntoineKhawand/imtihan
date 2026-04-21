@@ -174,7 +174,7 @@ export default function ConfirmPage() {
                           const next = selected
                             ? context.chapterIds.filter((id) => id !== ch.id)
                             : [...context.chapterIds, ch.id];
-                          if (next.length > 0) update("chapterIds", next);
+                          update("chapterIds", next);
                         }}
                         className={cn(
                           "text-xs px-3 py-1.5 rounded-full border transition-all",

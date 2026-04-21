@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { getGeminiModel, withRetry, geminiErrorMessage } from "@/lib/gemini";
+import { withRetryAndFallback, geminiErrorMessage } from "@/lib/gemini";
 import { buildAnalyzeSystemPrompt, buildAnalyzeUserPrompt, buildCurriculaReference } from "@/lib/prompts/analyze";
 
 // ---------------------------------------------------------------------------
@@ -125,11 +125,10 @@ export async function POST(request: NextRequest) {
     }
     parts.push({ text: userText });
 
-    // 4. Call Gemini — retry up to 3 times on 503/429
-    const model = getGeminiModel();
+    // 4. Call Gemini — retry on 503/429, fallback to 2.0-flash if 2.5-flash overloaded
     let rawText: string;
     try {
-      const result = await withRetry(() =>
+      const result = await withRetryAndFallback((model) =>
         model.generateContent({
           systemInstruction: systemPrompt,
           contents: [{ role: "user", parts }],
