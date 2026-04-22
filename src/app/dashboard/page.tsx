@@ -2,10 +2,12 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Plus, BookOpen, Clock, Award, Search, Sparkles, FileText, Copy, Trash2, ChevronRight, Bookmark, Users } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Plus, BookOpen, Clock, Award, Search, Sparkles, FileText, Copy, Trash2, ChevronRight, Bookmark, Users, Zap, CreditCard } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { cn, formatDate, SUBJECT_LABELS, FREE_EXAM_LIMIT, shortId } from "@/lib/utils";
 import { getSavedExams, deleteExam, saveExam, type SavedExam } from "@/lib/storage";
+import { useAuth } from "@/contexts/AuthContext";
 
 const SUBJECT_ICONS: Record<string, string> = {
   physics: "⚛", mathematics: "∑", chemistry: "⚗", biology: "🧬",
@@ -18,43 +20,41 @@ export default function DashboardPage() {
   const [exams, setExams] = useState<SavedExam[]>([]);
   const [query, setQuery] = useState("");
   const [mounted, setMounted] = useState(false);
+  const [upgrading, setUpgrading] = useState(false);
+  const { profile } = useAuth();
+const router = useRouter();
 
-  useEffect(() => {
-    setExams(getSavedExams());
-    setMounted(true);
-  }, []);
-
-  function handleDelete(id: string) {
-    deleteExam(id);
-    setExams((prev) => prev.filter((e) => e.id !== id));
-  }
-
-  function handleDuplicate(exam: SavedExam) {
-    const copy: SavedExam = {
-      ...exam,
-      id: shortId(),
-      title: exam.title + " (copy)",
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
-    };
-    saveExam(copy);
-    setExams((prev) => [copy, ...prev]);
-  }
-
-  const filtered = exams.filter((e) => {
-    if (!query.trim()) return true;
-    const q = query.toLowerCase();
-    return (
-      e.title.toLowerCase().includes(q) ||
-      e.context.curriculumId.toLowerCase().includes(q) ||
-      (SUBJECT_LABELS[e.context.subject]?.fr ?? "").toLowerCase().includes(q)
-    );
-  });
-
-  const examsGenerated = exams.length;
-  const totalExercises = exams.reduce((s, e) => s + e.exercises.length, 0);
-  const quotaUsed = examsGenerated;
+  const isPro = profile?.subscription?.tier === "individual";
+  const quotaUsed = exams.length;
   const quotaRemaining = Math.max(0, FREE_EXAM_LIMIT - quotaUsed);
+
+  async function handleUpgrade() {
+    if (isPro) {
+      router.push("/pricing");
+      return;
+    }
+    setUpgrading(true);
+    try {
+      const origin = window.location.origin;
+      const res = await fetch("/api/stripe/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          successUrl: `${origin}/pricing/success?session_id={CHECKOUT_SESSION_ID}`,
+          cancelUrl: `${origin}/pricing/cancel`,
+        }),
+      });
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        throw new Error(data.error || "Failed to start checkout");
+      }
+    } catch (error) {
+      console.error("Checkout error:", error);
+      setUpgrading(false);
+    }
+  }
 
   if (!mounted) {
     return (
@@ -109,23 +109,42 @@ export default function DashboardPage() {
           ))}
         </div>
 
-        {/* Free tier quota */}
+        {/* Subscription status */}
         <div className="card p-4 mb-6 flex items-center gap-4">
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-[var(--text)] mb-2">
-              Free plan — <span className="text-[var(--accent)]">{quotaRemaining} exam{quotaRemaining !== 1 ? "s" : ""}</span> remaining
-            </p>
-            <div className="flex items-center gap-2">
-              <div className="flex-1 h-1.5 rounded-full bg-[var(--border)]">
-                <div
-                  className="h-full rounded-full bg-[var(--accent)] transition-all"
-                  style={{ width: `${Math.min(100, (quotaUsed / FREE_EXAM_LIMIT) * 100)}%` }}
-                />
+          {isPro ? (
+            <>
+              <div className="w-10 h-10 rounded-xl bg-[var(--accent)] flex items-center justify-center flex-shrink-0">
+                <Zap size={18} className="text-white" />
               </div>
-              <span className="text-xs text-[var(--text-tertiary)] tabular-nums flex-shrink-0">{quotaUsed}/{FREE_EXAM_LIMIT}</span>
-            </div>
-          </div>
-          <Button variant="secondary" size="sm">Upgrade to Pro</Button>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-[var(--text)] mb-1">Pro plan</p>
+                <p className="text-xs text-[var(--text-tertiary)]">Unlimited exams</p>
+              </div>
+              <Button variant="secondary" size="sm" icon={<CreditCard size={13} />} onClick={() => window.location.href = "/api/stripe/portal"}>
+                Manage billing
+              </Button>
+            </>
+          ) : (
+            <>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-[var(--text)] mb-2">
+                  Free plan — <span className="text-[var(--accent)]">{quotaRemaining} exam{quotaRemaining !== 1 ? "s" : ""}</span> remaining
+                </p>
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 h-1.5 rounded-full bg-[var(--border)]">
+                    <div
+                      className="h-full rounded-full bg-[var(--accent)] transition-all"
+                      style={{ width: `${Math.min(100, (quotaUsed / FREE_EXAM_LIMIT) * 100)}%` }}
+                    />
+                  </div>
+                  <span className="text-xs text-[var(--text-tertiary)] tabular-nums flex-shrink-0">{quotaUsed}/{FREE_EXAM_LIMIT}</span>
+                </div>
+              </div>
+              <Button variant="secondary" size="sm" onClick={handleUpgrade} disabled={upgrading}>
+                {upgrading ? "Loading..." : "Upgrade to Pro"}
+              </Button>
+            </>
+          )}
         </div>
 
         {/* Search */}

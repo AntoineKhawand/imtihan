@@ -16,6 +16,7 @@ export interface UserProfile {
     status: SubscriptionStatus;
     tier: SubscriptionTier;
     stripeCustomerId?: string;
+    stripeSubscriptionId?: string;
     renewsAt?: number;
   };
 }

@@ -65,10 +65,10 @@
 - 📋 Email delivery (Resend)
 
 ### Payments
-- 📋 Stripe integration
-- 📋 Free tier quota enforcement (3 exams)
-- 📋 /pricing page
-- 📋 Subscription management
+- 🔨 Stripe integration
+- 🔨 Free tier quota enforcement (3 exams)
+- 🔨 /pricing page
+- 🔨 Subscription management
 
 ---
 
