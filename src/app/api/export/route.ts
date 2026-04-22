@@ -12,6 +12,7 @@ const RequestSchema = z.object({
     totalPoints: z.number(),
     examType: z.string(),
   }),
+  templateId: z.string().optional().default("classic"),
   exercises: z.array(z.object({
     number: z.number(),
     type: z.string(),
@@ -46,6 +47,44 @@ const SUBJECT_LABELS: Record<string, string> = {
   informatics: "Informatique",
 };
 
+function cleanLatexForWord(text: string): string {
+  let cleaned = text;
+  
+  // Remove math mode markers
+  cleaned = cleaned.replace(/\$\$/g, "");
+  cleaned = cleaned.replace(/\$/g, "");
+  
+  // Replace common text blocks
+  cleaned = cleaned.replace(/\\text\{([^}]+)\}/g, "$1");
+  cleaned = cleaned.replace(/\\mathrm\{([^}]+)\}/g, "$1");
+  cleaned = cleaned.replace(/\\text\s+/g, ""); // fallback for missing braces
+  
+  // Replace common Greek letters & symbols
+  const latexMap: Record<string, string> = {
+    "\\alpha": "α", "\\beta": "β", "\\gamma": "γ", "\\Delta": "Δ", "\\delta": "δ",
+    "\\epsilon": "ε", "\\theta": "θ", "\\lambda": "λ", "\\mu": "μ", "\\pi": "π",
+    "\\rho": "ρ", "\\sigma": "σ", "\\Omega": "Ω", "\\omega": "ω",
+    "\\circ": "°", "\\times": "×", "\\cdot": "·", "\\approx": "≈", "\\neq": "≠",
+    "\\leq": "≤", "\\geq": "≥", "\\infty": "∞", "\\rightarrow": "→", "\\implies": "⇒",
+    "\\rightleftharpoons": "⇌", "\\pm": "±"
+  };
+  
+  for (const [key, val] of Object.entries(latexMap)) {
+    cleaned = cleaned.split(key).join(val);
+  }
+  
+  // Replace fractions: \frac{A}{B} -> A/B
+  cleaned = cleaned.replace(/\\frac\{([^}]+)\}\{([^}]+)\}/g, "($1)/($2)");
+  
+  // Replace square roots
+  cleaned = cleaned.replace(/\\sqrt\{([^}]+)\}/g, "√($1)");
+  
+  // Remove backslashes from remaining basic commands
+  cleaned = cleaned.replace(/\\(sin|cos|tan|ln|log|exp)/g, "$1");
+  
+  return cleaned;
+}
+
 /**
  * Parses a string with markdown-like formatting for bold, italics,
  * and LaTeX-style subscripts/superscripts, and returns an array of
@@ -55,19 +94,17 @@ const SUBJECT_LABELS: Record<string, string> = {
  * - `*text*` becomes italic.
  * - `_{text}` or `_c` becomes subscript.
  * - `^{text}` or `^c` becomes superscript.
- * - \`text\` is stripped of backticks.
+ * - `text` is stripped of backticks.
  */
 function createFormattedTextRuns(
   text: string,
   baseOptions: { size: number; color?: string; font?: string }
 ): TextRun[] {
   const runs: TextRun[] = [];
-  // Regex to capture formatting. The order of alternatives is important.
-  // It captures: 1. bold, 2. italic, 3. subscript-brace, 4. superscript-brace,
-  // 5. single-char subscript, 6. single-char superscript, 7. plain text.
-  const regex = /(\*\*(.+?)\*\*)|(\*(.+?)\*)|(_\{(.+?)\})|(\^\{(.+?)\})|_(.)|\^(.)|([^_*^{}]+)/g;
+  const cleanText = cleanLatexForWord(text.replace(/`(.*?)`/g, '$1'));
 
-  const cleanText = text.replace(/`(.*?)`/g, '$1');
+  // Regex to capture formatting.
+  const regex = /(\*\*(.+?)\*\*)|(\*(.+?)\*)|(_\{(.+?)\})|(\^\{(.+?)\})|_(.)|\^(.)|([^_*^]+)/g;
 
   let match;
   while ((match = regex.exec(cleanText)) !== null) {
@@ -102,10 +139,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Invalid request" }, { status: 400 });
     }
 
-    const { context, exercises, format, header } = parsed.data;
+    const { context, templateId, exercises, format, header } = parsed.data;
 
     if (format === "word") {
-      const buffer = await generateWordDocument(context, exercises, header ?? {});
+      const buffer = await generateWordDocument(context, templateId, exercises, header ?? {});
       return new NextResponse(new Uint8Array(buffer), {
         headers: {
           "Content-Type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
@@ -115,7 +152,7 @@ export async function POST(request: NextRequest) {
     }
 
     // PDF — placeholder: redirect to word for now, full PDF in v1.1
-    const buffer = await generateWordDocument(context, exercises, header ?? {});
+    const buffer = await generateWordDocument(context, templateId, exercises, header ?? {});
     return new NextResponse(new Uint8Array(buffer), {
       headers: {
         "Content-Type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
@@ -130,6 +167,7 @@ export async function POST(request: NextRequest) {
 
 async function generateWordDocument(
   context: z.infer<typeof RequestSchema>["context"],
+  templateId: string,
   exercises: z.infer<typeof RequestSchema>["exercises"],
   header: z.infer<typeof RequestSchema>["header"]
 ): Promise<Buffer> {
@@ -137,13 +175,24 @@ async function generateWordDocument(
   const lang = context.language === "french" ? "fr" : "en";
   const exerciseWord = lang === "fr" ? "Exercice" : "Exercise";
 
+  // Template configuration
+  const isModern = templateId === "modern";
+  const isFormal = templateId === "formal";
+
+  const fontBody = isModern ? "Arial" : isFormal ? "Times New Roman" : "Georgia";
+  const fontHeader = isModern ? "Arial" : isFormal ? "Times New Roman" : "Georgia";
+  const primaryColor = isModern ? "2563eb" : isFormal ? "000000" : "1a5e3f"; // Blue for modern, Black for formal, Green for classic
+  const textColor = isModern ? "1f2937" : isFormal ? "000000" : "333333";
+  const metaColor = isModern ? "6b7280" : isFormal ? "000000" : "666666";
+
   const children: Paragraph[] = [];
 
   // ─── Header ────────────────────────────────────────────────
   if (header?.schoolName) {
     children.push(new Paragraph({
-      children: [new TextRun({ text: header.schoolName, bold: true, size: 24 })],
+      children: [new TextRun({ text: header.schoolName, bold: true, size: 24, font: fontHeader, color: primaryColor })],
       alignment: AlignmentType.CENTER,
+      spacing: { after: 120 },
     }));
   }
 
@@ -152,6 +201,8 @@ async function generateWordDocument(
       text: `${subjectName} — ${context.levelId}`,
       bold: true,
       size: 28,
+      font: fontHeader,
+      color: textColor,
     })],
     alignment: AlignmentType.CENTER,
     heading: HeadingLevel.HEADING_1,
@@ -159,43 +210,49 @@ async function generateWordDocument(
 
   children.push(new Paragraph({
     children: [
-      new TextRun({ text: `Durée: ${context.duration} min`, size: 20 }),
-      new TextRun({ text: "    |    ", size: 20 }),
-      new TextRun({ text: `Total: ${context.totalPoints} points`, size: 20 }),
-      header?.date ? new TextRun({ text: `    |    ${header.date}`, size: 20 }) : new TextRun(""),
+      new TextRun({ text: `Durée: ${context.duration} min`, size: 20, font: fontBody, color: metaColor }),
+      new TextRun({ text: "    |    ", size: 20, font: fontBody, color: metaColor }),
+      new TextRun({ text: `Total: ${context.totalPoints} points`, size: 20, font: fontBody, color: metaColor }),
+      header?.date ? new TextRun({ text: `    |    ${header.date}`, size: 20, font: fontBody, color: metaColor }) : new TextRun(""),
     ],
     alignment: AlignmentType.CENTER,
   }));
 
   children.push(new Paragraph({ text: "" })); // spacer
   children.push(new Paragraph({
-    border: { bottom: { style: BorderStyle.SINGLE, size: 6, color: "1a5e3f" } },
+    border: isFormal ? undefined : { bottom: { style: BorderStyle.SINGLE, size: 6, color: primaryColor } },
     text: "",
   }));
+  if (isFormal) {
+    children.push(new Paragraph({
+      border: { bottom: { style: BorderStyle.DOUBLE, size: 12, color: "000000" } },
+      text: "",
+    }));
+  }
   children.push(new Paragraph({ text: "" }));
 
   // ─── Exercises ─────────────────────────────────────────────
   for (const ex of exercises) {
     children.push(new Paragraph({
       children: [
-        new TextRun({ text: `${exerciseWord} ${ex.number}`, bold: true, size: 24, color: "1a5e3f" }),
-        new TextRun({ text: `  (${ex.points} points)`, size: 20, color: "666666" }),
+        new TextRun({ text: `${exerciseWord} ${isFormal ? String(ex.number) + "." : ex.number}`, bold: true, size: 24, color: primaryColor, font: fontHeader }),
+        new TextRun({ text: `  (${ex.points} points)`, size: 20, color: metaColor, font: fontBody }),
       ],
       heading: HeadingLevel.HEADING_2,
       spacing: { before: 240, after: 120 },
     }));
 
     children.push(new Paragraph({
-      children: createFormattedTextRuns(ex.statement, { size: 22 }),
+      children: createFormattedTextRuns(ex.statement, { size: 22, font: fontBody, color: textColor }),
       spacing: { after: 120 },
     }));
 
     if (ex.subQuestions) {
       for (const sq of ex.subQuestions) {
         const subQuestionRuns: TextRun[] = [
-          new TextRun({ text: `${sq.label}  `, bold: true, size: 22 }),
-          ...createFormattedTextRuns(sq.statement, { size: 22 }),
-          new TextRun({ text: `  (${sq.points} pts)`, size: 20, color: "888888" }),
+          new TextRun({ text: `${sq.label}  `, bold: true, size: 22, font: fontBody, color: textColor }),
+          ...createFormattedTextRuns(sq.statement, { size: 22, font: fontBody, color: textColor }),
+          new TextRun({ text: `  (${sq.points} pts)`, size: 20, color: metaColor, font: fontBody }),
         ];
         children.push(new Paragraph({
           children: subQuestionRuns,
@@ -211,7 +268,7 @@ async function generateWordDocument(
   // ─── Corrigé ──────────────────────────────────────────────
   children.push(new Paragraph({
     pageBreakBefore: true,
-    children: [new TextRun({ text: lang === "fr" ? "CORRIGÉ" : "ANSWER KEY", bold: true, size: 28 })],
+    children: [new TextRun({ text: lang === "fr" ? "CORRIGÉ" : "ANSWER KEY", bold: true, size: 28, font: fontHeader, color: textColor })],
     heading: HeadingLevel.HEADING_1,
     alignment: AlignmentType.CENTER,
   }));
@@ -219,15 +276,15 @@ async function generateWordDocument(
 
   for (const ex of exercises) {
     children.push(new Paragraph({
-      children: [new TextRun({ text: `${exerciseWord} ${ex.number}`, bold: true, size: 24, color: "1a5e3f" })],
+      children: [new TextRun({ text: `${exerciseWord} ${isFormal ? String(ex.number) + "." : ex.number}`, bold: true, size: 24, color: primaryColor, font: fontHeader })],
       heading: HeadingLevel.HEADING_2,
       spacing: { before: 240, after: 120 },
     }));
 
     children.push(new Paragraph({
       children: [
-        new TextRun({ text: lang === "fr" ? "Réponse: " : "Answer: ", bold: true, size: 22 }),
-        ...createFormattedTextRuns(ex.solution.finalAnswer, { size: 22 }),
+        new TextRun({ text: lang === "fr" ? "Réponse: " : "Answer: ", bold: true, size: 22, font: fontBody, color: textColor }),
+        ...createFormattedTextRuns(ex.solution.finalAnswer, { size: 22, font: fontBody, color: textColor }),
       ],
       spacing: { after: 80 },
     }));
@@ -235,7 +292,7 @@ async function generateWordDocument(
     const methodLines = ex.solution.methodology.split("\n");
     for (const line of methodLines) {
       children.push(new Paragraph({
-        children: createFormattedTextRuns(line, { size: 20, color: "444444" }),
+        children: createFormattedTextRuns(line, { size: 20, color: metaColor, font: fontBody }),
         spacing: { after: 40 },
       }));
     }

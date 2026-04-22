@@ -178,6 +178,8 @@ If a request implies scope creep, flag it and point back to this section.
 - **`cn()` from `lib/utils`** for conditional classes. Never string-concat Tailwind.
 - **No default exports** except for Next.js page/layout/route files (which require them).
 - **Error boundaries** around each workflow step so a Claude API failure doesn't crash the whole flow.
+- **SEO First:** All public marketing pages must be server components with a full `metadata` object export including `alternates.canonical` and `openGraph`.
+- **GEO (Generative Engine Optimization):** Use explicit structured data (`<SchemaOrg>`) for FAQ/Product data and update `public/llms.txt` when adding new features or curricula.
 
 ## 11. Testing Strategy (Post-MVP Priority)
 

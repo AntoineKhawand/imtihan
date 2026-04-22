@@ -4,6 +4,7 @@ import { ArrowLeft } from "lucide-react";
 export const metadata = {
   title: "Terms of Service — Imtihan",
   description: "The terms and conditions for using Imtihan.",
+  alternates: { canonical: "/terms" },
 };
 
 const SECTIONS = [

@@ -4,6 +4,7 @@ import { ArrowLeft, Mail, MessageSquare, BookOpen, AlertCircle } from "lucide-re
 export const metadata = {
   title: "Contact — Imtihan",
   description: "Get in touch with the Imtihan team.",
+  alternates: { canonical: "/contact" },
 };
 
 const TOPICS = [

@@ -1,4 +1,12 @@
-"use client";
+import type { Metadata } from "next";
+import { cookies } from "next/headers";
+import { SchemaOrg } from "@/components/SchemaOrg";
+
+export const metadata: Metadata = {
+  title: "Imtihan — Générateur d'examens IA pour enseignants au Liban",
+  description: "Créez des examens alignés sur le Bac Libanais, Bac Français, IB et l'Université en quelques secondes. Corrigé complet inclus. 2 examens gratuits.",
+  alternates: { canonical: "/" },
+};
 import Link from "next/link";
 import {
   ArrowRight,
@@ -17,40 +25,13 @@ import {
   Sparkles,
   Download,
 } from "lucide-react";
-import { motion } from "framer-motion";
+import { MotionHero, MotionStats, MotionHowItWorks, MotionStreamingPreview } from "@/components/landing/LandingMotion";
 
 const STATS = [
   { value: "4",   label: "Curricula",  sub: "Bac Libanais · Bac Français · IB · Université" },
   { value: "32",  label: "Subjects",   sub: "Sciences · Humanités · Langues · Gestion" },
   { value: "3",   label: "Languages",  sub: "Français · English · العربية" },
   { value: "∞",   label: "Exercises",  sub: "Each one verified & unique" },
-];
-
-const HOW_IT_WORKS = [
-  {
-    step: "01",
-    Icon: MessageSquare,
-    title: "Describe in plain language",
-    body: "Type what you need — curriculum, level, subject, chapters, duration. Or just upload your course notes and let Imtihan read them.",
-  },
-  {
-    step: "02",
-    Icon: SlidersHorizontal,
-    title: "Review & fine-tune",
-    body: "Confirm the detected context, adjust the difficulty mix, choose your exam structure and template. Full control, no forms to dig through.",
-  },
-  {
-    step: "03",
-    Icon: Sparkles,
-    title: "Generate in seconds",
-    body: "Imtihan writes every exercise and its full corrigé — with methodology, not just the final answer. Watch it stream live.",
-  },
-  {
-    step: "04",
-    Icon: Download,
-    title: "Export & teach",
-    body: "Download a polished Word or PDF with your school header. Ready to print in one click.",
-  },
 ];
 
 const SUBJECT_CATEGORIES = [
@@ -121,9 +102,64 @@ const TESTIMONIALS = [
   },
 ];
 
-export default function LandingPage() {
+const FAQ_ITEMS = [
+  {
+    q: "Which curricula are supported?",
+    a: "Imtihan is designed specifically for the Lebanese Baccalaureate (EB9 to Terminale), the French Baccalaureate (Seconde to Terminale), the International Baccalaureate (IB), as well as university courses."
+  },
+  {
+    q: "Is the grading key (corrigé) included?",
+    a: "Yes. For every generated exam, Imtihan produces a detailed grading key. This includes not just the final answer, but a step-by-step methodology."
+  },
+  {
+    q: "How long does it take to generate an exam?",
+    a: "Thanks to Gemini 2.5 Flash, generating a complete exam (3 to 4 exercises) and its grading key usually takes under 30 seconds."
+  },
+  {
+    q: "Can I export the exam for printing?",
+    a: "Yes, all exams and grading keys can be exported as PDFs or Word documents (.docx), ready to be distributed to your students."
+  },
+  {
+    q: "Is it free?",
+    a: "You can generate your first 2 complete exams for free (no credit card required). After that, the Pro subscription unlocks unlimited generation."
+  }
+];
+
+export default async function LandingPage() {
+  const cookieStore = await cookies();
+  const session = cookieStore.get("__session");
+  const isAuthenticated = !!session;
+
+  const faqSchema = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": FAQ_ITEMS.map((item) => ({
+      "@type": "Question",
+      "name": item.q,
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": item.a
+      }
+    }))
+  };
+
+  const softwareSchema = {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Imtihan",
+    "applicationCategory": "EducationApplication",
+    "operatingSystem": "Web",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD",
+      "description": "2 free exams"
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[var(--bg)]">
+      <SchemaOrg schema={[softwareSchema, faqSchema]} />
 
       {/* ── NAV ─────────────────────────────────────────────────────── */}
       <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 md:px-10 h-16 bg-[var(--bg)]/75 backdrop-blur-xl border-b border-[var(--border)]/60 transition-colors">
@@ -140,18 +176,29 @@ export default function LandingPage() {
           <Link href="#pricing" className="hover:text-[var(--text)] transition-colors">Pricing</Link>
         </div>
         <div className="flex items-center gap-3">
-          <Link
-            href="/auth/login"
-            className="hidden md:inline-flex items-center text-sm text-[var(--text-secondary)] hover:text-[var(--text)] transition-colors"
-          >
-            Sign in
-          </Link> {/* TODO: Translate "Sign in" */}
-          <Link
-            href="/create"
-            className="inline-flex items-center gap-1.5 h-9 px-4 rounded-xl bg-[var(--accent)] text-white text-sm font-medium hover:opacity-90 transition-opacity shadow-sm"
-          >
-            Try free <ArrowRight size={14} />
-          </Link>
+          {isAuthenticated ? (
+            <Link
+              href="/dashboard"
+              className="inline-flex items-center gap-1.5 h-9 px-4 rounded-xl bg-[var(--text)] text-[var(--bg)] text-sm font-medium hover:opacity-90 transition-opacity shadow-sm"
+            >
+              Dashboard <ArrowRight size={14} />
+            </Link>
+          ) : (
+            <>
+              <Link
+                href="/auth/login"
+                className="hidden md:inline-flex items-center text-sm text-[var(--text-secondary)] hover:text-[var(--text)] transition-colors"
+              >
+                Sign in
+              </Link>
+              <Link
+                href="/create"
+                className="inline-flex items-center gap-1.5 h-9 px-4 rounded-xl bg-[var(--accent)] text-white text-sm font-medium hover:opacity-90 transition-opacity shadow-sm"
+              >
+                Try free <ArrowRight size={14} />
+              </Link>
+            </>
+          )}
         </div>
       </nav>
 
@@ -161,11 +208,7 @@ export default function LandingPage() {
         <div className="absolute bottom-0 left-0 w-[500px] h-[500px] rounded-full bg-violet-400 opacity-[0.03] blur-3xl translate-y-1/3 -translate-x-1/3 pointer-events-none" />
 
         <div className="relative max-w-5xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-          >
+          <MotionHero>
             {/* Badge */} {/* TODO: Translate "2 free exams — no credit card required" */}
             <div className="group inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-[var(--border)] bg-[var(--surface)] text-xs text-[var(--text-secondary)] mb-8 shadow-sm hover:border-[var(--accent)]/30 hover:bg-[var(--accent)]/5 transition-all duration-300 cursor-default" aria-label="2 free exams — no credit card required">
               <Star size={10} className="text-[var(--accent)] fill-[var(--accent)] group-hover:rotate-[72deg] transition-transform duration-500" />
@@ -179,7 +222,7 @@ export default function LandingPage() {
               <br />
               <span className="italic text-transparent bg-clip-text bg-gradient-to-r from-[var(--accent)] to-emerald-400">built in minutes.</span>
             </h1>
-          </motion.div>
+          </MotionHero>
 
           <p className="max-w-lg text-lg text-[var(--text-secondary)] leading-relaxed mb-2 text-pretty">
             Describe what you need in plain language. Imtihan generates a complete, curriculum-aligned exam with detailed solutions in seconds.
@@ -204,23 +247,7 @@ export default function LandingPage() {
           </div>
 
           {/* Stats */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true, amount: 0.5 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-20 pt-16 border-t border-[var(--border)]"
-          >
-            {STATS.map((stat, i) => (
-              <motion.div key={stat.label} className="group" initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: 0.3 + i * 0.1 }}>
-                <dl>
-                  <dt className="serif text-4xl font-light text-[var(--accent)] mb-1 group-hover:scale-105 transition-transform origin-left">{stat.value}</dt>
-                  <dd className="text-sm font-medium text-[var(--text)] mb-0.5">{stat.label}</dd>
-                  <dd className="text-xs text-[var(--text-tertiary)] leading-relaxed">{stat.sub}</dd>
-                </dl>
-              </motion.div>
-            ))}
-          </motion.div>
+          <MotionStats stats={STATS} />
         </div>
       </section>
 
@@ -242,26 +269,7 @@ export default function LandingPage() {
             </Link>
           </div>
 
-          <motion.div className="grid md:grid-cols-4 gap-6" initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.3 }} variants={{ visible: { transition: { staggerChildren: 0.1 } } }}>
-            {HOW_IT_WORKS.map((step, i) => (
-              <motion.div key={step.step} className="relative" variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }} transition={{ duration: 0.5 }}>
-                {/* connector line */}
-                {i < HOW_IT_WORKS.length - 1 && (
-                  <div className="hidden md:block absolute top-5 left-full w-6 border-t border-dashed border-[var(--border-strong)]" />
-                )}
-                <div className="card p-6 h-full bg-[var(--surface)] hover:-translate-y-1 hover:shadow-xl hover:shadow-black/[0.05] transition-all duration-300 group ring-1 ring-black/[0.02]">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="w-9 h-9 rounded-xl bg-[var(--accent)] flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform duration-300">
-                      <step.Icon size={16} className="text-white" />
-                    </div>
-                    <span className="serif text-2xl font-light text-[var(--text-tertiary)]">{step.step}</span>
-                  </div>
-                  <h3 className="font-semibold text-[var(--text)] mb-2 leading-snug text-sm">{step.title}</h3>
-                  <p className="text-xs text-[var(--text-secondary)] leading-relaxed">{step.body}</p>
-                </div>
-              </motion.div>
-            ))}
-          </motion.div>
+          <MotionHowItWorks />
         </div>
       </section>
 
@@ -283,63 +291,7 @@ export default function LandingPage() {
                 <span className="text-xs text-[var(--text-tertiary)]">imtihan.app/create</span>
               </div>
             </div>
-            <motion.div className="p-6 md:p-10 min-h-[340px] flex flex-col gap-5" initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.5 }} variants={{ visible: { transition: { staggerChildren: 0.8 } } }}>
-              {/* User message */}
-              <motion.div className="flex items-start gap-3 justify-end" variants={{ hidden: { opacity: 0, x: 50 }, visible: { opacity: 1, x: 0 } }} transition={{ type: "spring", stiffness: 100 }}>
-                <div className="flex-1 max-w-md bg-[var(--accent)] rounded-2xl rounded-tr-sm px-4 py-3 text-sm text-white leading-relaxed shadow-lg">
-                  Examen de Philosophie pour Terminale L Bac Libanais, chapitres éthique et épistémologie, 2 exercices, 1h30, en français
-                </div>
-                <div className="w-8 h-8 rounded-lg bg-[var(--bg-subtle)] border border-[var(--border)] flex items-center justify-center flex-shrink-0 mt-1 text-xs text-[var(--text-secondary)] font-medium">T</div>
-              </motion.div>
-              {/* AI response */}
-              <motion.div className="flex items-start gap-3" variants={{ hidden: { opacity: 0, x: -50 }, visible: { opacity: 1, x: 0 } }} transition={{ type: "spring", stiffness: 100 }}>
-                <div className="w-8 h-8 rounded-lg bg-[var(--accent)] flex items-center justify-center flex-shrink-0 mt-1">
-                  <span className="text-white text-xs font-serif">إ</span>
-                </div>
-                <div className="flex-1 bg-[var(--bg-subtle)] rounded-2xl rounded-tl-sm px-4 py-4 shadow-lg">
-                  <p className="text-xs text-[var(--text-tertiary)] mb-3 font-medium uppercase tracking-wide">Exam context identified</p>
-                  <motion.div initial="hidden" animate="visible" variants={{ visible: { transition: { staggerChildren: 0.05 } } }} className="grid grid-cols-2 sm:grid-cols-3 gap-x-6 gap-y-2.5 mb-4">
-                    {[
-                      ["Curriculum", "Bac Libanais"],
-                      ["Level", "Terminale L"],
-                      ["Subject", "Philosophie"],
-                      ["Language", "Français"],
-                      ["Duration", "1h 30"],
-                      ["Exercises", "2"],
-                    ].map(([k, v]) => (
-                      <motion.div key={k} className="flex flex-col gap-0.5" variants={{ hidden: { opacity: 0, y: 10 }, visible: { opacity: 1, y: 0 } }}>
-                        <span className="text-[10px] text-[var(--text-tertiary)] uppercase tracking-wide">{k}</span>
-                        <span className="text-xs font-semibold text-[var(--text)]">{v}</span>
-                      </motion.div>
-                    ))}
-                  </motion.div>
-                  <div className="flex items-center gap-2 pt-3 border-t border-[var(--border)]">
-                    <div className="w-5 h-5 rounded-full bg-[var(--accent)] flex items-center justify-center">
-                      <svg width="8" height="6" viewBox="0 0 8 6" fill="none"><path d="M1 3L3 5L7 1" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
-                    </div>
-                    <span className="text-xs text-[var(--accent)] font-medium">High confidence · Generating exam…</span>
-                  </div>
-                </div>
-              </motion.div>
-              {/* Streaming preview */}
-              <motion.div className="flex items-start gap-3" variants={{ hidden: { opacity: 0, x: -50 }, visible: { opacity: 1, x: 0 } }} transition={{ type: "spring", stiffness: 100 }}>
-                <div className="w-8 h-8 rounded-lg bg-[var(--accent-light)] flex items-center justify-center flex-shrink-0 mt-1">
-                  <Sparkles size={14} className="text-[var(--accent)]" />
-                </div>
-                <div className="flex-1 bg-[var(--bg-subtle)] rounded-2xl rounded-tl-sm px-4 py-4 shadow-lg">
-                  <div className="flex items-center gap-2 mb-3">
-                    <div className="w-2 h-2 rounded-full bg-[var(--accent)] animate-pulse" />
-                    <span className="text-xs font-medium text-[var(--accent)]">Exercice 1 — Éthique et liberté</span>
-                    <span className="text-[10px] text-[var(--text-tertiary)] ml-auto">8 pts · Moyen</span>
-                  </div>
-                  <div className="space-y-1.5">
-                    <div className="h-2.5 bg-[var(--border)] rounded w-full animate-pulse" style={{ animationDelay: '0.1s' }} />
-                    <div className="h-2.5 bg-[var(--border)] rounded w-4/5 animate-pulse" style={{ animationDelay: '0.2s' }} />
-                    <div className="h-2.5 bg-[var(--border)] rounded w-3/5 animate-pulse" style={{ animationDelay: '0.3s' }} />
-                  </div>
-                </div>
-              </motion.div>
-            </motion.div>
+            <MotionStreamingPreview />
           </div>
         </div>
       </section>
@@ -559,6 +511,25 @@ export default function LandingPage() {
                 Contact sales
               </Link>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── FAQ ──────────────────────────────────────────────────────── */}
+      <section className="px-6 md:px-10 py-24 border-t border-[var(--border)]">
+        <div className="max-w-3xl mx-auto">
+          <div className="mb-12 text-center">
+            <p className="text-xs uppercase tracking-widest text-[var(--accent)] font-medium mb-4">Frequently Asked Questions</p>
+            <h2 className="serif text-display-lg text-[var(--text)]">Everything you need to know</h2>
+          </div>
+          
+          <div className="space-y-6">
+            {FAQ_ITEMS.map((item, i) => (
+              <div key={i} className="card p-6 bg-[var(--surface)] hover:shadow-md transition-shadow">
+                <h3 className="text-[var(--text)] font-semibold mb-2">{item.q}</h3>
+                <p className="text-[var(--text-secondary)] text-sm leading-relaxed">{item.a}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>

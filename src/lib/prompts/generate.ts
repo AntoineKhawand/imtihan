@@ -116,25 +116,16 @@ MARK SCHEME RULES (MANDATORY for IB — these are non-negotiable):
 
 const SUBJECT_CONVENTIONS: Record<string, Record<string, string>> = {
   mathematics: {
-    "bac-libanais": `MATH FORMAT (Bac Libanais / Terminale S):
-- Typical structure: 3–4 exercises, 20 points total.
-- Sequences: convergence, limits, raisonnement par récurrence.
-- Derivatives: tableau de variations, extrema, tangent equations.
-- Second degree / polynomials: discriminant, factored form, sign table.
-- Trigonometry: formulas de duplication, résolution d'équations trigonométriques.
-- Complex numbers: module, argument, forme trigonométrique, racines nième.
-- Statistics / probability: loi normale, binomiale, espérance, variance.
-- Integration: primitives, intégrale définie, calcul d'aire.
+    "bac-libanais": `MATH FORMAT (Bac Libanais):
+- Adapt topics to the specified level (from Collège / EB4-EB9 to Lycée / Terminale).
+- For Lycée: Typical structure is 3–4 exercises, 20 points total. Topics: sequences, derivatives, integration, complex numbers, probability.
+- For Collège: Fractions, equations, proportionality, basic geometry, Thales/Pythagoras.
 Always include a "Données :" block for formulas given. Specify calculator use if applicable.`,
 
-    "bac-francais": `MATH FORMAT (Bac Français / Terminale):
-- 3 exercises + possibly a "problème" synthèse, total 20 points.
-- Typically organised with Partie A (guided), Partie B (more open).
-- Functions: limite, continuité, dérivabilité, étude complète.
-- Intégration: calcul de primitives, intégrale, calcul d'aire entre courbes.
-- Suites: sens de variation, convergence, démonstration par récurrence.
-- Probabilités: loi binomiale, loi normale, intervalle de fluctuation.
-- Géométrie dans l'espace: vecteurs, droites, plans, distances.
+    "bac-francais": `MATH FORMAT (Bac Français):
+- Adapt topics to the specified level (from Collège / 5ème-3ème to Lycée / Terminale).
+- For Lycée: 3 exercises + possibly a "problème" synthèse, total 20 points. Functions, integration, sequences, probability, 3D geometry.
+- For Collège: Arithmetic, literal calculus, proportionality, basic statistics, transformations.
 Use "On se place dans un repère orthonormal..." for geometry. Use "On admet que..." when giving a result to use without proof.`,
 
     ib: `MATH FORMAT (IB Mathematics AA / AI):
@@ -149,21 +140,20 @@ HL topics: All SL + Complex numbers, Proof, Series/sums, Differential equations,
   },
 
   physics: {
-    "bac-libanais": `PHYSICS FORMAT (Bac Libanais / Terminale S):
-- Typical structure: 3 exercises (Mécanique, Électricité, Optique ou Ondes), 20 points.
+    "bac-libanais": `PHYSICS FORMAT (Bac Libanais):
+- Adapt topics to the specified level (from Collège / EB7-EB9 to Lycée / Terminale).
+- For Lycée: 3 exercises (Mécanique, Électricité, Optique ou Ondes), 20 points.
 - Each exercise opens with a described scenario, then "Données :" listing constants.
-- Mécanique: 2e loi de Newton, énergie cinétique/potentielle, quantité de mouvement.
-- Électricité: circuits RC/RL/RLC, loi d'Ohm, résonance.
-- Optique: lentilles convergentes/divergentes, relation de conjugaison: $\\frac{1}{\\overline{SA'}} - \\frac{1}{\\overline{SA}} = \\frac{1}{f'}$.
-- Ondes: célérité, période, fréquence, phénomènes ondulatoires.
+- For Collège: Basic mechanics (forces, mass/weight), simple circuits, basic optics.
 - Every formula must be stated in literal form before numerical application.
 - Use "Donner l'expression littérale de..." before "Calculer la valeur numérique de...".`,
 
-    "bac-francais": `PHYSICS FORMAT (Bac Français / Terminale — Physique-Chimie):
-- 3 exercises with thematic labels (e.g., "Mécanique", "Ondes et signaux", "Chimie organique").
+    "bac-francais": `PHYSICS FORMAT (Bac Français):
+- Adapt topics to the specified level (from Collège / 5ème-3ème to Lycée / Terminale).
+- For Lycée: 3 exercises with thematic labels.
 - Each starts with a documentary context (article, experiment description).
 - Data table format: "Données : [tableau ou liste]".
-- Physique: mouvement dans un champ uniforme, énergie, ondes électromagnétiques, chimie des solutions.
+- For Collège: Energy sources, simple electrical circuits, light, basic forces.
 - Use "Aide :" when providing a hint for a difficult sub-question.
 - "Document n°" to reference any provided figure, graph, or table.
 - Required: "Faire une application numérique" after every literal expression.`,
@@ -179,21 +169,31 @@ HL topics: All SL + Complex numbers, Proof, Series/sums, Differential equations,
   },
 
   chemistry: {
-    "bac-libanais": `CHEMISTRY FORMAT (Bac Libanais / Terminale S):
-- 2–3 exercises covering Chimie organique, Acido-basicité, Oxydoréduction, Cinétique.
+    "bac-libanais": `CHEMISTRY FORMAT (Bac Libanais):
+- Adapt topics to the specified level (from Collège / EB7-EB9 to Lycée / Terminale).
+- For Lycée: 2–3 exercises (Chimie organique, Acido-basicité, Oxydoréduction, Cinétique).
+- For Collège: States of matter, atoms/molecules, basic chemical reactions, solutions.
 - Every reaction equation must be balanced: "Écrire et équilibrer l'équation-bilan".
-- Organic: IUPAC naming, functional groups, reaction types (substitution, addition, elimination).
-- Acid-base: pH calculations, Ka, pKa, titration curves, Henderson-Hasselbalch.
-- Electrochemistry: redox equations, half-reaction method, piles (cells).
-- Données : include all Ka, Kb, E°, molar masses needed.`,
+- Données : include all Ka, Kb, E°, molar masses needed.
+- CHEMICAL FORMULA NOTATION (CRITICAL):
+  * Subscripts: write H₂O, CO₂, NaCl, CuSO₄, Ca(OH)₂ — NOT H2O, CO2, CuSO4
+  * Charges: write Cu²⁺, SO₄²⁻, Fe³⁺, OH⁻ — NOT Cu+2, SO4-2
+  * State symbols: (aq), (s), (l), (g) — always in parentheses
+  * Coefficients BEFORE formulas: 2H₂O, 3NaCl — NOT H2O2, NaCl3
+  * For mhchem in JSON: use \\ce{H2O}, \\ce{Cu^{2+}}, \\ce{SO4^{2-}} with braces around each formula`,
 
-    "bac-francais": `CHEMISTRY FORMAT (Bac Français / Terminale — Physique-Chimie):
-- Integrated with Physics paper; chemistry portion ~40% of total.
-- Chimie organique: identification de fonctions, mécanismes réactionnels (addition nucléophile, substitution).
-- Solutions: titrage, courbe de titrage, équivalence.
-- Thermochimie: enthalpie, énergie de liaison.
+    "bac-francais": `CHEMISTRY FORMAT (Bac Français):
+- Adapt topics to the specified level (from Collège / 5ème-3ème to Lycée / Terminale).
+- For Lycée: Integrated with Physics. Organic chemistry, titrations, thermochemistry.
+- For Collège: Mixtures, pH of common liquids, structure of matter, combustion.
 - "Écrire l'équation de la réaction" — always balance and include state symbols (aq), (l), (g), (s).
-- "Donner le nom systématique de..." for IUPAC naming.`,
+- "Donner le nom systématique de..." for IUPAC naming.
+- CHEMICAL FORMULA NOTATION (CRITICAL):
+  * Subscripts: write H₂O, CO₂, NaCl, CuSO₄, Ca(OH)₂ — NOT H2O, CO2, CuSO4
+  * Charges: write Cu²⁺, SO₄²⁻, Fe³⁺, OH⁻ — NOT Cu+2, SO4-2
+  * State symbols: (aq), (s), (l), (g) — always in parentheses
+  * Coefficients BEFORE formulas: 2H₂O, 3NaCl — NOT H2O2, NaCl3
+  * For mhchem in JSON: use \\ce{H2O}, \\ce{Cu^{2+}}, \\ce{SO4^{2-}} with braces around each formula`,
 
     ib: `CHEMISTRY FORMAT (IB Chemistry SL/HL):
 - Start with context: reaction in industry, environmental issue, biological system.
@@ -202,22 +202,28 @@ HL topics: All SL + Complex numbers, Proof, Series/sums, Differential equations,
 - HL only: organic mechanism arrow-pushing, crystal field theory, entropy/Gibbs.
 - "Deduce" for predicting products; "Identify" for naming compounds/functional groups.
 - Green chemistry context appreciated (atom economy, percentage yield).
-- For titration: always ask students to "State one indicator and its colour change".`,
+- For titration: always ask students to "State one indicator and its colour change".
+- CHEMICAL FORMULA NOTATION (CRITICAL):
+  * Use IB notation: mol dm-3 (not mol/L), m s-1 (not m/s)
+  * Subscripts: write H2O, CO2, NaCl, CuSO4, Ca(OH)2 -- NOT H2O, CO2, CuSO4
+  * Charges: write Cu2+, SO4 2-, Fe3+, OH- -- NOT Cu+2, SO4-2
+  * State symbols: (aq), (s), (l), (g) -- always in parentheses
+  * For mhchem in JSON: use \\ce{H2O}, \\ce{Cu^{2+}}, \\ce{SO4^{2-}} with braces around each formula`,
   },
 
   biology: {
-    "bac-libanais": `BIOLOGY FORMAT (Bac Libanais / SVT / Terminale S):
-- 3–4 exercises covering Génétique, Neurophysiologie, Immunologie, Évolution, Reproduction.
+    "bac-libanais": `BIOLOGY FORMAT (Bac Libanais / SVT):
+- Adapt topics to the specified level (from Collège / EB7-EB9 to Lycée / Terminale).
+- For Lycée: 3–4 exercises covering Génétique, Neurophysiologie, Immunologie.
+- For Collège: Digestion, respiration, environment, simple genetics.
 - Heavily document-based: diagrams, micrographs, experimental results provided.
 - Questions follow: "Analyser le document", "En exploitant le document, expliquer...".
-- Genetics: cross problems, Punnett square, inheritance patterns.
-- Physiology: draw and annotate diagrams ("Légender le schéma ci-dessous").
 - "Rédiger un texte organisé" for essay-type questions (structured paragraph).`,
 
-    "bac-francais": `BIOLOGY FORMAT (Bac Français / SVT / Terminale):
+    "bac-francais": `BIOLOGY FORMAT (Bac Français / SVT):
+- Adapt topics to the specified level (from Collège / 5ème-3ème to Lycée / Terminale).
 - Document analysis is central — always include a stimulus (figure, data, text extract).
 - Three parts typically: Partie 1 (QCM), Partie 2 (Analyse), Partie 3 (Synthèse/rédaction).
-- Command terms: "Exploiter", "Analyser", "Relier", "Réaliser un schéma bilan".
 - Final question often: "Rédiger un texte de synthèse" (structured written response).
 - Award marks for scientific vocabulary AND logical structure of the answer.`,
 
@@ -457,8 +463,43 @@ You have been given a document uploaded by the teacher (textbook chapter, past e
 1. All calculations must be correct — verify every numerical answer before writing it.
 2. Numbers must be realistic: no negative masses, no speeds exceeding c, no impossible concentrations.
 3. Each exercise must stay within the selected chapters — no out-of-scope content.
-4. MATH NOTATION — JSON requires double-escaped backslashes: write \\\\frac, \\\\sqrt, \\\\alpha, \\\\vec, \\\\int. Single backslash is INVALID inside a JSON string and will crash the parser. Correct: "$\\\\frac{a}{b}$". Wrong: "$\\frac{a}{b}$".
-5. OUTPUT: Start your response with [ and end with ]. Output ONLY the raw JSON array — no prose, no markdown fences, no explanation.
+4. MATH & CHEMISTRY NOTATION — JSON requires double-escaped backslashes: write \\frac, \\sqrt, \\alpha, \\vec, \\int. For chemical equations, you MUST use mhchem WITH BRACES: \\ce{CH4 + 2O2 -> CO2 + 2H2O}. NEVER write \\ce without braces (e.g. \\ceCH4 is INVALID). Single backslash is INVALID inside a JSON string and will crash the parser.
+5. VISUALS — Use the following for visual elements:
+   a) TABLES: Use Markdown table syntax with pipes:
+       | x | f(x) |
+       |---|------|
+       | 0 |  1   |
+       | 1 |  3   |
+   b) GRAPHS/FUNCTIONS: Use Mermaid xychart-beta:
+       \`\`\`mermaid
+       xychart-beta
+           title "Function f(x) = x²"
+           x-axis [0, 1, 2, 3]
+           y-axis [0, 2, 4, 6]
+           line [0, 1, 4, 9]
+       \`\`\`
+   c) CIRCUITS/DIAGRAMS: Use Mermaid flowchart:
+       \`\`\`mermaid
+       flowchart LR
+           A[Battery] --> B[Resistor]
+           B --> C[LED]
+       \`\`\`
+   d) ORGANIC MECHANISMS: Use Mermaid flowchart with arrows:
+       \`\`\`mermaid
+       flowchart TD
+           A[CH3-Br] --> B[CH3COO-]
+           B -->|attack| C[Transition State]
+       \`\`\`
+   e) DATA PLOTS: Use Mermaid xychart-beta for experimental data:
+       \`\`\`mermaid
+       xychart-beta
+           title "Absorption vs Concentration"
+           x-axis [0, 10, 20, 30, 40]
+           y-axis [0, 0.2, 0.4, 0.6, 0.8]
+           line [0.05, 0.18, 0.42, 0.65, 0.79]
+       \`\`\`
+   IMPORTANT: Close all mermaid code blocks with \`\`\` (three backticks, no language) — NOT with ```javascript or any other language name.
+6. OUTPUT: Start your response with [ and end with ]. Output ONLY the raw JSON array — no prose, no markdown fences, no explanation.
 
 SOLUTION QUALITY — The corrigé is what differentiates Imtihan from a simple question generator:
 - Write the methodology as numbered steps in the exam language ("**Étape 1 :**", "**Step 1:**", "**الخطوة ١ :**").
@@ -500,7 +541,7 @@ export function buildGenerateUserPrompt(context: ExamContext): string {
 - Medium: ${Math.round(context.difficultyMix.medium * context.exerciseCount)} exercise(s) (${Math.round(context.difficultyMix.medium * 100)}%)
 - Hard:   ${Math.round(context.difficultyMix.hard   * context.exerciseCount)} exercise(s) (${Math.round(context.difficultyMix.hard   * 100)}%)`;
 
-  return `Generate ${context.exerciseCount} exercises. Reply with ONLY a JSON array starting with [ — no other text.
+  return `Generate ${context.exerciseCount} exercises. Reply with ONLY a JSON array starting with [ and ending with ] — no markdown, no prose, no explanation. Output must be valid parseable JSON.
 
 Curriculum : ${context.curriculumId}
 Level      : ${context.levelId}
@@ -540,5 +581,5 @@ Curriculum: ${context.curriculumId} | Level: ${context.levelId} | Subject: ${con
 
 ${chapterBlock}
 
-Return ONLY a single JSON exercise object (not an array). No prose, no explanation.`;
+Return ONLY a single JSON exercise object (not an array). No markdown, no prose, no explanation. Output must be valid parseable JSON.`;
 }

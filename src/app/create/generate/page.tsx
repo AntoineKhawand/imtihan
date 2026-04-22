@@ -24,6 +24,7 @@ export default function GeneratePage() {
   const [streamText, setStreamText] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [regeneratingId, setRegeneratingId] = useState<string | null>(null);
+  const [transformingId, setTransformingId] = useState<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
 
   const [editingExercise, setEditingExercise] = useState<Exercise | null>(null);
@@ -31,9 +32,9 @@ export default function GeneratePage() {
   const [bankToast, setBankToast] = useState<string | null>(null);
   const [uploadedDoc, setUploadedDoc] = useState<{ base64: string; type: string } | null>(null);
 
-  function persistExercises(next: Exercise[], ctx: ExamContext | null = context, tmpl: string = templateId) {
+  function persistExercises(next: Exercise[], ctx: ExamContext | null = context) {
     sessionStorage.setItem("imtihan_exercises", JSON.stringify(next));
-    if (ctx) sessionStorage.setItem("imtihan_exercises_key", JSON.stringify({ c: ctx, t: tmpl }));
+    if (ctx) sessionStorage.setItem("imtihan_exercises_key", JSON.stringify({ c: ctx }));
   }
 
   useEffect(() => {
@@ -58,14 +59,14 @@ export default function GeneratePage() {
       // instead of hammering the Gemini API again.
       const cachedEx = sessionStorage.getItem("imtihan_exercises");
       const cachedKey = sessionStorage.getItem("imtihan_exercises_key");
-      const currentKey = JSON.stringify({ c: ctx, t: tmpl });
+      const currentKey = JSON.stringify({ c: ctx });
       if (cachedEx && cachedKey === currentKey) {
         try {
           const parsed = JSON.parse(cachedEx) as Exercise[];
           if (parsed.length > 0) { setExercises(parsed); setStatus("done"); }
         } catch { /* ignore */ }
       } else if (cachedEx && cachedKey !== currentKey) {
-        // Context/template changed — cached exercises are stale.
+        // Context changed — cached exercises are stale.
         sessionStorage.removeItem("imtihan_exercises");
         sessionStorage.removeItem("imtihan_exercises_key");
       }
@@ -206,6 +207,36 @@ export default function GeneratePage() {
       }
     } finally {
       setRegeneratingId(null);
+    }
+  }
+
+  async function handleTransform(id: string, type: "table" | "image") {
+    if (!context) return;
+    const exercise = exercises.find(e => e.id === id);
+    if (!exercise) return;
+    
+    setTransformingId(id);
+    try {
+      const res = await fetch("/api/generate/transform", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ exercise, type, language: context.language }),
+      });
+
+      if (!res.ok) return;
+      
+      const data = await res.json();
+      if (data.success && data.exercise) {
+        setExercises((prev) => {
+          const next = prev.map(e => e.id === id ? { ...data.exercise, id, number: e.number } : e);
+          persistExercises(next);
+          return next;
+        });
+      }
+    } catch {
+      // Ignore error for now
+    } finally {
+      setTransformingId(null);
     }
   }
 
@@ -440,8 +471,9 @@ export default function GeneratePage() {
                     onRemove={handleRemove}
                     onEdit={handleEdit}
                     onSaveToBank={handleSaveToBank}
+                    onTransform={handleTransform}
                     savedToBank={savedIds.has(exercise.id)}
-                    isRegenerating={regeneratingId === exercise.id}
+                    isRegenerating={regeneratingId === exercise.id || transformingId === exercise.id}
                   />
                 </div>
               ))}

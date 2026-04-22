@@ -5,119 +5,9 @@ import Link from "next/link";
 import { Plus, Search, Users, Heart, Download, BookOpen, Eye, X, Copy, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { cn, SUBJECT_LABELS } from "@/lib/utils";
+import { useAuth } from "@/contexts/AuthContext";
 
-// ─── Featured / example community exams ────────────────────────────────────
-// In a real deployment these would come from a Supabase table.
-const FEATURED_EXAMS = [
-  {
-    id: "f1",
-    title: "Physique — Mécanique et Électromagnétisme",
-    subject: "physics",
-    curriculum: "Bac Libanais",
-    level: "Terminale S",
-    language: "Français",
-    exerciseCount: 3,
-    totalPoints: 20,
-    duration: 120,
-    difficulty: { easy: 1, medium: 1, hard: 1 },
-    author: "M. Sami Khoury",
-    school: "Lycée Verdun International",
-    likes: 47,
-    downloads: 124,
-    tags: ["mécanique", "électromagnétisme", "loi d'Ohm"],
-    preview: "Exercice 1 — Un corps de masse m = 2 kg est lancé sur un plan incliné à θ = 30°...",
-  },
-  {
-    id: "f2",
-    title: "IB Chemistry HL — Organic & Equilibria",
-    subject: "chemistry",
-    curriculum: "IB Diploma",
-    level: "DP Year 2 (HL)",
-    language: "English",
-    exerciseCount: 4,
-    totalPoints: 50,
-    duration: 90,
-    difficulty: { easy: 1, medium: 2, hard: 1 },
-    author: "Ms. Lara Abi Nader",
-    school: "International College Beirut",
-    likes: 82,
-    downloads: 203,
-    tags: ["organic chemistry", "equilibria", "SN2", "Le Chatelier"],
-    preview: "Q1 — Draw the structural formula of 2-methylpropan-1-ol and classify it as primary, secondary, or tertiary...",
-  },
-  {
-    id: "f3",
-    title: "Mathématiques — Analyse et Fonctions",
-    subject: "mathematics",
-    curriculum: "Bac Français",
-    level: "Première",
-    language: "Français",
-    exerciseCount: 4,
-    totalPoints: 20,
-    duration: 60,
-    difficulty: { easy: 1, medium: 2, hard: 1 },
-    author: "Mme. Hana Mansour",
-    school: "Collège des Frères",
-    likes: 61,
-    downloads: 178,
-    tags: ["dérivation", "fonctions", "limites", "tableau de variation"],
-    preview: "Exercice 1 — Soit f(x) = x³ − 3x + 2. Calculer f′(x) et dresser le tableau de variation...",
-  },
-  {
-    id: "f4",
-    title: "Histoire — Première Guerre Mondiale",
-    subject: "history",
-    curriculum: "Bac Libanais",
-    level: "Troisième",
-    language: "Français",
-    exerciseCount: 2,
-    totalPoints: 20,
-    duration: 90,
-    difficulty: { easy: 0, medium: 1, hard: 1 },
-    author: "M. Georges Rahme",
-    school: "Lycée des Cèdres",
-    likes: 29,
-    downloads: 87,
-    tags: ["WWI", "traité de Versailles", "totalitarisme"],
-    preview: "Sujet 1 — Analysez les causes principales de la Première Guerre Mondiale en vous appuyant sur les documents...",
-  },
-  {
-    id: "f5",
-    title: "Biology HL — Cell Division & Genetics",
-    subject: "biology",
-    curriculum: "IB Diploma",
-    level: "DP Year 1 (HL)",
-    language: "English",
-    exerciseCount: 3,
-    totalPoints: 30,
-    duration: 60,
-    difficulty: { easy: 1, medium: 1, hard: 1 },
-    author: "Dr. Maya Frem",
-    school: "Wellspring Learning Community",
-    likes: 55,
-    downloads: 142,
-    tags: ["mitosis", "meiosis", "Mendelian genetics", "inheritance"],
-    preview: "Q1 — Describe the stages of mitosis using annotated diagrams. Include the key events in each phase...",
-  },
-  {
-    id: "f6",
-    title: "Philosophie — Conscience et Liberté",
-    subject: "philosophy",
-    curriculum: "Bac Libanais",
-    level: "Terminale L",
-    language: "Français",
-    exerciseCount: 2,
-    totalPoints: 20,
-    duration: 180,
-    difficulty: { easy: 0, medium: 1, hard: 1 },
-    author: "Prof. Antoine Gemayel",
-    school: "Université Saint-Joseph",
-    likes: 38,
-    downloads: 96,
-    tags: ["conscience", "liberté", "Sartre", "Descartes"],
-    preview: "Dissertation — Peut-on être libre sans en avoir conscience ? Vous développerez votre réflexion...",
-  },
-];
+import { FEATURED_EXAMS } from "@/data/communityExams";
 
 const SUBJECT_ICONS: Record<string, string> = {
   physics: "⚛", mathematics: "∑", chemistry: "⚗", biology: "🧬",
@@ -127,11 +17,19 @@ const SUBJECT_ICONS: Record<string, string> = {
 
 type SortKey = "popular" | "recent" | "downloads";
 
+import { useRouter } from "next/navigation";
+
 export default function CommunityPage() {
+  const router = useRouter();
+  const { user, profile, loading } = useAuth();
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<SortKey>("popular");
   const [previewId, setPreviewId] = useState<string | null>(null);
   const [likedIds, setLikedIds] = useState<Set<string>>(new Set());
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
+  const [downloadStats, setDownloadStats] = useState<Record<string, number>>(() =>
+    Object.fromEntries(FEATURED_EXAMS.map((e) => [e.id, e.downloads]))
+  );
 
   const filtered = FEATURED_EXAMS.filter((e) => {
     if (!query.trim()) return true;
@@ -145,7 +43,7 @@ export default function CommunityPage() {
     );
   }).sort((a, b) => {
     if (sort === "popular") return b.likes - a.likes;
-    if (sort === "downloads") return b.downloads - a.downloads;
+    if (sort === "downloads") return downloadStats[b.id] - downloadStats[a.id];
     return 0; // "recent" keeps original order
   });
 
@@ -157,7 +55,111 @@ export default function CommunityPage() {
     });
   }
 
+  async function handleDownload(exam: typeof FEATURED_EXAMS[0]) {
+    setDownloadingId(exam.id);
+    try {
+      const res = await fetch("/api/export", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          context: exam.context,
+          exercises: exam.exercises,
+          format: "word",
+          includeAnswerKey: true,
+          header: { schoolName: exam.school || "Imtihan Community" },
+        }),
+      });
+
+      if (!res.ok) throw new Error("Download failed");
+
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${exam.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.docx`;
+      a.click();
+      URL.revokeObjectURL(url);
+      
+      // Increment downloads locally
+      setDownloadStats((prev) => ({ ...prev, [exam.id]: prev[exam.id] + 1 }));
+    } catch (err) {
+      console.error(err);
+      alert("Failed to download exam. Please try again later.");
+    } finally {
+      setDownloadingId(null);
+    }
+  }
+
+  function handleUse(exam: typeof FEATURED_EXAMS[0]) {
+    sessionStorage.setItem("imtihan_context", JSON.stringify(exam.context));
+    sessionStorage.setItem("imtihan_exercises", JSON.stringify(exam.exercises));
+    sessionStorage.setItem("imtihan_exercises_key", JSON.stringify({ c: exam.context }));
+    // Provide a hint to the user they are remixing
+    sessionStorage.setItem("imtihan_remix_source", exam.title);
+    router.push("/create/structure");
+  }
+
   const previewExam = previewId ? FEATURED_EXAMS.find((e) => e.id === previewId) : null;
+
+  const totalExams = FEATURED_EXAMS.length;
+  const totalDownloads = Object.values(downloadStats).reduce((acc, val) => acc + val, 0);
+  const totalCurricula = new Set(FEATURED_EXAMS.map((e) => e.context.curriculumId)).size;
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[var(--bg)] flex items-center justify-center">
+        <div className="w-8 h-8 rounded-full border-2 border-[var(--accent)] border-t-transparent animate-spin" />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-[var(--bg)] flex flex-col items-center justify-center p-6 text-center">
+        <h1 className="serif text-2xl text-[var(--text)] mb-2">Sign in required</h1>
+        <p className="text-sm text-[var(--text-secondary)] max-w-sm mb-6">
+          You must be signed in to view the community exam library.
+        </p>
+        <Link href="/auth/login?next=/community">
+          <Button>Sign In</Button>
+        </Link>
+      </div>
+    );
+  }
+
+  if (profile?.role === "student") {
+    return (
+      <div className="min-h-screen bg-[var(--bg)] flex flex-col items-center justify-center p-6 text-center">
+        <div className="w-16 h-16 rounded-2xl bg-red-50 text-red-500 flex items-center justify-center mb-6">
+          <Users size={24} />
+        </div>
+        <h1 className="serif text-2xl text-[var(--text)] mb-2">Access Denied</h1>
+        <p className="text-sm text-[var(--text-secondary)] max-w-sm mb-6">
+          The community exam library is exclusively available for teachers to share and remix exams.
+        </p>
+        <Link href="/dashboard">
+          <Button variant="secondary">Return to Dashboard</Button>
+        </Link>
+      </div>
+    );
+  }
+
+  if (profile?.subscription?.tier === "free") {
+    return (
+      <div className="min-h-screen bg-[var(--bg)] flex flex-col items-center justify-center p-6 text-center">
+        <div className="w-16 h-16 rounded-2xl bg-[var(--accent-light)] text-[var(--accent)] flex items-center justify-center mb-6">
+          <BookOpen size={24} />
+        </div>
+        <h1 className="serif text-2xl text-[var(--text)] mb-2">Pro Feature</h1>
+        <p className="text-sm text-[var(--text-secondary)] max-w-sm mb-6">
+          Browsing and downloading from the community exam library is available on the Pro plan.
+        </p>
+        <Link href="/#pricing">
+          <Button>Upgrade to Pro</Button>
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[var(--bg)]">
@@ -193,9 +195,9 @@ export default function CommunityPage() {
         {/* Stats bar */}
         <div className="grid grid-cols-3 gap-4 mb-8">
           {[
-            { value: "120+", label: "Shared exams" },
-            { value: "850+", label: "Downloads" },
-            { value: "4 curricula", label: "Covered" },
+            { value: totalExams.toString(), label: "Shared exams" },
+            { value: totalDownloads.toString(), label: "Downloads" },
+            { value: `${totalCurricula} curricula`, label: "Covered" },
           ].map((s) => (
             <div key={s.label} className="card p-4 text-center">
               <div className="serif text-2xl font-light text-[var(--accent)] mb-0.5">{s.value}</div>
@@ -247,8 +249,8 @@ export default function CommunityPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {filtered.map((exam) => {
               const liked = likedIds.has(exam.id);
-              const totalDiff = exam.difficulty.easy + exam.difficulty.medium + exam.difficulty.hard;
-              const icon = SUBJECT_ICONS[exam.subject] ?? "📄";
+              const totalDiff = (exam.context.difficultyMix.easy + exam.context.difficultyMix.medium + exam.context.difficultyMix.hard) || 1;
+              const icon = SUBJECT_ICONS[exam.context.subject] ?? "📄";
 
               return (
                 <div key={exam.id} className="card overflow-hidden flex flex-col">
@@ -261,29 +263,29 @@ export default function CommunityPage() {
                       <div className="flex-1 min-w-0">
                         <p className="font-semibold text-[var(--text)] text-sm leading-tight mb-1 line-clamp-2">{exam.title}</p>
                         <div className="flex flex-wrap gap-x-2 gap-y-0.5 text-xs text-[var(--text-tertiary)]">
-                          <span>{exam.curriculum}</span>
+                          <span>{exam.context.curriculumId}</span>
                           <span>·</span>
-                          <span>{exam.level}</span>
+                          <span>{exam.context.levelId}</span>
                           <span>·</span>
-                          <span>{exam.language}</span>
+                          <span>{exam.context.language}</span>
                         </div>
                       </div>
                     </div>
 
                     {/* Difficulty bar */}
                     <div className="flex h-1.5 rounded-full overflow-hidden gap-px mb-3">
-                      {exam.difficulty.easy > 0 && <div className="bg-emerald-500" style={{ width: `${(exam.difficulty.easy / totalDiff) * 100}%` }} />}
-                      {exam.difficulty.medium > 0 && <div className="bg-amber-500" style={{ width: `${(exam.difficulty.medium / totalDiff) * 100}%` }} />}
-                      {exam.difficulty.hard > 0 && <div className="bg-red-500" style={{ width: `${(exam.difficulty.hard / totalDiff) * 100}%` }} />}
+                      {exam.context.difficultyMix.easy > 0 && <div className="bg-emerald-500" style={{ width: `${(exam.context.difficultyMix.easy / totalDiff) * 100}%` }} />}
+                      {exam.context.difficultyMix.medium > 0 && <div className="bg-amber-500" style={{ width: `${(exam.context.difficultyMix.medium / totalDiff) * 100}%` }} />}
+                      {exam.context.difficultyMix.hard > 0 && <div className="bg-red-500" style={{ width: `${(exam.context.difficultyMix.hard / totalDiff) * 100}%` }} />}
                     </div>
 
                     {/* Stats */}
                     <div className="flex flex-wrap gap-3 text-xs text-[var(--text-secondary)] mb-3">
-                      <span>{exam.exerciseCount} exercises</span>
+                      <span>{exam.context.exerciseCount} exercises</span>
                       <span>·</span>
-                      <span>{exam.totalPoints} pts</span>
+                      <span>{exam.context.totalPoints} pts</span>
                       <span>·</span>
-                      <span>{exam.duration} min</span>
+                      <span>{exam.context.duration} min</span>
                     </div>
 
                     {/* Tags */}
@@ -319,10 +321,18 @@ export default function CommunityPage() {
                     </button>
 
                     {/* Downloads count */}
-                    <span className="inline-flex items-center gap-1 text-xs text-[var(--text-tertiary)]">
-                      <Download size={11} />
-                      {exam.downloads}
-                    </span>
+                    <button
+                      onClick={() => handleDownload(exam)}
+                      disabled={downloadingId === exam.id}
+                      className="inline-flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-lg border border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)] hover:text-[var(--accent)] hover:bg-[var(--accent-light)] transition-colors disabled:opacity-50"
+                    >
+                      {downloadingId === exam.id ? (
+                        <div className="w-3 h-3 rounded-full border-2 border-[var(--accent)] border-t-transparent animate-spin" />
+                      ) : (
+                        <Download size={11} />
+                      )}
+                      Download ({downloadStats[exam.id]})
+                    </button>
 
                     <div className="flex-1" />
 
@@ -336,13 +346,13 @@ export default function CommunityPage() {
                     </button>
 
                     {/* Use as inspiration */}
-                    <Link
-                      href={`/create?inspiration=${exam.id}`}
-                      className="inline-flex items-center gap-1 text-xs px-3 py-1.5 rounded-lg bg-[var(--accent)] text-white font-medium hover:bg-[var(--accent-hover)] transition-colors"
+                    <button
+                      onClick={() => handleUse(exam)}
+                      className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-[var(--accent)] border border-transparent text-white font-medium hover:bg-transparent hover:text-[var(--accent)] hover:border-[var(--accent)] transition-colors"
                     >
                       <BookOpen size={11} />
                       Use
-                    </Link>
+                    </button>
                   </div>
                 </div>
               );
@@ -365,25 +375,64 @@ export default function CommunityPage() {
                 <X size={14} />
               </button>
             </div>
-            <div className="p-6 space-y-4">
-              <p className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider">Preview</p>
-              <div className="p-4 rounded-xl bg-[var(--bg-subtle)] border border-[var(--border)]">
-                <p className="text-sm text-[var(--text)] leading-relaxed italic">&quot;{previewExam.preview}&quot;</p>
+            <div className="p-0 overflow-y-auto max-h-[60vh]">
+              <div className="p-6 space-y-5">
+                <div className="grid grid-cols-2 gap-4 text-xs text-[var(--text-secondary)] bg-[var(--bg-subtle)] p-4 rounded-xl border border-[var(--border)]">
+                  <div><span className="text-[var(--text-tertiary)]">Author</span><br /><span className="font-medium text-[var(--text)]">{previewExam.author}</span></div>
+                  <div><span className="text-[var(--text-tertiary)]">School</span><br /><span className="font-medium text-[var(--text)]">{previewExam.school || '—'}</span></div>
+                  <div><span className="text-[var(--text-tertiary)]">Curriculum</span><br /><span className="font-medium text-[var(--text)]">{previewExam.context.curriculumId}</span></div>
+                  <div><span className="text-[var(--text-tertiary)]">Details</span><br /><span className="font-medium text-[var(--text)]">{previewExam.context.duration} min · {previewExam.context.totalPoints} pts</span></div>
+                </div>
+
+                <div className="space-y-4">
+                  {previewExam.exercises.map((ex, i) => (
+                    <div key={ex.id} className="p-4 rounded-xl border border-[var(--border)] bg-white shadow-sm space-y-3">
+                      <div className="flex justify-between items-center mb-1">
+                        <span className="text-sm font-semibold text-[var(--accent)]">Exercise {i + 1}</span>
+                        <span className="text-xs text-[var(--text-tertiary)]">{ex.points} pts</span>
+                      </div>
+                      <p className="text-sm text-[var(--text)] leading-relaxed">{ex.statement}</p>
+                      {ex.subQuestions && ex.subQuestions.length > 0 && (
+                        <div className="space-y-2 pl-2">
+                          {ex.subQuestions.map((sq, j) => (
+                            <div key={j} className="flex items-start gap-2 text-sm text-[var(--text-secondary)]">
+                              <span className="font-medium flex-shrink-0">{sq.label}</span>
+                              <span className="leading-relaxed">{sq.statement}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                  {previewExam.exercises.length === 0 && (
+                    <div className="p-4 text-center text-sm text-[var(--text-tertiary)] border border-dashed rounded-xl">
+                      Detailed preview unavailable for this legacy exam.
+                    </div>
+                  )}
+                </div>
               </div>
-              <div className="grid grid-cols-2 gap-3 text-xs text-[var(--text-secondary)]">
-                <div><span className="text-[var(--text-tertiary)]">Author</span><br /><span className="font-medium text-[var(--text)]">{previewExam.author}</span></div>
-                <div><span className="text-[var(--text-tertiary)]">School</span><br /><span className="font-medium text-[var(--text)]">{previewExam.school}</span></div>
-                <div><span className="text-[var(--text-tertiary)]">Curriculum</span><br /><span className="font-medium text-[var(--text)]">{previewExam.curriculum}</span></div>
-                <div><span className="text-[var(--text-tertiary)]">Duration</span><br /><span className="font-medium text-[var(--text)]">{previewExam.duration} min · {previewExam.totalPoints} pts</span></div>
-              </div>
-              <Link
-                href={`/create?inspiration=${previewExam.id}`}
-                onClick={() => setPreviewId(null)}
-                className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-[var(--accent)] text-white text-sm font-medium hover:bg-[var(--accent-hover)] transition-colors"
-              >
-                <BookOpen size={14} />
-                Use as inspiration
-              </Link>
+            </div>
+            
+            <div className="p-4 border-t border-[var(--border)] bg-[var(--bg-subtle)] flex gap-3">
+               <button
+                  onClick={() => handleDownload(previewExam)}
+                  disabled={downloadingId === previewExam.id}
+                  className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl border border-[var(--border)] text-sm font-medium hover:border-[var(--accent)] hover:text-[var(--accent)] transition-colors disabled:opacity-50"
+                >
+                  {downloadingId === previewExam.id ? (
+                    <div className="w-4 h-4 rounded-full border-2 border-[var(--accent)] border-t-transparent animate-spin" />
+                  ) : (
+                    <Download size={14} />
+                  )}
+                  Download
+                </button>
+               <button
+                  onClick={() => { setPreviewId(null); handleUse(previewExam); }}
+                  className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl border border-transparent bg-[var(--accent)] text-white text-sm font-medium hover:bg-transparent hover:text-[var(--accent)] hover:border-[var(--accent)] transition-colors"
+                >
+                  <BookOpen size={14} />
+                  Use this exam
+                </button>
             </div>
           </div>
         </div>

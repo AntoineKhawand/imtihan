@@ -5,7 +5,8 @@ export type ExamType =
   | "homework"
   | "midterm"
   | "final"
-  | "practice";
+  | "practice"
+  | "dawrat";
 
 export type Difficulty = "easy" | "medium" | "hard";
 

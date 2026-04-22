@@ -23,6 +23,108 @@ export const bacFrancais: Curriculum = {
   ],
   levels: [
     // ──────────────────────────────────────────────────────────
+    // Cinquième (Grade 7)
+    // ──────────────────────────────────────────────────────────
+    {
+      id: "cinquieme-fr",
+      name: { fr: "Cinquième", en: "Grade 7" },
+      chapters: {
+        mathematics: [
+          {
+            id: "cinq-fr-math-numbers",
+            name: { fr: "Nombres et calculs", en: "Numbers and calculations" },
+            objectives: ["Calculer avec des nombres relatifs", "Utiliser les fractions simples", "Proportionnalité"],
+          },
+          {
+            id: "cinq-fr-math-geometry",
+            name: { fr: "Espace et géométrie", en: "Space and geometry" },
+            objectives: ["Symétrie centrale", "Angles et triangles", "Aires et périmètres"],
+          },
+        ],
+        french: [
+          {
+            id: "cinq-fr-french-texts",
+            name: { fr: "Héros, héroïnes et héroïsmes", en: "Heroes and heroism" },
+            objectives: ["Découvrir des textes épiques", "Comprendre la figure du héros"],
+          },
+        ],
+        physics: [
+          {
+            id: "cinq-fr-phys-matter",
+            name: { fr: "Organisation et transformations de la matière", en: "Matter and transformations" },
+            objectives: ["États de la matière", "Mélanges et solutions"],
+          },
+        ],
+      },
+    },
+    // ──────────────────────────────────────────────────────────
+    // Quatrième (Grade 8)
+    // ──────────────────────────────────────────────────────────
+    {
+      id: "quatrieme-fr",
+      name: { fr: "Quatrième", en: "Grade 8" },
+      chapters: {
+        mathematics: [
+          {
+            id: "quat-fr-math-numbers",
+            name: { fr: "Nombres et calculs", en: "Numbers and calculations" },
+            objectives: ["Puissances", "Équations du 1er degré", "Théorème de Pythagore"],
+          },
+        ],
+        french: [
+          {
+            id: "quat-fr-french-texts",
+            name: { fr: "La fiction pour interroger le réel", en: "Fiction to question reality" },
+            objectives: ["Lire des nouvelles réalistes", "Analyser des textes fantastiques"],
+          },
+        ],
+        physics: [
+          {
+            id: "quat-fr-phys-electricity",
+            name: { fr: "Des signaux pour observer et communiquer", en: "Signals to observe and communicate" },
+            objectives: ["Loi d'Ohm", "Circuits électriques"],
+          },
+        ],
+      },
+    },
+    // ──────────────────────────────────────────────────────────
+    // Troisième (Grade 9)
+    // ──────────────────────────────────────────────────────────
+    {
+      id: "troisieme-fr",
+      name: { fr: "Troisième (Brevet)", en: "Grade 9 (Brevet)" },
+      chapters: {
+        mathematics: [
+          {
+            id: "trois-fr-math",
+            name: { fr: "Algèbre et géométrie", en: "Algebra and geometry" },
+            objectives: ["Théorème de Thalès", "Trigonométrie", "Fonctions affines"],
+          },
+        ],
+        french: [
+          {
+            id: "trois-fr-french",
+            name: { fr: "Agir dans la cité", en: "Acting in the city" },
+            objectives: ["Analyser l'argumentation", "Rédiger un essai littéraire"],
+          },
+        ],
+        physics: [
+          {
+            id: "trois-fr-phys",
+            name: { fr: "Mouvement et interactions", en: "Movement and interactions" },
+            objectives: ["Vitesse et accélération", "Forces et gravitation"],
+          },
+        ],
+        chemistry: [
+          {
+            id: "trois-fr-chem",
+            name: { fr: "Structure de la matière", en: "Structure of matter" },
+            objectives: ["Modèle atomique", "Ions et pH"],
+          },
+        ],
+      },
+    },
+    // ──────────────────────────────────────────────────────────
     // Seconde (Grade 10 — Common core)
     // ──────────────────────────────────────────────────────────
     {

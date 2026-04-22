@@ -51,9 +51,9 @@ export const SUBJECT_LABELS: Record<string, { fr: string; en: string }> = {
 };
 
 export const LANGUAGE_LABELS: Record<string, string> = {
-  french: "Français",
+  french: "French",
   english: "English",
-  arabic: "العربية",
+  arabic: "Arabic",
 };
 
 export const EXAM_TYPE_LABELS: Record<string, { fr: string; en: string }> = {

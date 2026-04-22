@@ -127,19 +127,8 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <div className="min-h-screen bg-[var(--bg)] flex flex-col">
-      <header className="flex items-center px-6 md:px-10 h-16 border-b border-[var(--border)]">
-        <Link href="/" className="flex items-center gap-2 text-[var(--text-secondary)] hover:text-[var(--text)] transition-colors">
-          <ArrowLeft size={16} />
-          <span className="text-sm">Back to home</span>
-        </Link>
-      </header>
-
-      <main className="flex-1 flex items-center justify-center px-6 py-12">
-        <Suspense fallback={<div className="w-full max-w-sm h-96 skeleton" />}>
-          <LoginForm />
-        </Suspense>
-      </main>
-    </div>
+    <Suspense fallback={<div className="w-full max-w-sm h-96 skeleton" />}>
+      <LoginForm />
+    </Suspense>
   );
 }

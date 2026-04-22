@@ -20,6 +20,8 @@
 - ✅ Prompt architecture (analyze.ts, generate.ts)
 - ✅ /api/analyze route with Zod validation
 - ✅ /api/generate route with SSE streaming
+- ✅ SEO Strategy implemented (sitemap, robots, JSON-LD, metadata)
+- ✅ GEO Strategy implemented (llms.txt, FAQ structured data, Vercel Analytics)
 - ✅ CLAUDE.md, README, ARCHITECTURE, ROADMAP, BUGS
 
 ### UI — Workflow

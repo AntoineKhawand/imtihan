@@ -18,7 +18,7 @@ Server builds Claude messages:
   - System: inject curriculum reference (all IDs)
   - User: teacher description + optional PDF/image block
             ↓
-Claude Sonnet 4.5 returns JSON (ExamContext)
+Gemini 2.5 Flash returns JSON (ExamContext)
             ↓
 Zod validates schema + auto-corrects difficultyMix sum
             ↓
@@ -39,7 +39,7 @@ Server builds system prompt:
   - Curriculum style (Bac vs IB formatting)
   - Difficulty guide
             ↓
-Claude Sonnet 4.5 streams JSON array of exercises
+Gemini 2.5 Flash streams JSON array of exercises
             ↓
 Server pipes SSE stream to client
   → Client renders exercises as they arrive

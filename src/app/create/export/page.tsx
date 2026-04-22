@@ -15,12 +15,15 @@ import {
 import { buildVersionB } from "@/lib/variant";
 import type { ExamContext, Exercise } from "@/types/exam";
 import { StepIndicator, StepLabel } from "@/app/create/page";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function ExportPage() {
   const router = useRouter();
   const [context, setContext] = useState<ExamContext | null>(null);
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [templateId, setTemplateId] = useState("classic");
+  const { profile } = useAuth();
+  const isFreeTier = profile?.subscription?.tier === "free";
 
   // Header fields — pre-filled from saved school settings
   const [schoolName, setSchoolName] = useState("");
@@ -362,14 +365,10 @@ export default function ExportPage() {
               </button>
 
               <button
-                onClick={() => handleDownload("pdf")}
-                disabled={!!downloading}
+                onClick={() => window.open("/print", "_blank")}
                 className={cn(
                   "flex items-center gap-4 p-4 rounded-xl border text-left transition-all",
-                  downloaded === "pdf"
-                    ? "border-[var(--accent)] bg-[var(--accent-light)]"
-                    : "border-[var(--border)] hover:border-[var(--accent)] hover:bg-[var(--accent-light)]",
-                  downloading === "pdf" && "opacity-60"
+                  "border-[var(--border)] hover:border-[var(--accent)] hover:bg-[var(--accent-light)]"
                 )}
               >
                 <div className="w-10 h-10 rounded-xl bg-red-50 text-red-500 flex items-center justify-center flex-shrink-0">
@@ -379,12 +378,6 @@ export default function ExportPage() {
                   <p className="text-sm font-semibold text-[var(--text)]">PDF</p>
                   <p className="text-xs text-[var(--text-secondary)]">Print-ready, fixed layout</p>
                 </div>
-                {downloading === "pdf" && (
-                  <div className="ml-auto w-4 h-4 rounded-full border-2 border-[var(--accent)] border-t-transparent animate-spin flex-shrink-0" />
-                )}
-                {downloaded === "pdf" && downloading !== "pdf" && (
-                  <CheckCircle2 size={16} className="text-[var(--accent)] flex-shrink-0" />
-                )}
               </button>
             </div>
 
@@ -407,9 +400,18 @@ export default function ExportPage() {
           </div>
 
           {/* Email */}
-          <div className="card p-6">
+          <div className={cn("card p-6", isFreeTier && "opacity-60 relative")}>
+            {isFreeTier && (
+              <div className="absolute inset-0 z-10 flex items-center justify-center bg-[var(--surface)]/40 backdrop-blur-[1px] rounded-2xl">
+                <div className="bg-[var(--bg)] px-4 py-2 rounded-full border border-[var(--border)] shadow-sm flex items-center gap-2">
+                  <span className="text-xs font-semibold text-[var(--text)]">Pro Feature</span>
+                  <Link href="/community" className="text-xs text-[var(--accent)] hover:underline">Upgrade</Link>
+                </div>
+              </div>
+            )}
             <button
-              onClick={() => setShowEmail(!showEmail)}
+              onClick={() => !isFreeTier && setShowEmail(!showEmail)}
+              disabled={isFreeTier}
               className="w-full flex items-center justify-between"
             >
               <div className="flex items-center gap-3">

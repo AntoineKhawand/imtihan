@@ -6,8 +6,14 @@
  *  - Inline math:   $...$   → KaTeX inline
  *  - Bold/italic/code markdown
  *  - Actual \n and literal "\\n" strings from JSON output
+ *  - Mermaid graphs: ```mermaid ... ```
  */
 import katex from "katex";
+import mermaid from "mermaid";
+if (typeof window !== "undefined") {
+  require("katex/contrib/mhchem/mhchem");
+  mermaid.initialize({ startOnLoad: false, theme: "base" });
+}
 
 function renderKaTeX(src: string, displayMode: boolean): string {
   try {
@@ -53,18 +59,88 @@ function splitMath(text: string, open: string, close: string): Array<{ kind: "te
   return parts;
 }
 
+function parseTables(text: string): string {
+  const lines = text.split("\n");
+  const result: string[] = [];
+  let inTable = false;
+  
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
+    if (line.startsWith("|") && line.endsWith("|")) {
+      if (!inTable) {
+        result.push('<div class="overflow-x-auto my-4"><table class="w-full text-sm text-left border-collapse border border-[var(--border)] rounded-lg hidden-border-collapse">');
+        inTable = true;
+      }
+      
+      const cells = line.split("|").slice(1, -1).map(c => c.trim());
+      
+      // Skip separator line in HTML
+      if (cells.every(c => /^[-:]+$/.test(c))) continue;
+      
+      const isHeader = inTable && result[result.length - 1].includes('<table');
+      
+      result.push('<tr class="border-b border-[var(--border)]">');
+      for (const cell of cells) {
+        const tag = isHeader ? 'th' : 'td';
+        const classes = isHeader 
+          ? 'px-4 py-2 font-semibold text-[var(--text)] bg-[var(--bg-subtle)] border-r border-[var(--border)] last:border-r-0' 
+          : 'px-4 py-2 text-[var(--text-secondary)] border-r border-[var(--border)] last:border-r-0';
+        result.push(`<${tag} class="${classes}">${cell}</${tag}>`);
+      }
+      result.push('</tr>');
+    } else {
+      if (inTable) {
+        result.push('</table></div>');
+        inTable = false;
+      }
+      result.push(lines[i]);
+    }
+  }
+  
+  if (inTable) result.push('</table></div>');
+  return result.join("\n");
+}
+
 function applyMarkdown(text: string): string {
-  return text
+  let md = text
     .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
     .replace(/(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)/g, "<em>$1</em>")
     .replace(/`([^`]+)`/g, '<code class="font-mono text-xs bg-[var(--bg-subtle)] px-1 py-0.5 rounded">$1</code>');
+    
+  return parseTables(md);
 }
 
-export function renderContent(raw: string): string {
+async function renderMermaidBlocks(text: string): Promise<string> {
+  const mermaidRegex = /```mermaid\n?([\s\S]*?)```/g;
+  const matches = [...text.matchAll(mermaidRegex)];
+  
+  if (matches.length === 0) return text;
+  
+  let result = text;
+  for (const match of matches) {
+    const code = match[1].trim();
+    const id = `mermaid-${Math.random().toString(36).slice(2, 9)}`;
+    try {
+      const svg = await mermaid.render(id, code);
+      const replacement = `<div class="my-4 p-4 bg-white rounded-lg border border-[var(--border)] overflow-x-auto">${svg}</div>`;
+      result = result.replace(match[0], replacement);
+    } catch (e) {
+      console.warn("[Mermaid] Render error:", e);
+      result = result.replace(match[0], `<pre class="my-4 p-3 bg-red-50 text-red-700 rounded text-xs overflow-x-auto">${code}</pre>`);
+    }
+  }
+  
+  return result;
+}
+
+export async function renderContent(raw: string): Promise<string> {
   if (!raw) return "";
 
+  // 0. Render Mermaid blocks first (they may contain math)
+  let text = await renderMermaidBlocks(raw);
+
   // 1. Normalise line endings: handle actual \n and JSON-escaped \\n (literal backslash-n)
-  let text = raw
+  text = text
     .replace(/\\n\\n/g, "\n\n")   // literal \\n\\n → real double newline
     .replace(/\\n/g, "\n");        // literal \\n → real newline
 

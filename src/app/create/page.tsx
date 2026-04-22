@@ -8,9 +8,11 @@ import { Button } from "@/components/ui/Button";
 import { Dropzone } from "@/components/ui/Dropzone";
 import { cn, shortId } from "@/lib/utils";
 import {
-  getClassProfiles, saveClassProfile, deleteClassProfile,
+  getClassProfiles, saveClassProfile, deleteClassProfile, getSavedExams,
   type ClassProfile,
 } from "@/lib/storage";
+import { useAuth } from "@/contexts/AuthContext";
+import { FREE_EXAM_LIMIT } from "@/lib/utils";
 
 interface UploadedFile {
   name: string;
@@ -20,10 +22,10 @@ interface UploadedFile {
 }
 
 const EXAMPLE_PROMPTS = [
-  { label: "Physics · Terminale S", text: "Examen de Physique pour Terminale S Bac Libanais, chapitres mécanique et électromagnétisme, 3 exercices en français, 2 heures, total 20 points" },
+  { label: "Physics · Terminale S", text: "Physics exam for Terminale S Bac Libanais, mechanics and electromagnetism chapters, 3 exercises, 2 hours, 20 points total, in French" },
   { label: "IB Chemistry HL", text: "IB Chemistry HL exam on organic chemistry and equilibria, 4 questions, 90 minutes, in English" },
-  { label: "Math Quiz · Première", text: "Quiz de Mathématiques pour Première Bac Français, dérivation et fonctions, 30 minutes, niveau moyen" },
-  { label: "Philo · Terminale L", text: "Devoir de Philosophie Terminale L Bac Libanais, éthique et épistémologie, 2 sujets au choix, 1h30, en français" },
+  { label: "Math Quiz · Première", text: "Math quiz for Première Bac Français, derivatives and functions, 30 minutes, medium difficulty, in French" },
+  { label: "Philo · Terminale L", text: "Philosophy essay for Terminale L Bac Libanais, ethics and epistemology, 2 optional questions, 1h30min, in French" },
 ];
 
 const CHAR_MAX = 1000;
@@ -41,8 +43,13 @@ export default function CreatePage() {
   const [showProfileForm, setShowProfileForm] = useState(false);
   const [newProfileName, setNewProfileName] = useState("");
 
+  const { profile } = useAuth();
+  const isFreeTier = profile?.subscription?.tier === "free";
+  const [quotaUsed, setQuotaUsed] = useState(0);
+
   useEffect(() => {
     setProfiles(getClassProfiles());
+    setQuotaUsed(getSavedExams().length);
     // Restore description + uploaded file if the user navigated back here
     const savedDesc = sessionStorage.getItem("imtihan_description");
     if (savedDesc) setDescription(savedDesc);
@@ -79,7 +86,7 @@ export default function CreatePage() {
       curriculumId: "bac-libanais",
       levelId: "terminale-s",
       subject: "mathematics",
-      language: "french",
+      language: "english",
       createdAt: Date.now(),
     };
     saveClassProfile(profile);
@@ -95,6 +102,11 @@ export default function CreatePage() {
 
   async function handleAnalyze() {
     if (!isReady) return;
+    if (isFreeTier && quotaUsed >= FREE_EXAM_LIMIT) {
+      setError(`You have reached the limit of ${FREE_EXAM_LIMIT} free exams. Please upgrade to Pro to create more.`);
+      return;
+    }
+    
     setIsAnalyzing(true);
     setError(null);
 

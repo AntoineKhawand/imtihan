@@ -23,6 +23,66 @@ export const bacLibanais: Curriculum = {
   ],
   levels: [
     // ──────────────────────────────────────────────────────────
+    // EB7 — Cinquième (Grade 7)
+    // ──────────────────────────────────────────────────────────
+    {
+      id: "eb7",
+      name: { fr: "Classe EB7 (Cinquième)", en: "Grade 7", ar: "السابع أساسي" },
+      chapters: {
+        mathematics: [
+          {
+            id: "eb7-math",
+            name: { fr: "Algèbre et Géométrie", en: "Algebra and Geometry" },
+            objectives: ["Nombres entiers et décimaux", "Fractions", "Angles et droites parallèles"],
+          },
+        ],
+        physics: [
+          {
+            id: "eb7-phys",
+            name: { fr: "Sciences Physiques", en: "Physical Sciences" },
+            objectives: ["États de la matière", "Circuits électriques simples"],
+          },
+        ],
+        arabic: [
+          {
+            id: "eb7-arabic",
+            name: { fr: "Langue Arabe", en: "Arabic Language", ar: "اللغة العربية" },
+            objectives: ["Lecture et compréhension", "Grammaire de base"],
+          },
+        ],
+      },
+    },
+    // ──────────────────────────────────────────────────────────
+    // EB8 — Quatrième (Grade 8)
+    // ──────────────────────────────────────────────────────────
+    {
+      id: "eb8",
+      name: { fr: "Classe EB8 (Quatrième)", en: "Grade 8", ar: "الثامن أساسي" },
+      chapters: {
+        mathematics: [
+          {
+            id: "eb8-math",
+            name: { fr: "Algèbre et Géométrie", en: "Algebra and Geometry" },
+            objectives: ["Nombres relatifs", "Théorème de Pythagore", "Équations simples"],
+          },
+        ],
+        physics: [
+          {
+            id: "eb8-phys",
+            name: { fr: "Sciences Physiques", en: "Physical Sciences" },
+            objectives: ["Tension et intensité", "Lentilles"],
+          },
+        ],
+        chemistry: [
+          {
+            id: "eb8-chem",
+            name: { fr: "Chimie", en: "Chemistry" },
+            objectives: ["L'air et ses constituants", "Les transformations chimiques"],
+          },
+        ],
+      },
+    },
+    // ──────────────────────────────────────────────────────────
     // EB9 — Brevet (Grade 9)
     // ──────────────────────────────────────────────────────────
     {

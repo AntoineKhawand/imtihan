@@ -7,6 +7,7 @@ import { ArrowLeft, ArrowRight, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input, Toggle, TemplateCard } from "@/components/ui/StructureFormElements";
 import { StepIndicator, StepLabel } from "@/app/create/page";
+import { useAuth } from "@/contexts/AuthContext";
 import type { ExamContext } from "@/types/exam";
 
 type StructureContext = ExamContext & {
@@ -28,85 +29,108 @@ const TEMPLATES = [
   { id: "formal", label: "Formal" },
 ];
 
+import { motion } from "framer-motion";
+
 function TemplateSkeleton({ templateId, selected }: { templateId: string; selected: boolean }) {
-  const wrapperClasses = `w-full h-28 bg-[var(--bg-subtle)] rounded-md p-3 border space-y-2 group-hover:border-[var(--border-strong)] transition-all duration-200 ease-in-out ${selected ? 'border-[var(--accent)] scale-[1.03]' : 'border-[var(--border)]'}`;
-  const lineClasses = `rounded-sm transition-colors duration-300 ${selected ? 'bg-[var(--accent)]/60' : 'bg-[var(--border-strong)]/60'}`;
+  const wrapperClasses = `w-full h-[120px] bg-white rounded-md p-3 border shadow-sm group-hover:shadow-md transition-all duration-300 ease-out overflow-hidden flex flex-col ${selected ? 'border-[var(--accent)] scale-[1.02]' : 'border-[var(--border)]'}`;
+  
+  // Animation variants for the skeleton lines
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    show: { opacity: 1, transition: { staggerChildren: 0.1, delayChildren: 0.1 } }
+  };
+  const itemVariants = {
+    hidden: { opacity: 0, y: 5 },
+    show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } }
+  };
+
+  const lineColor = selected ? "bg-[var(--accent)]/20" : "bg-black/5";
+  const darkLineColor = selected ? "bg-[var(--accent)]/40" : "bg-black/10";
+  const primaryColor = selected ? "bg-[var(--accent)]" : "bg-black/20";
 
   if (templateId === 'modern') {
-    // Asymmetric layout with a prominent accent color bar. Clean and spacious.
     return (
       <div className={wrapperClasses}>
-        <div className="flex items-start gap-3">
-          <div
-            className={`w-3.5 h-16 rounded mt-0.5 transition-colors duration-300 ${selected ? 'bg-[var(--accent)]' : 'bg-[var(--accent)]/50'}`}
-          ></div>
-          <div className="flex-1 space-y-1.5 pt-1">
-            <div className={`${lineClasses} h-2 w-1/2`}></div>
-            <div className={`${lineClasses} h-1.5 w-3/4`}></div>
-            <div className="space-y-1 pt-2">
-              <div className={`${lineClasses} h-1.5 w-full`}></div>
-              <div className={`${lineClasses} h-1.5 w-5/6`}></div>
+        <motion.div variants={containerVariants} initial="hidden" animate="show" className="flex items-start gap-2.5 h-full">
+          {/* Accent side bar */}
+          <motion.div variants={itemVariants} className={`w-1.5 h-full rounded-full ${primaryColor} transition-colors duration-300`} />
+          <div className="flex-1 space-y-2.5 pt-1">
+            <div className="space-y-1">
+              <motion.div variants={itemVariants} className={`h-2.5 w-1/2 rounded-sm ${darkLineColor}`} />
+              <motion.div variants={itemVariants} className={`h-1.5 w-1/3 rounded-sm ${lineColor}`} />
+            </div>
+            <div className="space-y-1.5 pt-1">
+              <motion.div variants={itemVariants} className="flex items-center gap-1.5">
+                <div className={`h-3 w-3 rounded-sm ${primaryColor} opacity-50`} />
+                <div className={`h-1.5 w-3/4 rounded-sm ${lineColor}`} />
+              </motion.div>
+              <motion.div variants={itemVariants} className="flex items-center gap-1.5">
+                <div className={`h-3 w-3 rounded-sm ${primaryColor} opacity-50`} />
+                <div className={`h-1.5 w-2/3 rounded-sm ${lineColor}`} />
+              </motion.div>
             </div>
           </div>
-        </div>
+        </motion.div>
       </div>
     );
   }
 
   if (templateId === 'formal') {
-    // Structured, official look with a framed header box.
     return (
       <div className={wrapperClasses}>
-        <div
-          className={`w-full border p-2 rounded-sm transition-colors duration-300 ${selected ? 'border-[var(--accent)]/70' : 'border-[var(--border-strong)]/50'}`}
-        >
-            <div className="flex justify-between items-center">
-                <div className="space-y-1">
-                    <div className={`${lineClasses} h-1.5 w-16`}></div>
-                    <div className={`${lineClasses} h-1.5 w-24`}></div>
-                </div>
-                <div className="space-y-1 text-right">
-                    <div className={`${lineClasses} h-1.5 w-12 ml-auto`}></div>
-                    <div className={`${lineClasses} h-1.5 w-20 ml-auto`}></div>
-                </div>
+        <motion.div variants={containerVariants} initial="hidden" animate="show" className="h-full flex flex-col gap-2">
+          {/* Framed Header */}
+          <motion.div variants={itemVariants} className={`w-full border p-1.5 rounded-sm flex justify-between items-center ${selected ? 'border-[var(--accent)]/30' : 'border-black/10'}`}>
+            <div className="space-y-1">
+              <div className={`h-1.5 w-10 rounded-sm ${darkLineColor}`} />
+              <div className={`h-1 w-16 rounded-sm ${lineColor}`} />
             </div>
-        </div>
-        <div className="space-y-1 pt-2">
-          <div className={`${lineClasses} h-1.5 w-1/4`}></div>
-          <div className={`${lineClasses} h-1.5 w-full`}></div>
-          <div className={`${lineClasses} h-1.5 w-5/6`}></div>
-        </div>
+            <div className="space-y-1">
+              <div className={`h-1.5 w-8 rounded-sm ml-auto ${darkLineColor}`} />
+              <div className={`h-1 w-12 rounded-sm ml-auto ${lineColor}`} />
+            </div>
+          </motion.div>
+          {/* Body */}
+          <div className="space-y-1.5 flex-1 mt-1">
+            <motion.div variants={itemVariants} className={`h-1.5 w-1/4 rounded-sm ${primaryColor} opacity-40`} />
+            <motion.div variants={itemVariants} className={`h-1 w-full rounded-sm ${lineColor}`} />
+            <motion.div variants={itemVariants} className={`h-1 w-[90%] rounded-sm ${lineColor}`} />
+            <motion.div variants={itemVariants} className={`h-1 w-3/4 rounded-sm ${lineColor}`} />
+          </div>
+        </motion.div>
       </div>
     );
   }
 
-  // Default to 'classic'
-  // Traditional centered title with a horizontal rule separator.
-  return <div className={wrapperClasses}>
-    <div className={`${lineClasses} h-2 w-2/3 mx-auto`}></div>
-    <div className={`${lineClasses} h-1.5 w-1/2 mx-auto !mt-1.5`}></div>
-    <div
-      className={`h-px w-full !my-2.5 transition-colors duration-300 ${selected ? 'bg-[var(--accent)]/50' : 'bg-[var(--border)]'}`}
-    ></div>
-    <div className="space-y-1">
-      <div className={`${lineClasses} h-1.5 w-1/4`}></div>
-      <div className={`${lineClasses} h-1.5 w-full`}></div>
-      <div className={`${lineClasses} h-1.5 w-5/6`}></div>
+  // Classic
+  return (
+    <div className={wrapperClasses}>
+      <motion.div variants={containerVariants} initial="hidden" animate="show" className="flex flex-col items-center h-full">
+        {/* Centered header */}
+        <motion.div variants={itemVariants} className={`h-2 w-1/2 rounded-sm ${darkLineColor} mb-1`} />
+        <motion.div variants={itemVariants} className={`h-1.5 w-1/3 rounded-sm ${lineColor} mb-2`} />
+        <motion.div variants={itemVariants} className={`h-px w-full ${selected ? 'bg-[var(--accent)]/30' : 'bg-black/10'} mb-2`} />
+        
+        {/* Left aligned content */}
+        <div className="w-full space-y-1.5">
+          <motion.div variants={itemVariants} className={`h-1.5 w-1/5 rounded-sm ${primaryColor} opacity-50`} />
+          <div className="space-y-1">
+            <motion.div variants={itemVariants} className={`h-1 w-full rounded-sm ${lineColor}`} />
+            <motion.div variants={itemVariants} className={`h-1 w-4/5 rounded-sm ${lineColor}`} />
+          </div>
+        </div>
+      </motion.div>
     </div>
-    <div className="space-y-1 pt-2">
-      <div className={`${lineClasses} h-1.5 w-1/4`}></div>
-      <div className={`${lineClasses} h-1.5 w-full`}></div>
-    </div>
-  </div>;
+  );
 }
 
 export default function StructurePage() {
   const router = useRouter();
   const [context, setContext] = useState<StructureContext | null>(null);
   const [loading, setLoading] = useState(true);
+  const { profile } = useAuth();
 
-  // Placeholder for actual subscription status from a hook like useUser()
-  const isFreeTier = true;
+  const isFreeTier = profile?.subscription?.tier === "free";
 
   // Placeholder for file upload status from Step 1
   const hasUploadedFile = false;
@@ -220,6 +244,22 @@ export default function StructurePage() {
           <div className="card p-6">
             <h2 className="text-base font-semibold text-[var(--text)] mb-1">Exam Structure</h2>
             <p className="text-xs text-[var(--text-secondary)] mb-5">Define the core parameters of the exam.</p>
+            
+            {/* Context Summary - show what's already selected */}
+            {context && (
+              <div className="mb-5 p-3 bg-[var(--bg-subtle)] rounded-lg border border-[var(--border)]">
+                <p className="text-xs text-[var(--text-secondary)] mb-2">Your Selection:</p>
+                <div className="flex flex-wrap gap-2 text-sm">
+                  <span className="px-2 py-1 bg-white rounded border border-[var(--border)]">
+                    {context.curriculumId === "bac-libanais" ? "Bac Libanais" : context.curriculumId === "bac-francais" ? "Bac Français" : context.curriculumId === "ib" ? "IB" : context.curriculumId}
+                  </span>
+                  <span className="px-2 py-1 bg-white rounded border border-[var(--border)]">{context.levelId}</span>
+                  <span className="px-2 py-1 bg-white rounded border border-[var(--border)] capitalize">{context.subject}</span>
+                  <span className="px-2 py-1 bg-white rounded border border-[var(--border)] capitalize">{context.language}</span>
+                </div>
+              </div>
+            )}
+            
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Input type="number" label="Total Points" value={context.totalPoints} onChange={(e) => update("totalPoints", parseInt(e.target.value, 10))} placeholder="e.g. 20" />
               <Input type="number" label="Number of Exercises" value={context.exerciseCount} onChange={(e) => update("exerciseCount", parseInt(e.target.value, 10))} placeholder="e.g. 3" />
