@@ -139,7 +139,7 @@ export default function CreatePage() {
       {/* Header */}
       <header className="flex items-center justify-between px-6 md:px-10 h-16 border-b border-[var(--border)]/60 bg-[var(--bg)]/75 backdrop-blur-xl sticky top-0 z-40 transition-colors">
         <Link href="/" className="flex items-center gap-2 text-[var(--text-secondary)] hover:text-[var(--text)] transition-colors">
-          <ArrowLeft size={16} />
+          <ArrowLeft size={16} aria-label="Back to home page" />
           <span className="text-sm hidden sm:block">Back</span>
         </Link>
         <div className="flex items-center gap-2">
@@ -205,7 +205,7 @@ export default function CreatePage() {
                 <button
                   key={i}
                   onClick={() => useExample(i)}
-                  className={cn(
+                  className={cn( // role="button" is implicit for <button>
                     "text-xs px-3 py-1.5 rounded-full border transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]",
                     activeExample === i
                       ? "border-[var(--accent)] text-[var(--accent)] bg-[var(--accent-light)] shadow-sm"
@@ -228,6 +228,7 @@ export default function CreatePage() {
                 <button
                   onClick={() => setShowProfileForm(!showProfileForm)}
                   className="text-xs text-[var(--accent)] hover:underline"
+                  aria-label={showProfileForm ? "Cancel adding new class profile" : "Add new class profile"}
                 >
                   {showProfileForm ? "Cancel" : "+ Add class"}
                 </button>
@@ -244,7 +245,7 @@ export default function CreatePage() {
                   <button
                     onClick={addProfileFromCurrent}
                     disabled={!newProfileName.trim()}
-                    className="text-xs px-3 py-1.5 rounded-lg bg-[var(--accent)] text-white font-medium hover:bg-[var(--accent-hover)] transition-colors disabled:opacity-50"
+                    className="text-xs px-3 py-1.5 rounded-lg bg-[var(--accent)] text-white font-medium hover:bg-[var(--accent-hover)] transition-colors disabled:opacity-50" aria-label="Save class profile"
                   >
                     Save
                   </button>
@@ -260,13 +261,13 @@ export default function CreatePage() {
                     >
                       <button
                         onClick={() => applyProfile(p)}
-                        className="text-xs pl-3 pr-2 py-1.5 text-[var(--text-secondary)] hover:text-[var(--text)]"
+                        className="text-xs pl-3 pr-2 py-1.5 text-[var(--text-secondary)] hover:text-[var(--text)]" aria-label={`Apply profile ${p.name}`}
                       >
                         {p.name}
                       </button>
                       <button
                         onClick={() => removeProfile(p.id)}
-                        className="pr-2.5 py-1.5 text-[var(--text-tertiary)] opacity-0 group-hover:opacity-100 hover:text-[var(--danger)] transition-all"
+                        className="pr-2.5 py-1.5 text-[var(--text-tertiary)] opacity-0 group-hover:opacity-100 hover:text-[var(--danger)] transition-all" aria-label={`Remove profile ${p.name}`}
                       >
                         <Trash2 size={10} />
                       </button>
@@ -283,6 +284,7 @@ export default function CreatePage() {
               <button
                 onClick={() => setShowProfileForm(true)}
                 className="text-xs text-[var(--text-tertiary)] hover:text-[var(--accent)] inline-flex items-center gap-1.5 transition-colors"
+                aria-label="Save a class profile"
               >
                 <BookOpen size={11} />
                 + Save a class profile for quick reuse next time
@@ -312,33 +314,35 @@ export default function CreatePage() {
           )}
 
           {/* CTA */}
-          <Button
-            onClick={handleAnalyze}
-            disabled={!isReady}
-            loading={isAnalyzing}
-            size="lg"
-            className="w-full shadow-md shadow-[var(--accent)]/10 ring-1 ring-inset ring-white/20"
-            icon={isAnalyzing ? undefined : <Sparkles size={15} />}
-            iconPosition="right"
-          >
-            {isAnalyzing ? "Analyzing…" : "Analyze & continue"}
-          </Button>
+          <div className="pt-4 pb-8">
+            <Button
+              onClick={handleAnalyze}
+              disabled={!isReady}
+              loading={isAnalyzing}
+              size="lg"
+              className="w-full shadow-md shadow-[var(--accent)]/10 ring-1 ring-inset ring-white/20"
+              icon={isAnalyzing ? undefined : <Sparkles size={15} />}
+              iconPosition="right"
+            >
+              {isAnalyzing ? "Analyzing…" : "Analyze & continue"}
+            </Button>
 
-          {isReady && !isAnalyzing && (
-            <p className="text-center text-xs text-[var(--text-tertiary)] mt-3">
-              Imtihan will detect curriculum, level, subject and chapters automatically
-            </p>
-          )}
-          {!isReady && description.length > 0 && (
-            <p className="text-center text-xs text-[var(--text-tertiary)] mt-3">
-              Add a bit more detail to continue (min. 20 characters)
-            </p>
-          )}
+            {isReady && !isAnalyzing && (
+              <p className="text-center text-xs text-[var(--text-tertiary)] mt-3">
+                Imtihan will detect curriculum, level, subject and chapters automatically
+              </p>
+            )}
+            {!isReady && description.length > 0 && (
+              <p className="text-center text-xs text-[var(--text-tertiary)] mt-3">
+                Add a bit more detail to continue (min. 20 characters)
+              </p>
+            )}
+          </div>
         </div>
       </main>
 
       {/* Bottom curriculum hints */}
-      <div className="flex items-center justify-center pb-6 gap-5">
+      <div className="flex flex-wrap items-center justify-center pb-6 px-6 gap-x-5 gap-y-2">
         {["Bac Libanais", "Bac Français", "IB", "Université"].map((c) => (
           <span key={c} className="text-xs text-[var(--text-tertiary)]">{c}</span>
         ))}

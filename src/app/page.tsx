@@ -145,7 +145,7 @@ export default function LandingPage() {
             className="hidden md:inline-flex items-center text-sm text-[var(--text-secondary)] hover:text-[var(--text)] transition-colors"
           >
             Sign in
-          </Link>
+          </Link> {/* TODO: Translate "Sign in" */}
           <Link
             href="/create"
             className="inline-flex items-center gap-1.5 h-9 px-4 rounded-xl bg-[var(--accent)] text-white text-sm font-medium hover:opacity-90 transition-opacity shadow-sm"
@@ -166,27 +166,26 @@ export default function LandingPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
           >
-            {/* Badge */}
-            <div className="group inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-[var(--border)] bg-[var(--surface)] text-xs text-[var(--text-secondary)] mb-8 shadow-sm hover:border-[var(--accent)]/30 hover:bg-[var(--accent)]/5 transition-all duration-300 cursor-default">
+            {/* Badge */} {/* TODO: Translate "2 free exams — no credit card required" */}
+            <div className="group inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-[var(--border)] bg-[var(--surface)] text-xs text-[var(--text-secondary)] mb-8 shadow-sm hover:border-[var(--accent)]/30 hover:bg-[var(--accent)]/5 transition-all duration-300 cursor-default" aria-label="2 free exams — no credit card required">
               <Star size={10} className="text-[var(--accent)] fill-[var(--accent)] group-hover:rotate-[72deg] transition-transform duration-500" />
-              <span>3 free exams — no credit card required</span>
+              <span>2 free exams — no credit card required</span>
               <ChevronRight size={10} />
             </div>
 
             {/* Headline */}
             <h1 className="serif text-display-2xl text-[var(--text)] text-balance leading-[0.95] tracking-tighter mb-5">
-              Exam generation
+              The exam you imagined,
               <br />
-              <span className="italic text-transparent bg-clip-text bg-gradient-to-r from-[var(--accent)] to-emerald-400">for Lebanese teachers.</span>
+              <span className="italic text-transparent bg-clip-text bg-gradient-to-r from-[var(--accent)] to-emerald-400">built in minutes.</span>
             </h1>
           </motion.div>
 
           <p className="max-w-lg text-lg text-[var(--text-secondary)] leading-relaxed mb-2 text-pretty">
-            Describe what you want. Upload your notes. Get a polished exam + corrigé in
-            minutes — matched to your exact curriculum and syllabus.
+            Describe what you need in plain language. Imtihan generates a complete, curriculum-aligned exam with detailed solutions in seconds.
           </p>
           <p className="max-w-lg text-sm text-[var(--text-tertiary)] leading-relaxed mb-10">
-            32 subjects · Bac Libanais · Bac Français · IB · Université · Français / English / العربية
+            Supports Bac Libanais · Bac Français · IB · University courses.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-3">
@@ -475,11 +474,11 @@ export default function LandingPage() {
             {/* Free */}
             <div className="card p-8 flex flex-col h-full hover:-translate-y-1 hover:shadow-xl hover:shadow-black/[0.03] transition-all duration-300">
               <p className="text-xs uppercase tracking-wider text-[var(--text-tertiary)] font-medium mb-4">Free</p>
-              <div className="serif text-4xl font-light text-[var(--text)] mb-1">$0</div>
-              <p className="text-sm text-[var(--text-secondary)] mb-6">3 exams to try everything</p>
+              <div className="serif text-4xl font-light text-[var(--text)] mb-1">2 Free</div>
+              <p className="text-sm text-[var(--text-secondary)] mb-6">2 exams to try everything</p>
               <ul className="space-y-3 mb-8 text-sm text-[var(--text-secondary)]">
                 {[
-                  "3 complete exams + corrigés",
+                  "2 complete exams + corrigés",
                   "All curricula & subjects",
                   "Word + PDF export",
                   "Version A/B generation",
@@ -565,18 +564,18 @@ export default function LandingPage() {
       </section>
 
       {/* ── FOOTER ───────────────────────────────────────────────────── */}
-      <footer className="px-6 md:px-10 py-12 border-t border-[var(--border)]">
-        <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="flex items-center gap-2.5">
+      <footer className="px-6 md:px-10 py-16 border-t border-[var(--border)]">
+        <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-8 md:gap-6">
+          <div className="flex items-center gap-2.5 order-1">
             <div className="w-7 h-7 rounded-lg bg-[var(--accent)] flex items-center justify-center">
               <span className="text-white font-serif text-xs">إ</span>
             </div>
             <span className="font-semibold text-[var(--text)] text-sm tracking-tight">Imtihan</span>
           </div>
-          <p className="text-xs text-[var(--text-tertiary)] text-center">
+          <p className="text-xs text-[var(--text-tertiary)] text-center order-3 md:order-2">
             Made for Lebanese teachers · © {new Date().getFullYear()} Imtihan
           </p>
-          <div className="flex items-center gap-5 text-xs text-[var(--text-tertiary)]">
+          <div className="flex items-center justify-center gap-5 text-xs text-[var(--text-tertiary)] order-2 md:order-3">
             <Link href="/privacy" className="hover:text-[var(--text)] transition-colors">Privacy</Link>
             <Link href="/terms" className="hover:text-[var(--text)] transition-colors">Terms</Link>
             <Link href="/contact" className="hover:text-[var(--text)] transition-colors">Contact</Link>

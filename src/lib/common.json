@@ -1,0 +1,19 @@
+{
+  "nav": {
+    "how_it_works": "Comment ça marche",
+    "subjects": "Matières",
+    "reviews": "Témoignages",
+    "pricing": "Tarifs",
+    "sign_in": "Se connecter",
+    "try_free": "Essai gratuit"
+  },
+  "hero": {
+    "badge_text": "2 examens gratuits — aucune carte de crédit requise",
+    "headline_part1": "Génération d'examens",
+    "headline_part2": "pour les professeurs libanais.",
+    "description_part1": "Décrivez ce que vous voulez. Téléchargez vos notes. Obtenez un examen + corrigé soigné en quelques minutes — adapté à votre programme et syllabus.",
+    "description_part2": "32 matières · Bac Libanais · Bac Français · IB · Université · Français / English / العربية",
+    "create_exam_button": "Créez votre premier examen",
+    "see_how_it_works_button": "Voir comment ça marche"
+  }
+}

@@ -35,6 +35,8 @@ const ExamContextSchema = z.object({
 const RequestSchema = z.object({
   context: ExamContextSchema,
   templateId: z.string().default("default"),
+  documentBase64: z.string().optional(),
+  documentMimeType: z.string().optional(),
 });
 
 /**
@@ -164,10 +166,21 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { context } = parsed.data;
+    const { context, documentBase64, documentMimeType } = parsed.data;
 
-    const systemPrompt = buildGenerateSystemPrompt(context);
+    const hasDocument = !!(documentBase64 && documentMimeType);
+    const systemPrompt = buildGenerateSystemPrompt(context, hasDocument);
     const userPrompt = buildGenerateUserPrompt(context);
+
+    // Build user parts — prepend teacher's document when provided (NotebookLM-style grounding)
+    type Part = { text: string } | { inlineData: { mimeType: string; data: string } };
+    const parts: Part[] = [];
+    if (documentBase64 && documentMimeType) {
+      // Strip data URL prefix if present (e.g. "data:application/pdf;base64,")
+      const data = documentBase64.replace(/^data:[^;]+;base64,/, "");
+      parts.push({ inlineData: { mimeType: documentMimeType, data } });
+    }
+    parts.push({ text: userPrompt });
 
     // Streaming response via Gemini — retry on 503/429, fallback to 2.0-flash
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -176,7 +189,7 @@ export async function POST(request: NextRequest) {
       streamResult = await withRetryAndFallback((model) =>
         model.generateContentStream({
           systemInstruction: systemPrompt,
-          contents: [{ role: "user", parts: [{ text: userPrompt }] }],
+          contents: [{ role: "user", parts }],
         })
       );
     } catch (geminiErr) {

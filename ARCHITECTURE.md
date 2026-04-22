@@ -48,6 +48,35 @@ Server pipes SSE stream to client
 
 ---
 
+## AI Grounding & RAG Strategy
+
+To ensure generated content is accurate and curriculum-aligned, we employ a Retrieval-Augmented Generation (RAG) strategy.
+
+### v1 (MVP): Direct Context Injection
+
+The current implementation uses a simple form of RAG. In the `/api/analyze` step, any uploaded document (PDF, DOCX) is sent directly to Gemini along with the user's text prompt.
+
+```
+User Prompt + Base64 Encoded Document → Gemini API → Structured ExamContext
+```
+
+**Pros:** Simple to implement, effective for single-document analysis.
+**Cons:** Not scalable to multiple documents, inefficient, and limited by the model's context window. Uploaded files are not persisted.
+
+### v1.1+ (Future): Vector Database RAG
+
+The long-term vision is to implement a full RAG pipeline using a vector database (e.g., Firebase Vector Search, Pinecone).
+
+1.  **Indexing:** All official curriculum documents and teacher-uploaded materials will be chunked, vectorized, and stored in a vector database.
+2.  **Retrieval:** When a user makes a request, their prompt is used to search the vector database for the most relevant document chunks.
+3.  **Augmentation:** These retrieved chunks are then injected into the prompt sent to Gemini, providing highly relevant, targeted context.
+
+This approach is more scalable, faster at runtime, and allows for grounding across a vast library of trusted sources, perfectly aligning with the project's goal of accuracy.
+
+**Note:** The primary materials for this RAG pipeline, especially for the "University" curriculum, should be sourced according to the guide in `docs/DATA_SOURCING.md`.
+
+---
+
 ## Data Flow — State Management
 
 The workflow uses **sessionStorage** for cross-page state during the 5-step flow. This avoids the complexity of a global state manager for MVP.
@@ -157,9 +186,9 @@ When a prompt is changed, add a comment `// v2 — reason for change` and test a
 
 ## Free Tier Enforcement
 
-The 3-exam free limit is enforced **server-side** in `/api/generate`:
+The 2-exam free limit is enforced **server-side** in `/api/generate`:
 
-```typescript
+```typescript // v2 - updated free exam limit
 const uid = await verifyIdToken(request);  // Firebase Admin
 const userDoc = await adminDb.doc(`users/${uid}`).get();
 const { examsGenerated, subscription } = userDoc.data();

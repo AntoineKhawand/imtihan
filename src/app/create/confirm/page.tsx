@@ -37,6 +37,11 @@ export default function ConfirmPage() {
     finally { setLoading(false); }
   }, [router]);
 
+  // Auto-persist edits so navigating back doesn't wipe in-progress changes.
+  useEffect(() => {
+    if (context) sessionStorage.setItem("imtihan_context", JSON.stringify(context));
+  }, [context]);
+
   function update<K extends keyof ExamContext>(key: K, value: ExamContext[K]) {
     setContext((prev) => prev ? { ...prev, [key]: value } : prev);
   }

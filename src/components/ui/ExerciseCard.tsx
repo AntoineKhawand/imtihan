@@ -60,6 +60,7 @@ interface ExerciseCardProps {
   onSaveToBank?: (exercise: Exercise) => void;
   isRegenerating?: boolean;
   savedToBank?: boolean;
+  isFreeTier?: boolean;
 }
 
 export function ExerciseCard({
@@ -72,6 +73,7 @@ export function ExerciseCard({
   onSaveToBank,
   isRegenerating = false,
   savedToBank = false,
+  isFreeTier = false,
 }: ExerciseCardProps) {
   const [showSolution, setShowSolution] = useState(false);
   const [showActions, setShowActions] = useState(false);
@@ -394,4 +396,3 @@ export function ExerciseCard({
     </div>
   );
 }
-

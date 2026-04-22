@@ -84,6 +84,8 @@ imtihan/
 
 All curriculum chapters live in `src/data/curricula/`. This is the **single source of truth** — Claude only generates exercises for chapters defined here. Adding a new chapter = add it to the appropriate file.
 
+For university-level content, which is more free-form, high-quality source documents are critical for grounding the AI. See `docs/DATA_SOURCING.md` for a detailed guide on acquiring authentic past exams (`dawrat`) and syllabi from Lebanese universities.
+
 ### Prompt Architecture
 
 All AI prompts are in `src/lib/prompts/`. They are versioned TypeScript files with named exports. Never inline prompts inside route handlers.

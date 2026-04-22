@@ -29,6 +29,7 @@ export default function GeneratePage() {
   const [editingExercise, setEditingExercise] = useState<Exercise | null>(null);
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
   const [bankToast, setBankToast] = useState<string | null>(null);
+  const [uploadedDoc, setUploadedDoc] = useState<{ base64: string; type: string } | null>(null);
 
   function persistExercises(next: Exercise[], ctx: ExamContext | null = context, tmpl: string = templateId) {
     sessionStorage.setItem("imtihan_exercises", JSON.stringify(next));
@@ -43,6 +44,15 @@ export default function GeneratePage() {
       const ctx = JSON.parse(raw) as ExamContext;
       setContext(ctx);
       setTemplateId(tmpl);
+
+      // Load teacher's uploaded document for NotebookLM-style grounding
+      const fileRaw = sessionStorage.getItem("imtihan_uploaded_file");
+      if (fileRaw) {
+        try {
+          const f = JSON.parse(fileRaw) as { name: string; size: number; type: string; base64: string };
+          setUploadedDoc({ base64: f.base64, type: f.type });
+        } catch { /* ignore */ }
+      }
 
       // If the user already generated exercises and navigates back, restore them
       // instead of hammering the Gemini API again.
@@ -81,7 +91,11 @@ export default function GeneratePage() {
       const res = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ context, templateId }),
+        body: JSON.stringify({
+          context,
+          templateId,
+          ...(uploadedDoc ? { documentBase64: uploadedDoc.base64, documentMimeType: uploadedDoc.type } : {}),
+        }),
         signal: abortRef.current.signal,
       });
 
@@ -123,7 +137,7 @@ export default function GeneratePage() {
                   number: i + 1,
                 }));
                 setExercises(withIds);
-                sessionStorage.setItem("imtihan_exercises", JSON.stringify(withIds));
+                persistExercises(withIds);
                 setStatus("done");
               }
             }
@@ -158,6 +172,7 @@ export default function GeneratePage() {
             } : {}),
           },
           templateId,
+          ...(uploadedDoc ? { documentBase64: uploadedDoc.base64, documentMimeType: uploadedDoc.type } : {}),
         }),
       });
 
@@ -182,7 +197,7 @@ export default function GeneratePage() {
                 if (idx === -1) return prev;
                 const next = [...prev];
                 next[idx] = { ...newExercise, number: idx + 1 };
-                sessionStorage.setItem("imtihan_exercises", JSON.stringify(next));
+                persistExercises(next);
                 return next;
               });
             }
@@ -197,7 +212,7 @@ export default function GeneratePage() {
   function handleRemove(id: string) {
     setExercises((prev) => {
       const next = prev.filter((e) => e.id !== id).map((e, i) => ({ ...e, number: i + 1 }));
-      sessionStorage.setItem("imtihan_exercises", JSON.stringify(next));
+      persistExercises(next);
       return next;
     });
   }
@@ -209,7 +224,7 @@ export default function GeneratePage() {
   function handleEditorSave(updated: Exercise) {
     setExercises((prev) => {
       const next = prev.map((e) => e.id === updated.id ? updated : e);
-      sessionStorage.setItem("imtihan_exercises", JSON.stringify(next));
+      persistExercises(next);
       return next;
     });
     setEditingExercise(null);

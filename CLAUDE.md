@@ -21,8 +21,8 @@
 │  uploads PDFs/DOCX/images (textbook chapter, past exam, notes). │
 │                                                                 │
 │  → POST /api/analyze                                            │
-│  → Claude Sonnet 4.5 with vision reads everything               │
-│  → Returns structured ExamContext (curriculum, level, subject,  │
+│  → Gemini 2.5 Flash with vision reads everything                │
+│  → Returns structured ExamContext (curriculum, level, subject,   │
 │    chapters, language, duration, exercise count, etc.)          │
 └─────────────────────────────────────────────────────────────────┘
                               ↓
@@ -65,7 +65,7 @@
 | Auth | Firebase Auth | Same stack as Antoine's other app (Ruvo) |
 | Database | Firestore | Teacher accounts, saved exams, exam library |
 | Storage | Firebase Storage | Uploaded source documents, generated files |
-| AI | Anthropic Claude Sonnet 4.5 | Best quality/cost for exam generation + vision |
+| AI | Google Gemini 1.5 Flash | Best quality/cost for exam generation + vision |
 | Word export | `docx` npm package | Full styling control |
 | PDF export | `@react-pdf/renderer` | React-native PDF rendering |
 | Payments | Stripe (v1.1+) | Monthly subscription, USD |
@@ -106,7 +106,7 @@ Prompts live in `src/lib/prompts/` as versioned TypeScript files, not hardcoded 
 1. Has a **named export** describing its purpose: `buildAnalyzePrompt()`, `buildExerciseGenerationPrompt()`.
 2. Takes typed inputs and returns a single string.
 3. Uses explicit XML tags when structuring sub-sections (`<curriculum>`, `<teacher_description>`, etc.) — this is how Claude is trained to parse structure.
-4. Asks Claude to **return JSON only** when structured output is needed, and we parse it safely with Zod schemas.
+4. Asks Gemini to **return JSON only** when structured output is needed, and we parse it safely with Zod schemas.
 
 **Never** inline a prompt as a template literal inside a route handler. It makes prompts un-testable and un-versionable.
 
@@ -142,7 +142,7 @@ users/{uid}/exams/{examId}
 
 - [ ] **Domain name** — imtihan.app? imtihan.io? imtihan.me? Needs purchase.
 - [ ] **Accent color final** — currently emerald `#1a5e3f`. Could also be terracotta.
-- [ ] **Free tier** — confirmed 3 exams lifetime (not per month).
+- [x] **Free tier** — confirmed 2 exams lifetime (not per month).
 - [ ] **Pricing after free tier** — probably $7–10/month for individuals. School pricing TBD.
 - [ ] **Arabic support** — deferred to v1.1. Do not start until MVP is stable.
 - [ ] **Custom .docx format upload** — deferred to v1.1. Templates only in MVP.
@@ -161,7 +161,9 @@ users/{uid}/exams/{examId}
 - Granular exercise regeneration
 - Methodology in corrigé
 - Word + PDF export
-- 3 free exams, then paywall stub (paywall logic can be a TODO until Stripe is wired)
+- 2 free exams, then paywall stub (paywall logic can be a TODO until Stripe is wired)
+
+**Note on University Curriculum:** While "free-form" for the user, AI responses should be grounded in high-quality past exams (`dawrat`) and syllabi sourced according to the `docs/DATA_SOURCING.md` guide. This ensures authenticity.
 
 **Not in MVP — defer firmly:**
 - Arabic, Biology, custom format upload, school accounts, question bank, homework generator, grading assistant
@@ -180,15 +182,16 @@ If a request implies scope creep, flag it and point back to this section.
 ## 11. Testing Strategy (Post-MVP Priority)
 
 - Unit tests for prompt builders (deterministic string output).
-- Integration tests for the generate endpoint using recorded Claude responses.
+- Integration tests for the generate endpoint using recorded Gemini responses.
 - E2E with Playwright for the full workflow — same pattern Antoine used for Ruvo.
 
 ## 12. Known Gotchas
 
 - **Firebase Admin private key** in env vars needs literal `\n` characters, not real newlines. Handle with `.replace(/\\n/g, '\n')` on load.
-- **Claude vision for PDFs** works best when PDFs are small (<20 pages). Large syllabi should be chunked.
+- **Gemini vision for PDFs** works best when PDFs are small (<20 pages). Large syllabi should be chunked.
 - **Next.js 15 + React 19** — some older libraries don't support React 19 yet. Check before adding deps.
 - **Lebanese internet** — Vercel edge performs okay in Beirut, but generated file downloads must be self-contained (no re-fetching assets from cloud at print time).
+- **Gemini `thinking` tokens** — The SDK can fail on "thinking" tokens in streams. `thinkingBudget: 0` is set in `gemini.ts` to suppress them.
 
 ## 13. When You're Stuck
 

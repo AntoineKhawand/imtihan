@@ -26,13 +26,20 @@ interface ToggleProps {
   description: string;
   checked: boolean;
   onChange: (checked: boolean) => void;
+  disabled?: boolean;
+  locked?: boolean;
 }
 
-export function Toggle({ label, description, checked, onChange }: ToggleProps) {
+export function Toggle({ label, description, checked, onChange, disabled, locked }: ToggleProps) {
   return (
     <div
-      onClick={() => onChange(!checked)}
-      className="flex items-center justify-between p-4 rounded-xl border border-[var(--border)] hover:border-[var(--border-strong)] transition-colors cursor-pointer"
+      onClick={() => !disabled && !locked && onChange(!checked)}
+      className={cn(
+        "relative flex items-center justify-between p-4 rounded-xl border border-[var(--border)] transition-colors",
+        (disabled || locked)
+          ? "opacity-60 cursor-not-allowed bg-[var(--bg-subtle)]"
+          : "hover:border-[var(--border-strong)] cursor-pointer"
+      )}
     >
       <div>
         <p className="text-sm font-medium text-[var(--text)]">{label}</p>
@@ -51,6 +58,11 @@ export function Toggle({ label, description, checked, onChange }: ToggleProps) {
           )}
         />
       </div>
+      {locked && (
+        <span className="absolute top-2 right-2 text-[10px] uppercase tracking-wider font-bold text-[var(--accent)] px-2 py-0.5 rounded-full bg-[var(--accent-light)] border border-[var(--accent)]/20">
+          Pro
+        </span>
+      )}
     </div>
   );
 }
@@ -60,14 +72,15 @@ interface TemplateCardProps {
   id: string;
   selected: boolean;
   onSelect: () => void;
+  children?: import("react").ReactNode;
 }
 
-export function TemplateCard({ label, id, selected, onSelect }: TemplateCardProps) {
+export function TemplateCard({ label, selected, onSelect, children }: TemplateCardProps) {
   return (
     <button
       onClick={onSelect}
       className={cn(
-        "relative w-full aspect-[3/4] rounded-xl border-2 flex items-center justify-center text-center p-4 transition-all",
+        "relative w-full aspect-[3/4] rounded-xl border-2 flex flex-col items-center justify-between text-center p-3 transition-all",
         selected
           ? "border-[var(--accent)] shadow-lg"
           : "border-[var(--border)] hover:border-[var(--border-strong)]"
@@ -78,7 +91,8 @@ export function TemplateCard({ label, id, selected, onSelect }: TemplateCardProp
           <Check size={12} className="text-white" />
         </div>
       )}
-      <span className="text-sm font-medium text-[var(--text)]">{label}</span>
+      {children && <div className="flex-1 w-full flex items-center justify-center">{children}</div>}
+      <span className="text-sm font-medium text-[var(--text)] mt-2">{label}</span>
     </button>
   );
 }
