@@ -15,10 +15,16 @@ import { auth, db, getFirebaseConfig } from "@/lib/firebase";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/FormElements";
 import { ArrowLeft, User } from "lucide-react";
+import { useSearchParams } from "next/navigation";
 import { UserRole } from "@/types/user";
+import { useAuth } from "@/contexts/AuthContext";
+import { useEffect } from "react";
 
 export default function RegisterPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const next = searchParams.get("next") || "/dashboard";
+  const { user } = useAuth();
 
   const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
@@ -28,17 +34,29 @@ export default function RegisterPage() {
   const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  useEffect(() => {
+    if (user && !loading && !googleLoading) {
+      console.log("[RegisterPage] Auth state detected. Auto-redirecting to:", next);
+      window.location.assign(next);
+    }
+  }, [user, loading, googleLoading, next]);
+
   async function handleRegister() {
     if (!email || !password) return;
     setLoading(true);
     setError(null);
     try {
+      console.log("[Register] Creating user with email:", email);
       const credential = await createUserWithEmailAndPassword(auth, email, password);
+      console.log("[Register] User created. UID:", credential.user.uid);
+
       if (displayName.trim()) {
         await updateProfile(credential.user, { displayName: displayName.trim() });
+        console.log("[Register] Profile updated with name:", displayName.trim());
       }
       
       // Save custom user profile immediately
+      console.log("[Register] Saving profile to Firestore...");
       const userRef = doc(db, "users", credential.user.uid);
       await setDoc(userRef, {
         uid: credential.user.uid,
@@ -53,10 +71,14 @@ export default function RegisterPage() {
           tier: "free",
         },
       });
+      console.log("[Register] Firestore profile saved.");
 
-      window.location.href = "/create";
+      console.log("[Register] Redirecting to:", next);
+      window.location.href = next;
     } catch (err: unknown) {
-      const code = (err as { code?: string }).code;
+      const e = err as { code?: string; message?: string; stack?: string };
+      const code = e.code ?? "";
+      console.error("[Register] Error detail:", { code, message: e.message, stack: e.stack });
       if (code === "auth/email-already-in-use") {
         setError("An account with this email already exists. Try signing in.");
       } else if (code === "auth/weak-password") {
@@ -81,10 +103,11 @@ async function handleGoogle() {
         setGoogleLoading(false);
         return;
       }
-      console.log("[Google sign-up] Starting. Auth:", !!auth, "Config:", getFirebaseConfig());
       const provider = new GoogleAuthProvider();
       provider.setCustomParameters({ prompt: "select_account" });
+      console.log("[Google sign-up] Starting signInWithPopup...");
       const credential = await signInWithPopup(auth, provider);
+      console.log("[Google sign-up] Success. User:", credential.user.email);
       
       const additionalInfo = getAdditionalUserInfo(credential);
       if (additionalInfo?.isNewUser) {
@@ -104,11 +127,12 @@ async function handleGoogle() {
         });
       }
 
-      window.location.href = "/create";
+      console.log("[Google sign-up] Redirecting to:", next);
+      window.location.href = next;
     } catch (err: unknown) {
       const e = err as { code?: string; message?: string; stack?: string };
       const code = e.code ?? "";
-      console.error("[Google sign-up] Error:", code, e.message, e.stack);
+      console.error("[Google sign-up] Error detail:", { code, message: e.message, stack: e.stack });
       if (code === "auth/popup-closed-by-user" || code === "auth/cancelled-popup-request") {
         setError(null);
       } else if (code === "auth/popup-blocked") {

@@ -39,18 +39,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Sync Firebase auth state with our custom session cookie for Next.js Middleware
   const syncSessionCookie = async (user: User | null) => {
     try {
+      console.log("[AuthContext] Syncing session cookie. User:", user?.email || "null");
       if (user) {
         const token = await user.getIdToken();
-        await fetch("/api/auth/session", {
+        console.log("[AuthContext] Got ID token. Sending to /api/auth/session...");
+        const res = await fetch("/api/auth/session", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ token }),
         });
+        console.log("[AuthContext] Session API response status:", res.status);
       } else {
+        console.log("[AuthContext] No user. Clearing session...");
         await fetch("/api/auth/session", { method: "DELETE" });
+        console.log("[AuthContext] Session cleared.");
       }
     } catch (error) {
-      console.error("Failed to sync session cookie:", error);
+      console.error("[AuthContext] syncSessionCookie error:", error);
     }
   };
 
@@ -90,10 +95,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
-      await syncSessionCookie(currentUser);
+      // Non-blocking sync to prevent UI freezes
+      syncSessionCookie(currentUser).catch(err => console.error("[AuthContext] Session sync error:", err));
       
       if (currentUser) {
-        await ensureUserProfile(currentUser);
+        ensureUserProfile(currentUser).catch(err => console.error("[AuthContext] Profile ensure error:", err));
       } else {
         setProfile(null);
       }

@@ -13,6 +13,7 @@ import {
 } from "@/lib/storage";
 import { useAuth } from "@/contexts/AuthContext";
 import { FREE_EXAM_LIMIT } from "@/lib/utils";
+import { UserNav } from "@/components/layout/UserNav";
 
 interface UploadedFile {
   name: string;
@@ -150,18 +151,24 @@ export default function CreatePage() {
 
       {/* Header */}
       <header className="flex items-center justify-between px-6 md:px-10 h-16 border-b border-[var(--border)]/60 bg-[var(--bg)]/75 backdrop-blur-xl sticky top-0 z-40 transition-colors">
-        <Link href="/" className="flex items-center gap-2 text-[var(--text-secondary)] hover:text-[var(--text)] transition-colors">
-          <ArrowLeft size={16} aria-label="Back to home page" />
-          <span className="text-sm hidden sm:block">Back</span>
-        </Link>
-        <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg bg-[var(--accent)] flex items-center justify-center">
-            <span className="text-white text-xs font-serif">إ</span>
+        <div className="flex items-center gap-6">
+          <Link href="/" className="flex items-center gap-2 text-[var(--text-secondary)] hover:text-[var(--text)] transition-colors">
+            <ArrowLeft size={16} aria-label="Back to home page" />
+            <span className="text-sm hidden sm:block">Back</span>
+          </Link>
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-lg bg-[var(--accent)] flex items-center justify-center">
+              <span className="text-white text-xs font-serif">إ</span>
+            </div>
+            <span className="font-semibold text-sm text-[var(--text)] tracking-tight">Imtihan</span>
           </div>
-          <span className="font-semibold text-sm text-[var(--text)] tracking-tight">Imtihan</span>
         </div>
-        {/* Step progress */}
-        <StepIndicator current={1} />
+
+        <div className="flex items-center gap-6">
+          <StepIndicator current={1} />
+          <div className="w-px h-6 bg-[var(--border)] hidden sm:block" />
+          <UserNav />
+        </div>
       </header>
 
       <main className="flex-1 flex flex-col items-center px-6 md:px-10 py-12">

@@ -2,7 +2,8 @@
 
 import { cn } from "@/lib/utils";
 import { type InputHTMLAttributes, type SelectHTMLAttributes, forwardRef } from "react";
-import { ChevronDown } from "lucide-react";
+import { Eye, EyeOff, ChevronDown } from "lucide-react";
+import { useState } from "react";
 
 // ─── Input ───────────────────────────────────────────────────────────────────
 
@@ -13,29 +14,47 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
 }
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(
-  ({ label, hint, error, className, id, ...props }, ref) => {
+  ({ label, hint, error, className, id, type, ...props }, ref) => {
+    const [showPassword, setShowPassword] = useState(false);
     const inputId = id ?? label?.toLowerCase().replace(/\s+/g, "-");
+    const isPassword = type === "password";
+    const currentType = isPassword ? (showPassword ? "text" : "password") : type;
+
     return (
-      <div className="flex flex-col gap-1.5">
+      <div className="flex flex-col gap-1.5 w-full">
         {label && (
           <label htmlFor={inputId} className="text-sm font-medium text-[var(--text)]">
             {label}
           </label>
         )}
-        <input
-          ref={ref}
-          id={inputId}
-          className={cn(
-            "h-10 px-3.5 rounded-xl border bg-[var(--surface)] text-[var(--text)] text-sm",
-            "placeholder:text-[var(--text-tertiary)]",
-            "transition-all duration-150 focus:outline-none",
-            error
-              ? "border-[var(--danger)] focus:ring-2 focus:ring-[var(--danger)]/20"
-              : "border-[var(--border)] focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent)]/10",
-            className
+        <div className="relative">
+          <input
+            ref={ref}
+            id={inputId}
+            type={currentType}
+            className={cn(
+              "h-10 px-3.5 rounded-xl border bg-[var(--surface)] text-[var(--text)] text-sm w-full",
+              "placeholder:text-[var(--text-tertiary)]",
+              "transition-all duration-150 focus:outline-none",
+              isPassword && "pr-10",
+              error
+                ? "border-[var(--danger)] focus:ring-2 focus:ring-[var(--danger)]/20"
+                : "border-[var(--border)] focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent)]/10",
+              className
+            )}
+            {...props}
+          />
+          {isPassword && (
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)] hover:text-[var(--text)] transition-colors"
+              tabIndex={-1}
+            >
+              {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+            </button>
           )}
-          {...props}
-        />
+        </div>
         {hint && !error && <p className="text-xs text-[var(--text-tertiary)]">{hint}</p>}
         {error && <p className="text-xs text-[var(--danger)]">{error}</p>}
       </div>

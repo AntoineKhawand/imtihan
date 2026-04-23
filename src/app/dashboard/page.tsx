@@ -5,9 +5,12 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Plus, BookOpen, Clock, Award, Search, Sparkles, FileText, Copy, Trash2, ChevronRight, Bookmark, Users, Zap, CreditCard } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import { RenewalBanner } from "@/components/ui/RenewalBanner";
 import { cn, formatDate, SUBJECT_LABELS, FREE_EXAM_LIMIT, shortId } from "@/lib/utils";
+import { isProActive, isInGracePeriod, getWhatsAppUpgradeLink } from "@/lib/subscription";
 import { getSavedExams, deleteExam, saveExam, type SavedExam } from "@/lib/storage";
 import { useAuth } from "@/contexts/AuthContext";
+import { UserNav } from "@/components/layout/UserNav";
 
 const SUBJECT_ICONS: Record<string, string> = {
   physics: "⚛", mathematics: "∑", chemistry: "⚗", biology: "🧬",
@@ -20,15 +23,19 @@ export default function DashboardPage() {
   const [exams, setExams] = useState<SavedExam[]>([]);
   const [query, setQuery] = useState("");
   const [mounted, setMounted] = useState(false);
-  const [upgrading, setUpgrading] = useState(false);
   const { profile } = useAuth();
-const router = useRouter();
+  const router = useRouter();
 
-  const isPro = profile?.subscription?.tier === "individual";
+  const isPro = isProActive(profile) || isInGracePeriod(profile);
   const quotaUsed = exams.length;
   const quotaRemaining = Math.max(0, FREE_EXAM_LIMIT - quotaUsed);
   const examsGenerated = exams.length;
   const totalExercises = exams.reduce((acc, exam) => acc + exam.exercises.length, 0);
+
+  useEffect(() => {
+    setMounted(true);
+    setExams(getSavedExams());
+  }, []);
 
   const filtered = query
     ? exams.filter((exam) => {
@@ -60,32 +67,9 @@ const router = useRouter();
     }
   }
 
-  async function handleUpgrade() {
-    if (isPro) {
-      router.push("/pricing");
-      return;
-    }
-    setUpgrading(true);
-    try {
-      const origin = window.location.origin;
-      const res = await fetch("/api/stripe/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          successUrl: `${origin}/pricing/success?session_id={CHECKOUT_SESSION_ID}`,
-          cancelUrl: `${origin}/pricing/cancel`,
-        }),
-      });
-      const data = await res.json();
-      if (data.url) {
-        window.location.href = data.url;
-      } else {
-        throw new Error(data.error || "Failed to start checkout");
-      }
-    } catch (error) {
-      console.error("Checkout error:", error);
-      setUpgrading(false);
-    }
+  function handleUpgrade() {
+    const link = getWhatsAppUpgradeLink(profile?.email ?? "");
+    window.open(link, "_blank", "noopener,noreferrer");
   }
 
   if (!mounted) {
@@ -98,6 +82,7 @@ const router = useRouter();
 
   return (
     <div className="min-h-screen bg-[var(--bg)]">
+      <RenewalBanner />
       {/* Nav */}
       <nav className="flex items-center justify-between px-6 md:px-10 h-16 border-b border-[var(--border)] bg-[var(--bg)]/90 backdrop-blur-md sticky top-0 z-40">
         <Link href="/" className="flex items-center gap-2.5">
@@ -106,16 +91,20 @@ const router = useRouter();
           </div>
           <span className="font-semibold text-[var(--text)] text-sm tracking-tight">Imtihan</span>
         </Link>
-        <div className="flex items-center gap-3">
-          <Link href="/bank">
-            <Button variant="secondary" size="sm" icon={<Bookmark size={13} />}>Bank</Button>
-          </Link>
-          <Link href="/community">
-            <Button variant="secondary" size="sm" icon={<Users size={13} />}>Community</Button>
-          </Link>
-          <Link href="/create">
-            <Button size="sm" icon={<Plus size={13} />}>New exam</Button>
-          </Link>
+        <div className="flex items-center gap-6">
+          <div className="hidden md:flex items-center gap-3">
+            <Link href="/bank">
+              <Button variant="secondary" size="sm" icon={<Bookmark size={13} />}>Bank</Button>
+            </Link>
+            <Link href="/community">
+              <Button variant="secondary" size="sm" icon={<Users size={13} />}>Community</Button>
+            </Link>
+            <Link href="/create">
+              <Button size="sm" icon={<Plus size={13} />}>New exam</Button>
+            </Link>
+          </div>
+          <div className="w-px h-6 bg-[var(--border)] hidden md:block" />
+          <UserNav />
         </div>
       </nav>
 
@@ -152,9 +141,15 @@ const router = useRouter();
                 <p className="text-sm font-semibold text-[var(--text)] mb-1">Pro plan</p>
                 <p className="text-xs text-[var(--text-tertiary)]">Unlimited exams</p>
               </div>
-              <Button variant="secondary" size="sm" icon={<CreditCard size={13} />} onClick={() => window.location.href = "/api/stripe/portal"}>
-                Manage billing
-              </Button>
+              <a
+                href={getWhatsAppUpgradeLink(profile?.email ?? "")}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg border border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--border-strong)] hover:text-[var(--text)] transition-colors"
+              >
+                <CreditCard size={12} />
+                Renew via WhatsApp
+              </a>
             </>
           ) : (
             <>
@@ -172,8 +167,8 @@ const router = useRouter();
                   <span className="text-xs text-[var(--text-tertiary)] tabular-nums flex-shrink-0">{quotaUsed}/{FREE_EXAM_LIMIT}</span>
                 </div>
               </div>
-              <Button variant="secondary" size="sm" onClick={handleUpgrade} disabled={upgrading}>
-                {upgrading ? "Loading..." : "Upgrade to Pro"}
+              <Button variant="secondary" size="sm" onClick={handleUpgrade}>
+                Upgrade to Pro — $9/mo
               </Button>
             </>
           )}

@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { Suspense, useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
@@ -8,11 +8,13 @@ import { auth } from "@/lib/firebase";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/FormElements";
 import { ArrowLeft } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const next = searchParams.get("next") ?? "/create";
+  const next = searchParams.get("next") || "/dashboard";
+  const { user } = useAuth();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -20,19 +22,40 @@ function LoginForm() {
   const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  useEffect(() => {
+    if (user && !loading && !googleLoading) {
+      console.log("[LoginForm] Auth state detected. Auto-redirecting to:", next);
+      window.location.assign(next);
+    }
+  }, [user, loading, googleLoading, next]);
+
+  console.log("[LoginForm] Rendering. Email:", email, "Next:", next);
+
   async function handleEmail() {
-    if (!email || !password) return;
+    console.log("[Email login] Button clicked. Email:", email);
+    if (!email || !password) {
+      console.warn("[Email login] Missing email or password");
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
+      console.log("[Email login] Calling signInWithEmailAndPassword with email:", email);
       await signInWithEmailAndPassword(auth, email, password);
-      window.location.href = next;
+      console.log("[Email login] Success. Redirecting to:", next);
+      window.location.assign(next);
     } catch (err: unknown) {
-      const code = (err as { code?: string }).code;
-      if (code === "auth/user-not-found" || code === "auth/wrong-password") {
-        setError("Invalid email or password.");
+      const e = err as { code?: string; message?: string };
+      const code = e.code ?? "unknown";
+      console.error("[Email login] Error:", code, e.message);
+      if (code === "auth/user-not-found" || code === "auth/invalid-credential") {
+        setError("Account not found or invalid password. Please create an account first if you haven't yet.");
+      } else if (code === "auth/wrong-password") {
+        setError("Invalid password. Please try again.");
+      } else if (code === "auth/too-many-requests") {
+        setError("Too many failed attempts. Please try again later.");
       } else {
-        setError("Login failed. Please try again.");
+        setError(`Login failed: ${code}. Please check your details.`);
       }
     } finally {
       setLoading(false);
@@ -40,17 +63,25 @@ function LoginForm() {
   }
 
   async function handleGoogle() {
+    console.log("[Google login] Button clicked");
     setGoogleLoading(true);
     setError(null);
     try {
       const provider = new GoogleAuthProvider();
       provider.setCustomParameters({ prompt: "select_account" });
-      await signInWithPopup(auth, provider);
-      window.location.href = next;
+      console.log("[Google login] Starting signInWithPopup...");
+      const credential = await signInWithPopup(auth, provider);
+      console.log("[Google login] Success. User:", credential.user.email, "Redirecting to:", next);
+      
+      // Force a small delay to ensure session sync starts
+      setTimeout(() => {
+        console.log("[Google login] Executing window.location.assign(", next, ")");
+        window.location.assign(next);
+      }, 100);
     } catch (err: unknown) {
-      const e = err as { code?: string; message?: string };
+      const e = err as { code?: string; message?: string; stack?: string };
       const code = e.code ?? "";
-      console.error("[Google login]", code, e.message);
+      console.error("[Google login] Error detail:", { code, message: e.message, stack: e.stack });
       if (code === "auth/popup-closed-by-user" || code === "auth/cancelled-popup-request") {
         setError(null);
       } else if (code === "auth/popup-blocked") {
@@ -61,6 +92,8 @@ function LoginForm() {
         setError("Google sign-in is disabled. Enable it in Firebase Console → Authentication → Sign-in method.");
       } else if (code === "auth/invalid-api-key" || code === "auth/api-key-not-valid") {
         setError("Firebase API key is missing or invalid. Check NEXT_PUBLIC_FIREBASE_API_KEY in .env.local.");
+      } else if (code === "auth/network-request-failed") {
+        setError("Network error. Please check your internet, disable ad-blockers, and ensure your domain (e.g. localhost) is added to 'Authorized domains' in Firebase Console.");
       } else {
         setError(`Google login failed: ${code || e.message || "unknown error"}`);
       }
@@ -107,8 +140,26 @@ function LoginForm() {
       </div>
 
       <div className="space-y-4 mb-4">
-        <Input label="Email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@school.edu.lb" />
-        <Input label="Password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" />
+        <Input 
+          label="Email" 
+          type="email" 
+          value={email} 
+          onChange={(e) => {
+            console.log("[LoginForm] Email change:", e.target.value);
+            setEmail(e.target.value);
+          }} 
+          placeholder="you@school.edu.lb" 
+        />
+        <Input 
+          label="Password" 
+          type="password" 
+          value={password} 
+          onChange={(e) => {
+            console.log("[LoginForm] Password change");
+            setPassword(e.target.value);
+          }} 
+          placeholder="••••••••" 
+        />
       </div>
 
       {error && <p className="text-xs text-[var(--danger)] mb-4">{error}</p>}

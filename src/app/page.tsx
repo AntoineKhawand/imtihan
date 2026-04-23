@@ -26,6 +26,7 @@ import {
   Download,
 } from "lucide-react";
 import { MotionHero, MotionStats, MotionHowItWorks, MotionStreamingPreview } from "@/components/landing/LandingMotion";
+import { UserNav } from "@/components/layout/UserNav";
 
 const STATS = [
   { value: "4",   label: "Curricula",  sub: "Bac Libanais · Bac Français · IB · Université" },
@@ -177,12 +178,7 @@ export default async function LandingPage() {
         </div>
         <div className="flex items-center gap-3">
           {isAuthenticated ? (
-            <Link
-              href="/dashboard"
-              className="inline-flex items-center gap-1.5 h-9 px-4 rounded-xl bg-[var(--text)] text-[var(--bg)] text-sm font-medium hover:opacity-90 transition-opacity shadow-sm"
-            >
-              Dashboard <ArrowRight size={14} />
-            </Link>
+            <UserNav />
           ) : (
             <>
               <Link

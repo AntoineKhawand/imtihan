@@ -12,18 +12,18 @@ export const metadata: Metadata = {
   metadataBase: new URL(APP_URL),
   applicationName: "Imtihan",
   title: {
-    default: "Imtihan — Générateur d'examens IA pour enseignants au Liban",
+    default: "Imtihan — AI Exam Generator for Teachers in Lebanon",
     template: "%s — Imtihan",
   },
   description:
-    "Créez des examens alignés sur le Bac Libanais, Bac Français, IB et l'Université en quelques secondes. Corrigé complet inclus. 2 examens gratuits, sans carte bancaire.",
+    "Create exams aligned with Bac Libanais, Bac Français, IB, and University curricula in seconds. Full answer key included. 2 free exams, no credit card required.",
   keywords: [
-    "générateur examen bac libanais",
-    "examen IA professeur liban",
-    "créer examen physique terminale S",
-    "corrigé automatique bac français",
     "AI exam generator Lebanon",
+    "bac libanais exam generator",
     "IB exam generator",
+    "physics exam generator",
+    "math exam generator",
+    "exam creator for teachers",
     "Imtihan",
     "امتحان",
   ],
@@ -40,27 +40,27 @@ export const metadata: Metadata = {
   },
   openGraph: {
     type: "website",
-    locale: "fr_LB",
-    alternateLocale: "en_US",
+    locale: "en_US",
+    alternateLocale: "fr_LB",
     url: APP_URL,
     siteName: "Imtihan",
-    title: "Imtihan — Générateur d'examens IA pour enseignants au Liban",
+    title: "Imtihan — AI Exam Generator for Teachers in Lebanon",
     description:
-      "Créez des examens alignés sur le Bac Libanais, Bac Français, IB et l'Université en quelques secondes. Corrigé complet inclus.",
+      "Create exams aligned with Bac Libanais, Bac Français, IB, and University curricula in seconds. Full answer key included.",
     images: [
       {
         url: "/opengraph-image",
         width: 1200,
         height: 630,
-        alt: "Imtihan — Générateur d'examens IA",
+        alt: "Imtihan — AI Exam Generator",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Imtihan — Générateur d'examens IA pour enseignants au Liban",
+    title: "Imtihan — AI Exam Generator for Teachers in Lebanon",
     description:
-      "Créez des examens Bac Libanais, Bac Français, IB ou Université en quelques secondes avec l'IA. Corrigé complet inclus.",
+      "Generate Bac Libanais, Bac Français, IB, or University exams in seconds with AI. Full answer key included.",
     images: ["/opengraph-image"],
   },
   manifest: "/manifest.json",
@@ -79,7 +79,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="fr" className={`${GeistSans.variable} ${GeistMono.variable}`} suppressHydrationWarning>
+    <html lang="en" className={`${GeistSans.variable} ${GeistMono.variable}`} suppressHydrationWarning>
       <head>
         {/* Google Fonts performance: preconnect before @import in CSS */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />

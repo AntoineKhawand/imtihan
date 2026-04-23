@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { withRetryAndFallback, geminiErrorMessage, isRetryableError } from "@/lib/gemini";
 import { buildGenerateSystemPrompt, buildGenerateUserPrompt } from "@/lib/prompts/generate";
+import type { GenerationConfig } from "@google/generative-ai";
 import { sanitizeError, createSecurityHeaders } from "@/lib/security";
 
 export const runtime = "nodejs";
@@ -198,6 +199,11 @@ export async function POST(request: NextRequest) {
         model.generateContentStream({
           systemInstruction: systemPrompt,
           contents: [{ role: "user", parts }],
+          // Force pure JSON output — eliminates "Failed to parse" errors from markdown fences or prose
+          generationConfig: {
+            responseMimeType: "application/json",
+            thinkingConfig: { thinkingBudget: 0 },
+          } as unknown as GenerationConfig,
         })
       );
     } catch (geminiErr) {

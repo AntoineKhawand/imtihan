@@ -12,6 +12,8 @@ export interface UserProfile {
   country: string; // default "LB"
   createdAt: number;
   examsGenerated: number;
+  /** Unix timestamp (ms) when the Pro plan expires. Set by admin after Whish payment. */
+  proExpiresAt?: number;
   subscription: {
     status: SubscriptionStatus;
     tier: SubscriptionTier;
