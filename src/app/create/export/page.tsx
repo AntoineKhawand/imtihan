@@ -293,7 +293,14 @@ export default function ExportPage() {
 
             {/* Variant + language */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div className="rounded-xl border border-[var(--border)] p-3">
+              <div className={cn("rounded-xl border border-[var(--border)] p-3", isFreeTier && "opacity-60 relative")}>
+                {isFreeTier && (
+                  <div className="absolute inset-0 z-10 flex items-center justify-center bg-[var(--surface)]/40 backdrop-blur-[1px] rounded-xl">
+                    <div className="bg-[var(--bg)] px-2 py-1 rounded-full border border-[var(--border)] text-[10px]">
+                      Pro
+                    </div>
+                  </div>
+                )}
                 <div className="flex items-center gap-2 mb-2">
                   <Shuffle size={12} className="text-[var(--text-secondary)]" />
                   <span className="text-xs font-medium text-[var(--text-secondary)]">Variant</span>
@@ -302,12 +309,14 @@ export default function ExportPage() {
                   {(["A", "B"] as const).map((v) => (
                     <button
                       key={v}
-                      onClick={() => setVariant(v)}
+                      onClick={() => !isFreeTier && setVariant(v)}
+                      disabled={isFreeTier}
                       className={cn(
                         "flex-1 text-xs px-3 py-1.5 rounded-lg border transition-all",
                         variant === v
                           ? "bg-[var(--accent)] text-white border-[var(--accent)]"
-                          : "border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--border-strong)]"
+                          : "border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--border-strong)]",
+                        isFreeTier && "cursor-not-allowed"
                       )}
                     >
                       Version {v}

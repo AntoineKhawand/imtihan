@@ -450,7 +450,7 @@ function ShareCTA() {
   const [copied, setCopied] = useState(false);
 
   function copyEmail() {
-    navigator.clipboard.writeText("share@imtihan.app").then(() => {
+    navigator.clipboard.writeText("share@imtihan.live").then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     });
@@ -480,7 +480,7 @@ function ShareCTA() {
             To share an exam, send it to us and we&apos;ll review it before publishing. We&apos;ll display your name and school (optional).
           </p>
           <div className="flex items-center gap-3 p-3 rounded-xl bg-[var(--bg-subtle)] border border-[var(--border)]">
-            <p className="flex-1 text-sm font-medium text-[var(--text)]">share@imtihan.app</p>
+            <p className="flex-1 text-sm font-medium text-[var(--text)]">share@imtihan.live</p>
             <button
               onClick={copyEmail}
               className={cn(

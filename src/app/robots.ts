@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://imtihan.app";
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://imtihan.live";
 
 /**
  * Auto-generated robots.txt

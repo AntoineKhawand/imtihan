@@ -12,29 +12,21 @@ const TOPICS = [
     icon: MessageSquare,
     title: "General question",
     description: "Questions about features, how it works, or anything else.",
-    email: "hello@imtihan.app",
-    label: "hello@imtihan.app",
-  },
-  {
-    icon: AlertCircle,
-    title: "Bug or issue",
-    description: "Something broken, unexpected output, or a technical problem.",
-    email: "support@imtihan.app",
-    label: "support@imtihan.app",
-  },
-  {
-    icon: BookOpen,
-    title: "School or institution",
-    description: "Interested in a plan for your school, department, or team.",
-    email: "schools@imtihan.app",
-    label: "schools@imtihan.app",
-  },
-  {
-    icon: Mail,
-    title: "Privacy or legal",
-    description: "Data requests, terms questions, or compliance inquiries.",
-    email: "legal@imtihan.app",
-    label: "legal@imtihan.app",
+email: "hello@imtihan.live",
+
+    label: "hello@imtihan.live",
+
+    email: "support@imtihan.live",
+
+    label: "support@imtihan.live",
+
+    email: "schools@imtihan.live",
+
+    label: "schools@imtihan.live",
+
+    email: "legal@imtihan.live",
+
+    label: "legal@imtihan.live",
   },
 ];
 

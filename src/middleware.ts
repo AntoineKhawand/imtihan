@@ -5,8 +5,8 @@ export const runtime = "edge";
 
 const ALLOWED_ORIGINS = [
   "http://localhost:3000",
-  "https://imtihan.app",
-  "https://www.imtihan.app",
+  "https://imtihan.live",
+  "https://www.imtihan.live",
 ];
 
 const RATE_LIMIT_WINDOW = 60;
@@ -16,7 +16,7 @@ const rateLimitMap = new Map<string, { count: number; timestamp: number }>();
 
 function getRateLimitKey(request: NextRequest): string {
   const forwarded = request.headers.get("x-forwarded-for");
-  const ip = forwarded ? forwarded.split(",")[0].trim() : request.ip ?? "unknown";
+  const ip = forwarded ? forwarded.split(",")[0].trim() : "unknown";
   return ip;
 }
 

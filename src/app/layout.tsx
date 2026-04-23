@@ -6,7 +6,7 @@ import { ToastProvider } from "@/components/ui/Toast";
 import { AuthProvider } from "@/contexts/AuthContext";
 import "./globals.css";
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://imtihan.app";
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://imtihan.live";
 
 export const metadata: Metadata = {
   metadataBase: new URL(APP_URL),

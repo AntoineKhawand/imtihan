@@ -140,7 +140,7 @@ users/{uid}/exams/{examId}
 
 ## 8. Open Decisions (Ask Antoine Before Choosing)
 
-- [ ] **Domain name** — imtihan.app? imtihan.io? imtihan.me? Needs purchase.
+- [x] **Domain name** — imtihan.live (purchased)
 - [ ] **Accent color final** — currently emerald `#1a5e3f`. Could also be terracotta.
 - [x] **Free tier** — confirmed 2 exams lifetime (not per month).
 - [ ] **Pricing after free tier** — probably $7–10/month for individuals. School pricing TBD.

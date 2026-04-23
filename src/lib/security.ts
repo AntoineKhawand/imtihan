@@ -119,7 +119,7 @@ export const defaultSecurityConfig: SecurityConfig = {
   allowedContentTypes: ["application/json", "multipart/form-data"],
   rateLimitWindow: 60,
   rateLimitMax: 100,
-  corsOrigins: ["http://localhost:3000", "https://imtihan.app"],
+  corsOrigins: ["http://localhost:3000", "https://imtihan.live"],
 };
 
 export function createSecurityHeaders(): Record<string, string> {

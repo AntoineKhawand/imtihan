@@ -115,8 +115,8 @@ export default function PrivacyPage() {
             <Section title="11. Contact">
               <p>
                 Questions or requests regarding your privacy can be sent to:{" "}
-                <a href="mailto:privacy@imtihan.app" className="text-[var(--accent)] hover:underline">
-                  privacy@imtihan.app
+                <a href="mailto:privacy@imtihan.live" className="text-[var(--accent)] hover:underline">
+                  privacy@imtihan.live
                 </a>
               </p>
             </Section>

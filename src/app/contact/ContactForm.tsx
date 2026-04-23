@@ -116,7 +116,7 @@ export default function ContactForm() {
       {status === "error" && (
         <p className="text-sm text-[var(--danger)]">
           Something went wrong. Please email us directly at{" "}
-          <a href="mailto:hello@imtihan.app" className="underline">hello@imtihan.app</a>.
+          <a href="mailto:hello@imtihan.live" className="underline">hello@imtihan.live</a>.
         </p>
       )}
 

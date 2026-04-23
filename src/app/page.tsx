@@ -288,7 +288,7 @@ export default async function LandingPage() {
               <div className="w-2.5 h-2.5 rounded-full bg-yellow-400/80 shadow-sm" />
               <div className="w-2.5 h-2.5 rounded-full bg-green-400/80 shadow-sm" />
               <div className="flex-1 mx-3 h-6 rounded-md bg-[var(--bg)] shadow-inner flex items-center px-3 border border-[var(--border)]/50">
-                <span className="text-xs text-[var(--text-tertiary)]">imtihan.app/create</span>
+                <span className="text-xs text-[var(--text-tertiary)]">imtihan.live/create</span>
               </div>
             </div>
             <MotionStreamingPreview />
