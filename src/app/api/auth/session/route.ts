@@ -30,8 +30,16 @@ export async function POST(request: Request) {
     });
     return response;
   } catch (error) {
-    console.error("Session creation error:", error);
-    return NextResponse.json({ error: sanitizeError(error) }, { status: 500, headers: createSecurityHeaders() });
+    console.error("Session creation error details:", {
+      message: (error as Error).message,
+      stack: (error as Error).stack,
+      name: (error as Error).name,
+      code: (error as any).code
+    });
+    return NextResponse.json({ 
+      error: sanitizeError(error),
+      debug: process.env.NODE_ENV === "development" ? (error as Error).message : undefined
+    }, { status: 500, headers: createSecurityHeaders() });
   }
 }
 

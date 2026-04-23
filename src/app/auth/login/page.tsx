@@ -6,6 +6,7 @@ import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from 
 import { auth } from "@/lib/firebase";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/FormElements";
+import { Logo as BrandLogo } from "@/components/ui/Logo";
 
 function getRedirectDestination(): string {
   if (typeof document === "undefined") return "/dashboard";
@@ -97,6 +98,7 @@ function LoginForm() {
   return (
     <div className="card p-8 md:p-10 shadow-xl shadow-black/[0.03] ring-1 ring-black/[0.01]">
       <div className="mb-8 flex flex-col items-center text-center">
+        <BrandLogo size={48} className="mb-6" />
         <h1 className="serif text-display-md text-[var(--text)] mb-2">Welcome back</h1>
         <p className="text-sm text-[var(--text-secondary)]">Sign in to access your exam library.</p>
       </div>

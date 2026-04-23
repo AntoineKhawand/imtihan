@@ -20,7 +20,10 @@ function getAdminApp(): App {
     return _app;
   }
 
-  const privateKey = process.env.FIREBASE_ADMIN_PRIVATE_KEY?.replace(/\\n/g, "\n");
+  const rawKey = process.env.FIREBASE_ADMIN_PRIVATE_KEY;
+  const privateKey = rawKey
+    ?.replace(/^["']|["']$/g, "") // Strip leading/trailing quotes
+    .replace(/\\n/g, "\n");
 
   if (
     !process.env.FIREBASE_ADMIN_PROJECT_ID ||
@@ -44,22 +47,28 @@ function getAdminApp(): App {
   return _app;
 }
 
-// Lazy getters — no initialization happens at import time
+// Lazy getters — binds functions to their parent instances to preserve 'this'
 export const adminAuth = new Proxy({} as admin.auth.Auth, {
   get(_, prop) {
-    return Reflect.get(admin.auth(getAdminApp()), prop);
+    const service = admin.auth(getAdminApp());
+    const value = Reflect.get(service, prop);
+    return typeof value === "function" ? value.bind(service) : value;
   },
 });
 
 export const adminDb = new Proxy({} as admin.firestore.Firestore, {
   get(_, prop) {
-    return Reflect.get(admin.firestore(getAdminApp()), prop);
+    const service = admin.firestore(getAdminApp());
+    const value = Reflect.get(service, prop);
+    return typeof value === "function" ? value.bind(service) : value;
   },
 });
 
 export const adminStorage = new Proxy({} as admin.storage.Storage, {
   get(_, prop) {
-    return Reflect.get(admin.storage(getAdminApp()), prop);
+    const service = admin.storage(getAdminApp());
+    const value = Reflect.get(service, prop);
+    return typeof value === "function" ? value.bind(service) : value;
   },
 });
 
