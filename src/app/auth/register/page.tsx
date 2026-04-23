@@ -14,7 +14,7 @@ import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/FormElements";
-import { ArrowLeft, User, GraduationCap } from "lucide-react";
+import { ArrowLeft, User } from "lucide-react";
 import { UserRole } from "@/types/user";
 
 export default function RegisterPage() {
@@ -130,11 +130,11 @@ export default function RegisterPage() {
 
       <h1 className="serif text-3xl text-[var(--text)] mb-1">Create your account</h1>
       <p className="text-sm text-[var(--text-secondary)] mb-6">
-        3 free exams — no credit card required.
+        2 free exams — no credit card required.
       </p>
 
       {/* Role Selection */}
-      <div className="grid grid-cols-2 gap-3 mb-8">
+      <div className="grid grid-cols-1 gap-3 mb-8">
         <button
           onClick={() => setRole("teacher")}
           className={`flex flex-col items-center justify-center gap-2 p-4 rounded-xl border ${
@@ -145,17 +145,6 @@ export default function RegisterPage() {
         >
           <User size={24} />
           <span className="text-sm font-medium">I'm a Teacher</span>
-        </button>
-        <button
-          onClick={() => setRole("student")}
-          className={`flex flex-col items-center justify-center gap-2 p-4 rounded-xl border ${
-            role === "student"
-              ? "border-[var(--accent)] bg-[var(--accent-light)] text-[var(--accent)]"
-              : "border-[var(--border)] bg-[var(--surface)] text-[var(--text-secondary)] hover:bg-[var(--bg-subtle)]"
-          } transition-all duration-200`}
-        >
-          <GraduationCap size={24} />
-          <span className="text-sm font-medium">I'm a Student</span>
         </button>
       </div>
 
