@@ -15,7 +15,6 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/FormElements";
 import { User } from "lucide-react";
 import type { UserRole } from "@/types/user";
-import { useAuth } from "@/contexts/AuthContext";
 
 function getRedirectDestination(): string {
   if (typeof document === "undefined") return "/dashboard";
@@ -27,8 +26,15 @@ function clearRedirectCookie() {
   document.cookie = "__redirect=; Max-Age=0; Path=/";
 }
 
+async function setSessionCookie(idToken: string): Promise<void> {
+  await fetch("/api/auth/session", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ token: idToken }),
+  });
+}
+
 function RegisterForm() {
-  const { user } = useAuth();
   const [dest, setDest] = useState("/dashboard");
 
   const [displayName, setDisplayName] = useState("");
@@ -39,18 +45,10 @@ function RegisterForm() {
   const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Read + clear the redirect cookie exactly once on mount
   useEffect(() => {
     setDest(getRedirectDestination());
     clearRedirectCookie();
   }, []);
-
-  // Auto-redirect if already logged in
-  useEffect(() => {
-    if (user && !loading && !googleLoading) {
-      window.location.assign(dest);
-    }
-  }, [user, loading, googleLoading, dest]);
 
   async function handleRegister() {
     if (!email || !password) return;
@@ -71,6 +69,7 @@ function RegisterForm() {
         examsGenerated: 0,
         subscription: { status: "none", tier: "free" },
       });
+      await setSessionCookie(await credential.user.getIdToken());
       window.location.assign(dest);
     } catch (err: unknown) {
       const code = (err as { code?: string }).code ?? "";
@@ -108,7 +107,8 @@ function RegisterForm() {
           subscription: { status: "none", tier: "free" },
         });
       }
-      setTimeout(() => window.location.assign(dest), 100);
+      await setSessionCookie(await credential.user.getIdToken());
+      window.location.assign(dest);
     } catch (err: unknown) {
       const code = (err as { code?: string }).code ?? "";
       if (code === "auth/popup-closed-by-user" || code === "auth/cancelled-popup-request") {

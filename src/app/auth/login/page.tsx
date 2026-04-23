@@ -6,7 +6,6 @@ import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from 
 import { auth } from "@/lib/firebase";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/FormElements";
-import { useAuth } from "@/contexts/AuthContext";
 
 function getRedirectDestination(): string {
   if (typeof document === "undefined") return "/dashboard";
@@ -18,48 +17,47 @@ function clearRedirectCookie() {
   document.cookie = "__redirect=; Max-Age=0; Path=/";
 }
 
-function LoginForm() {
-  const { user } = useAuth();
-  const [dest, setDest] = useState("/dashboard");
+async function setSessionCookie(idToken: string): Promise<void> {
+  await fetch("/api/auth/session", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ token: idToken }),
+  });
+}
 
+function LoginForm() {
+  const [dest, setDest] = useState("/dashboard");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Read + clear the redirect cookie exactly once on mount
+  // Read + clear the redirect cookie once on mount
   useEffect(() => {
     setDest(getRedirectDestination());
     clearRedirectCookie();
   }, []);
-
-  // Auto-redirect if already logged in
-  useEffect(() => {
-    if (user && !loading && !googleLoading) {
-      window.location.assign(dest);
-    }
-  }, [user, loading, googleLoading, dest]);
 
   async function handleEmail() {
     if (!email || !password) return;
     setLoading(true);
     setError(null);
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      const credential = await signInWithEmailAndPassword(auth, email, password);
+      await setSessionCookie(await credential.user.getIdToken());
       window.location.assign(dest);
     } catch (err: unknown) {
       const code = (err as { code?: string }).code ?? "unknown";
       if (code === "auth/user-not-found" || code === "auth/invalid-credential") {
-        setError("No account found with those credentials. Create one first if you haven't.");
+        setError("No account found with those credentials.");
       } else if (code === "auth/wrong-password") {
         setError("Incorrect password. Please try again.");
       } else if (code === "auth/too-many-requests") {
         setError("Too many failed attempts. Please wait a moment.");
       } else {
-        setError(`Sign-in failed (${code}). Please check your details.`);
+        setError(`Sign-in failed (${code}).`);
       }
-    } finally {
       setLoading(false);
     }
   }
@@ -70,8 +68,10 @@ function LoginForm() {
     try {
       const provider = new GoogleAuthProvider();
       provider.setCustomParameters({ prompt: "select_account" });
-      await signInWithPopup(auth, provider);
-      setTimeout(() => window.location.assign(dest), 100);
+      const credential = await signInWithPopup(auth, provider);
+      // Wait for the session cookie before navigating — proxy needs it
+      await setSessionCookie(await credential.user.getIdToken());
+      window.location.assign(dest);
     } catch (err: unknown) {
       const code = (err as { code?: string }).code ?? "";
       if (code === "auth/popup-closed-by-user" || code === "auth/cancelled-popup-request") {
@@ -81,11 +81,10 @@ function LoginForm() {
       } else if (code === "auth/unauthorized-domain") {
         setError("This domain isn't authorized. Add it under Firebase → Auth → Authorized domains.");
       } else if (code === "auth/network-request-failed") {
-        setError("Network error. Check your connection and that this domain is in Firebase's authorized list.");
+        setError("Network error. Check your connection.");
       } else {
         setError(`Google sign-in failed: ${code || "unknown error"}`);
       }
-    } finally {
       setGoogleLoading(false);
     }
   }
