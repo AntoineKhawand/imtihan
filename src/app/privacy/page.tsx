@@ -53,7 +53,7 @@ export default function PrivacyPage() {
             <Section title="3. How we use your data">
               <ul>
                 <li>To provide, operate, and improve the Imtihan service.</li>
-                <li>To process your exam generation requests via the Google Gemini API.</li>
+                <li>To process your exam generation requests via our AI engine.</li>
                 <li>To save your exam history to your personal library.</li>
                 <li>To send transactional emails (password reset, export delivery) if you request them.</li>
                 <li>To detect and prevent abuse or fraudulent activity.</li>
@@ -64,7 +64,7 @@ export default function PrivacyPage() {
             <Section title="4. Third-party services">
               <p>We use the following third-party providers to operate Imtihan:</p>
               <ul>
-                <li><strong className="text-[var(--text)]">Google Gemini API</strong> — exam generation. Your description and uploaded documents are sent to Google&apos;s servers to produce the exam. Refer to Google&apos;s privacy policy for their data handling practices.</li>
+                <li><strong className="text-[var(--text)]">AI</strong> — exam generation. Your description and uploaded documents are sent to our AI provider's servers to produce the exam. Refer to their privacy policy for their data handling practices.</li>
                 <li><strong className="text-[var(--text)]">Firebase (Google)</strong> — authentication and database storage.</li>
                 <li><strong className="text-[var(--text)]">Vercel</strong> — hosting and edge functions.</li>
               </ul>
@@ -72,7 +72,7 @@ export default function PrivacyPage() {
 
             <Section title="5. Uploaded documents">
               <p>
-                When you upload a document (PDF, image, etc.) to assist exam generation, it is sent to the Google Gemini API within your request and is not stored on our servers beyond the duration of that request. We do not retain uploaded document content after the API call completes.
+                When you upload a document (PDF, image, etc.) to assist exam generation, it is sent to our AI provider within your request and is not stored on our servers beyond the duration of that request. We do not retain uploaded document content after the processing completes.
               </p>
             </Section>
 

@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { getStripe, type Stripe } from "@/lib/stripe";
 import { adminDb, verifyIdToken } from "@/lib/firebase-admin";
-import { doc, getDoc } from "firebase/firestore";
 
 const PRICE_ID = process.env.STRIPE_PRO_PRICE_ID || "price_pro_monthly";
 
@@ -15,16 +14,16 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { successUrl, cancelUrl } = body;
 
-    const userRef = doc(adminDb, "users", uid);
-    const userSnap = await getDoc(userRef);
+    const userRef = adminDb.collection("users").doc(uid);
+    const userSnap = await userRef.get();
     
-    if (!userSnap.exists()) {
+    if (!userSnap.exists) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
     const userData = userSnap.data();
-    const customerEmail = userData.email;
-    const customerId = userData.subscription?.stripeCustomerId;
+    const customerEmail = userData?.email;
+    const customerId = userData?.subscription?.stripeCustomerId;
 
     const stripe = getStripe();
 

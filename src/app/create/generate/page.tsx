@@ -56,7 +56,7 @@ export default function GeneratePage() {
       }
 
       // If the user already generated exercises and navigates back, restore them
-      // instead of hammering the Gemini API again.
+      // instead of hammering the AI again.
       const cachedEx = sessionStorage.getItem("imtihan_exercises");
       const cachedKey = sessionStorage.getItem("imtihan_exercises_key");
       const currentKey = JSON.stringify({ c: ctx });
@@ -474,6 +474,7 @@ export default function GeneratePage() {
                     onTransform={handleTransform}
                     savedToBank={savedIds.has(exercise.id)}
                     isRegenerating={regeneratingId === exercise.id || transformingId === exercise.id}
+                    defaultShowSolution={true}
                   />
                 </div>
               ))}

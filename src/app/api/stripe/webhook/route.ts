@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getStripe, type Stripe } from "@/lib/stripe";
 import { adminDb } from "@/lib/firebase-admin";
-import { doc, updateDoc, serverTimestamp } from "firebase-admin/firestore";
+import { FieldValue } from "firebase-admin/firestore";
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
@@ -29,14 +29,14 @@ export async function POST(request: Request) {
         const uid = session.metadata?.uid;
         
         if (uid && session.subscription) {
-          const userRef = doc(adminDb, "users", uid);
-          await updateDoc(userRef, {
+          const userRef = adminDb.collection("users").doc(uid);
+          await userRef.update({
             "subscription.status": "active",
             "subscription.tier": "individual",
             "subscription.stripeCustomerId": session.customer as string,
             "subscription.stripeSubscriptionId": session.subscription as string,
             "subscription.renewsAt": Date.now() + 30 * 24 * 60 * 60 * 1000,
-            updatedAt: serverTimestamp(),
+            updatedAt: FieldValue.serverTimestamp(),
           });
         }
         break;
@@ -52,10 +52,10 @@ export async function POST(request: Request) {
             .get();
 
           for (const docSnap of usersSnap.docs) {
-            await doc(adminDb, "users", docSnap.id).update({
+            await docSnap.ref.update({
               "subscription.status": "active",
               "subscription.renewsAt": Date.now() + 30 * 24 * 60 * 60 * 1000,
-              updatedAt: serverTimestamp(),
+              updatedAt: FieldValue.serverTimestamp(),
             });
           }
         }
@@ -72,9 +72,9 @@ export async function POST(request: Request) {
             .get();
 
           for (const docSnap of usersSnap.docs) {
-            await doc(adminDb, "users", docSnap.id).update({
+            await docSnap.ref.update({
               "subscription.status": "past_due",
-              updatedAt: serverTimestamp(),
+              updatedAt: FieldValue.serverTimestamp(),
             });
           }
         }
@@ -91,10 +91,10 @@ export async function POST(request: Request) {
           .get();
 
         for (const docSnap of usersSnap.docs) {
-          await doc(adminDb, "users", docSnap.id).update({
+          await docSnap.ref.update({
             "subscription.status": "canceled",
             "subscription.tier": "free",
-            updatedAt: serverTimestamp(),
+            updatedAt: FieldValue.serverTimestamp(),
           });
         }
         break;

@@ -118,7 +118,7 @@ export default function PricingPage() {
             </div>
             <p className="text-xs uppercase tracking-wider text-[var(--accent)] font-medium mb-4">Individual</p>
             <div className="serif text-4xl font-light text-[var(--text)] mb-1">
-              $9<span className="text-lg text-[var(--text-secondary)]">/mo</span>
+              $5<span className="text-lg text-[var(--text-secondary)]">/mo</span>
             </div>
             <p className="text-sm text-[var(--text-secondary)] mb-6">Unlimited exams for one teacher</p>
             <ul className="space-y-3 mb-8 flex-1">

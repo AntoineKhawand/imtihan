@@ -12,15 +12,12 @@ function getGenAI(): GoogleGenerativeAI {
 }
 
 /**
- * Gemini 2.5 Flash emits "thinking" tokens in its stream by default.
- * The current SDK (v0.24.x) cannot parse those chunks and throws
- * "Failed to parse stream". Setting thinkingBudget: 0 suppresses
- * thinking tokens so both streaming and non-streaming work correctly.
+ * AI model configuration
  */
 const NO_THINKING = { thinkingConfig: { thinkingBudget: 0 } } as unknown as GenerationConfig;
 
-// gemini-2.5-flash is the stable GA model as of 2025+.
-// gemini-1.5-flash-latest is the fallback — powerful and widely available.
+// Primary model for stable GA
+// Fallback model — powerful and widely available.
 export const GEMINI_MODEL_PRIMARY  = "gemini-2.5-flash";
 export const GEMINI_MODEL_FALLBACK = "gemini-1.5-flash-latest";
 /** @deprecated use GEMINI_MODEL_PRIMARY */

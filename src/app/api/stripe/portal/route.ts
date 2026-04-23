@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { getStripe } from "@/lib/stripe";
 import { adminDb, verifyIdToken } from "@/lib/firebase-admin";
-import { doc } from "firebase/firestore";
 
 export async function POST(request: Request) {
   try {
@@ -10,10 +9,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const userRef = doc(adminDb, "users", uid);
+    const userRef = adminDb.collection("users").doc(uid);
     
     const stripe = getStripe();
-    const userSnap = await adminDb.collection("users").doc(uid).get();
+    const userSnap = await userRef.get();
     const customerId = userSnap.data()?.subscription?.stripeCustomerId;
 
     if (!customerId) {

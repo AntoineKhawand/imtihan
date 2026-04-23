@@ -1,11 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 
 /**
- * Auth proxy — protects /dashboard, /library routes.
- * Renamed from middleware.ts → proxy.ts for Next.js 16.
+ * Auth proxy — protects /dashboard, /create, /library, /bank, /community routes.
  */
 
-const PROTECTED_PATHS = ["/dashboard", "/library", "/account", "/create"];
+const PROTECTED_PATHS = ["/dashboard", "/library", "/account", "/create", "/bank", "/community"];
 const AUTH_PATHS = ["/auth/login", "/auth/register"];
 
 export function proxy(request: NextRequest) {
@@ -14,7 +13,6 @@ export function proxy(request: NextRequest) {
   const isProtected = PROTECTED_PATHS.some((p) => pathname.startsWith(p));
   const isAuthRoute = AUTH_PATHS.some((p) => pathname.startsWith(p));
 
-  // Check for session cookie (set on login via our api route)
   const session = request.cookies.get("__session");
 
   if (isProtected && !session) {
@@ -23,7 +21,6 @@ export function proxy(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  // Redirect to dashboard if trying to access login/register while already authenticated
   if (isAuthRoute && session) {
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
@@ -32,5 +29,5 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],
+  matcher: ["/((?!api|_next/static|_next/image|favicon.ico|llms.txt).*)"],
 };

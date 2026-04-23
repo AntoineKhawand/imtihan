@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Sparkles, Lightbulb, Upload, X, BookOpen, Trash2 } from "lucide-react";
+import { ArrowLeft, Sparkles, Lightbulb, Upload, X, BookOpen, Trash2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Dropzone } from "@/components/ui/Dropzone";
 import { cn, shortId } from "@/lib/utils";
@@ -320,8 +320,15 @@ export default function CreatePage() {
           {/* Error */}
           {error && (
             <div className="mb-5 flex items-start gap-3 px-4 py-3.5 rounded-xl bg-red-50 border border-red-200 text-sm text-red-700">
-              <X size={14} className="flex-shrink-0 mt-0.5" />
-              {error}
+              <AlertCircle size={14} className="flex-shrink-0 mt-0.5" />
+              <div className="flex-1">
+                {error}
+                {error.includes("upgrade") && (
+                  <Link href="/pricing" className="ml-2 text-[var(--accent)] hover:underline font-medium">
+                    Upgrade to Pro
+                  </Link>
+                )}
+              </div>
             </div>
           )}
 

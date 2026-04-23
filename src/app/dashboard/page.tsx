@@ -27,6 +27,38 @@ const router = useRouter();
   const isPro = profile?.subscription?.tier === "individual";
   const quotaUsed = exams.length;
   const quotaRemaining = Math.max(0, FREE_EXAM_LIMIT - quotaUsed);
+  const examsGenerated = exams.length;
+  const totalExercises = exams.reduce((acc, exam) => acc + exam.exercises.length, 0);
+
+  const filtered = query
+    ? exams.filter((exam) => {
+        const q = query.toLowerCase();
+        return (
+          exam.title?.toLowerCase().includes(q) ||
+          exam.context.subject.toLowerCase().includes(q) ||
+          exam.context.curriculumId.toLowerCase().includes(q)
+        );
+      })
+    : exams;
+
+  async function handleDelete(id: string) {
+    try {
+      await deleteExam(id);
+      setExams((prev) => prev.filter((e) => e.id !== id));
+    } catch (error) {
+      console.error("Delete error:", error);
+    }
+  }
+
+  async function handleDuplicate(exam: SavedExam) {
+    try {
+      const newExam = { ...exam, id: shortId(), title: `${exam.title} (Copy)`, createdAt: Date.now() };
+      await saveExam(newExam);
+      setExams((prev) => [newExam, ...prev]);
+    } catch (error) {
+      console.error("Duplicate error:", error);
+    }
+  }
 
   async function handleUpgrade() {
     if (isPro) {

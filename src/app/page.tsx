@@ -113,7 +113,7 @@ const FAQ_ITEMS = [
   },
   {
     q: "How long does it take to generate an exam?",
-    a: "Thanks to Gemini 2.5 Flash, generating a complete exam (3 to 4 exercises) and its grading key usually takes under 30 seconds."
+    a: "Thanks to our AI engine, generating a complete exam (3 to 4 exercises) and its grading key usually takes under 30 seconds."
   },
   {
     q: "Can I export the exam for printing?",
@@ -457,7 +457,7 @@ export default async function LandingPage() {
               </div>
               <p className="text-xs uppercase tracking-wider text-[var(--accent)] font-medium mb-4">Pro</p>
               <div className="serif text-4xl font-light text-[var(--text)] mb-1">
-                $9<span className="text-lg text-[var(--text-secondary)]">/mo</span>
+                $5<span className="text-lg text-[var(--text-secondary)]">/mo</span>
               </div>
               <p className="text-sm text-[var(--text-secondary)] mb-6">Unlimited exams for one teacher</p>
               <ul className="space-y-3 mb-8 text-sm text-[var(--text-secondary)]">

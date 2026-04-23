@@ -34,11 +34,13 @@ export default function CommunityPage() {
   const filtered = FEATURED_EXAMS.filter((e) => {
     if (!query.trim()) return true;
     const q = query.toLowerCase();
+    const curriculum = e.curriculum ?? e.context.curriculumId;
+    const subject = e.subject ?? e.context.subject;
     return (
       e.title.toLowerCase().includes(q) ||
-      e.curriculum.toLowerCase().includes(q) ||
-      e.subject.toLowerCase().includes(q) ||
-      (SUBJECT_LABELS[e.subject]?.fr ?? "").toLowerCase().includes(q) ||
+      curriculum.toLowerCase().includes(q) ||
+      subject.toLowerCase().includes(q) ||
+      (SUBJECT_LABELS[subject]?.fr ?? "").toLowerCase().includes(q) ||
       e.tags.some((t) => t.toLowerCase().includes(q))
     );
   }).sort((a, b) => {

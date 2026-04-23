@@ -54,7 +54,7 @@ export default function RegisterPage() {
         },
       });
 
-      router.push("/create");
+      window.location.href = "/create";
     } catch (err: unknown) {
       const code = (err as { code?: string }).code;
       if (code === "auth/email-already-in-use") {
@@ -97,7 +97,7 @@ export default function RegisterPage() {
         });
       }
 
-      router.push("/create");
+      window.location.href = "/create";
     } catch (err: unknown) {
       const e = err as { code?: string; message?: string };
       const code = e.code ?? "";

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { adminAuth } from "@/lib/firebase-admin";
+import { sanitizeError, createSecurityHeaders } from "@/lib/security";
 
 /**
  * Creates a secure session cookie from a Firebase ID token.
@@ -29,10 +30,10 @@ export async function POST(request: Request) {
       sameSite: "lax",
     });
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true }, { headers: createSecurityHeaders() });
   } catch (error) {
     console.error("Session creation error:", error);
-    return NextResponse.json({ error: "Internal error" }, { status: 500 });
+    return NextResponse.json({ error: sanitizeError(error) }, { status: 500, headers: createSecurityHeaders() });
   }
 }
 

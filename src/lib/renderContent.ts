@@ -133,11 +133,11 @@ async function renderMermaidBlocks(text: string): Promise<string> {
   return result;
 }
 
-export async function renderContent(raw: string): Promise<string> {
+export function renderContent(raw: string): string {
   if (!raw) return "";
 
   // 0. Render Mermaid blocks first (they may contain math)
-  let text = await renderMermaidBlocks(raw);
+  let text = raw;
 
   // 1. Normalise line endings: handle actual \n and JSON-escaped \\n (literal backslash-n)
   text = text

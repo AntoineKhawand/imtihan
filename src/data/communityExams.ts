@@ -10,6 +10,8 @@ export interface CommunityExam {
   tags: string[];
   context: ExamContext;
   exercises: Exercise[];
+  curriculum?: string;
+  subject?: string;
 }
 
 export const FEATURED_EXAMS: CommunityExam[] = [

@@ -64,6 +64,7 @@ interface ExerciseCardProps {
   isRegenerating?: boolean;
   savedToBank?: boolean;
   isFreeTier?: boolean;
+  defaultShowSolution?: boolean;
 }
 
 export function ExerciseCard({
@@ -78,8 +79,9 @@ export function ExerciseCard({
   isRegenerating = false,
   savedToBank = false,
   isFreeTier = false,
+  defaultShowSolution = false,
 }: ExerciseCardProps) {
-  const [showSolution, setShowSolution] = useState(false);
+  const [showSolution, setShowSolution] = useState(defaultShowSolution);
   const [showActions, setShowActions] = useState(false);
   const [rubric, setRubric] = useState<Rubric | null>(null);
   const [rubricLoading, setRubricLoading] = useState(false);

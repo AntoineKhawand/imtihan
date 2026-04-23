@@ -2,6 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { withRetryAndFallback, geminiErrorMessage, isRetryableError } from "@/lib/gemini";
 import { buildGenerateSystemPrompt, buildGenerateUserPrompt } from "@/lib/prompts/generate";
+import { sanitizeError, createSecurityHeaders } from "@/lib/security";
+
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
+export async function GET() {
+  return NextResponse.json({ status: "ok", timestamp: Date.now() });
+}
 
 const ExamContextSchema = z.object({
   curriculumId: z.enum(["bac-libanais", "bac-francais", "ib", "university"]),
@@ -256,13 +264,14 @@ export async function POST(request: NextRequest) {
         "Content-Type": "text/event-stream",
         "Cache-Control": "no-cache",
         Connection: "keep-alive",
+        ...createSecurityHeaders(),
       },
     });
   } catch (error) {
     console.error("[/api/generate]", error);
     return NextResponse.json(
-      { success: false, errors: ["Unexpected error during generation. Please try again."] },
-      { status: 500 }
+      { success: false, errors: [sanitizeError(error)] },
+      { status: 500, headers: createSecurityHeaders() }
     );
   }
 }

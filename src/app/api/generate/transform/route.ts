@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { withRetryAndFallback } from "@/lib/gemini";
 import type { Exercise } from "@/types/exam";
+import { sanitizeError, createSecurityHeaders } from "@/lib/security";
 
 const RequestSchema = z.object({
   exercise: z.any(), // Not strictly typed here, but we pass it as Exercise
@@ -47,12 +48,17 @@ Your task is to:
 Original Exercise JSON:
 ${JSON.stringify(exercise, null, 2)}`;
 
-    const { response, provider } = await withRetryAndFallback([
-      { role: "system", content: systemPrompt },
-      { role: "user", content: "Return the updated JSON object for the exercise." }
-    ], { temperature: 0.2 });
+    const result = await withRetryAndFallback(async (model) => {
+      const response = await model.generateContent({
+        contents: [
+          { role: "user", parts: [{ text: systemPrompt }] },
+          { role: "user", parts: [{ text: "Return the updated JSON object for the exercise." }] }
+        ]
+      });
+      return response.response;
+    });
 
-    const raw = response.choices?.[0]?.message?.content ?? "";
+    const raw = result.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
     const cleanRaw = sanitizeJSON(raw);
     
     try {

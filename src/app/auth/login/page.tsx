@@ -26,7 +26,7 @@ function LoginForm() {
     setError(null);
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      router.push(next);
+      window.location.href = next;
     } catch (err: unknown) {
       const code = (err as { code?: string }).code;
       if (code === "auth/user-not-found" || code === "auth/wrong-password") {
@@ -46,7 +46,7 @@ function LoginForm() {
       const provider = new GoogleAuthProvider();
       provider.setCustomParameters({ prompt: "select_account" });
       await signInWithPopup(auth, provider);
-      router.push(next);
+      window.location.href = next;
     } catch (err: unknown) {
       const e = err as { code?: string; message?: string };
       const code = e.code ?? "";

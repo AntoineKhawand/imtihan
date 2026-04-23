@@ -2,6 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { withRetryAndFallback, geminiErrorMessage } from "@/lib/gemini";
 import { buildAnalyzeSystemPrompt, buildAnalyzeUserPrompt, buildCurriculaReference } from "@/lib/prompts/analyze";
+import { sanitizeError, createSecurityHeaders } from "@/lib/security";
+
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
+export async function GET() {
+  return NextResponse.json({ status: "ok", timestamp: Date.now() });
+}
 
 // ---------------------------------------------------------------------------
 // All valid subject values
@@ -196,8 +204,8 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("[/api/analyze]", error);
     return NextResponse.json(
-      { success: false, errors: ["Unexpected server error. Please try again."] },
-      { status: 500 }
+      { success: false, errors: [sanitizeError(error)] },
+      { status: 500, headers: createSecurityHeaders() }
     );
   }
 }
