@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+﻿import { NextRequest, NextResponse } from "next/server";
 
 const PROTECTED_PATHS = [
   "/dashboard", "/library", "/account", "/create",
@@ -82,7 +82,6 @@ export function proxy(request: NextRequest) {
       });
     }
 
-    // Only enforce Content-Type on requests that carry a body
     const method = request.method.toUpperCase();
     const hasBody = ["POST", "PUT", "PATCH"].includes(method);
     if (hasBody) {
