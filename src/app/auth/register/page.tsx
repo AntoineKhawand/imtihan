@@ -1,8 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState, useEffect } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import {
   createUserWithEmailAndPassword,
   signInWithPopup,
@@ -11,74 +10,66 @@ import {
   getAdditionalUserInfo,
 } from "firebase/auth";
 import { doc, setDoc, serverTimestamp } from "firebase/firestore";
-import { auth, db, getFirebaseConfig } from "@/lib/firebase";
+import { auth, db } from "@/lib/firebase";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/FormElements";
-import { ArrowLeft, User } from "lucide-react";
-import { useSearchParams } from "next/navigation";
-import { UserRole } from "@/types/user";
+import { User } from "lucide-react";
+import type { UserRole } from "@/types/user";
 import { useAuth } from "@/contexts/AuthContext";
-import { useEffect } from "react";
 
-export default function RegisterPage() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const next = searchParams.get("next") || "/dashboard";
+function getRedirectDestination(): string {
+  if (typeof document === "undefined") return "/dashboard";
+  const match = document.cookie.match(/(?:^|;\s*)__redirect=([^;]+)/);
+  return match ? decodeURIComponent(match[1]) : "/dashboard";
+}
+
+function clearRedirectCookie() {
+  document.cookie = "__redirect=; Max-Age=0; Path=/";
+}
+
+function RegisterForm() {
   const { user } = useAuth();
 
   const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState<UserRole>("teacher");
+  const [role] = useState<UserRole>("teacher");
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (user && !loading && !googleLoading) {
-      console.log("[RegisterPage] Auth state detected. Auto-redirecting to:", next);
-      window.location.assign(next);
+      const dest = getRedirectDestination();
+      clearRedirectCookie();
+      window.location.assign(dest);
     }
-  }, [user, loading, googleLoading, next]);
+  }, [user, loading, googleLoading]);
 
   async function handleRegister() {
     if (!email || !password) return;
     setLoading(true);
     setError(null);
     try {
-      console.log("[Register] Creating user with email:", email);
       const credential = await createUserWithEmailAndPassword(auth, email, password);
-      console.log("[Register] User created. UID:", credential.user.uid);
-
       if (displayName.trim()) {
         await updateProfile(credential.user, { displayName: displayName.trim() });
-        console.log("[Register] Profile updated with name:", displayName.trim());
       }
-      
-      // Save custom user profile immediately
-      console.log("[Register] Saving profile to Firestore...");
-      const userRef = doc(db, "users", credential.user.uid);
-      await setDoc(userRef, {
+      await setDoc(doc(db, "users", credential.user.uid), {
         uid: credential.user.uid,
-        email: credential.user.email || "",
+        email: credential.user.email ?? "",
         displayName: displayName.trim() || "",
         createdAt: serverTimestamp(),
-        role: role,
+        role,
         country: "LB",
         examsGenerated: 0,
-        subscription: {
-          status: "none",
-          tier: "free",
-        },
+        subscription: { status: "none", tier: "free" },
       });
-      console.log("[Register] Firestore profile saved.");
-
-      console.log("[Register] Redirecting to:", next);
-      window.location.href = next;
+      const dest = getRedirectDestination();
+      clearRedirectCookie();
+      window.location.assign(dest);
     } catch (err: unknown) {
-      const e = err as { code?: string; message?: string; stack?: string };
-      const code = e.code ?? "";
-      console.error("[Register] Error detail:", { code, message: e.message, stack: e.stack });
+      const code = (err as { code?: string }).code ?? "";
       if (code === "auth/email-already-in-use") {
         setError("An account with this email already exists. Try signing in.");
       } else if (code === "auth/weak-password") {
@@ -93,58 +84,41 @@ export default function RegisterPage() {
     }
   }
 
-async function handleGoogle() {
+  async function handleGoogle() {
     setGoogleLoading(true);
     setError(null);
     try {
-      if (!auth) {
-        console.error("[Google sign-up] Firebase auth not initialized");
-        setError("Firebase not initialized. Reload the page and try again.");
-        setGoogleLoading(false);
-        return;
-      }
       const provider = new GoogleAuthProvider();
       provider.setCustomParameters({ prompt: "select_account" });
-      console.log("[Google sign-up] Starting signInWithPopup...");
       const credential = await signInWithPopup(auth, provider);
-      console.log("[Google sign-up] Success. User:", credential.user.email);
-      
       const additionalInfo = getAdditionalUserInfo(credential);
       if (additionalInfo?.isNewUser) {
-        const userRef = doc(db, "users", credential.user.uid);
-        await setDoc(userRef, {
+        await setDoc(doc(db, "users", credential.user.uid), {
           uid: credential.user.uid,
-          email: credential.user.email || "",
-          displayName: credential.user.displayName || "",
+          email: credential.user.email ?? "",
+          displayName: credential.user.displayName ?? "",
           createdAt: serverTimestamp(),
-          role: role,
+          role,
           country: "LB",
           examsGenerated: 0,
-          subscription: {
-            status: "none",
-            tier: "free",
-          },
+          subscription: { status: "none", tier: "free" },
         });
       }
-
-      console.log("[Google sign-up] Redirecting to:", next);
-      window.location.href = next;
+      const dest = getRedirectDestination();
+      clearRedirectCookie();
+      setTimeout(() => window.location.assign(dest), 100);
     } catch (err: unknown) {
-      const e = err as { code?: string; message?: string; stack?: string };
-      const code = e.code ?? "";
-      console.error("[Google sign-up] Error detail:", { code, message: e.message, stack: e.stack });
+      const code = (err as { code?: string }).code ?? "";
       if (code === "auth/popup-closed-by-user" || code === "auth/cancelled-popup-request") {
-        setError(null);
+        // dismissed — no error
       } else if (code === "auth/popup-blocked") {
-        setError("Popup blocked by your browser. Allow popups for this site and retry.");
+        setError("Popup blocked. Allow popups for this site and try again.");
       } else if (code === "auth/unauthorized-domain") {
-        setError("This domain isn't authorized in Firebase. Add it under Auth → Settings → Authorized domains.");
-      } else if (code === "auth/operation-not-allowed") {
-        setError("Google sign-in is disabled. Enable it in Firebase Console → Authentication → Sign-in method.");
-      } else if (code === "auth/internal-error") {
-        setError("Google sign-in is not configured. Enable Google in Firebase Console → Authentication → Sign-in method.");
+        setError("This domain isn't authorized. Add it under Firebase → Auth → Authorized domains.");
+      } else if (code === "auth/network-request-failed") {
+        setError("Network error. Check your connection and that this domain is in Firebase's authorized list.");
       } else {
-        setError(`Google sign-up failed: ${code || e.message || "unknown error"}`);
+        setError(`Google sign-up failed: ${code || "unknown error"}`);
       }
     } finally {
       setGoogleLoading(false);
@@ -153,7 +127,6 @@ async function handleGoogle() {
 
   return (
     <div className="w-full max-w-sm">
-      {/* Logo */}
       <div className="flex items-center gap-2.5 mb-8">
         <div className="w-9 h-9 rounded-xl bg-[var(--accent)] flex items-center justify-center">
           <span className="text-white font-serif">إ</span>
@@ -162,26 +135,15 @@ async function handleGoogle() {
       </div>
 
       <h1 className="serif text-3xl text-[var(--text)] mb-1">Create your account</h1>
-      <p className="text-sm text-[var(--text-secondary)] mb-6">
-        2 free exams — no credit card required.
-      </p>
+      <p className="text-sm text-[var(--text-secondary)] mb-6">2 free exams — no credit card required.</p>
 
-      {/* Role Selection */}
       <div className="grid grid-cols-1 gap-3 mb-8">
-        <button
-          onClick={() => setRole("teacher")}
-          className={`flex flex-col items-center justify-center gap-2 p-4 rounded-xl border ${
-            role === "teacher"
-              ? "border-[var(--accent)] bg-[var(--accent-light)] text-[var(--accent)]"
-              : "border-[var(--border)] bg-[var(--surface)] text-[var(--text-secondary)] hover:bg-[var(--bg-subtle)]"
-          } transition-all duration-200`}
-        >
+        <div className="flex flex-col items-center justify-center gap-2 p-4 rounded-xl border border-[var(--accent)] bg-[var(--accent-light)] text-[var(--accent)]">
           <User size={24} />
-          <span className="text-sm font-medium">I'm a Teacher</span>
-        </button>
+          <span className="text-sm font-medium">Teacher</span>
+        </div>
       </div>
 
-      {/* Google */}
       <Button
         variant="secondary"
         size="lg"
@@ -207,47 +169,31 @@ async function handleGoogle() {
       </div>
 
       <div className="space-y-4 mb-4">
-        <Input
-          label="Full name"
-          type="text"
-          value={displayName}
-          onChange={(e) => setDisplayName(e.target.value)}
-          placeholder="Antoine Khoury"
-        />
-        <Input
-          label="Email"
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder="you@school.edu.lb"
-        />
-        <Input
-          label="Password"
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          placeholder="At least 6 characters"
-        />
+        <Input label="Full name" type="text" value={displayName} onChange={(e) => setDisplayName(e.target.value)} placeholder="Antoine Khoury" />
+        <Input label="Email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@school.edu.lb" />
+        <Input label="Password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="At least 6 characters" />
       </div>
 
-      {error && <p className="text-xs text-[var(--danger)] mb-4">{error}</p>}
+      {error && <p className="text-xs text-red-500 mb-4">{error}</p>}
 
-      <Button
-        onClick={handleRegister}
-        loading={loading}
-        disabled={!email || !password}
-        size="lg"
-        className="w-full mb-4"
-      >
+      <Button onClick={handleRegister} loading={loading} disabled={!email || !password} size="lg" className="w-full mb-4">
         Create account
       </Button>
 
       <p className="text-center text-sm text-[var(--text-secondary)]">
         Already have an account?{" "}
-        <Link href="/auth/login" className="text-[var(--accent)] hover:underline">
-          Sign in
-        </Link>
+        <Link href="/auth/login" className="text-[var(--accent)] hover:underline">Sign in</Link>
       </p>
+    </div>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <div className="min-h-screen bg-[var(--bg)] flex items-center justify-center px-4">
+      <Suspense fallback={<div className="w-full max-w-sm h-96 rounded-2xl bg-[var(--bg-subtle)] animate-pulse" />}>
+        <RegisterForm />
+      </Suspense>
     </div>
   );
 }

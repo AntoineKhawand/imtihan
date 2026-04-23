@@ -7,7 +7,7 @@ export let auth: Auth;
 export let db: Firestore;
 export let storage: FirebaseStorage;
 
-function getFirebaseConfig() {
+export function getFirebaseConfig() {
   return {
     apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
     authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
@@ -18,35 +18,28 @@ function getFirebaseConfig() {
   };
 }
 
-export { getFirebaseConfig };
-
 function initFirebase() {
+  // Never run during SSR / Next.js build-time prerendering.
+  // Firebase client SDK requires a real browser and valid env vars.
+  if (typeof window === "undefined") return;
+
   const config = getFirebaseConfig();
-  
-  console.log("[firebase] Init with config:", JSON.stringify(config, null, 2));
-  
   if (!config.apiKey) {
-    console.error("[firebase] MISSING API KEY - env vars not set");
+    console.error("[firebase] NEXT_PUBLIC_FIREBASE_API_KEY is not set — skipping init");
     return;
   }
 
   let app: FirebaseApp;
   try {
-    if (getApps().length > 0) {
-      app = getApp();
-    } else {
-      app = initializeApp(config);
-    }
+    app = getApps().length > 0 ? getApp() : initializeApp(config);
   } catch (e) {
-    console.error("[firebase] Init error:", e);
+    console.error("[firebase] initializeApp error:", e);
     return;
   }
 
   auth = getAuth(app);
   db = getFirestore(app);
   storage = getStorage(app);
-  
-  console.log("[firebase] Initialized. Auth:", !!auth, "Db:", !!db);
 }
 
 initFirebase();
