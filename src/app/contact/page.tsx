@@ -12,20 +12,28 @@ const TOPICS = [
     icon: MessageSquare,
     title: "General question",
     description: "Questions about features, how it works, or anything else.",
-email: "hello@imtihan.live",
-
+    email: "hello@imtihan.live",
     label: "hello@imtihan.live",
-
+  },
+  {
+    icon: Mail,
+    title: "Technical support",
+    description: "Having issues? We're here to help.",
     email: "support@imtihan.live",
-
     label: "support@imtihan.live",
-
+  },
+  {
+    icon: BookOpen,
+    title: "School & institution",
+    description: "For schools, universities, or bulk licensing.",
     email: "schools@imtihan.live",
-
     label: "schools@imtihan.live",
-
+  },
+  {
+    icon: AlertCircle,
+    title: "Legal & Privacy",
+    description: "For legal inquiries or data requests.",
     email: "legal@imtihan.live",
-
     label: "legal@imtihan.live",
   },
 ];
