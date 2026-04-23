@@ -28,6 +28,7 @@ const AuthContext = createContext<AuthContextType>({
   loading: true,
   signInWithGoogle: async () => {},
   signOut: async () => {},
+  incrementUsage: async () => {},
 });
 
 export const useAuth = () => useContext(AuthContext);

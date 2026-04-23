@@ -2,11 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { adminDb, verifyIdToken } from "@/lib/firebase-admin";
 import { extendProByDays } from "@/lib/subscription";
-
-function isAdmin(uid: string): boolean {
-  const admins = (process.env.ADMIN_UIDS ?? "").split(",").map((s) => s.trim()).filter(Boolean);
-  return admins.includes(uid);
-}
+import { isAdmin } from "@/lib/admin";
 
 const BodySchema = z.object({
   targetUid: z.string().min(1),
@@ -15,7 +11,7 @@ const BodySchema = z.object({
 
 export async function POST(request: NextRequest) {
   const uid = await verifyIdToken(request);
-  if (!uid || !isAdmin(uid)) {
+  if (!uid || !(await isAdmin(uid))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

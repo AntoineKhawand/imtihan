@@ -1,14 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminDb, verifyIdToken } from "@/lib/firebase-admin";
-
-function isAdmin(uid: string): boolean {
-  const admins = (process.env.ADMIN_UIDS ?? "").split(",").map((s) => s.trim()).filter(Boolean);
-  return admins.includes(uid);
-}
+import { isAdmin } from "@/lib/admin";
 
 export async function GET(request: NextRequest) {
   const uid = await verifyIdToken(request);
-  if (!uid || !isAdmin(uid)) {
+  if (!uid || !(await isAdmin(uid))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

@@ -95,6 +95,11 @@ export default function AdminPage() {
         <div className="mb-8">
           <h1 className="text-2xl font-bold text-gray-900 mb-1">Admin — Subscriptions</h1>
           <p className="text-sm text-gray-500">Manage manual Whish renewals. Add +30 days after each payment.</p>
+          {user && (
+            <p className="mt-2 text-xs text-gray-400 font-mono bg-gray-100 rounded px-2 py-1 inline-block">
+              Your UID: {user.uid}
+            </p>
+          )}
         </div>
 
         {/* Stats */}
