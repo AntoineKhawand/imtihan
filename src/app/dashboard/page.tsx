@@ -11,6 +11,7 @@ import { isProActive, isInGracePeriod, getWhatsAppUpgradeLink } from "@/lib/subs
 import { getSavedExams, deleteExam, saveExam, type SavedExam } from "@/lib/storage";
 import { useAuth } from "@/contexts/AuthContext";
 import { UserNav } from "@/components/layout/UserNav";
+import { Logo } from "@/components/ui/Logo";
 
 const SUBJECT_ICONS: Record<string, string> = {
   physics: "⚛", mathematics: "∑", chemistry: "⚗", biology: "🧬",
@@ -85,12 +86,7 @@ export default function DashboardPage() {
       <RenewalBanner />
       {/* Nav */}
       <nav className="flex items-center justify-between px-6 md:px-10 h-16 border-b border-[var(--border)] bg-[var(--bg)]/90 backdrop-blur-md sticky top-0 z-40">
-        <Link href="/" className="flex items-center gap-2.5">
-          <div className="w-7 h-7 rounded-lg bg-[var(--accent)] flex items-center justify-center">
-            <span className="text-white font-serif text-xs">إ</span>
-          </div>
-          <span className="font-semibold text-[var(--text)] text-sm tracking-tight">Imtihan</span>
-        </Link>
+        <Logo size={28} />
         <div className="flex items-center gap-6">
           <div className="hidden md:flex items-center gap-3">
             <Link href="/bank">

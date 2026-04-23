@@ -27,6 +27,7 @@ import {
 } from "lucide-react";
 import { MotionHero, MotionStats, MotionHowItWorks, MotionStreamingPreview } from "@/components/landing/LandingMotion";
 import { UserNav } from "@/components/layout/UserNav";
+import { Logo } from "@/components/ui/Logo";
 
 const STATS = [
   { value: "4",   label: "Curricula",  sub: "Bac Libanais · Bac Français · IB · Université" },
@@ -164,12 +165,7 @@ export default async function LandingPage() {
 
       {/* ── NAV ─────────────────────────────────────────────────────── */}
       <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 md:px-10 h-16 bg-[var(--bg)]/75 backdrop-blur-xl border-b border-[var(--border)]/60 transition-colors">
-        <Link href="/" className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-[var(--accent)] flex items-center justify-center shadow-sm">
-            <span className="text-white font-serif text-sm font-semibold">إ</span>
-          </div>
-          <span className="font-semibold text-[var(--text)] tracking-tight">Imtihan</span>
-        </Link>
+        <Logo />
         <div className="hidden md:flex items-center gap-6 text-sm text-[var(--text-secondary)]">
           <Link href="#how" className="hover:text-[var(--text)] transition-colors">How it works</Link>
           <Link href="#subjects" className="hover:text-[var(--text)] transition-colors">Subjects</Link>
@@ -533,12 +529,7 @@ export default async function LandingPage() {
       {/* ── FOOTER ───────────────────────────────────────────────────── */}
       <footer className="px-6 md:px-10 py-16 border-t border-[var(--border)]">
         <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-8 md:gap-6">
-          <div className="flex items-center gap-2.5 order-1">
-            <div className="w-7 h-7 rounded-lg bg-[var(--accent)] flex items-center justify-center">
-              <span className="text-white font-serif text-xs">إ</span>
-            </div>
-            <span className="font-semibold text-[var(--text)] text-sm tracking-tight">Imtihan</span>
-          </div>
+          <Logo size={28} />
           <p className="text-xs text-[var(--text-tertiary)] text-center order-3 md:order-2">
             Made for Lebanese teachers · © {new Date().getFullYear()} Imtihan
           </p>

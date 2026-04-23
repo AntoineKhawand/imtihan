@@ -14,6 +14,7 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import { FREE_EXAM_LIMIT } from "@/lib/utils";
 import { UserNav } from "@/components/layout/UserNav";
+import { Logo } from "@/components/ui/Logo";
 
 interface UploadedFile {
   name: string;
@@ -155,12 +156,7 @@ export default function CreatePage() {
             <ArrowLeft size={16} aria-label="Back to home page" />
             <span className="text-sm hidden sm:block">Back</span>
           </Link>
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-[var(--accent)] flex items-center justify-center">
-              <span className="text-white text-xs font-serif">إ</span>
-            </div>
-            <span className="font-semibold text-sm text-[var(--text)] tracking-tight">Imtihan</span>
-          </div>
+          <Logo size={28} />
         </div>
 
         <div className="flex items-center gap-6">
