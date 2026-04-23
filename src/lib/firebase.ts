@@ -3,29 +3,39 @@ import { getAuth, type Auth } from "firebase/auth";
 import { getFirestore, type Firestore } from "firebase/firestore";
 import { getStorage, type FirebaseStorage } from "firebase/storage";
 
-const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
-};
+export let auth: Auth;
+export let db: Firestore;
+export let storage: FirebaseStorage;
 
-let app: FirebaseApp;
-let auth: Auth;
-let db: Firestore;
-let storage: FirebaseStorage;
-
-// Prevent multiple initializations in Next.js hot-reload
-if (getApps().length === 0) {
-  app = initializeApp(firebaseConfig);
-} else {
-  app = getApps()[0]!;
+export function getFirebaseConfig() {
+  return {
+    apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+    authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+    projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+    storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+    messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+    appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+  };
 }
 
-auth = getAuth(app);
-db = getFirestore(app);
-storage = getStorage(app);
+function initFirebase() {
+  const config = getFirebaseConfig();
+  
+  if (!config.apiKey) {
+    console.warn("Firebase config not available - client SDK may not work");
+    return;
+  }
 
-export { app, auth, db, storage };
+  let app: FirebaseApp;
+  if (getApps().length === 0) {
+    app = initializeApp(config);
+  } else {
+    app = getApps()[0]!;
+  }
+
+  auth = getAuth(app);
+  db = getFirestore(app);
+  storage = getStorage(app);
+}
+
+initFirebase();
