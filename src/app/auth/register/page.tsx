@@ -11,7 +11,7 @@ import {
   getAdditionalUserInfo,
 } from "firebase/auth";
 import { doc, setDoc, serverTimestamp } from "firebase/firestore";
-import { auth, db } from "@/lib/firebase";
+import { auth, db, getFirebaseConfig } from "@/lib/firebase";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/FormElements";
 import { ArrowLeft, User } from "lucide-react";
@@ -71,10 +71,17 @@ export default function RegisterPage() {
     }
   }
 
-  async function handleGoogle() {
+async function handleGoogle() {
     setGoogleLoading(true);
     setError(null);
     try {
+      if (!auth) {
+        console.error("[Google sign-up] Firebase auth not initialized");
+        setError("Firebase not initialized. Reload the page and try again.");
+        setGoogleLoading(false);
+        return;
+      }
+      console.log("[Google sign-up] Starting. Auth:", !!auth, "Config:", getFirebaseConfig());
       const provider = new GoogleAuthProvider();
       provider.setCustomParameters({ prompt: "select_account" });
       const credential = await signInWithPopup(auth, provider);
@@ -99,9 +106,9 @@ export default function RegisterPage() {
 
       window.location.href = "/create";
     } catch (err: unknown) {
-      const e = err as { code?: string; message?: string };
+      const e = err as { code?: string; message?: string; stack?: string };
       const code = e.code ?? "";
-      console.error("[Google sign-up]", code, e.message);
+      console.error("[Google sign-up] Error:", code, e.message, e.stack);
       if (code === "auth/popup-closed-by-user" || code === "auth/cancelled-popup-request") {
         setError(null);
       } else if (code === "auth/popup-blocked") {
@@ -110,6 +117,8 @@ export default function RegisterPage() {
         setError("This domain isn't authorized in Firebase. Add it under Auth → Settings → Authorized domains.");
       } else if (code === "auth/operation-not-allowed") {
         setError("Google sign-in is disabled. Enable it in Firebase Console → Authentication → Sign-in method.");
+      } else if (code === "auth/internal-error") {
+        setError("Google sign-in is not configured. Enable Google in Firebase Console → Authentication → Sign-in method.");
       } else {
         setError(`Google sign-up failed: ${code || e.message || "unknown error"}`);
       }
