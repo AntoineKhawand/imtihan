@@ -46,11 +46,10 @@ export default function CreatePage() {
 
   const { profile } = useAuth();
   const isFreeTier = profile?.subscription?.tier === "free";
-  const [quotaUsed, setQuotaUsed] = useState(0);
+  const quotaUsed = profile?.examsGenerated ?? 0;
 
   useEffect(() => {
     setProfiles(getClassProfiles());
-    setQuotaUsed(getSavedExams().length);
     // Restore description + uploaded file if the user navigated back here
     const savedDesc = sessionStorage.getItem("imtihan_description");
     if (savedDesc) setDescription(savedDesc);

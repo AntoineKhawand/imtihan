@@ -9,7 +9,7 @@ import {
   signOut as firebaseSignOut 
 } from "firebase/auth";
 import { auth, db } from "@/lib/firebase";
-import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
+import { doc, getDoc, setDoc, updateDoc, increment, serverTimestamp } from "firebase/firestore";
 
 import { UserProfile } from "@/types/user";
 
@@ -19,6 +19,7 @@ interface AuthContextType {
   loading: boolean;
   signInWithGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
+  incrementUsage: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -120,8 +121,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // syncSessionCookie(null) is handled automatically by onAuthStateChanged
   };
 
+  const incrementUsage = async () => {
+    if (!user) return;
+    try {
+      const userRef = doc(db, "users", user.uid);
+      await updateDoc(userRef, {
+        examsGenerated: increment(1)
+      });
+      // Refresh profile
+      const snap = await getDoc(userRef);
+      if (snap.exists()) setProfile(snap.data() as UserProfile);
+    } catch (error) {
+      console.error("Error incrementing usage:", error);
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, profile, loading, signInWithGoogle, signOut }}>
+    <AuthContext.Provider value={{ user, profile, loading, signInWithGoogle, signOut, incrementUsage }}>
       {children}
     </AuthContext.Provider>
   );

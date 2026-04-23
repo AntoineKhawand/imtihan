@@ -23,11 +23,11 @@ export default function DashboardPage() {
   const [exams, setExams] = useState<SavedExam[]>([]);
   const [query, setQuery] = useState("");
   const [mounted, setMounted] = useState(false);
-  const { profile } = useAuth();
+  const { profile, loading: authLoading } = useAuth();
   const router = useRouter();
 
   const isPro = isProActive(profile) || isInGracePeriod(profile);
-  const quotaUsed = exams.length;
+  const quotaUsed = profile?.examsGenerated ?? 0;
   const quotaRemaining = Math.max(0, FREE_EXAM_LIMIT - quotaUsed);
   const examsGenerated = exams.length;
   const totalExercises = exams.reduce((acc, exam) => acc + exam.exercises.length, 0);
