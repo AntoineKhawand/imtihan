@@ -29,6 +29,7 @@ function clearRedirectCookie() {
 
 function RegisterForm() {
   const { user } = useAuth();
+  const [dest, setDest] = useState("/dashboard");
 
   const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
@@ -38,13 +39,18 @@ function RegisterForm() {
   const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Read + clear the redirect cookie exactly once on mount
+  useEffect(() => {
+    setDest(getRedirectDestination());
+    clearRedirectCookie();
+  }, []);
+
+  // Auto-redirect if already logged in
   useEffect(() => {
     if (user && !loading && !googleLoading) {
-      const dest = getRedirectDestination();
-      clearRedirectCookie();
       window.location.assign(dest);
     }
-  }, [user, loading, googleLoading]);
+  }, [user, loading, googleLoading, dest]);
 
   async function handleRegister() {
     if (!email || !password) return;
@@ -65,8 +71,6 @@ function RegisterForm() {
         examsGenerated: 0,
         subscription: { status: "none", tier: "free" },
       });
-      const dest = getRedirectDestination();
-      clearRedirectCookie();
       window.location.assign(dest);
     } catch (err: unknown) {
       const code = (err as { code?: string }).code ?? "";
@@ -104,8 +108,6 @@ function RegisterForm() {
           subscription: { status: "none", tier: "free" },
         });
       }
-      const dest = getRedirectDestination();
-      clearRedirectCookie();
       setTimeout(() => window.location.assign(dest), 100);
     } catch (err: unknown) {
       const code = (err as { code?: string }).code ?? "";
@@ -190,10 +192,8 @@ function RegisterForm() {
 
 export default function RegisterPage() {
   return (
-    <div className="min-h-screen bg-[var(--bg)] flex items-center justify-center px-4">
-      <Suspense fallback={<div className="w-full max-w-sm h-96 rounded-2xl bg-[var(--bg-subtle)] animate-pulse" />}>
-        <RegisterForm />
-      </Suspense>
-    </div>
+    <Suspense fallback={<div className="w-full max-w-sm h-96 skeleton" />}>
+      <RegisterForm />
+    </Suspense>
   );
 }

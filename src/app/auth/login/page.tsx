@@ -20,6 +20,7 @@ function clearRedirectCookie() {
 
 function LoginForm() {
   const { user } = useAuth();
+  const [dest, setDest] = useState("/dashboard");
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -27,13 +28,18 @@ function LoginForm() {
   const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Read + clear the redirect cookie exactly once on mount
+  useEffect(() => {
+    setDest(getRedirectDestination());
+    clearRedirectCookie();
+  }, []);
+
+  // Auto-redirect if already logged in
   useEffect(() => {
     if (user && !loading && !googleLoading) {
-      const dest = getRedirectDestination();
-      clearRedirectCookie();
       window.location.assign(dest);
     }
-  }, [user, loading, googleLoading]);
+  }, [user, loading, googleLoading, dest]);
 
   async function handleEmail() {
     if (!email || !password) return;
@@ -41,8 +47,6 @@ function LoginForm() {
     setError(null);
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      const dest = getRedirectDestination();
-      clearRedirectCookie();
       window.location.assign(dest);
     } catch (err: unknown) {
       const code = (err as { code?: string }).code ?? "unknown";
@@ -67,13 +71,11 @@ function LoginForm() {
       const provider = new GoogleAuthProvider();
       provider.setCustomParameters({ prompt: "select_account" });
       await signInWithPopup(auth, provider);
-      const dest = getRedirectDestination();
-      clearRedirectCookie();
       setTimeout(() => window.location.assign(dest), 100);
     } catch (err: unknown) {
       const code = (err as { code?: string }).code ?? "";
       if (code === "auth/popup-closed-by-user" || code === "auth/cancelled-popup-request") {
-        // user dismissed — no error needed
+        // dismissed — no error
       } else if (code === "auth/popup-blocked") {
         setError("Popup blocked. Allow popups for this site and try again.");
       } else if (code === "auth/unauthorized-domain") {
@@ -90,13 +92,6 @@ function LoginForm() {
 
   return (
     <div className="w-full max-w-sm">
-      <div className="flex items-center gap-2.5 mb-8">
-        <div className="w-9 h-9 rounded-xl bg-[var(--accent)] flex items-center justify-center">
-          <span className="text-white font-serif">إ</span>
-        </div>
-        <span className="font-semibold text-lg text-[var(--text)] tracking-tight">Imtihan</span>
-      </div>
-
       <h1 className="serif text-3xl text-[var(--text)] mb-1">Welcome back</h1>
       <p className="text-sm text-[var(--text-secondary)] mb-8">Sign in to access your exam library.</p>
 
@@ -145,10 +140,8 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <div className="min-h-screen bg-[var(--bg)] flex items-center justify-center px-4">
-      <Suspense fallback={<div className="w-full max-w-sm h-96 rounded-2xl bg-[var(--bg-subtle)] animate-pulse" />}>
-        <LoginForm />
-      </Suspense>
-    </div>
+    <Suspense fallback={<div className="w-full max-w-sm h-96 skeleton" />}>
+      <LoginForm />
+    </Suspense>
   );
 }
