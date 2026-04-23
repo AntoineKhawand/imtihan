@@ -2,19 +2,37 @@
 
 import { Suspense, useState, useEffect } from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
 import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/FormElements";
-import { ArrowLeft } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 
+function getRedirectDestination(): string {
+  if (typeof document === "undefined") return "/dashboard";
+  const match = document.cookie.match(/(?:^|;\s*)__redirect=([^;]+)/);
+  return match ? decodeURIComponent(match[1]) : "/dashboard";
+}
+
+function clearRedirectCookie() {
+  document.cookie = "__redirect=; Max-Age=0; Path=/";
+}
+
 function LoginForm() {
-  const router = useRouter();
   const searchParams = useSearchParams();
-  const next = searchParams.get("next") || "/dashboard";
+  const searchNext = searchParams.get("next");
+  const [next, setNext] = useState("/dashboard");
   const { user } = useAuth();
+
+  useEffect(() => {
+    // Priority: 1. URL param, 2. Cookie from middleware, 3. Default dashboard
+    const cookieNext = document.cookie
+      .split("; ")
+      .find((row) => row.startsWith("__redirect="))
+      ?.split("=")[1];
+
+    setNext(searchNext || (cookieNext ? decodeURIComponent(cookieNext) : "/dashboard"));
+  }, [searchNext]);
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -24,38 +42,31 @@ function LoginForm() {
 
   useEffect(() => {
     if (user && !loading && !googleLoading) {
-      console.log("[LoginForm] Auth state detected. Auto-redirecting to:", next);
-      window.location.assign(next);
+      const dest = getRedirectDestination();
+      clearRedirectCookie();
+      window.location.assign(dest);
     }
-  }, [user, loading, googleLoading, next]);
-
-  console.log("[LoginForm] Rendering. Email:", email, "Next:", next);
+  }, [user, loading, googleLoading]);
 
   async function handleEmail() {
-    console.log("[Email login] Button clicked. Email:", email);
-    if (!email || !password) {
-      console.warn("[Email login] Missing email or password");
-      return;
-    }
+    if (!email || !password) return;
     setLoading(true);
     setError(null);
     try {
-      console.log("[Email login] Calling signInWithEmailAndPassword with email:", email);
       await signInWithEmailAndPassword(auth, email, password);
-      console.log("[Email login] Success. Redirecting to:", next);
-      window.location.assign(next);
+      const dest = getRedirectDestination();
+      clearRedirectCookie();
+      window.location.assign(dest);
     } catch (err: unknown) {
-      const e = err as { code?: string; message?: string };
-      const code = e.code ?? "unknown";
-      console.error("[Email login] Error:", code, e.message);
+      const code = (err as { code?: string }).code ?? "unknown";
       if (code === "auth/user-not-found" || code === "auth/invalid-credential") {
-        setError("Account not found or invalid password. Please create an account first if you haven't yet.");
+        setError("No account found with those credentials. Create one first if you haven't.");
       } else if (code === "auth/wrong-password") {
-        setError("Invalid password. Please try again.");
+        setError("Incorrect password. Please try again.");
       } else if (code === "auth/too-many-requests") {
-        setError("Too many failed attempts. Please try again later.");
+        setError("Too many failed attempts. Please wait a moment.");
       } else {
-        setError(`Login failed: ${code}. Please check your details.`);
+        setError(`Sign-in failed (${code}). Please check your details.`);
       }
     } finally {
       setLoading(false);
@@ -63,39 +74,27 @@ function LoginForm() {
   }
 
   async function handleGoogle() {
-    console.log("[Google login] Button clicked");
     setGoogleLoading(true);
     setError(null);
     try {
       const provider = new GoogleAuthProvider();
       provider.setCustomParameters({ prompt: "select_account" });
-      console.log("[Google login] Starting signInWithPopup...");
-      const credential = await signInWithPopup(auth, provider);
-      console.log("[Google login] Success. User:", credential.user.email, "Redirecting to:", next);
-      
-      // Force a small delay to ensure session sync starts
-      setTimeout(() => {
-        console.log("[Google login] Executing window.location.assign(", next, ")");
-        window.location.assign(next);
-      }, 100);
+      await signInWithPopup(auth, provider);
+      const dest = getRedirectDestination();
+      clearRedirectCookie();
+      setTimeout(() => window.location.assign(dest), 100);
     } catch (err: unknown) {
-      const e = err as { code?: string; message?: string; stack?: string };
-      const code = e.code ?? "";
-      console.error("[Google login] Error detail:", { code, message: e.message, stack: e.stack });
+      const code = (err as { code?: string }).code ?? "";
       if (code === "auth/popup-closed-by-user" || code === "auth/cancelled-popup-request") {
-        setError(null);
+        // user dismissed — no error needed
       } else if (code === "auth/popup-blocked") {
-        setError("Popup blocked by your browser. Allow popups for this site and retry.");
+        setError("Popup blocked. Allow popups for this site and try again.");
       } else if (code === "auth/unauthorized-domain") {
-        setError("This domain isn't authorized in Firebase. Add it under Auth → Settings → Authorized domains.");
-      } else if (code === "auth/operation-not-allowed") {
-        setError("Google sign-in is disabled. Enable it in Firebase Console → Authentication → Sign-in method.");
-      } else if (code === "auth/invalid-api-key" || code === "auth/api-key-not-valid") {
-        setError("Firebase API key is missing or invalid. Check NEXT_PUBLIC_FIREBASE_API_KEY in .env.local.");
+        setError("This domain isn't authorized. Add it under Firebase → Auth → Authorized domains.");
       } else if (code === "auth/network-request-failed") {
-        setError("Network error. Please check your internet, disable ad-blockers, and ensure your domain (e.g. localhost) is added to 'Authorized domains' in Firebase Console.");
+        setError("Network error. Check your connection and that this domain is in Firebase's authorized list.");
       } else {
-        setError(`Google login failed: ${code || e.message || "unknown error"}`);
+        setError(`Google sign-in failed: ${code || "unknown error"}`);
       }
     } finally {
       setGoogleLoading(false);
@@ -114,7 +113,6 @@ function LoginForm() {
       <h1 className="serif text-3xl text-[var(--text)] mb-1">Welcome back</h1>
       <p className="text-sm text-[var(--text-secondary)] mb-8">Sign in to access your exam library.</p>
 
-      {/* Google */}
       <Button
         variant="secondary"
         size="lg"
@@ -140,29 +138,11 @@ function LoginForm() {
       </div>
 
       <div className="space-y-4 mb-4">
-        <Input 
-          label="Email" 
-          type="email" 
-          value={email} 
-          onChange={(e) => {
-            console.log("[LoginForm] Email change:", e.target.value);
-            setEmail(e.target.value);
-          }} 
-          placeholder="you@school.edu.lb" 
-        />
-        <Input 
-          label="Password" 
-          type="password" 
-          value={password} 
-          onChange={(e) => {
-            console.log("[LoginForm] Password change");
-            setPassword(e.target.value);
-          }} 
-          placeholder="••••••••" 
-        />
+        <Input label="Email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@school.edu.lb" />
+        <Input label="Password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" />
       </div>
 
-      {error && <p className="text-xs text-[var(--danger)] mb-4">{error}</p>}
+      {error && <p className="text-xs text-red-500 mb-4">{error}</p>}
 
       <Button onClick={handleEmail} loading={loading} size="lg" className="w-full mb-4">
         Sign in
@@ -178,8 +158,10 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<div className="w-full max-w-sm h-96 skeleton" />}>
-      <LoginForm />
-    </Suspense>
+    <div className="min-h-screen bg-[var(--bg)] flex items-center justify-center px-4">
+      <Suspense fallback={<div className="w-full max-w-sm h-96 rounded-2xl bg-[var(--bg-subtle)] animate-pulse" />}>
+        <LoginForm />
+      </Suspense>
+    </div>
   );
 }
