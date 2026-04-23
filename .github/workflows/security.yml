@@ -1,0 +1,134 @@
+name: Security Scan
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: '0 2 * * 0'  # Weekly scan on Sundays at 2 AM
+  workflow_dispatch:
+
+jobs:
+  security-scan:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Build application
+        run: npm run build
+        env:
+          NODE_ENV: test
+      
+      - name: Start application
+        run: |
+          npm run dev &
+          sleep 15
+          curl -f http://localhost:3000 || exit 1
+      
+      - name: Run Shannon Security Scan
+        uses: KeygraphHQ/shannon@main
+        with:
+          target-url: 'http://localhost:3000'
+          workspace: 'imtihan-weekly-scan'
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      
+      - name: Upload security report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-report
+          path: security-reports/
+          retention-days: 30
+      
+      - name: Upload to GitHub Security Alerts
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: security-reports/**/.sarif
+          category: shannon-scan
+      
+      - name: Check for critical vulnerabilities
+        if: always()
+        run: |
+          echo "=== Security Scan Summary ==="
+          if [ -f "security-reports/imtihan-weekly-scan/deliverables/comprehensive_security_assessment_report.md" ]; then
+            CRITICAL=$(grep -ci "critical" security-reports/imtihan-weekly-scan/deliverables/*.md 2>/dev/null || echo "0")
+            HIGH=$(grep -ci "high" security-reports/imtihan-weekly-scan/deliverables/*.md 2>/dev/null || echo "0")
+            
+            echo "Critical: $CRITICAL"
+            echo "High: $HIGH"
+            
+            if [ "$CRITICAL" -gt 0 ] || [ "$HIGH" -gt 0 ]; then
+              echo "::warning::Critical or High vulnerabilities found!"
+              exit 1
+            fi
+          else
+            echo "No report generated"
+          fi
+        shell: bash
+
+  code-scan:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: javascript, typescript
+      
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:javascript"
+      
+      - name: Upload SARIF
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          results_file: ../code-scanning/results.sarif
+
+  dependency-scan:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Run npm audit
+        run: npm audit --audit-level=high --json > audit-results.json
+      
+      - name: Check for vulnerabilities
+        run: |
+          VULNS=$(jq '.vulnerabilities | length' audit-results.json 2>/dev/null || echo "0")
+          echo "Found $VULNS dependency vulnerabilities"
+          if [ "$VULNS" -gt 0 ]; then
+            echo "::warning::Dependency vulnerabilities found!"
+          fi
+        shell: bash
+      
+      - name: Upload audit results
+        uses: actions/upload-artifact@v4
+        with:
+          name: audit-results
+          path: audit-results.json
