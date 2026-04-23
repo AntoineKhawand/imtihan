@@ -13,7 +13,6 @@ import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/FormElements";
-import { Logo as BrandLogo } from "@/components/ui/Logo";
 import type { UserRole } from "@/types/user";
 
 function getRedirectDestination(): string {
@@ -133,7 +132,6 @@ function RegisterForm() {
   return (
     <div className="card p-8 md:p-10 shadow-xl shadow-black/[0.03] ring-1 ring-black/[0.01]">
       <div className="mb-8 flex flex-col items-center text-center">
-        <BrandLogo size={48} className="mb-6" />
         <h1 className="serif text-display-md text-[var(--text)] mb-2">Create your account</h1>
         <p className="text-sm text-[var(--text-secondary)] leading-relaxed">
           Join Imtihan and generate your first <span className="text-[var(--accent)] font-semibold">2 exams for free</span>.

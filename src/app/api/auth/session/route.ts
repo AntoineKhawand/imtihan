@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
 import { adminAuth } from "@/lib/firebase-admin";
 import { sanitizeError, createSecurityHeaders } from "@/lib/security";
 
@@ -21,16 +20,15 @@ export async function POST(request: Request) {
     
     const sessionCookie = await adminAuth.createSessionCookie(token, { expiresIn });
 
-    const cookieStore = await cookies();
-    cookieStore.set("__session", sessionCookie, {
+    const response = NextResponse.json({ success: true }, { headers: createSecurityHeaders() });
+    response.cookies.set("__session", sessionCookie, {
       maxAge: expiresIn / 1000,
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       path: "/",
       sameSite: "lax",
     });
-
-    return NextResponse.json({ success: true }, { headers: createSecurityHeaders() });
+    return response;
   } catch (error) {
     console.error("Session creation error:", error);
     return NextResponse.json({ error: sanitizeError(error) }, { status: 500, headers: createSecurityHeaders() });
@@ -41,7 +39,7 @@ export async function POST(request: Request) {
  * Clears the session cookie when the user logs out.
  */
 export async function DELETE() {
-  const cookieStore = await cookies();
-  cookieStore.delete("__session");
-  return NextResponse.json({ success: true });
+  const response = NextResponse.json({ success: true });
+  response.cookies.delete("__session");
+  return response;
 }
