@@ -20,7 +20,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         </Link>
         <div className="w-20" /> {/* Spacer to center the logo */}
       </header>
-      <main className="flex-1 flex items-center justify-center p-6 sm:p-10">
+      <main className="flex-1 flex items-center justify-center px-4 py-8 sm:px-10">
         {children}
       </main>
     </div>
