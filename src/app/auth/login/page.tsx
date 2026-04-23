@@ -19,11 +19,12 @@ function clearRedirectCookie() {
 }
 
 async function setSessionCookie(idToken: string): Promise<void> {
-  await fetch("/api/auth/session", {
+  const res = await fetch("/api/auth/session", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ token: idToken }),
   });
+  if (!res.ok) throw new Error(`session-failed:${res.status}`);
 }
 
 function LoginForm() {
@@ -56,6 +57,8 @@ function LoginForm() {
         setError("Incorrect password. Please try again.");
       } else if (code === "auth/too-many-requests") {
         setError("Too many failed attempts. Please wait a moment.");
+      } else if ((err as Error).message?.startsWith("session-failed")) {
+        setError("Sign-in succeeded but session could not be created. Check your server configuration.");
       } else {
         setError(`Sign-in failed (${code}).`);
       }
@@ -83,6 +86,8 @@ function LoginForm() {
         setError("This domain isn't authorized. Add it under Firebase → Auth → Authorized domains.");
       } else if (code === "auth/network-request-failed") {
         setError("Network error. Check your connection.");
+      } else if ((err as Error).message?.startsWith("session-failed")) {
+        setError("Sign-in succeeded but session could not be created. Check your server configuration.");
       } else {
         setError(`Google sign-in failed: ${code || "unknown error"}`);
       }

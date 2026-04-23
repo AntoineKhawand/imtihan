@@ -13,7 +13,6 @@ import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/FormElements";
-import { User, Logo } from "lucide-react";
 import { Logo as BrandLogo } from "@/components/ui/Logo";
 import type { UserRole } from "@/types/user";
 
@@ -28,11 +27,12 @@ function clearRedirectCookie() {
 }
 
 async function setSessionCookie(idToken: string): Promise<void> {
-  await fetch("/api/auth/session", {
+  const res = await fetch("/api/auth/session", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ token: idToken }),
   });
+  if (!res.ok) throw new Error(`session-failed:${res.status}`);
 }
 
 function RegisterForm() {
@@ -120,6 +120,8 @@ function RegisterForm() {
         setError("This domain isn't authorized. Add it under Firebase → Auth → Authorized domains.");
       } else if (code === "auth/network-request-failed") {
         setError("Network error. Check your connection and that this domain is in Firebase's authorized list.");
+      } else if ((err as Error).message?.startsWith("session-failed")) {
+        setError("Sign-up succeeded but session could not be created. Check your server configuration.");
       } else {
         setError(`Google sign-up failed: ${code || "unknown error"}`);
       }
@@ -128,7 +130,6 @@ function RegisterForm() {
     }
   }
 
-  return (
   return (
     <div className="card p-8 md:p-10 shadow-xl shadow-black/[0.03] ring-1 ring-black/[0.01]">
       <div className="mb-8 flex flex-col items-center text-center">
@@ -219,7 +220,6 @@ function RegisterForm() {
           </p>
         </div>
       </div>
-    </div>
     </div>
   );
 }
