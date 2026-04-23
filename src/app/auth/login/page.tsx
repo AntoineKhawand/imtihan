@@ -19,20 +19,7 @@ function clearRedirectCookie() {
 }
 
 function LoginForm() {
-  const searchParams = useSearchParams();
-  const searchNext = searchParams.get("next");
-  const [next, setNext] = useState("/dashboard");
   const { user } = useAuth();
-
-  useEffect(() => {
-    // Priority: 1. URL param, 2. Cookie from middleware, 3. Default dashboard
-    const cookieNext = document.cookie
-      .split("; ")
-      .find((row) => row.startsWith("__redirect="))
-      ?.split("=")[1];
-
-    setNext(searchNext || (cookieNext ? decodeURIComponent(cookieNext) : "/dashboard"));
-  }, [searchNext]);
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
