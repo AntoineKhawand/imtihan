@@ -9,9 +9,9 @@ import { Input } from "@/components/ui/FormElements";
 import { Logo as BrandLogo } from "@/components/ui/Logo";
 
 function getRedirectDestination(): string {
-  if (typeof document === "undefined") return "/dashboard";
+  if (typeof document === "undefined") return "/create";
   const match = document.cookie.match(/(?:^|;\s*)__redirect=([^;]+)/);
-  return match ? decodeURIComponent(match[1]) : "/dashboard";
+  return match ? decodeURIComponent(match[1]) : "/create";
 }
 
 function clearRedirectCookie() {
@@ -28,7 +28,7 @@ async function setSessionCookie(idToken: string): Promise<void> {
 }
 
 function LoginForm() {
-  const [dest, setDest] = useState("/dashboard");
+  const [dest, setDest] = useState("/create");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -96,11 +96,12 @@ function LoginForm() {
   }
 
   return (
-    <div className="card p-8 md:p-10 shadow-xl shadow-black/[0.03] ring-1 ring-black/[0.01]">
-      <div className="mb-8 flex flex-col items-center text-center">
-        <BrandLogo size={48} className="mb-6" />
-        <h1 className="serif text-display-md text-[var(--text)] mb-2">Welcome back</h1>
-        <p className="text-sm text-[var(--text-secondary)]">Sign in to access your exam library.</p>
+    <div className="w-full">
+      <div className="mb-10 text-center lg:text-left">
+        <h1 className="serif text-display-md text-[var(--text)] mb-3 tracking-tight">Welcome back</h1>
+        <p className="text-sm text-[var(--text-secondary)] leading-relaxed">
+          Sign in to your dashboard to manage your exams and history.
+        </p>
       </div>
 
       <div className="space-y-6">
@@ -108,7 +109,7 @@ function LoginForm() {
         <Button
           variant="secondary"
           size="lg"
-          className="w-full bg-[var(--surface)] hover:bg-[var(--bg-subtle)] border-[var(--border-strong)]/50"
+          className="w-full bg-[var(--surface)] hover:bg-[var(--bg-subtle)] border-[var(--border-strong)]/40 h-12 rounded-xl transition-all duration-300 shadow-sm hover:shadow-md"
           loading={googleLoading}
           onClick={handleGoogle}
           icon={
@@ -126,56 +127,61 @@ function LoginForm() {
         {/* Divider */}
         <div className="relative flex items-center gap-4 py-2">
           <div className="flex-1 h-px bg-gradient-to-r from-transparent via-[var(--border)] to-transparent" />
-          <span className="text-[10px] uppercase tracking-widest text-[var(--text-tertiary)] font-bold">or use email</span>
+          <span className="text-[10px] uppercase tracking-[0.2em] text-[var(--text-tertiary)] font-bold">or email</span>
           <div className="flex-1 h-px bg-gradient-to-r from-transparent via-[var(--border)] to-transparent" />
         </div>
 
         {/* Form Fields */}
         <div className="space-y-4">
-          <Input 
-            label="Email Address" 
-            type="email" 
-            value={email} 
-            onChange={(e) => setEmail(e.target.value)} 
-            placeholder="you@school.edu.lb" 
-            className="bg-[var(--bg-subtle)]/30"
-          />
-          <div className="space-y-1">
-            <div className="flex items-center justify-between">
-              <label className="text-[11px] font-semibold text-[var(--text-tertiary)] uppercase tracking-wider ml-1">Password</label>
-              <Link href="/auth/forgot" className="text-[11px] text-[var(--accent)] hover:underline font-medium">Forgot?</Link>
+          <div className="group">
+            <Input 
+              label="Email Address" 
+              type="email" 
+              value={email} 
+              onChange={(e) => setEmail(e.target.value)} 
+              placeholder="you@school.edu.lb" 
+              className="bg-[var(--surface)]/50 backdrop-blur-sm border-[var(--border)]/60 focus:border-[var(--accent)]/50 transition-all duration-300 h-11"
+            />
+          </div>
+          <div className="group">
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="text-[11px] font-bold uppercase tracking-wider text-[var(--text-secondary)]">Password</label>
+              <Link href="/auth/forgot" className="text-[10px] font-bold text-[var(--accent)] hover:underline underline-offset-4 tracking-wide uppercase">
+                Forgot?
+              </Link>
             </div>
             <Input 
               type="password" 
               value={password} 
               onChange={(e) => setPassword(e.target.value)} 
               placeholder="••••••••" 
-              className="bg-[var(--bg-subtle)]/30"
+              className="bg-[var(--surface)]/50 backdrop-blur-sm border-[var(--border)]/60 focus:border-[var(--accent)]/50 transition-all duration-300 h-11"
             />
           </div>
         </div>
 
         {error && (
-          <div className="p-3 rounded-lg bg-red-50 border border-red-100 text-[11px] text-red-600 leading-relaxed animate-in fade-in slide-in-from-top-1">
+          <div className="p-4 rounded-2xl bg-red-50/50 border border-red-100 text-[11px] text-red-600 leading-relaxed animate-in fade-in slide-in-from-top-1">
+            <span className="font-bold uppercase tracking-wider mr-2">Error:</span>
             {error}
           </div>
         )}
 
-        <div className="space-y-4 pt-2">
+        <div className="space-y-6 pt-2">
           <Button 
             onClick={handleEmail} 
             loading={loading} 
             disabled={!email || !password} 
             size="lg" 
-            className="w-full shadow-lg shadow-[var(--accent)]/10 ring-1 ring-white/10"
+            className="w-full h-12 rounded-xl bg-[var(--accent)] shadow-xl shadow-[var(--accent)]/10 hover:shadow-[var(--accent)]/20 transition-all duration-300 ring-1 ring-white/10"
           >
-            Sign in
+            Sign in to dashboard
           </Button>
 
-          <p className="text-center text-xs text-[var(--text-secondary)]">
-            No account?{" "}
-            <Link href="/auth/register" className="text-[var(--accent)] font-semibold hover:underline decoration-2 underline-offset-4">
-              Create one free
+          <p className="text-center text-xs text-[var(--text-secondary)] leading-relaxed">
+            New to Imtihan?{" "}
+            <Link href="/auth/register" className="text-[var(--accent)] font-bold hover:underline decoration-2 underline-offset-4 transition-all">
+              Create an account
             </Link>
           </p>
         </div>

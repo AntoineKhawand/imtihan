@@ -192,7 +192,7 @@ export default function CreatePage() {
               <textarea
                 value={description}
                 onChange={(e) => { setDescription(e.target.value.slice(0, CHAR_MAX)); setActiveExample(null); }}
-                placeholder="Ex: Examen de Physique pour Terminale S Bac Libanais, chapitres mécanique et électromagnétisme, 3 exercices en français, 2 heures, 20 points…"
+                placeholder="Ex: Examen de Physique pour Terminale S Bac Libanais, chapitres mécanique et électromagnétisme, 2 exercices en français, 2 heures, 20 points…"
                 className="w-full min-h-[180px] p-5 bg-transparent text-[var(--text)] placeholder:text-[var(--text-tertiary)] text-sm leading-relaxed resize-none focus:outline-none rounded-2xl"
                 autoFocus
               />

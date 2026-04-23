@@ -262,7 +262,7 @@ export default function StructurePage() {
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Input type="number" label="Total Points" value={context.totalPoints} onChange={(e) => update("totalPoints", parseInt(e.target.value, 10))} placeholder="e.g. 20" />
-              <Input type="number" label="Number of Exercises" value={context.exerciseCount} onChange={(e) => update("exerciseCount", parseInt(e.target.value, 10))} placeholder="e.g. 3" />
+              <Input type="number" label="Number of Exercises" value={context.exerciseCount} onChange={(e) => update("exerciseCount", parseInt(e.target.value, 10))} placeholder="e.g. 2" />
               {/* TODO: Add dynamic exercise breakdown here */}
             </div>
           </div>

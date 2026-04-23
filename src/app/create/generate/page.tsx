@@ -362,7 +362,7 @@ export default function GeneratePage() {
                 )}
               </div>
 
-              {[...Array(context?.exerciseCount ?? 3)].map((_, i) => (
+              {[...Array(context?.exerciseCount ?? 2)].map((_, i) => (
                 <div key={i} className="card p-6" style={{ opacity: 1 - i * 0.15 }}>
                   <div className="flex gap-3 mb-5">
                     <div className="skeleton w-9 h-9 rounded-xl flex-shrink-0" />
