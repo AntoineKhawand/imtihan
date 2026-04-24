@@ -1,6 +1,87 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, BorderStyle } from "docx";
+import { 
+  Document, Packer, Paragraph, TextRun, HeadingLevel, 
+  AlignmentType, BorderStyle, Table, TableRow, TableCell, WidthType 
+} from "docx";
+
+// ... keep RequestSchema, SUBJECT_LABELS, cleanLatexForWord, createFormattedTextRuns unchanged ...
+
+/**
+ * Splits text into paragraphs and tables.
+ */
+function processContentBlocks(
+  text: string, 
+  baseOptions: { size: number; color?: string; font?: string }
+): (Paragraph | Table)[] {
+  const blocks: (Paragraph | Table)[] = [];
+  
+  // Split by potential table blocks (detecting the | symbol at start of line)
+  const lines = text.split("\n");
+  let currentParagraphLines: string[] = [];
+  let currentTableLines: string[] = [];
+
+  const flushParagraph = () => {
+    if (currentParagraphLines.length > 0) {
+      blocks.push(new Paragraph({
+        children: createFormattedTextRuns(currentParagraphLines.join(" "), baseOptions),
+        spacing: { after: 120 },
+      }));
+      currentParagraphLines = [];
+    }
+  };
+
+  const flushTable = () => {
+    if (currentTableLines.length > 0) {
+      // Filter out separator lines like |---|---|
+      const rows = currentTableLines
+        .filter(line => !/^[|\s:-]+$/.test(line.replace(/[^|:-]/g, "")))
+        .map(line => {
+          const cells = line.split("|").filter((_, i, arr) => i > 0 && i < arr.length - 1);
+          return new TableRow({
+            children: cells.map(cell => new TableCell({
+              children: [new Paragraph({ 
+                children: createFormattedTextRuns(cell.trim(), { ...baseOptions, size: baseOptions.size - 2 }),
+                alignment: AlignmentType.CENTER 
+              })],
+              verticalAlign: AlignmentType.CENTER,
+              width: { size: 100 / cells.length, type: WidthType.PERCENTAGE },
+            })),
+          });
+        });
+
+      if (rows.length > 0) {
+        blocks.push(new Table({
+          rows,
+          width: { size: 100, type: WidthType.PERCENTAGE },
+          margins: { top: 100, bottom: 100, left: 100, right: 100 },
+        }));
+      }
+      currentTableLines = [];
+    }
+  };
+
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (trimmed.startsWith("|") && trimmed.endsWith("|")) {
+      flushParagraph();
+      currentTableLines.push(trimmed);
+    } else {
+      if (currentTableLines.length > 0) {
+        flushTable();
+      }
+      if (trimmed === "") {
+        flushParagraph();
+      } else {
+        currentParagraphLines.push(trimmed);
+      }
+    }
+  }
+  flushParagraph();
+  flushTable();
+
+  return blocks;
+}
 
 const RequestSchema = z.object({
   context: z.object({
@@ -242,20 +323,24 @@ async function generateWordDocument(
       spacing: { before: 240, after: 120 },
     }));
 
-    children.push(new Paragraph({
-      children: createFormattedTextRuns(ex.statement, { size: 22, font: fontBody, color: textColor }),
-      spacing: { after: 120 },
-    }));
+    children.push(...processContentBlocks(ex.statement, { size: 22, font: fontBody, color: textColor }));
 
     if (ex.subQuestions) {
       for (const sq of ex.subQuestions) {
-        const subQuestionRuns: TextRun[] = [
-          new TextRun({ text: `${sq.label}  `, bold: true, size: 22, font: fontBody, color: textColor }),
-          ...createFormattedTextRuns(sq.statement, { size: 22, font: fontBody, color: textColor }),
-          new TextRun({ text: `  (${sq.points} pts)`, size: 20, color: metaColor, font: fontBody }),
-        ];
         children.push(new Paragraph({
-          children: subQuestionRuns,
+          children: [new TextRun({ text: `${sq.label}  `, bold: true, size: 22, font: fontBody, color: textColor })],
+          indent: { left: 720 },
+          spacing: { after: 40 },
+        }));
+        children.push(...processContentBlocks(sq.statement, { size: 22, font: fontBody, color: textColor }).map(b => {
+          if (b instanceof Paragraph) {
+            // @ts-ignore
+            b.options.indent = { left: 720 };
+          }
+          return b;
+        }));
+        children.push(new Paragraph({
+          children: [new TextRun({ text: `  (${sq.points} pts)`, size: 20, color: metaColor, font: fontBody })],
           indent: { left: 720 },
           spacing: { after: 80 },
         }));
@@ -281,21 +366,8 @@ async function generateWordDocument(
       spacing: { before: 240, after: 120 },
     }));
 
-    children.push(new Paragraph({
-      children: [
-        new TextRun({ text: lang === "fr" ? "Réponse: " : "Answer: ", bold: true, size: 22, font: fontBody, color: textColor }),
-        ...createFormattedTextRuns(ex.solution.finalAnswer, { size: 22, font: fontBody, color: textColor }),
-      ],
-      spacing: { after: 80 },
-    }));
-
-    const methodLines = ex.solution.methodology.split("\n");
-    for (const line of methodLines) {
-      children.push(new Paragraph({
-        children: createFormattedTextRuns(line, { size: 20, color: metaColor, font: fontBody }),
-        spacing: { after: 40 },
-      }));
-    }
+    children.push(...processContentBlocks(ex.solution.finalAnswer, { size: 22, font: fontBody, color: textColor }));
+    children.push(...processContentBlocks(ex.solution.methodology, { size: 20, color: metaColor, font: fontBody }));
     children.push(new Paragraph({ text: "" }));
   }
 

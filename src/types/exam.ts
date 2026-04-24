@@ -46,6 +46,8 @@ export interface ExamContext {
   teacherNotes?: string;
   /** True if teacher wants two equivalent versions for anti-cheating */
   generateVersionB?: boolean;
+  /** Analysis of the visual/formatting style if a document was provided */
+  layoutPreferences?: string;
 }
 
 export interface Exercise {

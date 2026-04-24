@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { withRetryAndFallback, geminiErrorMessage } from "@/lib/gemini";
+import { getAnthropicClient, isAnthropicConfigured, CLAUDE_MODEL, MAX_TOKENS } from "@/lib/anthropic";
 import { buildAnalyzeSystemPrompt, buildAnalyzeUserPrompt, buildCurriculaReference } from "@/lib/prompts/analyze";
 import { sanitizeError, createSecurityHeaders } from "@/lib/security";
 import { verifySession } from "@/lib/firebase-admin";
@@ -50,6 +51,7 @@ const ExamContextSchema = z.object({
   // Optional fields — null/undefined both fine
   teacherNotes: z.string().nullable().optional().transform(v => v ?? undefined),
   generateVersionB: z.coerce.boolean().default(false),
+  layoutPreferences: z.string().default(""),
   warnings: z.array(z.string()).default([]),
   confidence: z.coerce.number().min(0).max(1).default(0.8),
 });
@@ -136,29 +138,68 @@ export async function POST(request: NextRequest) {
       availableCurricula: "", // already in system prompt — don't duplicate
     });
 
-    // 3. Assemble Gemini content parts (optional document + text)
-    const parts: Array<{ text: string } | { inlineData: { mimeType: string; data: string } }> = [];
-    if (documentBase64 && documentMimeType) {
-      parts.push({ inlineData: { mimeType: documentMimeType, data: documentBase64 } });
-    }
-    parts.push({ text: userText });
+    // ── AI Analysis (Primary: Claude, Fallback: Gemini) ─────────────────────
+    let rawText: string = "";
+    let providerName: "Claude" | "Gemini" = "Gemini";
 
-    // 4. Call Gemini — retry on 503/429, fallback to 2.0-flash if 2.5-flash overloaded
-    let rawText: string;
-    try {
-      const result = await withRetryAndFallback((model) =>
-        model.generateContent({
-          systemInstruction: systemPrompt,
-          contents: [{ role: "user", parts }],
-        })
-      );
-      rawText = result.response.text();
-    } catch (geminiErr) {
-      console.error("[/api/analyze] Gemini call failed after retries:", geminiErr);
-      return NextResponse.json(
-        { success: false, errors: [geminiErrorMessage(geminiErr)] },
-        { status: 503 }
-      );
+    if (isAnthropicConfigured()) {
+      try {
+        console.log("[/api/analyze] Attempting Claude 3.5 Sonnet...");
+        const anthropic = getAnthropicClient();
+        
+        const content: any[] = [];
+        if (documentBase64 && documentMimeType) {
+          const data = documentBase64.replace(/^data:[^;]+;base64,/, "");
+          content.push({
+            type: "document",
+            source: {
+              type: "base64",
+              media_type: documentMimeType,
+              data: data,
+            },
+          });
+        }
+        content.push({ type: "text", text: userText });
+
+        const message = await anthropic.messages.create({
+          model: CLAUDE_MODEL,
+          max_tokens: 2000,
+          system: systemPrompt,
+          messages: [{ role: "user", content: content }],
+        });
+
+        // @ts-ignore
+        rawText = message.content[0].text;
+        providerName = "Claude";
+      } catch (claudeErr) {
+        console.warn("[/api/analyze] Claude failed, falling back to Gemini:", claudeErr);
+      }
+    }
+
+    if (!rawText) {
+      try {
+        console.log("[/api/analyze] Using Gemini...");
+        const parts: Array<{ text: string } | { inlineData: { mimeType: string; data: string } }> = [];
+        if (documentBase64 && documentMimeType) {
+          parts.push({ inlineData: { mimeType: documentMimeType, data: documentBase64 } });
+        }
+        parts.push({ text: userText });
+
+        const result = await withRetryAndFallback((model) =>
+          model.generateContent({
+            systemInstruction: systemPrompt,
+            contents: [{ role: "user", parts }],
+          })
+        );
+        rawText = result.response.text();
+        providerName = "Gemini";
+      } catch (geminiErr) {
+        console.error("[/api/analyze] Gemini fallback failed:", geminiErr);
+        return NextResponse.json(
+          { success: false, errors: [geminiErrorMessage(geminiErr)] },
+          { status: 503 }
+        );
+      }
     }
 
     // 5. Parse Gemini's JSON response

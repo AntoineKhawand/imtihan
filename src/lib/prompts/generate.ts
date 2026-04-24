@@ -510,6 +510,12 @@ SOLUTION QUALITY — The corrigé is what differentiates Imtihan from a simple q
 - commonMistakes: 2–3 specific errors typical students at this level make (not trivial arithmetic slips — conceptual or methodological mistakes).
 - For IB: include mark allocation per step in the methodology (• Method mark [M1]: ..., • Answer mark [A1]: ...).
 
+LAYOUT & CONTENT QUALITY:
+- **Markdown Tables**: Use standard Markdown table syntax for data comparisons, experimental results, or organized information.
+- **Graphs/Diagrams**: You cannot generate image files. If a graph is needed, provide a detailed textual description of the axes, curves, and key points inside a `[GRAPH: description]` tag.
+- **Layout Consistency**: If the user provided a reference document (Teacher notes or grounding data), observe its structure (e.g., header style, question numbering) and attempt to mimic it in the text output.
+- **Scientific notation**: Use KaTeX for math and \ce{...} for chemistry.
+
 JSON schema for each exercise:
 {
   "id": string,
@@ -552,6 +558,7 @@ Duration   : ${context.duration} minutes
 Total points: ${context.totalPoints} (points must sum to exactly ${context.totalPoints})
 Difficulty : ${difficultyBreakdown}
 ${context.teacherNotes ? `\nTeacher notes:\n${context.teacherNotes}` : ""}
+${context.layoutPreferences ? `\nLayout Preferences (MIMIC THIS STYLE):\n${context.layoutPreferences}` : ""}
 
 Return the JSON array now.`;
 }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { withRetryAndFallback, geminiErrorMessage, isRetryableError } from "@/lib/gemini";
+import { getAnthropicClient, isAnthropicConfigured, CLAUDE_MODEL, MAX_TOKENS } from "@/lib/anthropic";
 import { buildGenerateSystemPrompt, buildGenerateUserPrompt } from "@/lib/prompts/generate";
 import { sanitizeError, createSecurityHeaders } from "@/lib/security";
 import { adminDb, verifySession } from "@/lib/firebase-admin";
@@ -226,44 +227,87 @@ export async function POST(request: NextRequest) {
     const systemPrompt = buildGenerateSystemPrompt(context, hasDocument);
     const userPrompt = buildGenerateUserPrompt(context);
 
-    // Build user parts — prepend teacher's document when provided (NotebookLM-style grounding)
-    type Part = { text: string } | { inlineData: { mimeType: string; data: string } };
-    const parts: Part[] = [];
-    if (documentBase64 && documentMimeType) {
-      // Strip data URL prefix if present (e.g. "data:application/pdf;base64,")
-      const data = documentBase64.replace(/^data:[^;]+;base64,/, "");
-      parts.push({ inlineData: { mimeType: documentMimeType, data } });
-    }
-    parts.push({ text: userPrompt });
+    // ── AI Generation (Primary: Claude, Fallback: Gemini) ───────────────────
+    let stream: AsyncIterable<any>;
+    let providerName: "Claude" | "Gemini" = "Gemini";
 
-    // Streaming response via Gemini — retry on 503/429, fallback to 2.0-flash
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let streamResult: any;
-    try {
-      streamResult = await withRetryAndFallback((model) =>
-        model.generateContentStream({
-          systemInstruction: systemPrompt,
-          contents: [{ role: "user", parts }],
-          // Force pure JSON output — eliminates "Failed to parse" errors from markdown fences or prose
-          generationConfig: { responseMimeType: "application/json" },
-        })
-      );
-    } catch (geminiErr) {
-      console.error("[/api/generate] Gemini call failed after retries:", geminiErr);
-      return NextResponse.json(
-        { success: false, errors: [geminiErrorMessage(geminiErr)] },
-        { status: 503 }
-      );
+    if (isAnthropicConfigured()) {
+      try {
+        console.log("[/api/generate] Attempting Claude 3.5 Sonnet...");
+        const anthropic = getAnthropicClient();
+        
+        // Prepare Claude messages
+        const messages: any[] = [];
+        if (documentBase64 && documentMimeType) {
+          const data = documentBase64.replace(/^data:[^;]+;base64,/, "");
+          messages.push({
+            role: "user",
+            content: [
+              {
+                type: "document",
+                source: {
+                  type: "base64",
+                  media_type: documentMimeType,
+                  data: data,
+                },
+              },
+              { type: "text", text: userPrompt },
+            ],
+          });
+        } else {
+          messages.push({ role: "user", content: userPrompt });
+        }
+
+        const claudeStream = await anthropic.messages.stream({
+          model: CLAUDE_MODEL,
+          max_tokens: MAX_TOKENS,
+          system: systemPrompt,
+          messages: messages,
+        });
+
+        // Map Claude stream to a uniform iterator
+        stream = (async function* () {
+          for await (const event of claudeStream) {
+            if (event.type === "content_block_delta" && event.delta.type === "text_delta") {
+              yield { text: () => event.delta.text };
+            }
+          }
+        })();
+        providerName = "Claude";
+      } catch (claudeErr) {
+        console.warn("[/api/generate] Claude failed, falling back to Gemini:", claudeErr);
+        // If Claude fails, we proceed to Gemini fallback below
+      }
     }
 
-    // The SDK exposes both `stream` and a `response` promise. We only consume
-    // `stream`; attach a noop catch to `response` so a stream-parse failure
-    // doesn't surface as an unhandledRejection after we've already closed the
-    // SSE response to the client.
-    if (streamResult?.response && typeof streamResult.response.catch === "function") {
-      streamResult.response.catch((err: unknown) => {
-        console.warn("[/api/generate] streamResult.response rejected:", (err as Error)?.message ?? err);
-      });
+    // Gemini Fallback (or Primary if Claude not configured)
+    if (!stream!) {
+      try {
+        console.log("[/api/generate] Using Gemini...");
+        type Part = { text: string } | { inlineData: { mimeType: string; data: string } };
+        const parts: Part[] = [];
+        if (documentBase64 && documentMimeType) {
+          const data = documentBase64.replace(/^data:[^;]+;base64,/, "");
+          parts.push({ inlineData: { mimeType: documentMimeType, data } });
+        }
+        parts.push({ text: userPrompt });
+
+        const streamResult = await withRetryAndFallback((model) =>
+          model.generateContentStream({
+            systemInstruction: systemPrompt,
+            contents: [{ role: "user", parts }],
+            generationConfig: { responseMimeType: "application/json" },
+          })
+        );
+        stream = streamResult.stream;
+        providerName = "Gemini";
+      } catch (geminiErr) {
+        console.error("[/api/generate] Gemini fallback failed:", geminiErr);
+        return NextResponse.json(
+          { success: false, errors: [geminiErrorMessage(geminiErr)] },
+          { status: 503 }
+        );
+      }
     }
 
     const encoder = new TextEncoder();
@@ -272,7 +316,7 @@ export async function POST(request: NextRequest) {
         let accumulated = "";
 
         try {
-          for await (const chunk of streamResult.stream) {
+          for await (const chunk of stream) {
             const text = chunk.text();
             if (text) {
               accumulated += text;
@@ -280,6 +324,7 @@ export async function POST(request: NextRequest) {
             }
           }
         } catch (streamErr) {
+          console.error(`[/api/generate] ${providerName} stream error:`, streamErr);
           const msg = isRetryableError(streamErr)
             ? "The AI model is overloaded. Please try again in a moment."
             : "Stream interrupted. Please try again.";
@@ -298,9 +343,7 @@ export async function POST(request: NextRequest) {
           userRef.update({ monthlyExamsGenerated: monthlyCount + 1 })
             .catch((e) => console.error("[/api/generate] Failed to increment monthly count:", e));
         } catch (err) {
-          console.error("[/api/generate] JSON parse failed. Length:", accumulated.length);
-          console.error("[/api/generate] First 400 chars:", accumulated.slice(0, 400));
-          console.error("[/api/generate] Last 400 chars:", accumulated.slice(-400));
+          console.error(`[/api/generate] ${providerName} JSON parse failed. Provider: ${providerName}. Length:`, accumulated.length);
           console.error("[/api/generate] Parse error:", err);
           controller.enqueue(
             encoder.encode(`data: ${JSON.stringify({ done: true, error: "Failed to parse generated exercises. Please try again." })}\n\n`)

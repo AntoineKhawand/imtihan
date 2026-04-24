@@ -5,13 +5,18 @@ let client: Anthropic | null = null;
 export function getAnthropicClient(): Anthropic {
   if (client) return client;
 
-  if (!process.env.ANTHROPIC_API_KEY) {
+  const key = process.env.ANTHROPIC_API_KEY?.trim();
+  if (!key) {
     throw new Error("ANTHROPIC_API_KEY is not set in environment variables.");
   }
 
-  client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+  client = new Anthropic({ apiKey: key });
   return client;
 }
 
-export const CLAUDE_MODEL = "claude-sonnet-4-6";
-export const MAX_TOKENS = 8000;
+export function isAnthropicConfigured(): boolean {
+  return !!process.env.ANTHROPIC_API_KEY?.trim();
+}
+
+export const CLAUDE_MODEL = "claude-3-5-sonnet-latest";
+export const MAX_TOKENS = 8192;

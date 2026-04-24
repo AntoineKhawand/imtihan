@@ -31,7 +31,8 @@ You must return ONLY a valid JSON object — no prose, no markdown fences, no pr
   "teacherNotes": string,
   "generateVersionB": boolean,
   "warnings": string[],
-  "confidence": number
+  "confidence": number,
+  "layoutPreferences": string
 }
 
 Rules:
@@ -42,6 +43,7 @@ Rules:
 - confidence: 0.0–1.0 reflecting how sure you are about the parsed context
 - warnings: array of strings describing anything you had to guess or that the teacher should verify
 - generateVersionB: true only if teacher explicitly asked for two versions
+- layoutPreferences: If a document is uploaded, describe its visual style in 1-2 sentences (e.g. "Uses bold headers with single lines", "Classic French school layout with left-aligned numbering"). If no doc, leave empty string.
 
 Curriculum reference (use these IDs exactly):`;
 }
