@@ -276,11 +276,11 @@ export async function POST(request: NextRequest) {
           }
         });
 
-        // Map Claude stream to a uniform iterator
         stream = (async function* () {
           for await (const chunk of claudeStream) {
             if (chunk.type === "content_block_delta" && chunk.delta.type === "text_delta") {
-              yield { text: () => chunk.delta.text };
+              const text = (chunk.delta as any).text;
+              yield { text: () => text };
             }
           }
         })();
