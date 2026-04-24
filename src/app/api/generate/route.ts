@@ -245,9 +245,7 @@ export async function POST(request: NextRequest) {
           systemInstruction: systemPrompt,
           contents: [{ role: "user", parts }],
           // Force pure JSON output — eliminates "Failed to parse" errors from markdown fences or prose
-          generationConfig: {
-            responseMimeType: "application/json",
-          } as unknown as GenerationConfig,
+          generationConfig: { responseMimeType: "application/json" },
         })
       );
     } catch (geminiErr) {
