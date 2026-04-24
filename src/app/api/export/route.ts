@@ -2,47 +2,56 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { 
   Document, Packer, Paragraph, TextRun, HeadingLevel, 
-  AlignmentType, BorderStyle, Table, TableRow, TableCell, WidthType 
+  AlignmentType, BorderStyle, Table, TableRow, TableCell, WidthType,
+  ImageRun
 } from "docx";
 
 // ... keep RequestSchema, SUBJECT_LABELS, cleanLatexForWord, createFormattedTextRuns unchanged ...
 
 /**
- * Splits text into paragraphs and tables.
+ * Splits text into paragraphs, tables and images.
  */
-function processContentBlocks(
+async function processContentBlocks(
   text: string, 
   baseOptions: { size: number; color?: string; font?: string }
-): (Paragraph | Table)[] {
+): Promise<(Paragraph | Table)[]> {
   const blocks: (Paragraph | Table)[] = [];
   
-  // Split by potential table blocks (detecting the | symbol at start of line)
-  const lines = text.split("\n");
+  // Normalise text to remove extra vertical space
+  const cleanText = text.replace(/\n\n\n+/g, "\n\n").trim();
+  const lines = cleanText.split("\n");
+  
   let currentParagraphLines: string[] = [];
   let currentTableLines: string[] = [];
 
   const flushParagraph = () => {
     if (currentParagraphLines.length > 0) {
-      blocks.push(new Paragraph({
-        children: createFormattedTextRuns(currentParagraphLines.join(" "), baseOptions),
-        spacing: { after: 120 },
-      }));
+      const content = currentParagraphLines.join(" ").trim();
+      if (content) {
+        blocks.push(new Paragraph({
+          children: createFormattedTextRuns(content, baseOptions),
+          spacing: { after: 120 },
+        }));
+      }
       currentParagraphLines = [];
     }
   };
 
   const flushTable = () => {
     if (currentTableLines.length > 0) {
-      // Filter out separator lines like |---|---|
       const rows = currentTableLines
-        .filter(line => !/^[|\s:-]+$/.test(line.replace(/[^|:-]/g, "")))
+        .filter(line => {
+          const content = line.replace(/[^|:-]/g, "");
+          return !/^[|\s:-]+$/.test(content);
+        })
         .map(line => {
           const cells = line.split("|").filter((_, i, arr) => i > 0 && i < arr.length - 1);
           return new TableRow({
             children: cells.map(cell => new TableCell({
               children: [new Paragraph({ 
                 children: createFormattedTextRuns(cell.trim(), { ...baseOptions, size: baseOptions.size - 2 }),
-                alignment: AlignmentType.CENTER 
+                alignment: AlignmentType.CENTER,
+                spacing: { before: 40, after: 40 }
               })],
               verticalAlign: AlignmentType.CENTER,
               width: { size: 100 / cells.length, type: WidthType.PERCENTAGE },
@@ -54,26 +63,60 @@ function processContentBlocks(
         blocks.push(new Table({
           rows,
           width: { size: 100, type: WidthType.PERCENTAGE },
-          margins: { top: 100, bottom: 100, left: 100, right: 100 },
+          margins: { top: 40, bottom: 40, left: 100, right: 100 },
+          spacing: { before: 200, after: 200 }
         }));
       }
       currentTableLines = [];
     }
   };
 
-  for (const line of lines) {
-    const trimmed = line.trim();
-    if (trimmed.startsWith("|") && trimmed.endsWith("|")) {
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
+    
+    // Handle [GRAPH: ...]
+    const graphMatch = line.match(/\[(?:GRAPH|VISUAL):\s*(.*?)\]/i);
+    if (graphMatch) {
       flushParagraph();
-      currentTableLines.push(trimmed);
+      const description = graphMatch[1].trim();
+      try {
+        const encoded = encodeURIComponent(description + " academic diagram, scientific illustration, high quality, centered, white background");
+        const imgRes = await fetch(`https://image.pollinations.ai/prompt/${encoded}?width=800&height=450&nologo=true&model=flux`);
+        if (imgRes.ok) {
+          const buffer = await imgRes.arrayBuffer();
+          blocks.push(new Paragraph({
+            children: [
+              new ImageRun({
+                data: buffer,
+                transformation: { width: 480, height: 270 },
+              }),
+            ],
+            alignment: AlignmentType.CENTER,
+            spacing: { before: 200, after: 200 },
+          }));
+          blocks.push(new Paragraph({
+            children: [new TextRun({ text: `Figure: ${description}`, italics: true, size: 18, color: "666666" })],
+            alignment: AlignmentType.CENTER,
+            spacing: { after: 200 },
+          }));
+        }
+      } catch (e) {
+        console.error("Failed to fetch graph image for DOCX:", e);
+      }
+      continue;
+    }
+
+    if (line.startsWith("|") && line.endsWith("|")) {
+      flushParagraph();
+      currentTableLines.push(line);
     } else {
       if (currentTableLines.length > 0) {
         flushTable();
       }
-      if (trimmed === "") {
+      if (line === "") {
         flushParagraph();
       } else {
-        currentParagraphLines.push(trimmed);
+        currentParagraphLines.push(line);
       }
     }
   }
@@ -131,37 +174,43 @@ const SUBJECT_LABELS: Record<string, string> = {
 function cleanLatexForWord(text: string): string {
   let cleaned = text;
   
-  // Remove math mode markers
+  // 1. Handle common chemical symbols and indices first
+  cleaned = cleaned.replace(/\\ce\{([^}]+)\}/g, "$1");
+  
+  // 2. Remove math mode markers
   cleaned = cleaned.replace(/\$\$/g, "");
   cleaned = cleaned.replace(/\$/g, "");
   
-  // Replace common text blocks
+  // 3. Replace common text blocks and formatting
   cleaned = cleaned.replace(/\\text\{([^}]+)\}/g, "$1");
   cleaned = cleaned.replace(/\\mathrm\{([^}]+)\}/g, "$1");
-  cleaned = cleaned.replace(/\\text\s+/g, ""); // fallback for missing braces
+  cleaned = cleaned.replace(/\\textbf\{([^}]+)\}/g, "$1");
+  cleaned = cleaned.replace(/\\textit\{([^}]+)\}/g, "$1");
+  cleaned = cleaned.replace(/\\text\s+/g, ""); 
   
-  // Replace common Greek letters & symbols
+  // 4. Advanced symbol mapping
   const latexMap: Record<string, string> = {
     "\\alpha": "α", "\\beta": "β", "\\gamma": "γ", "\\Delta": "Δ", "\\delta": "δ",
     "\\epsilon": "ε", "\\theta": "θ", "\\lambda": "λ", "\\mu": "μ", "\\pi": "π",
     "\\rho": "ρ", "\\sigma": "σ", "\\Omega": "Ω", "\\omega": "ω",
     "\\circ": "°", "\\times": "×", "\\cdot": "·", "\\approx": "≈", "\\neq": "≠",
     "\\leq": "≤", "\\geq": "≥", "\\infty": "∞", "\\rightarrow": "→", "\\implies": "⇒",
-    "\\rightleftharpoons": "⇌", "\\pm": "±"
+    "\\rightleftharpoons": "⇌", "\\pm": "±", "\\degree": "°", "\\parallel": "∥",
+    "\\perp": "⊥", "\\forall": "∀", "\\exists": "∃", "\\in": "∈", "\\sum": "Σ"
   };
   
   for (const [key, val] of Object.entries(latexMap)) {
     cleaned = cleaned.split(key).join(val);
   }
   
-  // Replace fractions: \frac{A}{B} -> A/B
-  cleaned = cleaned.replace(/\\frac\{([^}]+)\}\{([^}]+)\}/g, "($1)/($2)");
-  
-  // Replace square roots
+  // 5. Fractions and roots
+  cleaned = cleaned.replace(/\\frac\{([^}]+)\}\{([^}]+)\}/g, "$1/$2");
   cleaned = cleaned.replace(/\\sqrt\{([^}]+)\}/g, "√($1)");
   
-  // Remove backslashes from remaining basic commands
+  // 6. Cleanup remaining LaTeX commands
   cleaned = cleaned.replace(/\\(sin|cos|tan|ln|log|exp)/g, "$1");
+  cleaned = cleaned.replace(/\\( )/g, " "); // escaped spaces
+  cleaned = cleaned.replace(/\\{/g, "{").replace(/\\}/g, "}");
   
   return cleaned;
 }
@@ -323,7 +372,7 @@ async function generateWordDocument(
       spacing: { before: 240, after: 120 },
     }));
 
-    children.push(...processContentBlocks(ex.statement, { size: 22, font: fontBody, color: textColor }));
+    children.push(...(await processContentBlocks(ex.statement, { size: 22, font: fontBody, color: textColor })));
 
     if (ex.subQuestions) {
       for (const sq of ex.subQuestions) {
@@ -332,7 +381,7 @@ async function generateWordDocument(
           indent: { left: 720 },
           spacing: { after: 40 },
         }));
-        children.push(...processContentBlocks(sq.statement, { size: 22, font: fontBody, color: textColor }).map(b => {
+        children.push(...(await processContentBlocks(sq.statement, { size: 22, font: fontBody, color: textColor })).map(b => {
           if (b instanceof Paragraph) {
             // @ts-ignore
             b.options.indent = { left: 720 };
@@ -366,8 +415,8 @@ async function generateWordDocument(
       spacing: { before: 240, after: 120 },
     }));
 
-    children.push(...processContentBlocks(ex.solution.finalAnswer, { size: 22, font: fontBody, color: textColor }));
-    children.push(...processContentBlocks(ex.solution.methodology, { size: 20, color: metaColor, font: fontBody }));
+    children.push(...(await processContentBlocks(ex.solution.finalAnswer, { size: 22, font: fontBody, color: textColor })));
+    children.push(...(await processContentBlocks(ex.solution.methodology, { size: 20, color: metaColor, font: fontBody })));
     children.push(new Paragraph({ text: "" }));
   }
 

@@ -84,6 +84,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* Google Fonts performance: preconnect before @import in CSS */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" />
       </head>
       <body>
         <AuthProvider>

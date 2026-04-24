@@ -133,28 +133,48 @@ async function renderMermaidBlocks(text: string): Promise<string> {
   return result;
 }
 
+function handleGraphs(text: string): string {
+  // Matches [GRAPH: description] or [VISUAL: description]
+  return text.replace(/\[(?:GRAPH|VISUAL):\s*(.*?)\]/g, (match, description) => {
+    const desc = description.trim();
+    if (!desc) return "";
+    
+    const encoded = encodeURIComponent(desc + " academic diagram, scientific illustration, white background, high quality, centered");
+    return `
+      <div class="my-8 flex flex-col gap-3">
+        <div class="relative aspect-video w-full overflow-hidden rounded-xl border border-[var(--border)] bg-white shadow-sm group">
+          <img 
+            src="https://image.pollinations.ai/prompt/${encoded}?width=800&height=450&nologo=true&model=flux&seed=${Math.floor(Math.random() * 1000)}" 
+            alt="${desc}"
+            class="h-full w-full object-contain p-2 transition-transform duration-500 group-hover:scale-105"
+            loading="lazy"
+            onerror="this.parentElement.innerHTML='<div class=\'h-full flex flex-col items-center justify-center p-8 text-center\'><p class=\'text-xs font-semibold text-[var(--text-secondary)]\'>Visualization Description</p><p class=\'text-[10px] text-[var(--text-tertiary)] mt-2\'>${desc.replace(/'/g, "\\'")}</p></div>'"
+          />
+        </div>
+        <p class="text-[10px] text-center text-[var(--text-tertiary)] italic px-4 leading-relaxed">
+          <strong>Figure:</strong> ${desc}
+        </p>
+      </div>
+    `;
+  });
+}
+
 export function renderContent(raw: string): string {
   if (!raw) return "";
 
-  // 0. Render Mermaid blocks first (they may contain math)
   let text = raw;
 
-  // 1. Normalise line endings: handle actual \n and JSON-escaped \\n (literal backslash-n)
+  // 1. Normalise line endings
   text = text
-    .replace(/\\n\\n/g, "\n\n")   // literal \\n\\n → real double newline
-    .replace(/\\n/g, "\n");        // literal \\n → real newline
+    .replace(/\\n\\n/g, "\n\n")
+    .replace(/\\n/g, "\n");
 
-  // 2. Pre-process \ce{...} syntax if it's not already inside math blocks
-  //    This helps when the AI forgets to wrap \ce in $...$
+  // 2. Pre-process \ce{...}
   text = text.replace(/\\ce\{((?:[^{}]|\{[^{}]*\})*)\}/g, (match) => {
-    // If it's already wrapped in $, don't double wrap
-    // (This is a bit naive but covers most cases)
     return `$${match}$`;
   });
 
-  // 3. Process display math first ($$...$$), then inline ($...$)
-  //    We work on segments to avoid KaTeX eating inline $ signs inside display math.
-
+  // 3. Process blocks (Math, Tables, Graphs)
   // Split by display math $$...$$
   const displayParts = splitMath(text, "$$", "$$");
 
@@ -169,18 +189,30 @@ export function renderContent(raw: string): string {
       if (p.kind === "math") {
         return renderKaTeX(p.content, false);
       }
-      // Apply markdown and newline conversion on plain text segments only
-      const md = applyMarkdown(p.content);
-      return md
+      
+      // Apply markdown (Tables are handled here)
+      let content = applyMarkdown(p.content);
+      
+      // Apply Graphs
+      content = handleGraphs(content);
+      
+      // Smart newline handling to avoid gaps
+      // 1. Collapse multiple newlines
+      // 2. Convert to paragraphs, but trim around block elements (tables/graphs)
+      return content
+        .trim()
         .replace(/\n\n+/g, "</p><p class=\"mt-3\">")
         .replace(/\n/g, "<br />");
     }).join("");
   }).join("");
 
-  // 3. Wrap in a paragraph if we produced paragraph breaks
-  if (html.includes("</p><p")) {
-    html = `<p>${html}</p>`;
-  }
+  // Final cleanup: Wrap in paragraph and remove empty ones produced by block trimming
+  html = `<p>${html}</p>`;
+  html = html
+    .replace(/<p><\/p>/g, "")
+    .replace(/<p><br \/>/g, "<p>")
+    .replace(/<br \/>\s*<div/g, "<div")
+    .replace(/<\/div>\s*<br \/>/g, "</div>");
 
   return html;
 }
