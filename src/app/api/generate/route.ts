@@ -232,7 +232,10 @@ export async function POST(request: NextRequest) {
     let stream: AsyncIterable<any>;
     let providerName: "Claude" | "Gemini" = "Gemini";
 
-    if (isAnthropicConfigured()) {
+    const isClaudeCompatible = !hasDocument || 
+      (documentMimeType && (documentMimeType.startsWith("image/") || documentMimeType === "application/pdf"));
+
+    if (isAnthropicConfigured() && isClaudeCompatible) {
       try {
         console.log("[/api/generate] Attempting Claude 3.5 Sonnet...");
         const anthropic = getAnthropicClient();
@@ -261,11 +264,12 @@ export async function POST(request: NextRequest) {
           messages.push({ role: "user", content: userPrompt });
         }
 
-        const claudeStream = await anthropic.messages.stream({
+        const claudeStream = await anthropic.messages.create({
           model: CLAUDE_MODEL,
           max_tokens: MAX_TOKENS,
           system: systemPrompt,
           messages: messages,
+          stream: true,
         }, {
           headers: {
             "anthropic-beta": "pdfs-2024-09-25"
@@ -274,18 +278,19 @@ export async function POST(request: NextRequest) {
 
         // Map Claude stream to a uniform iterator
         stream = (async function* () {
-          for await (const event of claudeStream) {
-            if (event.type === "content_block_delta" && event.delta.type === "text_delta") {
-              const delta = event.delta as { type: "text_delta"; text: string };
-              yield { text: () => delta.text };
+          for await (const chunk of claudeStream) {
+            if (chunk.type === "content_block_delta" && chunk.delta.type === "text_delta") {
+              yield { text: () => chunk.delta.text };
             }
           }
         })();
         providerName = "Claude";
       } catch (claudeErr) {
-        console.warn("[/api/generate] Claude failed, falling back to Gemini:", claudeErr);
+        console.warn("[/api/generate] Claude failed to start, falling back to Gemini:", claudeErr);
         // If Claude fails, we proceed to Gemini fallback below
       }
+    } else if (isAnthropicConfigured() && hasDocument && !isClaudeCompatible) {
+      console.log(`[/api/generate] Skipping Claude: File type ${documentMimeType} only supported by Gemini.`);
     }
 
     // Gemini Fallback (or Primary if Claude not configured)
