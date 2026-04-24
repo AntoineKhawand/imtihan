@@ -269,7 +269,8 @@ export async function POST(request: NextRequest) {
         stream = (async function* () {
           for await (const event of claudeStream) {
             if (event.type === "content_block_delta" && event.delta.type === "text_delta") {
-              yield { text: () => event.delta.text };
+              const delta = event.delta as { type: "text_delta"; text: string };
+              yield { text: () => delta.text };
             }
           }
         })();
