@@ -266,7 +266,7 @@ async function generateWordDocument(
   const textColor = isModern ? "1f2937" : isFormal ? "000000" : "333333";
   const metaColor = isModern ? "6b7280" : isFormal ? "000000" : "666666";
 
-  const children: Paragraph[] = [];
+  const children: (Paragraph | Table)[] = [];
 
   // ─── Header ────────────────────────────────────────────────
   if (header?.schoolName) {
