@@ -163,9 +163,11 @@ export default function DashboardPage() {
                   <span className="text-xs text-[var(--text-tertiary)] tabular-nums flex-shrink-0">{quotaUsed}/{FREE_EXAM_LIMIT}</span>
                 </div>
               </div>
-              <Button variant="secondary" size="sm" onClick={handleUpgrade}>
-                Upgrade to Pro — $5.99/mo
-              </Button>
+              <Link href="/upgrade">
+                <Button variant="secondary" size="sm">
+                  Upgrade to Pro — $5.99/mo
+                </Button>
+              </Link>
             </>
           )}
         </div>

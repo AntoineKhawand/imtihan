@@ -150,7 +150,7 @@ export function LandingPricing() {
             </ul>
 
             <Link
-              href="/auth/register"
+              href="/upgrade"
               className="w-full flex items-center justify-center gap-2 h-12 rounded-2xl bg-[var(--accent)] text-white text-sm font-bold hover:bg-[var(--accent)]/90 hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 shadow-lg shadow-[var(--accent)]/20"
             >
               Get Pro Access <ArrowRight size={16} />

@@ -170,12 +170,12 @@ export default function PricingPage() {
                 <Zap size={14} /> Active — Pro plan
               </div>
             ) : (
-              <button
-                onClick={handleUpgrade}
+              <Link
+                href="/upgrade"
                 className="w-full flex items-center justify-center gap-2 h-10 rounded-xl bg-[var(--accent)] text-white text-sm font-semibold hover:bg-[var(--accent)]/90 active:scale-[0.98] transition-all shadow-sm"
               >
-                Upgrade via WhatsApp — {yearly ? `$${YEARLY_TOTAL}/yr` : `$${MONTHLY_PRICE}/mo`}
-              </button>
+                Upgrade to Pro — {yearly ? `$${YEARLY_TOTAL}/yr` : `$${MONTHLY_PRICE}/mo`}
+              </Link>
             )}
           </div>
         </div>
