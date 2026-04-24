@@ -11,6 +11,7 @@ import { CURRICULA } from "@/data/curricula";
 import type { ExamContext } from "@/types/exam";
 import type { CurriculumId, Subject } from "@/types/curriculum";
 import { StepIndicator, StepLabel } from "@/app/create/page";
+import { Logo } from "@/components/ui/Logo";
 
 const DURATION_OPTIONS = [
   { value: "20",  label: "20 min" },
@@ -75,18 +76,21 @@ export default function ConfirmPage() {
 
   return (
     <div className="min-h-screen bg-[var(--bg)] flex flex-col">
-      <header className="flex items-center justify-between px-6 md:px-10 h-16 border-b border-[var(--border)] bg-[var(--bg)]/90 backdrop-blur-md sticky top-0 z-40">
-        <Link href="/create" className="flex items-center gap-2 text-[var(--text-secondary)] hover:text-[var(--text)] transition-colors">
-          <ArrowLeft size={16} />
-          <span className="text-sm hidden sm:block">Back</span>
-        </Link>
-        <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg bg-[var(--accent)] flex items-center justify-center">
-            <span className="text-white text-xs font-serif">إ</span>
-          </div>
-          <span className="font-semibold text-sm text-[var(--text)] tracking-tight">Imtihan</span>
+      <header className="grid grid-cols-3 items-center px-6 md:px-10 h-16 border-b border-[var(--border)] bg-[var(--bg)]/90 backdrop-blur-md sticky top-0 z-40">
+        <div className="flex items-center">
+          <Link href="/create" className="flex items-center gap-2 text-[var(--text-secondary)] hover:text-[var(--text)] transition-colors">
+            <ArrowLeft size={16} />
+            <span className="text-sm hidden sm:block font-medium">Back</span>
+          </Link>
         </div>
-        <StepIndicator current={2} />
+        
+        <div className="flex justify-center">
+          <Logo size={28} />
+        </div>
+
+        <div className="flex justify-end">
+          <StepIndicator current={2} />
+        </div>
       </header>
 
       <main className="flex-1 flex flex-col items-center px-6 md:px-10 py-12">

@@ -151,16 +151,22 @@ export default function CreatePage() {
     <div className="min-h-screen bg-[var(--bg)] flex flex-col">
 
       {/* Header */}
-      <header className="flex items-center justify-between px-6 md:px-10 h-16 border-b border-[var(--border)]/60 bg-[var(--bg)]/75 backdrop-blur-xl sticky top-0 z-40 transition-colors">
-        <div className="flex items-center gap-6">
+      <header className="grid grid-cols-3 items-center px-6 md:px-10 h-16 border-b border-[var(--border)]/60 bg-[var(--bg)]/75 backdrop-blur-xl sticky top-0 z-40 transition-colors">
+        {/* Left */}
+        <div className="flex items-center">
           <Link href="/" className="flex items-center gap-2 text-[var(--text-secondary)] hover:text-[var(--text)] transition-colors">
             <ArrowLeft size={16} aria-label="Back to home page" />
-            <span className="text-sm hidden sm:block">Back</span>
+            <span className="text-sm hidden sm:block font-medium">Back</span>
           </Link>
+        </div>
+
+        {/* Center */}
+        <div className="flex justify-center">
           <Logo size={28} />
         </div>
 
-        <div className="flex items-center gap-6">
+        {/* Right */}
+        <div className="flex items-center justify-end gap-6">
           <StepIndicator current={1} />
           <div className="w-px h-6 bg-[var(--border)] hidden sm:block" />
           <UserNav />

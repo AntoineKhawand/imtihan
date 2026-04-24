@@ -11,12 +11,14 @@ const LANGUAGE_INSTRUCTIONS: Record<string, string> = {
 - Address students formally as "vous".
 - Use French typography: guillemets «», no space before colon is wrong — leave one space before : ; ! ?
 - Introduce context with "On considère...", "On dispose de...", "On donne :".
-- Label given constants/data in a block starting with "Données :" or "On donne :".`,
+- Label given constants/data in a block starting with "Données :" or "On donne :".
+- MATH & CHEMISTRY: Use KaTeX for all math and chemical formulas. Wrap math in $...$ (e.g. $x^2$, $K_a$). Use \\ce{...} for chemical formulas (e.g. \\ce{H2O}).`,
 
   english: `Write the entire exam in English.
 - Use international SI notation (m s⁻¹, N, J, mol dm⁻³).
 - Use "Given:" or "Data:" before providing constants.
-- British/international spelling preferred (centre, colour).`,
+- British/international spelling preferred (centre, colour).
+- MATH & CHEMISTRY: Use KaTeX for all math and chemical formulas. Wrap math in $...$ (e.g. $x^2$, $K_a$). Use \\ce{...} for chemical formulas (e.g. \\ce{H2O}).`,
 
   arabic: `Write the entire exam in Modern Standard Arabic (MSA/الفصحى).
 - All mathematical terms, units, and labels must be in Arabic.
@@ -176,11 +178,10 @@ HL topics: All SL + Complex numbers, Proof, Series/sums, Differential equations,
 - Every reaction equation must be balanced: "Écrire et équilibrer l'équation-bilan".
 - Données : include all Ka, Kb, E°, molar masses needed.
 - CHEMICAL FORMULA NOTATION (CRITICAL):
-  * Subscripts: write H₂O, CO₂, NaCl, CuSO₄, Ca(OH)₂ — NOT H2O, CO2, CuSO4
-  * Charges: write Cu²⁺, SO₄²⁻, Fe³⁺, OH⁻ — NOT Cu+2, SO4-2
-  * State symbols: (aq), (s), (l), (g) — always in parentheses
-  * Coefficients BEFORE formulas: 2H₂O, 3NaCl — NOT H2O2, NaCl3
-  * For mhchem in JSON: use \\ce{H2O}, \\ce{Cu^{2+}}, \\ce{SO4^{2-}} with braces around each formula`,
+  * ALWAYS use \\ce{...} for chemical formulas and equations.
+  * Example: \\ce{H2O}, \\ce{Cu^{2+}}, \\ce{SO4^{2-}}, \\ce{2H2 + O2 -> 2H2O}.
+  * Use $...$ for equilibrium constants ($K_a$, $K_w$), pH, and other variables.
+  * DO NOT use unicode subscripts (H2O) or superscripts; use LaTeX.`,
 
     "bac-francais": `CHEMISTRY FORMAT (Bac Français):
 - Adapt topics to the specified level (from Collège / 5ème-3ème to Lycée / Terminale).
@@ -189,11 +190,10 @@ HL topics: All SL + Complex numbers, Proof, Series/sums, Differential equations,
 - "Écrire l'équation de la réaction" — always balance and include state symbols (aq), (l), (g), (s).
 - "Donner le nom systématique de..." for IUPAC naming.
 - CHEMICAL FORMULA NOTATION (CRITICAL):
-  * Subscripts: write H₂O, CO₂, NaCl, CuSO₄, Ca(OH)₂ — NOT H2O, CO2, CuSO4
-  * Charges: write Cu²⁺, SO₄²⁻, Fe³⁺, OH⁻ — NOT Cu+2, SO4-2
-  * State symbols: (aq), (s), (l), (g) — always in parentheses
-  * Coefficients BEFORE formulas: 2H₂O, 3NaCl — NOT H2O2, NaCl3
-  * For mhchem in JSON: use \\ce{H2O}, \\ce{Cu^{2+}}, \\ce{SO4^{2-}} with braces around each formula`,
+  * ALWAYS use \\ce{...} for chemical formulas and equations.
+  * Example: \\ce{H2O}, \\ce{Cu^{2+}}, \\ce{SO4^{2-}}, \\ce{2H2 + O2 -> 2H2O}.
+  * Use $...$ for equilibrium constants ($K_a$, $K_w$), pH, and other variables.
+  * DO NOT use unicode subscripts (H2O) or superscripts; use LaTeX.`,
 
     ib: `CHEMISTRY FORMAT (IB Chemistry SL/HL):
 - Start with context: reaction in industry, environmental issue, biological system.
@@ -204,11 +204,11 @@ HL topics: All SL + Complex numbers, Proof, Series/sums, Differential equations,
 - Green chemistry context appreciated (atom economy, percentage yield).
 - For titration: always ask students to "State one indicator and its colour change".
 - CHEMICAL FORMULA NOTATION (CRITICAL):
-  * Use IB notation: mol dm-3 (not mol/L), m s-1 (not m/s)
-  * Subscripts: write H2O, CO2, NaCl, CuSO4, Ca(OH)2 -- NOT H2O, CO2, CuSO4
-  * Charges: write Cu2+, SO4 2-, Fe3+, OH- -- NOT Cu+2, SO4-2
-  * State symbols: (aq), (s), (l), (g) -- always in parentheses
-  * For mhchem in JSON: use \\ce{H2O}, \\ce{Cu^{2+}}, \\ce{SO4^{2-}} with braces around each formula`,
+  * ALWAYS use \\ce{...} for chemical formulas and equations.
+  * Example: \\ce{H2O}, \\ce{Cu^{2+}}, \\ce{SO4^{2-}}, \\ce{2H2 + O2 -> 2H2O}.
+  * Use $...$ for equilibrium constants ($K_a$, $K_w$), pH, and other variables.
+  * DO NOT use unicode subscripts (H2O) or superscripts; use LaTeX.
+  * Use $mol\,dm^{-3}$ and $m\,s^{-1}$ notation.`,
   },
 
   biology: {

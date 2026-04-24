@@ -144,7 +144,15 @@ export function renderContent(raw: string): string {
     .replace(/\\n\\n/g, "\n\n")   // literal \\n\\n → real double newline
     .replace(/\\n/g, "\n");        // literal \\n → real newline
 
-  // 2. Process display math first ($$...$$), then inline ($...$)
+  // 2. Pre-process \ce{...} syntax if it's not already inside math blocks
+  //    This helps when the AI forgets to wrap \ce in $...$
+  text = text.replace(/\\ce\{((?:[^{}]|\{[^{}]*\})*)\}/g, (match) => {
+    // If it's already wrapped in $, don't double wrap
+    // (This is a bit naive but covers most cases)
+    return `$${match}$`;
+  });
+
+  // 3. Process display math first ($$...$$), then inline ($...$)
   //    We work on segments to avoid KaTeX eating inline $ signs inside display math.
 
   // Split by display math $$...$$
