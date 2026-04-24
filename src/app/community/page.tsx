@@ -370,6 +370,7 @@ export default function CommunityPage() {
             })}
           </div>
         )}
+        </div>
       </main>
 
       {/* Preview modal */}
