@@ -6,7 +6,7 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export const FREE_EXAM_LIMIT = Number(process.env.NEXT_PUBLIC_FREE_EXAM_LIMIT ?? 2);
+export const FREE_EXAM_LIMIT = 2;
 
 export const SUBJECT_LABELS: Record<string, { fr: string; en: string }> = {
   // Sciences

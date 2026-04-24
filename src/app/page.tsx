@@ -115,7 +115,7 @@ const FAQ_ITEMS = [
   },
   {
     q: "How long does it take to generate an exam?",
-    a: "Thanks to our AI engine, generating a complete exam (3 to 4 exercises) and its grading key usually takes under 30 seconds."
+    a: "Thanks to our AI engine, generating a complete exam (2 to 4 exercises) and its grading key usually takes under 30 seconds."
   },
   {
     q: "Can I export the exam for printing?",

@@ -24,8 +24,8 @@ interface UploadedFile {
 }
 
 const EXAMPLE_PROMPTS = [
-  { label: "Physics · Terminale S", text: "Physics exam for Terminale S Bac Libanais, mechanics and electromagnetism chapters, 3 exercises, 2 hours, 20 points total, in French" },
-  { label: "IB Chemistry HL", text: "IB Chemistry HL exam on organic chemistry and equilibria, 4 questions, 90 minutes, in English" },
+  { label: "Physics · Terminale S", text: "Physics exam for Terminale S Bac Libanais, mechanics and electromagnetism chapters, 2 exercises, 2 hours, 20 points total, in French" },
+  { label: "IB Chemistry HL", text: "IB Chemistry HL exam on organic chemistry and equilibria, 3 questions, 90 minutes, in English" },
   { label: "Math Quiz · Première", text: "Math quiz for Première Bac Français, derivatives and functions, 30 minutes, medium difficulty, in French" },
   { label: "Philo · Terminale L", text: "Philosophy essay for Terminale L Bac Libanais, ethics and epistemology, 2 optional questions, 1h30min, in French" },
 ];
@@ -180,35 +180,65 @@ export default function CreatePage() {
             </p>
           </div>
 
-          {/* Textarea */}
+          {/* Textarea or Limit Card */}
           <div className="mb-5 relative group">
-            <div className="absolute -inset-0.5 bg-gradient-to-r from-[var(--accent)]/0 via-[var(--accent)]/10 to-[var(--accent)]/0 rounded-2xl blur opacity-0 group-focus-within:opacity-100 transition-opacity duration-500" />
-            <div className={cn(
-              "relative rounded-2xl border bg-[var(--surface)]/80 backdrop-blur-sm transition-all duration-300 shadow-sm focus-within:ring-4 focus-within:ring-[var(--accent)]/15 focus-within:border-[var(--accent)]/70",
-              description.length > 0
-                ? "border-[var(--accent)] shadow-[0_0_20px_rgba(26,94,63,0.08)]"
-                : "border-[var(--border)] hover:border-[var(--border-strong)] hover:shadow-md"
-            )}>
-              <textarea
-                value={description}
-                onChange={(e) => { setDescription(e.target.value.slice(0, CHAR_MAX)); setActiveExample(null); }}
-                placeholder="Ex: Examen de Physique pour Terminale S Bac Libanais, chapitres mécanique et électromagnétisme, 2 exercices en français, 2 heures, 20 points…"
-                className="w-full min-h-[180px] p-5 bg-transparent text-[var(--text)] placeholder:text-[var(--text-tertiary)] text-sm leading-relaxed resize-none focus:outline-none rounded-2xl"
-                autoFocus
-              />
-              <div className="flex items-center justify-between px-5 pb-4">
-                <div className="flex items-center gap-1.5 text-xs text-[var(--text-tertiary)]">
-                  <Lightbulb size={11} />
-                  <span>curriculum · level · subject · chapters · language · duration</span>
+            {isFreeTier && quotaUsed >= FREE_EXAM_LIMIT ? (
+              <div className="relative rounded-2xl border border-[var(--accent)]/30 bg-gradient-to-br from-[var(--accent-light)] to-white p-8 text-center shadow-xl shadow-[var(--accent)]/5 animate-in fade-in zoom-in-95 duration-500 overflow-hidden">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-[var(--accent)] opacity-[0.03] blur-2xl rounded-full -translate-y-1/2 translate-x-1/2" />
+                
+                <div className="w-16 h-16 rounded-2xl bg-white shadow-sm flex items-center justify-center mx-auto mb-6 border border-[var(--accent)]/10">
+                  <Sparkles size={28} className="text-[var(--accent)]" />
                 </div>
-                <span className={cn(
-                  "text-xs tabular-nums",
-                  charCount > CHAR_MAX * 0.9 ? "text-[var(--warning)]" : "text-[var(--text-tertiary)]"
-                )}>
-                  {charCount}/{CHAR_MAX}
-                </span>
+                
+                <h2 className="serif text-2xl text-[var(--text)] mb-3">You&apos;ve reached the free limit</h2>
+                <p className="text-sm text-[var(--text-secondary)] mb-8 max-w-sm mx-auto leading-relaxed">
+                  You&apos;ve generated <span className="font-bold text-[var(--text)]">{FREE_EXAM_LIMIT} free exams</span>. Upgrade to Pro for unlimited high-quality exams, saved history, and priority support.
+                </p>
+                
+                <div className="flex flex-col sm:flex-row items-center gap-3 justify-center">
+                  <Link href="/pricing" className="w-full sm:w-auto">
+                    <Button size="lg" className="w-full bg-[var(--accent)] shadow-lg shadow-[var(--accent)]/20 px-8">
+                      Upgrade to Pro — $5/mo
+                    </Button>
+                  </Link>
+                  <Link href="/dashboard" className="w-full sm:w-auto">
+                    <Button variant="secondary" size="lg" className="w-full border-[var(--border-strong)]/30 px-8">
+                      Back to Dashboard
+                    </Button>
+                  </Link>
+                </div>
               </div>
-            </div>
+            ) : (
+              <>
+                <div className="absolute -inset-0.5 bg-gradient-to-r from-[var(--accent)]/0 via-[var(--accent)]/10 to-[var(--accent)]/0 rounded-2xl blur opacity-0 group-focus-within:opacity-100 transition-opacity duration-500" />
+                <div className={cn(
+                  "relative rounded-2xl border bg-[var(--surface)]/80 backdrop-blur-sm transition-all duration-300 shadow-sm focus-within:ring-4 focus-within:ring-[var(--accent)]/15 focus-within:border-[var(--accent)]/70",
+                  description.length > 0
+                    ? "border-[var(--accent)] shadow-[0_0_20px_rgba(26,94,63,0.08)]"
+                    : "border-[var(--border)] hover:border-[var(--border-strong)] hover:shadow-md"
+                )}>
+                  <textarea
+                    value={description}
+                    onChange={(e) => { setDescription(e.target.value.slice(0, CHAR_MAX)); setActiveExample(null); }}
+                    placeholder="Ex: Examen de Physique pour Terminale S Bac Libanais, chapitres mécanique et électromagnétisme, 2 exercices en français, 2 heures, 20 points…"
+                    className="w-full min-h-[180px] p-5 bg-transparent text-[var(--text)] placeholder:text-[var(--text-tertiary)] text-sm leading-relaxed resize-none focus:outline-none rounded-2xl"
+                    autoFocus
+                  />
+                  <div className="flex items-center justify-between px-5 pb-4">
+                    <div className="flex items-center gap-1.5 text-xs text-[var(--text-tertiary)]">
+                      <Lightbulb size={11} />
+                      <span>curriculum · level · subject · chapters · language · duration</span>
+                    </div>
+                    <span className={cn(
+                      "text-xs tabular-nums",
+                      charCount > CHAR_MAX * 0.9 ? "text-[var(--warning)]" : "text-[var(--text-tertiary)]"
+                    )}>
+                      {charCount}/{CHAR_MAX}
+                    </span>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
 
           {/* Examples */}

@@ -39,7 +39,7 @@ const ExamContextSchema = z.object({
     .catch("midterm"),                        // unknown value → default midterm
   // Coerce: Gemini occasionally returns "120" (string) instead of 120
   duration: z.coerce.number().min(10).max(360).catch(60),
-  exerciseCount: z.coerce.number().min(1).max(20).catch(3),
+  exerciseCount: z.coerce.number().min(1).max(20).catch(2),
   totalPoints: z.coerce.number().min(1).max(200).catch(20),
   difficultyMix: z.object({
     easy:   z.coerce.number().min(0).max(1),
