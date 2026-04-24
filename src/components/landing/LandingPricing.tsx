@@ -193,10 +193,6 @@ export function LandingPricing() {
           </div>
         </div>
 
-        {/* Footer info */}
-        <p className="mt-14 text-center text-[11px] font-medium text-[var(--text-tertiary)] uppercase tracking-widest">
-          No hidden fees
-        </p>
       </div>
     </section>
   );

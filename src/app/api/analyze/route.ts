@@ -117,13 +117,13 @@ export async function POST(request: NextRequest) {
 
     const { description, documentBase64, documentMimeType } = parsed.data;
 
-    // 2. Build prompts
+    // 2. Build prompts — curricula reference lives in system prompt only
     const availableCurricula = buildCurriculaReference();
     const systemPrompt = buildAnalyzeSystemPrompt() + "\n" + availableCurricula;
     const userText = buildAnalyzeUserPrompt({
       teacherDescription: description,
       hasUploadedDocument: !!documentBase64,
-      availableCurricula,
+      availableCurricula: "", // already in system prompt — don't duplicate
     });
 
     // 3. Assemble Gemini content parts (optional document + text)

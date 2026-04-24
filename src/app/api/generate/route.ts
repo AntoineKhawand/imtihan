@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { withRetryAndFallback, geminiErrorMessage, isRetryableError } from "@/lib/gemini";
 import { buildGenerateSystemPrompt, buildGenerateUserPrompt } from "@/lib/prompts/generate";
-import type { GenerationConfig } from "@google/generative-ai";
 import { sanitizeError, createSecurityHeaders } from "@/lib/security";
 import { adminDb, verifySession } from "@/lib/firebase-admin";
 
@@ -248,7 +247,6 @@ export async function POST(request: NextRequest) {
           // Force pure JSON output — eliminates "Failed to parse" errors from markdown fences or prose
           generationConfig: {
             responseMimeType: "application/json",
-            thinkingConfig: { thinkingBudget: 0 },
           } as unknown as GenerationConfig,
         })
       );

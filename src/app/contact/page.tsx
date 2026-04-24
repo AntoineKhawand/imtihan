@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ArrowLeft, Mail, MessageSquare, BookOpen, AlertCircle } from "lucide-react";
+import { Logo } from "@/components/ui/Logo";
 
 export const metadata = {
   title: "Contact — Imtihan",
@@ -46,12 +47,7 @@ export default function ContactPage() {
           <ArrowLeft size={16} />
           <span className="text-sm hidden sm:block">Back</span>
         </Link>
-        <Link href="/" className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg bg-[var(--accent)] flex items-center justify-center">
-            <span className="text-white text-xs font-serif">إ</span>
-          </div>
-          <span className="font-semibold text-sm text-[var(--text)] tracking-tight">Imtihan</span>
-        </Link>
+        <Logo size={28} />
         <div className="w-20" />
       </header>
 

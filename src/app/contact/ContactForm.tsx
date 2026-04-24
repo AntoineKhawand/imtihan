@@ -21,14 +21,16 @@ export default function ContactForm() {
 
   const isReady = name.trim().length > 0 && email.includes("@") && message.trim().length >= 10;
 
-  async function handleSubmit(e: React.FormEvent) {
+  function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!isReady || status === "sending") return;
     setStatus("sending");
 
-    // Simulate sending — replace with your email API (Resend, EmailJS, etc.)
-    await new Promise((r) => setTimeout(r, 1200));
-    setStatus("sent");
+    const subject = encodeURIComponent(`[Imtihan – ${topic}] Message from ${name}`);
+    const body = encodeURIComponent(`Name: ${name}\nEmail: ${email}\nTopic: ${topic}\n\n${message}`);
+    window.location.href = `mailto:hello@imtihan.live?subject=${subject}&body=${body}`;
+
+    setTimeout(() => setStatus("sent"), 500);
   }
 
   if (status === "sent") {
