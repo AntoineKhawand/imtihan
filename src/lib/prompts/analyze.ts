@@ -39,13 +39,11 @@ Rules:
 - difficultyMix values must sum to exactly 1.0
 - duration is in minutes (e.g. 1h = 60, 2h = 120)
 - totalPoints: use 20 for Bac Libanais/Français, 100 for IB, best judgment for university
-- chapterIds must come from the curriculum reference provided — if you cannot map to specific chapter IDs, return the closest match and add a warning
+- chapterIds: infer from the teacher's description using short kebab-case identifiers (e.g. "mecanique-newtonienne", "suites-numeriques", "guerre-froide"). If the teacher lists specific chapters, use those words kebab-cased. For university, always return [].
 - confidence: 0.0–1.0 reflecting how sure you are about the parsed context
 - warnings: array of strings describing anything you had to guess or that the teacher should verify
 - generateVersionB: true only if teacher explicitly asked for two versions
-- layoutPreferences: If a document is uploaded, describe its visual style in 1-2 sentences (e.g. "Uses bold headers with single lines", "Classic French school layout with left-aligned numbering"). If no doc, leave empty string.
-
-Curriculum reference (use these IDs exactly):`;
+- layoutPreferences: If a document is uploaded, describe its visual style in 1-2 sentences. If no doc, leave empty string.`;
 }
 
 export function buildAnalyzeUserPrompt({ teacherDescription, hasUploadedDocument, availableCurricula }: AnalyzePromptInput): string {

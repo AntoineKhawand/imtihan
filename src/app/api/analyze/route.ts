@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { withRetryAndFallback, geminiErrorMessage } from "@/lib/gemini";
 import { getAnthropicClient, isAnthropicConfigured, CLAUDE_MODEL, MAX_TOKENS } from "@/lib/anthropic";
-import { buildAnalyzeSystemPrompt, buildAnalyzeUserPrompt, buildCurriculaReference } from "@/lib/prompts/analyze";
+import { buildAnalyzeSystemPrompt, buildAnalyzeUserPrompt } from "@/lib/prompts/analyze";
 import { sanitizeError, createSecurityHeaders } from "@/lib/security";
 import { verifySession } from "@/lib/firebase-admin";
 
@@ -129,13 +129,12 @@ export async function POST(request: NextRequest) {
 
     const { description, documentBase64, documentMimeType } = parsed.data;
 
-    // 2. Build prompts — curricula reference lives in system prompt only
-    const availableCurricula = buildCurriculaReference();
-    const systemPrompt = buildAnalyzeSystemPrompt() + "\n" + availableCurricula;
+    // 2. Build prompts — no curricula dump, AI infers chapter IDs from description
+    const systemPrompt = buildAnalyzeSystemPrompt();
     const userText = buildAnalyzeUserPrompt({
       teacherDescription: description,
       hasUploadedDocument: !!documentBase64,
-      availableCurricula: "", // already in system prompt — don't duplicate
+      availableCurricula: "",
     });
 
     // ── AI Analysis (Primary: Claude, Fallback: Gemini) ─────────────────────

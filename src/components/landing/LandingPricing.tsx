@@ -9,7 +9,7 @@ const YEARLY_PRICE_PER_MONTH = 3.99;
 const YEARLY_TOTAL = +(YEARLY_PRICE_PER_MONTH * 12).toFixed(2);
 const YEARLY_SAVING_PCT = Math.round((1 - YEARLY_PRICE_PER_MONTH / MONTHLY_PRICE) * 100);
 
-export function LandingPricing() {
+export function LandingPricing({ isAuthenticated }: { isAuthenticated?: boolean }) {
   const [yearly, setYearly] = useState(false);
 
   return (
@@ -99,7 +99,7 @@ export function LandingPricing() {
             </ul>
 
             <Link
-              href="/create"
+              href={isAuthenticated ? "/create" : "/auth/register"}
               className="w-full flex items-center justify-center gap-2 h-12 rounded-2xl border border-[var(--border)] text-sm font-semibold text-[var(--text)] hover:bg-[var(--bg-subtle)] hover:border-[var(--border-strong)] active:scale-[0.98] transition-all duration-300"
             >
               Get started free
@@ -150,7 +150,7 @@ export function LandingPricing() {
             </ul>
 
             <Link
-              href="/upgrade"
+              href={isAuthenticated ? "/upgrade" : "/auth/register"}
               className="w-full flex items-center justify-center gap-2 h-12 rounded-2xl bg-[var(--accent)] text-white text-sm font-bold hover:bg-[var(--accent)]/90 hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 shadow-lg shadow-[var(--accent)]/20"
             >
               Get Pro Access <ArrowRight size={16} />

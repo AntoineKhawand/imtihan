@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Sparkles, Lightbulb, Upload, BookOpen, Trash2, AlertCircle } from "lucide-react";
@@ -38,7 +38,17 @@ export default function CreatePage() {
   const [description, setDescription] = useState("");
   const [uploadedFile, setUploadedFile] = useState<UploadedFile | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [analyzeStep, setAnalyzeStep] = useState(0);
+  const stepTimer = useRef<ReturnType<typeof setInterval> | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  const ANALYZE_STEPS = [
+    "Reading your description…",
+    "Detecting curriculum & level…",
+    "Identifying subject & chapters…",
+    "Building exam context…",
+    "Almost ready…",
+  ];
   const [activeExample, setActiveExample] = useState<number | null>(null);
 
   // Class profiles (saved curriculum+level+subject combos)
@@ -110,7 +120,11 @@ export default function CreatePage() {
     }
     
     setIsAnalyzing(true);
+    setAnalyzeStep(0);
     setError(null);
+    stepTimer.current = setInterval(() => {
+      setAnalyzeStep((s) => Math.min(s + 1, ANALYZE_STEPS.length - 1));
+    }, 1800);
 
     try {
       const body: Record<string, unknown> = { description };
@@ -138,7 +152,9 @@ export default function CreatePage() {
     } catch {
       setError("Network error. Please check your connection and try again.");
     } finally {
+      if (stepTimer.current) clearInterval(stepTimer.current);
       setIsAnalyzing(false);
+      setAnalyzeStep(0);
     }
   }
 
@@ -385,6 +401,23 @@ export default function CreatePage() {
               {isAnalyzing ? "Analyzing…" : "Analyze & continue"}
             </Button>
 
+            {isAnalyzing && (
+              <div className="mt-4 flex flex-col items-center gap-2">
+                <div className="flex items-center gap-2.5">
+                  {ANALYZE_STEPS.map((step, i) => (
+                    <div
+                      key={step}
+                      className={`h-1 rounded-full transition-all duration-500 ${
+                        i <= analyzeStep ? "bg-[var(--accent)] w-5" : "bg-[var(--border)] w-1.5"
+                      }`}
+                    />
+                  ))}
+                </div>
+                <p className="text-xs text-[var(--text-secondary)] animate-in fade-in duration-300 key-[{analyzeStep}]">
+                  {ANALYZE_STEPS[analyzeStep]}
+                </p>
+              </div>
+            )}
             {isReady && !isAnalyzing && (
               <p className="text-center text-xs text-[var(--text-tertiary)] mt-3">
                 Imtihan will detect curriculum, level, subject and chapters automatically

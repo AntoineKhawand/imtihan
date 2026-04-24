@@ -137,13 +137,13 @@ export default function UpgradePage() {
 
         {/* ── Checkout split ── */}
         <div>
-          <h2 className="text-xl font-bold text-[var(--text)] mb-8">Complete your order</h2>
+          <h2 className="text-xl font-bold text-[var(--text)] mb-8">Confirm your upgrade</h2>
 
           <div className="grid md:grid-cols-[1fr_1.5fr] gap-6 items-start">
 
             {/* ── Left: Order Summary ── */}
             <div className="border border-[var(--border)] rounded-2xl p-6 bg-[var(--surface)] space-y-5">
-              <h3 className="font-semibold text-[var(--text)]">Order Summary</h3>
+              <h3 className="font-semibold text-[var(--text)]">Plan Summary</h3>
 
               <div className="flex gap-2">
                 {(["monthly","yearly"] as Plan[]).map((p) => (
@@ -180,7 +180,7 @@ export default function UpgradePage() {
 
               <div className="space-y-2 pt-3 border-t border-[var(--border)] text-sm">
                 <div className="flex justify-between text-[var(--text-secondary)]"><span>Subtotal</span><span>${total.toFixed(2)}</span></div>
-                <div className="flex justify-between text-[var(--text-secondary)]"><span>Delivery</span><span className="font-medium text-[var(--accent)]">FREE</span></div>
+                <div className="flex justify-between text-[var(--text-secondary)]"><span>Platform Fee</span><span className="font-medium text-[var(--accent)]">INCLUDED</span></div>
                 {plan === "yearly" && <div className="flex justify-between font-medium text-emerald-600"><span>You save</span><span>${SAVINGS}</span></div>}
                 <div className="flex justify-between font-bold text-[var(--text)] text-base pt-2 border-t border-[var(--border)]">
                   <span>Total</span><span>${total.toFixed(2)}</span>
