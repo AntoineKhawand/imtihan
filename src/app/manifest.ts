@@ -16,13 +16,13 @@ export default function manifest(): MetadataRoute.Manifest {
     orientation: "portrait-primary",
     icons: [
       {
-        src: "/icon-192.png",
+        src: "/Imtihan-logo.png",
         sizes: "192x192",
         type: "image/png",
         purpose: "maskable",
       },
       {
-        src: "/icon-512.png",
+        src: "/Imtihan-logo.png",
         sizes: "512x512",
         type: "image/png",
         purpose: "any",

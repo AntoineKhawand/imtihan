@@ -18,7 +18,7 @@ export function Logo({ className = "", size = 32, showText = true }: LogoProps) 
         style={{ width: size, height: size }}
       >
         <Image 
-          src="/logo.png" 
+          src="/Imtihan-logo.png" 
           alt="Imtihan Logo" 
           fill
           className="object-cover"
