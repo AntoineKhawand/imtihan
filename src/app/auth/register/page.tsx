@@ -134,15 +134,15 @@ function RegisterForm() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 sm:space-y-8">
 
       {/* Header */}
-      <div className="flex flex-col items-center text-center space-y-2">
-        <BrandLogo size={56} showText={false} className="mb-2" />
-        <h1 className="text-2xl font-bold text-[var(--text)] tracking-tight">
+      <div className="flex flex-col items-center text-center space-y-1.5 sm:space-y-2">
+        <BrandLogo size={48} showText={false} className="mb-2" />
+        <h1 className="text-xl sm:text-2xl font-bold text-[var(--text)] tracking-tight">
           Create your account
         </h1>
-        <p className="text-sm text-[var(--text-secondary)]">
+        <p className="text-[13px] sm:text-sm text-[var(--text-secondary)]">
           Start free — generate your first 2 exams today.
         </p>
       </div>

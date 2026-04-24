@@ -4,6 +4,10 @@ import { withRetryAndFallback, geminiErrorMessage, isRetryableError } from "@/li
 import { buildGenerateSystemPrompt, buildGenerateUserPrompt } from "@/lib/prompts/generate";
 import type { GenerationConfig } from "@google/generative-ai";
 import { sanitizeError, createSecurityHeaders } from "@/lib/security";
+import { adminDb, verifySession } from "@/lib/firebase-admin";
+
+const MONTHLY_PERIOD_MS = 30 * 24 * 60 * 60 * 1000;
+const MONTHLY_LIMITS = { free: 3, pro: 100 } as const;
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -177,6 +181,48 @@ export async function POST(request: NextRequest) {
 
     const { context, documentBase64, documentMimeType } = parsed.data;
 
+    // ── Monthly quota check ──────────────────────────────────────────────────
+    const uid = await verifySession(request);
+    if (!uid) {
+      return NextResponse.json(
+        { success: false, errors: ["Unauthorized. Please sign in."] },
+        { status: 401, headers: createSecurityHeaders() }
+      );
+    }
+
+    const userRef = adminDb.collection("users").doc(uid);
+    const userSnap = await userRef.get();
+    if (!userSnap.exists) {
+      return NextResponse.json(
+        { success: false, errors: ["User profile not found."] },
+        { status: 404, headers: createSecurityHeaders() }
+      );
+    }
+
+    const userData = userSnap.data()!;
+    const isPro = userData.proExpiresAt && userData.proExpiresAt > Date.now();
+    const limit = isPro ? MONTHLY_LIMITS.pro : MONTHLY_LIMITS.free;
+    const now = Date.now();
+
+    let monthlyCount: number = userData.monthlyExamsGenerated ?? 0;
+    const periodStart: number = userData.monthlyPeriodStart ?? now;
+
+    if (now - periodStart > MONTHLY_PERIOD_MS) {
+      monthlyCount = 0;
+      await userRef.update({ monthlyExamsGenerated: 0, monthlyPeriodStart: now });
+    }
+
+    if (monthlyCount >= limit) {
+      const msg = isPro
+        ? `You have reached your monthly limit of ${limit} exams. Contact support if you need more.`
+        : `You have reached your monthly limit of ${limit} free exams. Upgrade to Pro for 100 exams per month.`;
+      return NextResponse.json(
+        { success: false, errors: [msg] },
+        { status: 429, headers: createSecurityHeaders() }
+      );
+    }
+    // ────────────────────────────────────────────────────────────────────────
+
     const hasDocument = !!(documentBase64 && documentMimeType);
     const systemPrompt = buildGenerateSystemPrompt(context, hasDocument);
     const userPrompt = buildGenerateUserPrompt(context);
@@ -252,6 +298,9 @@ export async function POST(request: NextRequest) {
           controller.enqueue(
             encoder.encode(`data: ${JSON.stringify({ done: true, exercises })}\n\n`)
           );
+          // Increment monthly counter (fire-and-forget)
+          userRef.update({ monthlyExamsGenerated: monthlyCount + 1 })
+            .catch((e) => console.error("[/api/generate] Failed to increment monthly count:", e));
         } catch (err) {
           console.error("[/api/generate] JSON parse failed. Length:", accumulated.length);
           console.error("[/api/generate] First 400 chars:", accumulated.slice(0, 400));

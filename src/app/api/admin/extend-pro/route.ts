@@ -33,7 +33,11 @@ export async function POST(request: NextRequest) {
     const current = snap.data()?.proExpiresAt ?? undefined;
     const newExpiry = extendProByDays(current, days);
 
-    await ref.update({ proExpiresAt: newExpiry });
+    await ref.update({
+      proExpiresAt: newExpiry,
+      monthlyExamsGenerated: 0,
+      monthlyPeriodStart: Date.now(),
+    });
 
     return NextResponse.json({
       success: true,

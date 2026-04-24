@@ -95,26 +95,29 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
       </div>
 
       {/* ── Right panel ── */}
-      <div className="flex-1 flex flex-col min-h-screen">
+      <div className="flex-1 flex flex-col min-h-screen overflow-x-hidden overflow-y-auto bg-[var(--bg)]">
 
-        <header className="flex items-center justify-between px-6 md:px-10 h-16 border-b border-[var(--border)]/40">
+        {/* Header */}
+        <header className="flex-shrink-0 flex items-center justify-between px-4 sm:px-6 md:px-10 h-16 border-b border-[var(--border)]/40 bg-[var(--bg)]/80 backdrop-blur-md sticky top-0 z-20">
           <Link
             href="/"
-            className="flex items-center gap-2 text-[var(--text-secondary)] hover:text-[var(--text)] transition-colors duration-200 text-sm font-medium"
+            className="flex items-center gap-2 text-[var(--text-secondary)] hover:text-[var(--text)] transition-colors duration-200 text-[13px] sm:text-sm font-medium"
           >
-            <ArrowLeft size={15} />
-            Back to site
+            <ArrowLeft size={14} />
+            <span className="hidden xs:inline">Back to site</span>
+            <span className="xs:hidden">Back</span>
           </Link>
-          <div className="w-24" />
+          <div className="w-10 sm:w-24" />
         </header>
 
-        <main className="flex-1 flex items-center justify-center px-6 py-12">
-          <div className="w-full max-w-[400px] animate-in fade-in slide-in-from-bottom-3 duration-700">
+        {/* Form area */}
+        <main className="flex-1 flex flex-col items-center justify-center p-6 sm:p-8 md:p-12">
+          <div className="w-full max-w-[400px] py-4 sm:py-8 animate-in fade-in slide-in-from-bottom-3 duration-700">
             {children}
           </div>
         </main>
 
-        <footer className="py-6 text-center text-[11px] text-[var(--text-tertiary)]">
+        <footer className="flex-shrink-0 py-6 text-center text-[10px] sm:text-[11px] text-[var(--text-tertiary)] opacity-60">
           © {new Date().getFullYear()} Imtihan — Built for Education
         </footer>
       </div>

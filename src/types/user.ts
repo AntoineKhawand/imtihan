@@ -12,6 +12,10 @@ export interface UserProfile {
   country: string; // default "LB"
   createdAt: number;
   examsGenerated: number;
+  /** Exams generated in the current 30-day billing period. Reset by admin on extension. */
+  monthlyExamsGenerated?: number;
+  /** Unix ms when the current monthly period started. */
+  monthlyPeriodStart?: number;
   /** Unix timestamp (ms) when the Pro plan expires. Set by admin after Whish payment. */
   proExpiresAt?: number;
   subscription: {

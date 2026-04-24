@@ -1,4 +1,4 @@
-import { GoogleGenerativeAI, type GenerativeModel, type GenerationConfig } from "@google/generative-ai";
+import { GoogleGenerativeAI, type GenerativeModel } from "@google/generative-ai";
 
 let genai: GoogleGenerativeAI | null = null;
 
@@ -11,23 +11,15 @@ function getGenAI(): GoogleGenerativeAI {
   return genai;
 }
 
-/**
- * AI model configuration
- */
-const NO_THINKING = { thinkingConfig: { thinkingBudget: 0 } } as unknown as GenerationConfig;
-
-// Primary model for stable GA
-// Fallback model — powerful and widely available.
-export const GEMINI_MODEL_PRIMARY  = "gemini-2.5-flash";
+// Primary: GA and widely available on all API key tiers.
+// Fallback: stable backup when primary is unavailable.
+export const GEMINI_MODEL_PRIMARY  = "gemini-2.0-flash";
 export const GEMINI_MODEL_FALLBACK = "gemini-1.5-flash-latest";
 /** @deprecated use GEMINI_MODEL_PRIMARY */
 export const GEMINI_MODEL = GEMINI_MODEL_PRIMARY;
 
 function getModel(modelId: string): GenerativeModel {
-  return getGenAI().getGenerativeModel({
-    model: modelId,
-    generationConfig: NO_THINKING,
-  });
+  return getGenAI().getGenerativeModel({ model: modelId });
 }
 
 /** Non-streaming model — for /api/analyze */

@@ -72,6 +72,23 @@ export const adminStorage = new Proxy({} as admin.storage.Storage, {
   },
 });
 
+/**
+ * Verify the __session cookie (set by /api/auth/session) and return the uid.
+ * Use this in API routes that rely on the browser session cookie.
+ */
+export async function verifySession(request: Request): Promise<string | null> {
+  const cookieHeader = request.headers.get("cookie") ?? "";
+  const match = cookieHeader.match(/(?:^|;\s*)__session=([^;]+)/);
+  if (!match) return null;
+  const sessionCookie = decodeURIComponent(match[1]);
+  try {
+    const decoded = await adminAuth.verifySessionCookie(sessionCookie, true);
+    return decoded.uid;
+  } catch {
+    return null;
+  }
+}
+
 /** Verify a Firebase ID token from the Authorization header */
 export async function verifyIdToken(request: Request): Promise<string | null> {
   const authHeader = request.headers.get("Authorization");

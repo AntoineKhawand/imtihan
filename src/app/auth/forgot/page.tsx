@@ -66,10 +66,10 @@ export default function ForgotPasswordPage() {
 
   return (
     <div className="w-full">
-      <div className="mb-10 text-center flex flex-col items-center">
-        <BrandLogo size={56} showText={false} className="mb-6" />
-        <h1 className="serif text-display-md text-[var(--text)] mb-3 tracking-tight">Reset password</h1>
-        <p className="text-sm text-[var(--text-secondary)] leading-relaxed max-w-[320px]">
+      <div className="mb-6 sm:mb-10 text-center flex flex-col items-center">
+        <BrandLogo size={48} showText={false} className="mb-4 sm:mb-6" />
+        <h1 className="serif text-xl sm:text-display-md text-[var(--text)] mb-2 sm:mb-3 tracking-tight">Reset password</h1>
+        <p className="text-[13px] sm:text-sm text-[var(--text-secondary)] leading-relaxed max-w-[280px] sm:max-w-[320px]">
           Enter your email address and we&apos;ll send you a link to reset your password.
         </p>
       </div>
