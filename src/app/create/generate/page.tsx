@@ -403,7 +403,22 @@ export default function GeneratePage() {
                   <p className="text-xs text-red-600 leading-relaxed">{error}</p>
                 </div>
               </div>
-              <Button onClick={generateExam} icon={<RotateCcw size={14} />}>Try again</Button>
+              <div className="flex flex-wrap gap-3">
+                {error?.toLowerCase().includes("limit") ? (
+                  <>
+                    <Button onClick={() => router.push("/upgrade")} icon={<Sparkles size={14} />}>
+                      Upgrade to Pro
+                    </Button>
+                    <Button onClick={generateExam} variant="secondary" icon={<RotateCcw size={14} />}>
+                      Try again
+                    </Button>
+                  </>
+                ) : (
+                  <Button onClick={generateExam} icon={<RotateCcw size={14} />}>
+                    Try again
+                  </Button>
+                )}
+              </div>
             </div>
           )}
 
