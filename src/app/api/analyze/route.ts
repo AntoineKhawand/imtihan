@@ -141,7 +141,10 @@ export async function POST(request: NextRequest) {
     let rawText: string = "";
     let providerName: "Claude" | "Gemini" = "Gemini";
 
-    if (isAnthropicConfigured()) {
+    const isClaudeCompatible = !documentBase64 || 
+      (documentMimeType && (documentMimeType.startsWith("image/") || documentMimeType === "application/pdf"));
+
+    if (isAnthropicConfigured() && isClaudeCompatible) {
       try {
         console.log("[/api/analyze] Attempting Claude 3.5 Sonnet...");
         const anthropic = getAnthropicClient();
@@ -149,14 +152,16 @@ export async function POST(request: NextRequest) {
         const content: any[] = [];
         if (documentBase64 && documentMimeType) {
           const data = documentBase64.replace(/^data:[^;]+;base64,/, "");
+          const isImage = documentMimeType.startsWith("image/");
+          
           content.push({
-            type: "document",
+            type: isImage ? "image" : "document",
             source: {
               type: "base64",
-              media_type: documentMimeType,
+              media_type: documentMimeType as any,
               data: data,
             },
-          });
+          } as any);
         }
         content.push({ type: "text", text: userText });
 
@@ -165,6 +170,10 @@ export async function POST(request: NextRequest) {
           max_tokens: 2000,
           system: systemPrompt,
           messages: [{ role: "user", content: content }],
+        }, {
+          headers: {
+            "anthropic-beta": "pdfs-2024-09-25"
+          }
         });
 
         // @ts-ignore
@@ -180,7 +189,8 @@ export async function POST(request: NextRequest) {
         console.log("[/api/analyze] Using Gemini...");
         const parts: Array<{ text: string } | { inlineData: { mimeType: string; data: string } }> = [];
         if (documentBase64 && documentMimeType) {
-          parts.push({ inlineData: { mimeType: documentMimeType, data: documentBase64 } });
+          const data = documentBase64.replace(/^data:[^;]+;base64,/, "");
+          parts.push({ inlineData: { mimeType: documentMimeType, data } });
         }
         parts.push({ text: userText });
 
