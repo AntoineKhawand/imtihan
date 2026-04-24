@@ -11,6 +11,7 @@ const MONTHLY_LIMITS = { free: 2, pro: 100 } as const;
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+export const maxDuration = 60;
 
 export async function GET() {
   return NextResponse.json({ status: "ok", timestamp: Date.now() });
@@ -240,17 +241,19 @@ export async function POST(request: NextRequest) {
         const messages: any[] = [];
         if (documentBase64 && documentMimeType) {
           const data = documentBase64.replace(/^data:[^;]+;base64,/, "");
+          const isImage = documentMimeType.startsWith("image/");
+          
           messages.push({
             role: "user",
             content: [
               {
-                type: "document",
+                type: isImage ? "image" : "document",
                 source: {
                   type: "base64",
-                  media_type: documentMimeType,
+                  media_type: documentMimeType as any,
                   data: data,
                 },
-              },
+              } as any,
               { type: "text", text: userPrompt },
             ],
           });
@@ -263,6 +266,10 @@ export async function POST(request: NextRequest) {
           max_tokens: MAX_TOKENS,
           system: systemPrompt,
           messages: messages,
+        }, {
+          headers: {
+            "anthropic-beta": "pdfs-2024-09-25"
+          }
         });
 
         // Map Claude stream to a uniform iterator
@@ -326,10 +333,16 @@ export async function POST(request: NextRequest) {
           }
         } catch (streamErr) {
           console.error(`[/api/generate] ${providerName} stream error:`, streamErr);
+          const errorDetail = streamErr instanceof Error ? streamErr.message : String(streamErr);
           const msg = isRetryableError(streamErr)
             ? "The AI model is overloaded. Please try again in a moment."
-            : "Stream interrupted. Please try again.";
-          controller.enqueue(encoder.encode(`data: ${JSON.stringify({ done: true, error: msg })}\n\n`));
+            : `Stream interrupted (${providerName}). Please try again.`;
+          
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify({ 
+            done: true, 
+            error: msg,
+            debug: process.env.NODE_ENV !== "production" ? errorDetail : undefined
+          })}\n\n`));
           controller.close();
           return;
         }
