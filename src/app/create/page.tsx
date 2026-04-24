@@ -3,12 +3,12 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Sparkles, Lightbulb, Upload, X, BookOpen, Trash2, AlertCircle } from "lucide-react";
+import { ArrowLeft, Sparkles, Lightbulb, Upload, BookOpen, Trash2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Dropzone } from "@/components/ui/Dropzone";
 import { cn, shortId } from "@/lib/utils";
 import {
-  getClassProfiles, saveClassProfile, deleteClassProfile, getSavedExams,
+  getClassProfiles, saveClassProfile, deleteClassProfile,
   type ClassProfile,
 } from "@/lib/storage";
 import { useAuth } from "@/contexts/AuthContext";
@@ -192,13 +192,13 @@ export default function CreatePage() {
                 
                 <h2 className="serif text-2xl text-[var(--text)] mb-3">You&apos;ve reached the free limit</h2>
                 <p className="text-sm text-[var(--text-secondary)] mb-8 max-w-sm mx-auto leading-relaxed">
-                  You&apos;ve generated <span className="font-bold text-[var(--text)]">{FREE_EXAM_LIMIT} free exams</span>. Upgrade to Pro for unlimited high-quality exams, saved history, and priority support.
+                  You&apos;ve generated <span className="font-bold text-[var(--text)]">{FREE_EXAM_LIMIT} free exams</span>. Upgrade to Pro for 100 exams per month, saved history, and priority support.
                 </p>
                 
                 <div className="flex flex-col sm:flex-row items-center gap-3 justify-center">
                   <Link href="/pricing" className="w-full sm:w-auto">
                     <Button size="lg" className="w-full bg-[var(--accent)] shadow-lg shadow-[var(--accent)]/20 px-8">
-                      Upgrade to Pro — $5/mo
+                      Upgrade to Pro — $5.99/mo
                     </Button>
                   </Link>
                   <Link href="/dashboard" className="w-full sm:w-auto">

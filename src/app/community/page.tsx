@@ -181,7 +181,7 @@ export default function CommunityPage() {
               </p>
               <Link href="/pricing" className="block w-full">
                 <Button size="lg" className="w-full bg-[var(--accent)] shadow-lg shadow-[var(--accent)]/20">
-                  Upgrade to Pro — $5/mo
+                  Upgrade to Pro — $5.99/mo
                 </Button>
               </Link>
             </div>

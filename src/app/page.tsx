@@ -26,6 +26,7 @@ import {
   Download,
 } from "lucide-react";
 import { MotionHero, MotionStats, MotionHowItWorks, MotionStreamingPreview } from "@/components/landing/LandingMotion";
+import { LandingPricing } from "@/components/landing/LandingPricing";
 import { UserNav } from "@/components/layout/UserNav";
 import { Logo } from "@/components/ui/Logo";
 
@@ -123,7 +124,7 @@ const FAQ_ITEMS = [
   },
   {
     q: "Is it free?",
-    a: "You can generate your first 2 complete exams for free (no credit card required). After that, the Pro subscription unlocks unlimited generation."
+    a: "You can generate your first 3 complete exams for free (no credit card required). After that, the Pro subscription unlocks 100 exams per month."
   }
 ];
 
@@ -155,7 +156,7 @@ export default async function LandingPage() {
       "@type": "Offer",
       "price": "0",
       "priceCurrency": "USD",
-      "description": "2 free exams"
+      "description": "3 free exams"
     }
   };
 
@@ -201,10 +202,9 @@ export default async function LandingPage() {
 
         <div className="relative max-w-5xl mx-auto">
           <MotionHero>
-            {/* Badge */} {/* TODO: Translate "2 free exams — no credit card required" */}
-            <div className="group inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-[var(--border)] bg-[var(--surface)] text-xs text-[var(--text-secondary)] mb-8 shadow-sm hover:border-[var(--accent)]/30 hover:bg-[var(--accent)]/5 transition-all duration-300 cursor-default" aria-label="2 free exams — no credit card required">
+            <div className="group inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-[var(--border)] bg-[var(--surface)] text-xs text-[var(--text-secondary)] mb-8 shadow-sm hover:border-[var(--accent)]/30 hover:bg-[var(--accent)]/5 transition-all duration-300 cursor-default" aria-label="3 free exams — no credit card required">
               <Star size={10} className="text-[var(--accent)] fill-[var(--accent)] group-hover:rotate-[72deg] transition-transform duration-500" />
-              <span>2 free exams — no credit card required</span>
+              <span>3 free exams — no credit card required</span>
               <ChevronRight size={10} />
             </div>
 
@@ -403,109 +403,7 @@ export default async function LandingPage() {
       </section>
 
       {/* ── PRICING ──────────────────────────────────────────────────── */}
-      <section id="pricing" className="px-6 md:px-10 py-24 border-t border-[var(--border)]">
-        <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-16">
-            <p className="text-xs uppercase tracking-widest text-[var(--accent)] font-medium mb-4">Pricing</p>
-            <h2 className="serif text-display-lg text-[var(--text)] text-balance">
-              Start free, upgrade when you&apos;re convinced
-            </h2>
-            <p className="text-sm text-[var(--text-secondary)] mt-4 max-w-md mx-auto">
-              Simple pricing for individuals. For school-wide licenses, get in touch.
-            </p>
-          </div>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 items-start">
-            {/* Free */}
-            <div className="card p-8 flex flex-col h-full hover:-translate-y-1 hover:shadow-xl hover:shadow-black/[0.03] transition-all duration-300">
-              <p className="text-xs uppercase tracking-wider text-[var(--text-tertiary)] font-medium mb-4">Free</p>
-              <div className="serif text-4xl font-light text-[var(--text)] mb-1">2 Free</div>
-              <p className="text-sm text-[var(--text-secondary)] mb-6">2 exams to try everything</p>
-              <ul className="space-y-3 mb-8 text-sm text-[var(--text-secondary)]">
-                {[
-                  "2 complete exams + corrigés",
-                  "All curricula & subjects",
-                  "Word + PDF export",
-                  "Version A/B generation",
-                ].map((f) => (
-                  <li key={f} className="flex items-center gap-2.5">
-                    <span className="w-4 h-4 rounded-full bg-[var(--accent-light)] text-[var(--accent)] flex items-center justify-center text-xs flex-shrink-0">✓</span>
-                    {f}
-                  </li>
-                ))}
-              </ul>
-              <div className="mt-auto" />
-              <Link
-                href="/create"
-                className="w-full flex items-center justify-center gap-2 h-10 rounded-xl border border-[var(--border)] text-sm font-medium text-[var(--text)] hover:border-[var(--border-strong)] hover:bg-[var(--bg-subtle)] active:scale-[0.98] transition-all duration-300"
-              >
-                Get started free
-              </Link>
-            </div>
-
-            {/* Pro */}
-            <div className="relative card p-8 border-[var(--accent)]/80 ring-2 ring-[var(--accent)]/20 bg-[var(--accent-light)] shadow-lg shadow-[var(--accent)]/10 flex flex-col h-full hover:-translate-y-1 hover:shadow-xl hover:shadow-[var(--accent)]/20 transition-all duration-300">
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-[var(--accent)] text-white text-xs font-medium shadow-md shadow-[var(--accent)]/20">
-                Most popular
-              </div>
-              <p className="text-xs uppercase tracking-wider text-[var(--accent)] font-medium mb-4">Pro</p>
-              <div className="serif text-4xl font-light text-[var(--text)] mb-1">
-                $5<span className="text-lg text-[var(--text-secondary)]">/mo</span>
-              </div>
-              <p className="text-sm text-[var(--text-secondary)] mb-6">Unlimited exams for one teacher</p>
-              <ul className="space-y-3 mb-8 text-sm text-[var(--text-secondary)]">
-                {[
-                  "Unlimited exams + corrigés",
-                  "All curricula & subjects",
-                  "Exam library — saved forever",
-                  "Priority AI generation",
-                  "Email delivery",
-                  "Early access to new features",
-                ].map((f) => (
-                  <li key={f} className="flex items-center gap-2.5">
-                    <span className="w-4 h-4 rounded-full bg-[var(--accent)] text-white flex items-center justify-center text-xs flex-shrink-0">✓</span>
-                    {f}
-                  </li>
-                ))}
-              </ul>
-              <div className="mt-auto" />
-              <Link
-                href="/create"
-                className="w-full flex items-center justify-center gap-2 h-10 rounded-xl bg-[var(--accent)] text-white text-sm font-medium hover:bg-[var(--accent)]/90 active:scale-[0.98] transition-all duration-300 shadow-sm hover:shadow-md hover:shadow-[var(--accent)]/20"
-              >
-                Upgrade to Pro <ArrowRight size={14} />
-              </Link>
-            </div>
-
-            {/* Schools */}
-            <div className="card p-8 flex flex-col h-full md:col-span-2 lg:col-span-1 hover:-translate-y-1 hover:shadow-xl hover:shadow-black/[0.03] transition-all duration-300">
-              <p className="text-xs uppercase tracking-wider text-[var(--text-tertiary)] font-medium mb-4">Schools</p>
-              <div className="serif text-4xl font-light text-[var(--text)] mb-1">Custom</div>
-              <p className="text-sm text-[var(--text-secondary)] mb-6">For departments and institutions</p>
-              <ul className="space-y-3 mb-8 text-sm text-[var(--text-secondary)]">
-                {[
-                  "Everything in Pro",
-                  "Centralized billing",
-                  "Multiple teacher accounts",
-                  "Shared question bank (v2)",
-                  "Dedicated support",
-                ].map((f) => (
-                  <li key={f} className="flex items-center gap-2.5">
-                    <span className="w-4 h-4 rounded-full bg-[var(--bg-subtle)] border border-[var(--border)] text-[var(--text-secondary)] flex items-center justify-center text-xs flex-shrink-0">✓</span>
-                    {f}
-                  </li>
-                ))}
-              </ul>
-              <div className="mt-auto" />
-              <Link
-                href="/contact"
-                className="w-full flex items-center justify-center gap-2 h-10 rounded-xl border border-[var(--border)] text-sm font-medium text-[var(--text)] hover:border-[var(--border-strong)] hover:bg-[var(--bg-subtle)] active:scale-[0.98] transition-all duration-300"
-              >
-                Contact sales
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
+      <LandingPricing />
 
       {/* ── FAQ ──────────────────────────────────────────────────────── */}
       <section className="px-6 md:px-10 py-24 border-t border-[var(--border)]">
