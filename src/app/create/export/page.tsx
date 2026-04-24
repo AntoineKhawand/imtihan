@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, FileText, FileDown, Mail, BookOpen, CheckCircle2, Plus, Sparkles, Eye, EyeOff, Save, Shuffle, Globe } from "lucide-react";
+import { UserNav } from "@/components/layout/UserNav";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/FormElements";
 import { cn, SUBJECT_LABELS, LANGUAGE_LABELS, shortId } from "@/lib/utils";
@@ -220,7 +221,10 @@ export default function ExportPage() {
           </div>
           <span className="font-semibold text-sm text-[var(--text)] tracking-tight">Imtihan</span>
         </div>
-        <StepIndicator current={5} />
+        <div className="flex items-center gap-4">
+          <StepIndicator current={5} />
+          <UserNav />
+        </div>
       </header>
 
       <main className="flex-1 px-6 md:px-10 py-12">

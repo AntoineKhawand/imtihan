@@ -6,6 +6,7 @@ import { Plus, Search, Users, Heart, Download, BookOpen, Eye, X, Copy, CheckCirc
 import { Button } from "@/components/ui/Button";
 import { cn, SUBJECT_LABELS } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
+import { UserNav } from "@/components/layout/UserNav";
 
 import { FEATURED_EXAMS } from "@/data/communityExams";
 
@@ -146,22 +147,7 @@ export default function CommunityPage() {
     );
   }
 
-  if (profile?.subscription?.tier === "free") {
-    return (
-      <div className="min-h-screen bg-[var(--bg)] flex flex-col items-center justify-center p-6 text-center">
-        <div className="w-16 h-16 rounded-2xl bg-[var(--accent-light)] text-[var(--accent)] flex items-center justify-center mb-6">
-          <BookOpen size={24} />
-        </div>
-        <h1 className="serif text-2xl text-[var(--text)] mb-2">Pro Feature</h1>
-        <p className="text-sm text-[var(--text-secondary)] max-w-sm mb-6">
-          Browsing and downloading from the community exam library is available on the Pro plan.
-        </p>
-        <Link href="/#pricing">
-          <Button>Upgrade to Pro</Button>
-        </Link>
-      </div>
-    );
-  }
+  const isFree = profile?.subscription?.tier === "free";
 
   return (
     <div className="min-h-screen bg-[var(--bg)]">
@@ -173,26 +159,49 @@ export default function CommunityPage() {
           </div>
           <span className="font-semibold text-[var(--text)] text-sm tracking-tight">Imtihan</span>
         </Link>
-        <Link href="/create">
-          <Button size="sm" icon={<Plus size={13} />}>New exam</Button>
-        </Link>
+        <div className="flex items-center gap-4">
+          <Link href="/create">
+            <Button size="sm" icon={<Plus size={13} />}>New exam</Button>
+          </Link>
+          <UserNav />
+        </div>
       </nav>
 
-      <main className="max-w-4xl mx-auto px-6 md:px-10 py-12">
-
-        {/* Hero */}
-        <div className="mb-10 text-center">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[var(--accent-light)] border border-[var(--accent)]/20 text-xs font-medium text-[var(--accent)] mb-5">
-            <Users size={12} />
-            Community exams
+      <main className="max-w-4xl mx-auto px-6 md:px-10 py-12 relative">
+        {/* Pro Overlay for Free Users */}
+        {isFree && (
+          <div className="absolute inset-0 z-30 flex flex-col items-center pt-40 px-6">
+            <div className="sticky top-40 w-full max-w-sm p-8 rounded-3xl bg-white/80 backdrop-blur-xl border border-[var(--accent)]/30 shadow-2xl shadow-[var(--accent)]/10 text-center animate-in fade-in zoom-in-95 duration-500">
+              <div className="w-16 h-16 rounded-2xl bg-[var(--accent-light)] flex items-center justify-center mx-auto mb-6 border border-[var(--accent)]/10 text-[var(--accent)]">
+                <BookOpen size={28} />
+              </div>
+              <h2 className="serif text-2xl text-[var(--text)] mb-3">Community Library</h2>
+              <p className="text-sm text-[var(--text-secondary)] mb-8 leading-relaxed">
+                Unlock hundreds of exams shared by teachers. Adapt, remix, and download premium content with a Pro plan.
+              </p>
+              <Link href="/pricing" className="block w-full">
+                <Button size="lg" className="w-full bg-[var(--accent)] shadow-lg shadow-[var(--accent)]/20">
+                  Upgrade to Pro — $5/mo
+                </Button>
+              </Link>
+            </div>
           </div>
-          <h1 className="serif text-display-xl text-[var(--text)] mb-3 text-balance">
-            Browse exams from the community
-          </h1>
-          <p className="text-[var(--text-secondary)] text-sm max-w-md mx-auto leading-relaxed">
-            Exams shared by teachers across Lebanon and beyond. Use them as inspiration, adapt them, or generate a similar one in seconds.
-          </p>
-        </div>
+        )}
+
+        <div className={cn("transition-all duration-700", isFree && "opacity-40 blur-sm pointer-events-none select-none")}>
+          {/* Hero */}
+          <div className="mb-10 text-center">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[var(--accent-light)] border border-[var(--accent)]/20 text-xs font-medium text-[var(--accent)] mb-5">
+              <Users size={12} />
+              Community exams
+            </div>
+            <h1 className="serif text-display-xl text-[var(--text)] mb-3 text-balance">
+              Browse exams from the community
+            </h1>
+            <p className="text-[var(--text-secondary)] text-sm max-w-md mx-auto leading-relaxed">
+              Exams shared by teachers across Lebanon and beyond. Use them as inspiration, adapt them, or generate a similar one in seconds.
+            </p>
+          </div>
 
         {/* Stats bar */}
         <div className="grid grid-cols-3 gap-4 mb-8">

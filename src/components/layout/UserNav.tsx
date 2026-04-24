@@ -3,13 +3,25 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { LogOut, LayoutDashboard, Plus } from "lucide-react";
 import Link from "next/link";
+import { usePathname as useNextPathname } from "next/navigation";
 import { signOut } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 
 export function UserNav() {
   const { user, profile, loading } = useAuth();
+  const { pathname } = useNextPathname();
 
-  if (loading) return <div className="w-8 h-8 rounded-full bg-[var(--bg-subtle)] animate-pulse" />;
+  const isProtectedPath = ["/dashboard", "/create", "/bank", "/library", "/account", "/community"].some(p => pathname.startsWith(p));
+
+  if (loading || (isProtectedPath && !user)) {
+    return (
+      <div className="flex items-center gap-2">
+        <div className="w-8 h-8 rounded-full bg-[var(--bg-subtle)] animate-pulse" />
+        <div className="hidden sm:block w-20 h-4 bg-[var(--bg-subtle)] rounded animate-pulse" />
+      </div>
+    );
+  }
+
   if (!user) {
     return (
       <Link href="/auth/login" className="text-sm font-medium text-[var(--accent)] hover:underline">

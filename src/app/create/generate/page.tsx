@@ -13,6 +13,7 @@ import type { ExamContext, Exercise } from "@/types/exam";
 import { StepIndicator, StepLabel } from "@/app/create/page";
 import { getChapter } from "@/data/curricula";
 import { useAuth } from "@/contexts/AuthContext";
+import { UserNav } from "@/components/layout/UserNav";
 
 type GenerationStatus = "idle" | "generating" | "done" | "error";
 
@@ -313,7 +314,10 @@ export default function GeneratePage() {
           </div>
           <span className="font-semibold text-sm text-[var(--text)] tracking-tight hidden sm:block">Imtihan</span>
         </div>
-        <StepIndicator current={4} />
+        <div className="flex items-center gap-4">
+          <StepIndicator current={4} />
+          <UserNav />
+        </div>
       </header>
 
       <main className="flex-1 px-6 md:px-10 py-12">

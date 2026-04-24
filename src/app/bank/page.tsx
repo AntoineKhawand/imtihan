@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { renderContent } from "@/lib/renderContent";
 import { cn, SUBJECT_LABELS, formatDate } from "@/lib/utils";
 import { getBankExercises, removeFromBank, type BankExercise } from "@/lib/storage";
+import { UserNav } from "@/components/layout/UserNav";
 
 const DIFFICULTY_CONFIG = {
   easy:   { label: "Easy",   color: "text-emerald-600 bg-emerald-50", dot: "bg-emerald-500" },
@@ -57,9 +58,12 @@ export default function BankPage() {
           </div>
           <span className="font-semibold text-[var(--text)] text-sm tracking-tight">Imtihan</span>
         </Link>
-        <Link href="/create">
-          <Button size="sm" icon={<Plus size={13} />}>New exam</Button>
-        </Link>
+        <div className="flex items-center gap-4">
+          <Link href="/create">
+            <Button size="sm" icon={<Plus size={13} />}>New exam</Button>
+          </Link>
+          <UserNav />
+        </div>
       </nav>
 
       <main className="max-w-3xl mx-auto px-6 md:px-10 py-12">

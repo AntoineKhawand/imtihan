@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, ArrowRight, AlertTriangle } from "lucide-react";
+import { Plus, ArrowLeft, AlertTriangle, ChevronRight, Zap, ArrowRight } from "lucide-react";
+import { UserNav } from "@/components/layout/UserNav";
 import { Button } from "@/components/ui/Button";
 import { Input, Toggle, TemplateCard } from "@/components/ui/StructureFormElements";
 import { StepIndicator, StepLabel } from "@/app/create/page";
@@ -204,7 +205,10 @@ export default function StructurePage() {
           </div>
           <span className="font-semibold text-sm text-[var(--text)] tracking-tight">Imtihan</span>
         </div>
-        <StepIndicator current={2} />
+        <div className="flex items-center gap-4">
+          <StepIndicator current={2} />
+          <UserNav />
+        </div>
       </header>
 
       <main className="flex-1 flex flex-col items-center px-6 md:px-10 pt-12 pb-20">
