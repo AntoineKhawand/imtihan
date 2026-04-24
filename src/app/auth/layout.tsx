@@ -97,7 +97,6 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
       {/* ── Right panel ── */}
       <div className="flex-1 flex flex-col min-h-screen">
 
-        {/* Header */}
         <header className="flex items-center justify-between px-6 md:px-10 h-16 border-b border-[var(--border)]/40">
           <Link
             href="/"
@@ -106,13 +105,9 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
             <ArrowLeft size={15} />
             Back to site
           </Link>
-          <div className="lg:hidden">
-            <Logo size={28} />
-          </div>
           <div className="w-24" />
         </header>
 
-        {/* Form area */}
         <main className="flex-1 flex items-center justify-center px-6 py-12">
           <div className="w-full max-w-[400px] animate-in fade-in slide-in-from-bottom-3 duration-700">
             {children}

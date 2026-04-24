@@ -7,6 +7,7 @@ import { auth } from "@/lib/firebase";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/FormElements";
 import { Mail, ArrowRight, CheckCircle2 } from "lucide-react";
+import { Logo as BrandLogo } from "@/components/ui/Logo";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -65,9 +66,10 @@ export default function ForgotPasswordPage() {
 
   return (
     <div className="w-full">
-      <div className="mb-10 text-center lg:text-left">
+      <div className="mb-10 text-center flex flex-col items-center">
+        <BrandLogo size={56} showText={false} className="mb-6" />
         <h1 className="serif text-display-md text-[var(--text)] mb-3 tracking-tight">Reset password</h1>
-        <p className="text-sm text-[var(--text-secondary)] leading-relaxed">
+        <p className="text-sm text-[var(--text-secondary)] leading-relaxed max-w-[320px]">
           Enter your email address and we&apos;ll send you a link to reset your password.
         </p>
       </div>

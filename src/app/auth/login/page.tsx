@@ -97,8 +97,8 @@ function LoginForm() {
     <div className="space-y-8">
 
       {/* Header */}
-      <div className="space-y-2">
-        <BrandLogo size={40} showText={false} className="mb-4" />
+      <div className="flex flex-col items-center text-center space-y-2">
+        <BrandLogo size={56} showText={false} className="mb-2" />
         <h1 className="text-2xl font-bold text-[var(--text)] tracking-tight">
           Welcome back
         </h1>
