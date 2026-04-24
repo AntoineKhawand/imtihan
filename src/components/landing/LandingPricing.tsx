@@ -25,7 +25,7 @@ export function LandingPricing() {
             <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] animate-pulse" />
             Pricing Plans
           </div>
-          <h2 className="serif text-display-lg md:text-display-xl text-[var(--text)] text-balance mb-6 leading-[1.1]">
+          <h2 className="serif text-display-lg text-[var(--text)] text-balance mb-6 leading-[1.1]">
             Start free, upgrade when<br />you&apos;re convinced
           </h2>
           <p className="text-sm md:text-base text-[var(--text-secondary)] max-w-lg mx-auto leading-relaxed text-pretty">
@@ -107,7 +107,7 @@ export function LandingPricing() {
           </div>
 
           {/* Pro Tier (Featured) */}
-          <div className="group relative flex flex-col p-8 md:p-10 rounded-[2rem] bg-white border-[1.5px] border-[var(--accent)] shadow-[0_20px_50px_-20px_rgba(26,94,63,0.15)] ring-4 ring-[var(--accent)]/5 lg:scale-105 z-10 hover:shadow-[0_30px_70px_-20px_rgba(26,94,63,0.25)] transition-all duration-500">
+          <div className="group relative flex flex-col p-8 md:p-10 rounded-[2rem] bg-[var(--accent-light)] border-[1.5px] border-[var(--accent)] shadow-[0_20px_50px_-20px_rgba(26,94,63,0.15)] lg:scale-105 z-10 hover:shadow-[0_30px_70px_-20px_rgba(26,94,63,0.25)] transition-all duration-500">
             <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1.5 rounded-full bg-[var(--accent)] text-white text-[10px] font-bold uppercase tracking-widest shadow-lg shadow-[var(--accent)]/20">
               Most Popular
             </div>
@@ -134,11 +134,11 @@ export function LandingPricing() {
             <ul className="space-y-4 mb-10 flex-1">
               {[
                 "100 exams per month",
-                "Priority AI generation",
-                "Unlimited corrigés",
-                "Advanced Word templates",
-                "History & library access",
-                "Premium support",
+                "All curricula & subjects",
+                "Corrigé included per exam",
+                "Word + PDF export",
+                "Saved exam library",
+                "Community exam library",
               ].map((f) => (
                 <li key={f} className="flex items-start gap-3 text-sm text-[var(--text-secondary)]">
                   <div className="mt-1 w-4 h-4 rounded-full bg-[var(--accent)] text-white flex items-center justify-center flex-shrink-0 shadow-sm shadow-[var(--accent)]/20">
@@ -194,22 +194,9 @@ export function LandingPricing() {
         </div>
 
         {/* Footer info */}
-        <div className="mt-20 flex flex-col items-center gap-4">
-          <div className="flex items-center gap-8 text-[11px] font-bold uppercase tracking-[0.15em] text-[var(--text-tertiary)]">
-            <div className="flex items-center gap-2">
-              <div className="w-1 h-1 rounded-full bg-[var(--accent)]" />
-              Secure payments
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-1 h-1 rounded-full bg-[var(--accent)]" />
-              Cancel anytime
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-1 h-1 rounded-full bg-[var(--accent)]" />
-              No hidden fees
-            </div>
-          </div>
-        </div>
+        <p className="mt-14 text-center text-[11px] font-medium text-[var(--text-tertiary)] uppercase tracking-widest">
+          No hidden fees
+        </p>
       </div>
     </section>
   );
