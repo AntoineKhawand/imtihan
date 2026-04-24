@@ -146,7 +146,6 @@ export default function StructurePage() {
     try {
       const parsedContext = JSON.parse(raw);
       // Initialize structure-specific fields if they don't exist
-      parsedContext.header ??= { schoolName: "", className: "", teacherName: "", date: "" };
       parsedContext.templateId ??= "classic";
       parsedContext.generateVersionB ??= false;
       parsedContext.examType ??= "final";
@@ -172,12 +171,6 @@ export default function StructurePage() {
     setContext((prev) => (prev ? { ...prev, [key]: value } : prev));
   }
 
-  function updateHeader(key: keyof NonNullable<StructureContext["header"]>, value: string) {
-    setContext((prev) => {
-      if (!prev) return prev;
-      return { ...prev, header: { ...prev.header, [key]: value } };
-    });
-  }
 
   function handleContinue() {
     if (!context) return;
@@ -234,17 +227,6 @@ export default function StructurePage() {
             </div>
           )}
 
-          {/* School Header Customization */}
-          <div className="card p-6">
-            <h2 className="text-base font-semibold text-[var(--text)] mb-1">Exam Header</h2>
-            <p className="text-xs text-[var(--text-secondary)] mb-5">Add school and class details to the exported document.</p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <Input label="School Name" value={context.header?.schoolName} onChange={(e) => updateHeader("schoolName", e.target.value)} placeholder="e.g. Lycée Franco-Libanais" />
-              <Input label="Class Name" value={context.header?.className} onChange={(e) => updateHeader("className", e.target.value)} placeholder="e.g. Terminale S" />
-              <Input label="Teacher Name" value={context.header?.teacherName} onChange={(e) => updateHeader("teacherName", e.target.value)} placeholder="Your name" />
-              <Input label="Date" value={context.header?.date} onChange={(e) => updateHeader("date", e.target.value)} placeholder="e.g. Fall 2026 Final" />
-            </div>
-          </div>
 
           {/* Exam Blueprint Section */}
           <div className="card p-6">
