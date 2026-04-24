@@ -11,10 +11,10 @@ function getGenAI(): GoogleGenerativeAI {
   return genai;
 }
 
-// Primary: GA and widely available on all API key tiers.
-// Fallback: stable backup when primary is unavailable.
+// Primary: fast, GA, multimodal (images + PDFs).
+// Fallback: legacy but reliable for document-heavy requests.
 export const GEMINI_MODEL_PRIMARY  = "gemini-2.0-flash";
-export const GEMINI_MODEL_FALLBACK = "gemini-1.5-flash-latest";
+export const GEMINI_MODEL_FALLBACK = "gemini-1.5-flash";
 /** @deprecated use GEMINI_MODEL_PRIMARY */
 export const GEMINI_MODEL = GEMINI_MODEL_PRIMARY;
 
