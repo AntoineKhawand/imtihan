@@ -64,7 +64,6 @@ async function processContentBlocks(
           rows,
           width: { size: 100, type: WidthType.PERCENTAGE },
           margins: { top: 40, bottom: 40, left: 100, right: 100 },
-          spacing: { before: 200, after: 200 }
         }));
       }
       currentTableLines = [];
