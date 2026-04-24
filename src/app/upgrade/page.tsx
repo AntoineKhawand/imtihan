@@ -100,8 +100,8 @@ export default function UpgradePage() {
                 ? <>We sent payment instructions to <strong>{email}</strong>. Your account activates instantly once confirmed.</>
                 : <>Send the pre-filled message and we&apos;ll guide you through the payment.</>}
             </p>
-            <Link href="/dashboard" className="inline-flex items-center gap-2 h-11 px-6 rounded-xl bg-[var(--accent)] text-white text-sm font-semibold hover:bg-[var(--accent)]/90 transition-colors">
-              Back to Dashboard <ArrowRight size={14} />
+            <Link href="/" className="inline-flex items-center gap-2 h-11 px-6 rounded-xl bg-[var(--accent)] text-white text-sm font-semibold hover:bg-[var(--accent)]/90 transition-colors">
+              Back to Homepage <ArrowRight size={14} />
             </Link>
           </div>
         </main>
@@ -113,9 +113,9 @@ export default function UpgradePage() {
     <div className="min-h-screen bg-[var(--bg)] flex flex-col">
       <nav className="flex items-center justify-between px-6 md:px-10 h-16 border-b border-[var(--border)] bg-[var(--bg)]/80 backdrop-blur-md sticky top-0 z-50">
         <Logo size={28} />
-        <Link href="/dashboard" className="flex items-center gap-2 text-sm text-[var(--text-secondary)] hover:text-[var(--text)] transition-colors group">
+        <Link href="/" className="flex items-center gap-2 text-sm text-[var(--text-secondary)] hover:text-[var(--text)] transition-colors group">
           <ArrowLeft size={15} className="group-hover:-translate-x-0.5 transition-transform" />
-          Back to Dashboard
+          Back to Homepage
         </Link>
       </nav>
 
