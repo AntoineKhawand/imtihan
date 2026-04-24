@@ -124,7 +124,7 @@ const FAQ_ITEMS = [
   },
   {
     q: "Is it free?",
-    a: "You can generate your first 3 complete exams for free (no credit card required). After that, the Pro subscription unlocks 100 exams per month."
+    a: "You can generate your first 2 complete exams for free (no credit card required). After that, the Pro subscription unlocks 100 exams per month."
   }
 ];
 
@@ -156,7 +156,7 @@ export default async function LandingPage() {
       "@type": "Offer",
       "price": "0",
       "priceCurrency": "USD",
-      "description": "3 free exams"
+      "description": "2 free exams"
     }
   };
 
@@ -202,9 +202,9 @@ export default async function LandingPage() {
 
         <div className="relative max-w-5xl mx-auto">
           <MotionHero>
-            <div className="group inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-[var(--border)] bg-[var(--surface)] text-xs text-[var(--text-secondary)] mb-8 shadow-sm hover:border-[var(--accent)]/30 hover:bg-[var(--accent)]/5 transition-all duration-300 cursor-default" aria-label="3 free exams — no credit card required">
+            <div className="group inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-[var(--border)] bg-[var(--surface)] text-xs text-[var(--text-secondary)] mb-8 shadow-sm hover:border-[var(--accent)]/30 hover:bg-[var(--accent)]/5 transition-all duration-300 cursor-default" aria-label="2 free exams — no credit card required">
               <Star size={10} className="text-[var(--accent)] fill-[var(--accent)] group-hover:rotate-[72deg] transition-transform duration-500" />
-              <span>3 free exams — no credit card required</span>
+              <span>2 free exams — no credit card required</span>
               <ChevronRight size={10} />
             </div>
 

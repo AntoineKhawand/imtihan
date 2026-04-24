@@ -1,7 +1,7 @@
 "use client";
 
 import { useAuth } from "@/contexts/AuthContext";
-import { LogOut, LayoutDashboard, Plus } from "lucide-react";
+import { LogOut, LayoutDashboard, Plus, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "firebase/auth";
@@ -24,9 +24,20 @@ export function UserNav() {
 
   if (!user) {
     return (
-      <Link href="/auth/login" className="text-sm font-medium text-[var(--accent)] hover:underline">
-        Sign in
-      </Link>
+      <div className="flex items-center gap-3">
+        <Link
+          href="/auth/login"
+          className="hidden md:inline-flex items-center text-sm text-[var(--text-secondary)] hover:text-[var(--text)] transition-colors"
+        >
+          Sign in
+        </Link>
+        <Link
+          href="/create"
+          className="inline-flex items-center gap-1.5 h-9 px-4 rounded-xl bg-[var(--accent)] text-white text-sm font-medium hover:opacity-90 transition-opacity shadow-sm"
+        >
+          Try free <ArrowRight size={14} />
+        </Link>
+      </div>
     );
   }
 

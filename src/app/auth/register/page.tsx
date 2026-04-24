@@ -143,7 +143,7 @@ function RegisterForm() {
           Create your account
         </h1>
         <p className="text-[13px] sm:text-sm text-[var(--text-secondary)]">
-          Start free — generate your first 3 exams today.
+          Start free — generate your first 2 exams today.
         </p>
       </div>
 

@@ -54,7 +54,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
             {[
               "Aligned to Lebanese & French curricula",
               "Export to Word in one click",
-              "3 free exams — no credit card",
+              "2 free exams — no credit card",
             ].map((feat) => (
               <div key={feat} className="flex items-center gap-3">
                 <div className="flex-shrink-0 w-5 h-5 rounded-full bg-[var(--accent)]/20 border border-[var(--accent)]/30 flex items-center justify-center">

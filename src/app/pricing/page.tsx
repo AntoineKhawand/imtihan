@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/Button";
 import { useAuth } from "@/contexts/AuthContext";
 
 const FEATURES_FREE = [
-  "3 complete exams to try everything",
+  "2 complete exams + corrigés",
   "All curricula & subjects",
   "Word + PDF export",
   "Version A/B generation",
@@ -134,8 +134,8 @@ export default function PricingPage() {
           {/* Free */}
           <div className="card p-8 flex flex-col">
             <p className="text-xs uppercase tracking-wider text-[var(--text-tertiary)] font-medium mb-4">Free</p>
-            <div className="serif text-4xl font-light text-[var(--text)] mb-1">3 Free</div>
-            <p className="text-sm text-[var(--text-secondary)] mb-6">3 exams to try everything</p>
+            <div className="serif text-4xl font-light text-[var(--text)] mb-1">2 Free</div>
+            <p className="text-sm text-[var(--text-secondary)] mb-6">2 exams to try everything</p>
             <ul className="space-y-3 mb-8 flex-1">
               {FEATURES_FREE.map((f) => (
                 <li key={f} className="flex items-start gap-2.5 text-sm text-[var(--text-secondary)]">
