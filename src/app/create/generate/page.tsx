@@ -215,7 +215,7 @@ export default function GeneratePage() {
     }
   }
 
-  async function handleTransform(id: string, type: "table" | "image") {
+  async function handleTransform(id: string, type: "table" | "image", prompt?: string) {
     if (!context) return;
     const exercise = exercises.find(e => e.id === id);
     if (!exercise) return;
@@ -225,7 +225,12 @@ export default function GeneratePage() {
       const res = await fetch("/api/generate/transform", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ exercise, type, language: context.language }),
+        body: JSON.stringify({ 
+          exercise, 
+          type, 
+          language: context.language,
+          ...(prompt ? { prompt } : {})
+        }),
       });
 
       if (!res.ok) return;

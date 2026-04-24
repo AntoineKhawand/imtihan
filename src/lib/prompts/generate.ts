@@ -512,7 +512,7 @@ SOLUTION QUALITY — The corrigé is what differentiates Imtihan from a simple q
 
 LAYOUT & CONTENT QUALITY:
 - **Markdown Tables**: Use standard Markdown table syntax for data comparisons, experimental results, or organized information.
-- **Graphs/Diagrams**: You cannot generate image files. If a graph is needed, provide a detailed textual description of the axes, curves, and key points inside a \[GRAPH: description\] tag.
+- **Graphs/Diagrams**: You cannot generate image files. If a graph is needed, or specifically requested by the user, provide a detailed textual description of the axes, curves, and key points inside a [GRAPH: description] tag. Be highly accurate with coordinates and function behavior.
 - **Layout Consistency**: If the user provided a reference document (Teacher notes or grounding data), observe its structure (e.g., header style, question numbering) and attempt to mimic it in the text output.
 - **Scientific notation**: Use KaTeX for math and \ce{...} for chemistry.
 
@@ -559,6 +559,7 @@ Total points: ${context.totalPoints} (points must sum to exactly ${context.total
 Difficulty : ${difficultyBreakdown}
 ${context.teacherNotes ? `\nTeacher notes:\n${context.teacherNotes}` : ""}
 ${context.layoutPreferences ? `\nLayout Preferences (MIMIC THIS STYLE):\n${context.layoutPreferences}` : ""}
+${context.visualPreference ? `\nVisual & Graph Requirements:\n${context.visualPreference}` : ""}
 
 Return the JSON array now.`;
 }

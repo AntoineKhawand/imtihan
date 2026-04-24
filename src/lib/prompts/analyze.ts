@@ -32,7 +32,8 @@ You must return ONLY a valid JSON object — no prose, no markdown fences, no pr
   "generateVersionB": boolean,
   "warnings": string[],
   "confidence": number,
-  "layoutPreferences": string
+  "layoutPreferences": string,
+  "visualPreference": string
 }
 
 Rules:
@@ -43,7 +44,8 @@ Rules:
 - confidence: 0.0–1.0 reflecting how sure you are about the parsed context
 - warnings: array of strings describing anything you had to guess or that the teacher should verify
 - generateVersionB: true only if teacher explicitly asked for two versions
-- layoutPreferences: If a document is uploaded, describe its visual style in 1-2 sentences. If no doc, leave empty string.`;
+- layoutPreferences: If a document is uploaded, describe its visual style in 1-2 sentences. If no doc, leave empty string.
+- visualPreference: If the teacher explicitly asks for graphs, diagrams, curves, or specific visual elements, describe them here in 1-2 sentences.`;
 }
 
 export function buildAnalyzeUserPrompt({ teacherDescription, hasUploadedDocument, availableCurricula }: AnalyzePromptInput): string {

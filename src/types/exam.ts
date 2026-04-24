@@ -48,6 +48,8 @@ export interface ExamContext {
   generateVersionB?: boolean;
   /** Analysis of the visual/formatting style if a document was provided */
   layoutPreferences?: string;
+  /** Preferences for graphs, diagrams, or visual aids */
+  visualPreference?: string;
 }
 
 export interface Exercise {

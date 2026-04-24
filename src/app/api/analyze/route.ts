@@ -52,6 +52,7 @@ const ExamContextSchema = z.object({
   teacherNotes: z.string().nullable().optional().transform(v => v ?? undefined),
   generateVersionB: z.coerce.boolean().default(false),
   layoutPreferences: z.string().default(""),
+  visualPreference: z.string().default(""),
   warnings: z.array(z.string()).default([]),
   confidence: z.coerce.number().min(0).max(1).default(0.8),
 });

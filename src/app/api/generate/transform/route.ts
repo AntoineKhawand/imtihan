@@ -5,9 +5,10 @@ import type { Exercise } from "@/types/exam";
 import { sanitizeError, createSecurityHeaders } from "@/lib/security";
 
 const RequestSchema = z.object({
-  exercise: z.any(), // Not strictly typed here, but we pass it as Exercise
+  exercise: z.any(),
   type: z.enum(["table", "image"]),
   language: z.string(),
+  prompt: z.string().optional(),
 });
 
 function sanitizeJSON(input: string): string {
@@ -29,13 +30,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Invalid request" }, { status: 400 });
     }
 
-    const { exercise, type, language } = parsed.data;
+    const { exercise, type, language, prompt } = parsed.data;
 
     let instruction = "";
     if (type === "table") {
       instruction = `Transform the statement of this exercise into a well-formatted Markdown Table if applicable, or restructure its data points into a clear Markdown Table within the statement. Do not change the core academic difficulty or points, just improve the layout by using a markdown table for the data/context.`;
     } else {
-      instruction = `Add a suitable image or graph placeholder to the exercise statement using standard markdown image syntax, e.g., ![Graph of velocity over time](placeholder). Ensure it makes sense within the context of the question.`;
+      const visualReq = prompt ? `Specific requirement: ${prompt}` : `Add a suitable image or graph placeholder.`;
+      instruction = `${visualReq} Provide a detailed textual description of the axes, curves, or diagrams inside a [GRAPH: description] tag. Ensure it makes sense within the context of the question.`;
     }
 
     const systemPrompt = `You are an expert exam designer and editor. 
