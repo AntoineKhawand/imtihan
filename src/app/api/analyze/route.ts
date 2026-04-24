@@ -3,6 +3,7 @@ import { z } from "zod";
 import { withRetryAndFallback, geminiErrorMessage } from "@/lib/gemini";
 import { buildAnalyzeSystemPrompt, buildAnalyzeUserPrompt, buildCurriculaReference } from "@/lib/prompts/analyze";
 import { sanitizeError, createSecurityHeaders } from "@/lib/security";
+import { verifySession } from "@/lib/firebase-admin";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -105,6 +106,15 @@ function robustParse(text: string): unknown {
 // ---------------------------------------------------------------------------
 export async function POST(request: NextRequest) {
   try {
+    // 0. Auth check
+    const uid = await verifySession(request);
+    if (!uid) {
+      return NextResponse.json(
+        { success: false, errors: ["Unauthorized. Please sign in."] },
+        { status: 401, headers: createSecurityHeaders() }
+      );
+    }
+
     // 1. Parse and validate request body
     const body = await request.json();
     const parsed = RequestSchema.safeParse(body);

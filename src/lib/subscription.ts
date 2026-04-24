@@ -45,7 +45,7 @@ export function getWhatsAppRenewalLink(email: string): string {
 export function getWhatsAppUpgradeLink(email: string): string {
   const number = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? "";
   const message = encodeURIComponent(
-    `Hello! I would like to upgrade to Imtihan Pro ($9/month).\nMy account email is: ${email}`
+    `Hello! I would like to upgrade to Imtihan Pro ($5.99/month).\nMy account email is: ${email}`
   );
   return `https://wa.me/${number}?text=${message}`;
 }

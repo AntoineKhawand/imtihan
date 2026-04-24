@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Sparkles, CheckCircle, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import { Logo } from "@/components/ui/Logo";
 
 export default function PricingSuccessPage() {
   const [loading, setLoading] = useState(true);
@@ -24,12 +25,7 @@ export default function PricingSuccessPage() {
   return (
     <div className="min-h-screen bg-[var(--bg)] flex flex-col">
       <nav className="flex items-center justify-between px-6 md:px-10 h-16 border-b border-[var(--border)]">
-        <Link href="/" className="flex items-center gap-2.5">
-          <div className="w-7 h-7 rounded-lg bg-[var(--accent)] flex items-center justify-center">
-            <span className="text-white font-serif text-xs">إ</span>
-          </div>
-          <span className="font-semibold text-[var(--text)] text-sm tracking-tight">Imtihan</span>
-        </Link>
+        <Logo size={28} />
       </nav>
 
       <main className="flex-1 flex items-center justify-center px-6">

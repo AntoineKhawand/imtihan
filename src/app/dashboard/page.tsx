@@ -135,7 +135,7 @@ export default function DashboardPage() {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold text-[var(--text)] mb-1">Pro plan</p>
-                <p className="text-xs text-[var(--text-tertiary)]">Unlimited exams</p>
+                <p className="text-xs text-[var(--text-tertiary)]">{profile?.monthlyExamsGenerated ?? 0}/100 exams this month</p>
               </div>
               <a
                 href={getWhatsAppUpgradeLink(profile?.email ?? "")}
@@ -164,7 +164,7 @@ export default function DashboardPage() {
                 </div>
               </div>
               <Button variant="secondary" size="sm" onClick={handleUpgrade}>
-                Upgrade to Pro — $9/mo
+                Upgrade to Pro — $5.99/mo
               </Button>
             </>
           )}

@@ -1,7 +1,7 @@
 export type UserRole = "teacher" | "student" | "school_teacher" | "university_teacher" | "tutor";
 
 export type SubscriptionTier = "free" | "individual" | "school";
-export type SubscriptionStatus = "active" | "trialing" | "past_due" | "canceled" | "none";
+export type SubscriptionStatus = "none";
 
 export interface UserProfile {
   uid: string;
@@ -21,8 +21,5 @@ export interface UserProfile {
   subscription: {
     status: SubscriptionStatus;
     tier: SubscriptionTier;
-    stripeCustomerId?: string;
-    stripeSubscriptionId?: string;
-    renewsAt?: number;
   };
 }

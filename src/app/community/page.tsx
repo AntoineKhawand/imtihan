@@ -6,6 +6,7 @@ import { Plus, Search, Users, Heart, Download, BookOpen, Eye, X, Copy, CheckCirc
 import { Button } from "@/components/ui/Button";
 import { cn, SUBJECT_LABELS } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
+import { isProActive } from "@/lib/subscription";
 import { UserNav } from "@/components/layout/UserNav";
 
 import { FEATURED_EXAMS } from "@/data/communityExams";
@@ -147,7 +148,7 @@ export default function CommunityPage() {
     );
   }
 
-  const isFree = profile?.subscription?.tier === "free";
+  const isFree = !isProActive(profile);
 
   return (
     <div className="min-h-screen bg-[var(--bg)]">

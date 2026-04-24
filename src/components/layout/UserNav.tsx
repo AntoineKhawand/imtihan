@@ -1,6 +1,7 @@
 "use client";
 
 import { useAuth } from "@/contexts/AuthContext";
+import { isProActive } from "@/lib/subscription";
 import { LogOut, LayoutDashboard, Plus, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -49,7 +50,7 @@ export function UserNav() {
     <div className="flex items-center gap-4">
       <div className="flex flex-col items-end hidden sm:flex">
         <span className="text-xs font-semibold text-[var(--text)]">{profile?.displayName || user.email?.split("@")[0]}</span>
-        <span className="text-[10px] text-[var(--text-tertiary)] uppercase tracking-wider">{profile?.subscription?.tier || "Free"} tier</span>
+        <span className="text-[10px] text-[var(--text-tertiary)] uppercase tracking-wider">{isProActive(profile) ? "Pro" : "Free"} tier</span>
       </div>
       <div className="relative group">
         <button className="w-9 h-9 rounded-full bg-[var(--accent)] flex items-center justify-center text-white text-sm font-bold shadow-sm hover:opacity-90 transition-opacity">

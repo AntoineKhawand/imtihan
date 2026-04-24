@@ -13,6 +13,7 @@ import {
 } from "@/lib/storage";
 import { useAuth } from "@/contexts/AuthContext";
 import { FREE_EXAM_LIMIT } from "@/lib/utils";
+import { isProActive } from "@/lib/subscription";
 import { UserNav } from "@/components/layout/UserNav";
 import { Logo } from "@/components/ui/Logo";
 
@@ -46,7 +47,7 @@ export default function CreatePage() {
   const [newProfileName, setNewProfileName] = useState("");
 
   const { profile } = useAuth();
-  const isFreeTier = profile?.subscription?.tier === "free";
+  const isFreeTier = !isProActive(profile);
   const quotaUsed = profile?.examsGenerated ?? 0;
 
   useEffect(() => {

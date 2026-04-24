@@ -6,7 +6,7 @@ import { sanitizeError, createSecurityHeaders } from "@/lib/security";
 import { adminDb, verifySession } from "@/lib/firebase-admin";
 
 const MONTHLY_PERIOD_MS = 30 * 24 * 60 * 60 * 1000;
-const MONTHLY_LIMITS = { free: 3, pro: 100 } as const;
+const MONTHLY_LIMITS = { free: 2, pro: 100 } as const;
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
