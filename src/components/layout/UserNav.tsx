@@ -3,13 +3,13 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { LogOut, LayoutDashboard, Plus } from "lucide-react";
 import Link from "next/link";
-import { usePathname as useNextPathname } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { signOut } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 
 export function UserNav() {
   const { user, profile, loading } = useAuth();
-  const { pathname } = useNextPathname();
+  const pathname = usePathname();
 
   const isProtectedPath = ["/dashboard", "/create", "/bank", "/library", "/account", "/community"].some(p => pathname.startsWith(p));
 

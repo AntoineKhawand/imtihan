@@ -19,7 +19,7 @@ Track issues here during development. Format:
 
 ## Open Issues
 
-*None yet — project just scaffolded.*
+*None currently open.*
 
 ---
 
@@ -56,7 +56,45 @@ These are intentional constraints in MVP — document here to avoid re-opening a
 
 ## Fixed Issues
 
-*Will be moved here from Open Issues.*
+---
+
+## BUG-001: Register page syntax error — double `return (` statement
+**Status:** Fixed
+**Severity:** Critical
+**Area:** Auth / UI
+**Reported:** 2026-04-24
+**Fixed:** 2026-04-24
+
+**Description:** `src/app/auth/register/page.tsx` had a duplicate `return (` statement and an extra stray `</div>`, causing a Turbopack parse error at build time. The page was completely unreachable.
+**Root cause:** Manual editing left two consecutive `return (` lines inside `RegisterForm` and an unmatched closing `</div>`.
+**Fix:** Rewrote the file in full to restore a single clean `return (` and correct JSX structure.
+
+---
+
+## BUG-002: Google sign-in redirect silently fails — session cookie not set
+**Status:** Fixed
+**Severity:** High
+**Area:** Auth
+**Reported:** 2026-04-24
+**Fixed:** 2026-04-24
+
+**Description:** Clicking "Continue with Google" on login or register appeared to do nothing — the popup completed but the user was not navigated to the dashboard/create page.
+**Root cause (1):** `POST /api/auth/session` was using `cookies()` from `next/headers` to set the `__session` cookie inside a Route Handler. In Next.js 15 App Router, this does not reliably emit a `Set-Cookie` response header on client `fetch` calls. The cookie was never stored in the browser, so the middleware saw no session and immediately redirected back to `/auth/login`.
+**Root cause (2):** The client-side `setSessionCookie()` helper did not check `res.ok`, so a 500 response from the session route was swallowed silently and `window.location.assign()` fired without a valid session.
+**Fix:** Replaced `cookies().set()` with `response.cookies.set()` on the `NextResponse` object in the route handler. Added `if (!res.ok) throw new Error(...)` in `setSessionCookie()` so failures surface as visible error messages instead of silent loops.
+
+---
+
+## BUG-003: Community page fails to build — unclosed blur-container `<div>`
+**Status:** Fixed
+**Severity:** Critical
+**Area:** UI / Community
+**Reported:** 2026-04-24
+**Fixed:** 2026-04-24
+
+**Description:** Turbopack reported `Expected '</', got 'jsx text'` at the `</main>` closing tag in `src/app/community/page.tsx`, preventing the build.
+**Root cause:** The wrapping `<div className={cn("transition-all duration-700", isFree && "opacity-40 blur-sm ...")}>` opened at line 191 was never closed. Its closing `</div>` was missing before `</main>`.
+**Fix:** Added the missing `</div>` immediately before `</main>`.
 
 ---
 
