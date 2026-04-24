@@ -12,10 +12,10 @@ function getGenAI(): GoogleGenerativeAI {
   return genai;
 }
 
-// Primary: Stable GA, fast, multi-modal.
-// Fallback: More powerful, larger context window.
-export const GEMINI_MODEL_PRIMARY  = "gemini-1.5-flash";
-export const GEMINI_MODEL_FALLBACK = "gemini-1.5-pro";
+// Primary: Always points to the latest stable flash model (extremely reliable).
+// Fallback: Use the newer 2.5 flash if available.
+export const GEMINI_MODEL_PRIMARY  = "gemini-flash-latest";
+export const GEMINI_MODEL_FALLBACK = "gemini-2.5-flash";
 /** @deprecated use GEMINI_MODEL_PRIMARY */
 export const GEMINI_MODEL = GEMINI_MODEL_PRIMARY;
 
