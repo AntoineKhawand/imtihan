@@ -4,17 +4,18 @@ let genai: GoogleGenerativeAI | null = null;
 
 function getGenAI(): GoogleGenerativeAI {
   if (genai) return genai;
-  if (!process.env.GOOGLE_AI_API_KEY) {
+  const key = process.env.GOOGLE_AI_API_KEY?.trim();
+  if (!key) {
     throw new Error("GOOGLE_AI_API_KEY is not set in environment variables.");
   }
-  genai = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY);
+  genai = new GoogleGenerativeAI(key);
   return genai;
 }
 
-// Primary: fast, GA, multimodal (images + PDFs).
-// Fallback: legacy but reliable for document-heavy requests.
-export const GEMINI_MODEL_PRIMARY  = "gemini-2.0-flash";
-export const GEMINI_MODEL_FALLBACK = "gemini-1.5-flash";
+// Primary: Stable GA, fast, multi-modal.
+// Fallback: More powerful, larger context window.
+export const GEMINI_MODEL_PRIMARY  = "gemini-1.5-flash";
+export const GEMINI_MODEL_FALLBACK = "gemini-1.5-pro";
 /** @deprecated use GEMINI_MODEL_PRIMARY */
 export const GEMINI_MODEL = GEMINI_MODEL_PRIMARY;
 
