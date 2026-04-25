@@ -17,8 +17,6 @@ import {
   Award,
   Pencil,
   Bookmark,
-  ClipboardList,
-  Loader2,
   Table,
   Calculator,
 } from "lucide-react";
@@ -37,19 +35,6 @@ const TYPE_LABELS: Record<string, string> = {
   calculation: "Calculation",
   lab_analysis: "Lab analysis",
 };
-
-export interface RubricCriterion {
-  label: string;
-  description: string;
-  points: number;
-  markType: "method" | "answer" | "presentation";
-}
-export interface Rubric {
-  totalPoints: number;
-  criteria: RubricCriterion[];
-  partialCredit: Array<{ scenario: string; award: string }>;
-  commonErrors: Array<{ error: string; penalty: string }>;
-}
 
 interface ExerciseCardProps {
   exercise: Exercise;
@@ -82,10 +67,6 @@ export function ExerciseCard({
 }: ExerciseCardProps) {
   const [showSolution, setShowSolution] = useState(defaultShowSolution);
   const [showActions, setShowActions] = useState(false);
-  const [rubric, setRubric] = useState<Rubric | null>(null);
-  const [rubricLoading, setRubricLoading] = useState(false);
-  const [rubricError, setRubricError] = useState<string | null>(null);
-  const [showRubric, setShowRubric] = useState(false);
 
   const [showMathTool, setShowMathTool] = useState(false);
   const [mathOp, setMathOp] = useState("simplify");
@@ -115,26 +96,6 @@ export function ExerciseCard({
     }
   }
 
-  async function loadRubric() {
-    if (rubric) { setShowRubric((v) => !v); return; }
-    setRubricLoading(true);
-    setRubricError(null);
-    try {
-      const res = await fetch("/api/rubric", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ exercise, language }),
-      });
-      const data = await res.json();
-      if (!data.success) throw new Error(data.errors?.[0] ?? "Failed to generate rubric");
-      setRubric(data.rubric);
-      setShowRubric(true);
-    } catch (err) {
-      setRubricError(err instanceof Error ? err.message : "Rubric generation failed");
-    } finally {
-      setRubricLoading(false);
-    }
-  }
 
   const difficulty = DIFFICULTY_CONFIG[exercise.difficulty];
   const exerciseLabel = language === "french" ? "Exercice" : "Exercise";
@@ -234,13 +195,6 @@ export function ExerciseCard({
                     Edit
                   </button>
                 )}
-                <button
-                  onClick={() => { loadRubric(); setShowActions(false); }}
-                  className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-[var(--text-secondary)] hover:text-[var(--text)] hover:bg-[var(--bg-subtle)] rounded-lg transition-colors"
-                >
-                  <ClipboardList size={13} />
-                  {rubric ? "Show rubric" : "Generate rubric"}
-                </button>
                 {onTransform && (
                   <>
                     <div className="my-1 border-t border-[var(--border)]" />
@@ -321,79 +275,6 @@ export function ExerciseCard({
           {showSolution ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
         </button>
 
-        {rubricLoading && (
-          <div className="px-6 py-3 flex items-center gap-2 text-xs text-[var(--text-secondary)] border-t border-[var(--border)] bg-[var(--bg-subtle)]">
-            <Loader2 size={12} className="animate-spin" />
-            Generating detailed rubric…
-          </div>
-        )}
-        {rubricError && (
-          <div className="px-6 py-3 text-xs text-[var(--danger)] border-t border-[var(--border)] bg-red-50 dark:bg-red-950/20">
-            {rubricError}
-          </div>
-        )}
-        {rubric && showRubric && (
-          <div className="border-t border-[var(--border)] px-6 py-5 bg-[var(--bg-subtle)] space-y-4">
-            <div className="flex items-center justify-between">
-              <p className="text-xs font-semibold text-[var(--accent)] uppercase tracking-wider">
-                Grading Rubric · {rubric.totalPoints} pts total
-              </p>
-              <button
-                onClick={() => setShowRubric(false)}
-                className="text-xs text-[var(--text-tertiary)] hover:text-[var(--text)]"
-              >
-                Hide
-              </button>
-            </div>
-            <div className="space-y-1.5">
-              {rubric.criteria.map((c, i) => (
-                <div key={i} className="flex gap-3 items-start text-sm">
-                  <span className="w-14 text-right text-[var(--accent)] font-semibold flex-shrink-0">
-                    {c.points} pts
-                  </span>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium text-[var(--text)]">{c.label}</span>
-                      <span className="text-[10px] uppercase tracking-wider text-[var(--text-tertiary)]">{c.markType}</span>
-                    </div>
-                    <div
-                      className="text-xs text-[var(--text-secondary)]"
-                      dangerouslySetInnerHTML={{ __html: renderContent(c.description) }}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-            {rubric.partialCredit.length > 0 && (
-              <div>
-                <p className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-1.5">Partial credit</p>
-                <ul className="space-y-1 text-xs text-[var(--text-secondary)]">
-                  {rubric.partialCredit.map((p, i) => (
-                    <li key={i}>
-                      <strong dangerouslySetInnerHTML={{ __html: renderContent(p.scenario) }} />
-                      <span>: </span>
-                      <span dangerouslySetInnerHTML={{ __html: renderContent(p.award) }} />
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-            {rubric.commonErrors.length > 0 && (
-              <div>
-                <p className="text-xs font-semibold text-[var(--warning)] uppercase tracking-wider mb-1.5">Common errors</p>
-                <ul className="space-y-1 text-xs text-[var(--text-secondary)]">
-                  {rubric.commonErrors.map((e, i) => (
-                    <li key={i}>
-                      <strong dangerouslySetInnerHTML={{ __html: renderContent(e.error) }} />
-                      <span>: </span>
-                      <span dangerouslySetInnerHTML={{ __html: renderContent(e.penalty) }} />
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </div>
-        )}
 
         {showSolution && (
           <div className="px-6 pb-5 space-y-5 bg-[var(--bg-subtle)]">
@@ -401,39 +282,22 @@ export function ExerciseCard({
             {/* Barème */}
             {exercise.solution.bareme && exercise.solution.bareme.length > 0 && (
               <div className="pt-4">
-                <p className="text-xs font-semibold text-[var(--accent)] uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                  <ClipboardList size={11} /> Barème
-                </p>
-                <div className="rounded-xl border border-[var(--border)] overflow-hidden">
-                  <table className="w-full text-xs">
-                    <thead>
-                      <tr className="bg-[var(--accent-light)] border-b border-[var(--border)]">
-                        <th className="text-left px-3 py-2 font-semibold text-[var(--accent)] w-20">Question</th>
-                        <th className="text-center px-3 py-2 font-semibold text-[var(--accent)] w-16">Points</th>
-                        <th className="text-left px-3 py-2 font-semibold text-[var(--accent)]">Critère d&apos;attribution</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-[var(--border)]">
-                      {exercise.solution.bareme.map((b, i) => (
-                        <tr key={i} className="bg-[var(--surface)]">
-                          <td className="px-3 py-2 font-semibold text-[var(--text)]">{b.label}</td>
-                          <td className="px-3 py-2 text-center">
-                            <span className="inline-flex items-center justify-center w-8 h-5 rounded-md bg-[var(--accent)] text-white font-bold text-[10px]">{b.points}</span>
-                          </td>
-                          <td className="px-3 py-2 text-[var(--text-secondary)]">{b.criterion}</td>
-                        </tr>
-                      ))}
-                      <tr className="bg-[var(--bg-subtle)] border-t-2 border-[var(--border-strong)]">
-                        <td className="px-3 py-2 font-bold text-[var(--text)]">Total</td>
-                        <td className="px-3 py-2 text-center">
-                          <span className="inline-flex items-center justify-center w-8 h-5 rounded-md bg-[var(--text)] text-[var(--bg)] font-bold text-[10px]">
-                            {exercise.solution.bareme.reduce((s, b) => s + b.points, 0)}
-                          </span>
-                        </td>
-                        <td className="px-3 py-2" />
-                      </tr>
-                    </tbody>
-                  </table>
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-[var(--accent)]">Barème de correction</span>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[var(--accent)] text-white">
+                    {exercise.solution.bareme.reduce((s, b) => s + b.points, 0)} pts
+                  </span>
+                </div>
+                <div className="space-y-1.5">
+                  {exercise.solution.bareme.map((b, i) => (
+                    <div key={i} className="flex items-start gap-3 rounded-xl bg-[var(--surface)] border border-[var(--border)] px-3 py-2.5 hover:border-[var(--accent)]/30 transition-colors">
+                      <span className="text-xs font-bold text-[var(--accent)] w-10 flex-shrink-0 pt-px">{b.label}</span>
+                      <span className="flex-1 text-xs text-[var(--text-secondary)] leading-relaxed">{b.criterion}</span>
+                      <span className="flex-shrink-0 inline-flex items-center justify-center min-w-[28px] h-5 px-1.5 rounded-full bg-[var(--accent-light)] text-[var(--accent)] font-bold text-[10px] border border-[var(--accent)]/20">
+                        {b.points}
+                      </span>
+                    </div>
+                  ))}
                 </div>
               </div>
             )}
@@ -509,28 +373,21 @@ export function ExerciseCard({
             {/* Micro-barème */}
             {exercise.solution.microBareme && exercise.solution.microBareme.length > 0 && (
               <div>
-                <p className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                  <ClipboardList size={11} /> Micro-barème
-                </p>
-                <div className="rounded-xl border border-[var(--border)] overflow-hidden">
-                  <table className="w-full text-xs">
-                    <thead>
-                      <tr className="bg-[var(--bg-subtle)] border-b border-[var(--border)]">
-                        <th className="text-left px-3 py-2 font-semibold text-[var(--text-secondary)] w-20">Étape</th>
-                        <th className="text-center px-3 py-2 font-semibold text-[var(--text-secondary)] w-16">Pts</th>
-                        <th className="text-left px-3 py-2 font-semibold text-[var(--text-secondary)]">Critère observable</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-[var(--border)]">
-                      {exercise.solution.microBareme.map((mb, i) => (
-                        <tr key={i} className={i % 2 === 0 ? "bg-[var(--surface)]" : "bg-[var(--bg-subtle)]"}>
-                          <td className="px-3 py-2 font-medium text-[var(--text)]">{mb.step}</td>
-                          <td className="px-3 py-2 text-center text-[var(--text-secondary)] font-semibold">{mb.points}</td>
-                          <td className="px-3 py-2 text-[var(--text-secondary)]">{mb.criterion}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                <span className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-tertiary)] block mb-3">Micro-barème</span>
+                <div className="relative pl-4 space-y-0">
+                  {/* Vertical timeline line */}
+                  <div className="absolute left-[7px] top-2 bottom-2 w-px bg-[var(--border)]" />
+                  {exercise.solution.microBareme.map((mb, i) => (
+                    <div key={i} className="relative flex items-start gap-3 pb-2">
+                      {/* Dot */}
+                      <div className="absolute -left-[5px] top-2 w-2.5 h-2.5 rounded-full bg-[var(--surface)] border-2 border-[var(--border-strong)] flex-shrink-0" />
+                      <div className="flex-1 flex items-start gap-3 rounded-lg bg-[var(--surface)] border border-[var(--border)] px-3 py-2">
+                        <span className="text-[10px] font-bold text-[var(--text-tertiary)] uppercase tracking-wide w-14 flex-shrink-0 pt-0.5">{mb.step}</span>
+                        <span className="flex-1 text-xs text-[var(--text-secondary)] leading-relaxed">{mb.criterion}</span>
+                        <span className="flex-shrink-0 text-[10px] font-bold text-[var(--text-tertiary)] pt-0.5">{mb.points} pt{mb.points > 1 ? "s" : ""}</span>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
             )}
