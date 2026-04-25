@@ -66,6 +66,7 @@ export default function CreatePage() {
   }
 
   function injectPaper(paper: { title: string; abstract: string; authors: string[]; published: string }) {
+    const citation = paper.authors.length > 0
       ? `${paper.authors[0]} et al. (${paper.published})`
       : `Source (${paper.published})`;
     const context = `\n\nResearch context [${citation}, "${paper.title}"]: ${paper.abstract.slice(0, 400)}${paper.abstract.length > 400 ? "…" : ""}`;
