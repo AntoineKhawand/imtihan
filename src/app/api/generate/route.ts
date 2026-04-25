@@ -45,6 +45,8 @@ const ExamContextSchema = z.object({
   difficultyMix: z.object({ easy: z.number(), medium: z.number(), hard: z.number() }),
   teacherNotes: z.string().optional(),
   generateVersionB: z.boolean().optional(),
+  templateType: z.enum(["modern", "uploaded"]).optional(),
+  layoutPreferences: z.string().optional(),
 });
 
 const RequestSchema = z.object({

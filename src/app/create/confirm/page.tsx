@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, ArrowRight, AlertTriangle, CheckCircle2, Info, X } from "lucide-react";
+import { ArrowLeft, ArrowRight, AlertTriangle, CheckCircle2, Info, X, Layout, FileText, Wand2 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Select } from "@/components/ui/FormElements";
 import { cn, SUBJECT_LABELS, LANGUAGE_LABELS, EXAM_TYPE_LABELS } from "@/lib/utils";
@@ -29,11 +29,24 @@ export default function ConfirmPage() {
   const [context, setContext] = useState<(ExamContext & { warnings?: string[]; confidence?: number }) | null>(null);
   const [loading, setLoading] = useState(true);
   const [dismissedWarnings, setDismissedWarnings] = useState<number[]>([]);
+  const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
 
   useEffect(() => {
     const raw = sessionStorage.getItem("imtihan_context");
     if (!raw) { router.replace("/create"); return; }
-    try { setContext(JSON.parse(raw)); }
+    try { 
+      const parsed = JSON.parse(raw);
+      setContext({
+        ...parsed,
+        templateType: parsed.templateType ?? "modern"
+      }); 
+      
+      const fileRaw = sessionStorage.getItem("imtihan_uploaded_file");
+      if (fileRaw) {
+        const file = JSON.parse(fileRaw);
+        setUploadedFileName(file.name);
+      }
+    }
     catch { router.replace("/create"); }
     finally { setLoading(false); }
   }, [router]);
@@ -207,6 +220,79 @@ export default function ConfirmPage() {
             {context.curriculumId === "university" && (
               <div className="p-3.5 rounded-xl bg-[var(--bg-subtle)] border border-[var(--border)] text-xs text-[var(--text-secondary)] leading-relaxed">
                 University mode: chapters are inferred from your description and uploaded documents. The AI uses your course content directly.
+              </div>
+            )}
+          </div>
+
+          {/* Template Selection */}
+          <div className="space-y-4">
+            <h3 className="text-sm font-semibold text-[var(--text)] flex items-center gap-2">
+              <Layout size={16} className="text-[var(--text-tertiary)]" />
+              Document Template
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <button
+                onClick={() => update("templateType", "modern")}
+                className={cn(
+                  "flex flex-col items-start p-4 rounded-2xl border transition-all text-left group",
+                  context.templateType === "modern"
+                    ? "bg-[var(--accent-light)] border-[var(--accent)] ring-1 ring-[var(--accent)]"
+                    : "bg-[var(--surface)] border-[var(--border)] hover:border-[var(--border-strong)]"
+                )}
+              >
+                <div className={cn(
+                  "w-8 h-8 rounded-lg flex items-center justify-center mb-3 transition-colors",
+                  context.templateType === "modern" ? "bg-[var(--accent)] text-white" : "bg-[var(--bg-subtle)] text-[var(--text-tertiary)] group-hover:text-[var(--text-secondary)]"
+                )}>
+                  <CheckCircle2 size={16} />
+                </div>
+                <p className="text-sm font-semibold text-[var(--text)] mb-1">Modern (Standard)</p>
+                <p className="text-[11px] text-[var(--text-secondary)] leading-relaxed">
+                  Clean, professional Imtihan layout optimized for readability and printing.
+                </p>
+              </button>
+
+              <button
+                onClick={() => update("templateType", "uploaded")}
+                className={cn(
+                  "flex flex-col items-start p-4 rounded-2xl border transition-all text-left group",
+                  context.templateType === "uploaded"
+                    ? "bg-[var(--accent-light)] border-[var(--accent)] ring-1 ring-[var(--accent)]"
+                    : "bg-[var(--surface)] border-[var(--border)] hover:border-[var(--border-strong)]"
+                )}
+              >
+                <div className={cn(
+                  "w-8 h-8 rounded-lg flex items-center justify-center mb-3 transition-colors",
+                  context.templateType === "uploaded" ? "bg-[var(--accent)] text-white" : "bg-[var(--bg-subtle)] text-[var(--text-tertiary)] group-hover:text-[var(--text-secondary)]"
+                )}>
+                  <Wand2 size={16} />
+                </div>
+                <p className="text-sm font-semibold text-[var(--text)] mb-1">Extract Template</p>
+                <p className="text-[11px] text-[var(--text-secondary)] leading-relaxed">
+                  {uploadedFileName 
+                    ? `Use visual elements (logo, header) from ${uploadedFileName}.`
+                    : "Describe a custom layout or upload a template file in Step 1."}
+                </p>
+              </button>
+            </div>
+
+            {context.templateType === "uploaded" && (
+              <div className="animate-in fade-in slide-in-from-top-2 duration-300">
+                <div className="p-4 rounded-2xl border border-[var(--border)] bg-[var(--surface)] space-y-3">
+                  <div className="flex items-center gap-2">
+                    <FileText size={14} className="text-[var(--accent)]" />
+                    <p className="text-xs font-semibold text-[var(--text)]">Extraction Instructions</p>
+                  </div>
+                  <textarea
+                    value={context.layoutPreferences || ""}
+                    onChange={(e) => update("layoutPreferences", e.target.value)}
+                    placeholder="e.g. Replicate the school header from the PDF, use the same grading table at the end, keep the specific logo on the top right..."
+                    className="w-full min-h-[80px] p-3 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-xs text-[var(--text)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] transition-colors resize-none"
+                  />
+                  <p className="text-[10px] text-[var(--text-tertiary)] leading-relaxed">
+                    The AI will analyze the visual structure of your document and attempt to replicate it.
+                  </p>
+                </div>
               </div>
             )}
           </div>

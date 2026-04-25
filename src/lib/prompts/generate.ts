@@ -576,7 +576,9 @@ Duration   : ${context.duration} minutes
 Total points: ${context.totalPoints} (points must sum to exactly ${context.totalPoints})
 Difficulty : ${difficultyBreakdown}
 ${context.teacherNotes ? `\nTeacher notes:\n${context.teacherNotes}` : ""}
-${context.layoutPreferences ? `\nLayout Preferences (MIMIC THIS STYLE):\n${context.layoutPreferences}` : ""}
+${context.templateType === "modern" 
+  ? "\nTEMPLATE: Use the standard Modern (Standard) layout. Ignore the visual layout of any uploaded documents — use them for content only." 
+  : `\nTEMPLATE: Extract and replicate the visual layout, header, and formatting from the uploaded document. Instructions: ${context.layoutPreferences || "Mimic the general header and question structure."}`}
 ${context.visualPreference ? `\nVisual & Graph Requirements:\n${context.visualPreference}` : ""}
 ${extraContext ? `\nDOMAIN DATA CONTEXT:\n${extraContext}` : ""}
 

@@ -50,6 +50,8 @@ export interface ExamContext {
   layoutPreferences?: string;
   /** Preferences for graphs, diagrams, or visual aids */
   visualPreference?: string;
+  /** Template selection */
+  templateType?: "modern" | "uploaded";
 }
 
 export interface Exercise {
