@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import { sendEmail } from "@/lib/brevo";
 
 const RequestSchema = z.object({
   to: z.string().email(),
@@ -11,23 +12,10 @@ const RequestSchema = z.object({
 });
 
 /**
- * POST /api/email — delivers a generated exam as an attachment via Resend.
- * Requires env: RESEND_API_KEY and (optionally) RESEND_FROM (defaults to onboarding@resend.dev).
- * Resend free tier: 100 emails/day, 3000/month.
+ * POST /api/email — delivers a generated exam as an attachment via Brevo.
+ * Requires env: BREVO_API_KEY (set in Vercel).
  */
 export async function POST(request: NextRequest) {
-  const apiKey = process.env.RESEND_API_KEY;
-  if (!apiKey) {
-    return NextResponse.json(
-      {
-        success: false,
-        error:
-          "Email sending is not configured. Add RESEND_API_KEY to .env.local — get a free key at https://resend.com/api-keys",
-      },
-      { status: 501 }
-    );
-  }
-
   try {
     const body = await request.json();
     const parsed = RequestSchema.safeParse(body);
@@ -38,35 +26,24 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { to, subject, message, fileBase64, fileName, mimeType } = parsed.data;
-    const from = process.env.RESEND_FROM ?? "Imtihan <onboarding@resend.dev>";
+    const { to, subject, message, fileBase64, fileName } = parsed.data;
 
-    const res = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        from,
-        to: [to],
-        subject,
-        html: buildHtmlBody(message ?? ""),
-        attachments: [{ filename: fileName, content: fileBase64 }],
-      }),
+    const result = await sendEmail({
+      to,
+      subject,
+      html: buildHtmlBody(message ?? ""),
+      attachment: { name: fileName, content: fileBase64 },
     });
 
-    if (!res.ok) {
-      const errBody = await res.text();
-      console.error("[/api/email] Resend error:", res.status, errBody);
+    if (!result.ok) {
+      console.error("[/api/email] Brevo error:", result.error);
       return NextResponse.json(
-        { success: false, error: `Resend rejected the request (${res.status}). ${errBody.slice(0, 200)}` },
+        { success: false, error: result.error ?? "Email send failed" },
         { status: 502 }
       );
     }
 
-    const data = await res.json();
-    return NextResponse.json({ success: true, id: data.id });
+    return NextResponse.json({ success: true });
   } catch (err) {
     console.error("[/api/email]", err);
     return NextResponse.json(
@@ -81,9 +58,7 @@ function buildHtmlBody(message: string): string {
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;");
-  const intro = safe
-    ? `<p style="margin:0 0 12px 0;white-space:pre-wrap;">${safe}</p>`
-    : "";
+  const intro = safe ? `<p style="margin:0 0 12px 0;white-space:pre-wrap;">${safe}</p>` : "";
   return `<!doctype html>
 <html><body style="font-family:system-ui,-apple-system,Segoe UI,sans-serif;color:#111;font-size:15px;line-height:1.5;margin:0;padding:24px;">
   <div style="max-width:560px;margin:0 auto;">

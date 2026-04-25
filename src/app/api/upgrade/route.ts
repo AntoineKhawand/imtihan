@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { createSecurityHeaders } from "@/lib/security";
+import { sendEmail } from "@/lib/brevo";
 
 const BodySchema = z.object({
   name: z.string().min(1).max(100),
@@ -107,40 +108,14 @@ export async function POST(request: NextRequest) {
     }
 
     const data = parsed.data;
-    const apiKey = process.env.RESEND_API_KEY;
+    const adminEmail   = buildAdminEmail(data);
+    const confirmEmail = buildConfirmationEmail(data);
 
-    if (apiKey) {
-      const from = process.env.RESEND_FROM ?? "Imtihan <noreply@imtihan.live>";
-      const adminEmail = buildAdminEmail(data);
-      const confirmEmail = buildConfirmationEmail(data);
+    // Notify admin
+    await sendEmail({ to: "hello@imtihan.live", toName: "Imtihan Admin", subject: adminEmail.subject, html: adminEmail.html });
 
-      // Send notification to admin
-      await fetch("https://api.resend.com/emails", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
-        body: JSON.stringify({
-          from,
-          to: ["hello@imtihan.live"],
-          subject: adminEmail.subject,
-          html: adminEmail.html,
-        }),
-      });
-
-      // Send confirmation to user
-      await fetch("https://api.resend.com/emails", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
-        body: JSON.stringify({
-          from,
-          to: [data.email],
-          subject: confirmEmail.subject,
-          html: confirmEmail.html,
-        }),
-      });
-    } else {
-      // Log to server console so you can see requests even without Resend
-      console.log("[/api/upgrade] New upgrade request (Resend not configured):", data);
-    }
+    // Confirm to user
+    await sendEmail({ to: data.email, toName: data.name, subject: confirmEmail.subject, html: confirmEmail.html });
 
     return NextResponse.json({ success: true }, { headers: createSecurityHeaders() });
   } catch (err) {

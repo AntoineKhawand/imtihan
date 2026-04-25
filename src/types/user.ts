@@ -18,6 +18,8 @@ export interface UserProfile {
   monthlyPeriodStart?: number;
   /** Unix timestamp (ms) when the Pro plan expires. Set by admin after Whish payment. */
   proExpiresAt?: number;
+  /** Unix ms of the last renewal reminder email sent — prevents duplicate sends. */
+  lastReminderSentAt?: number;
   subscription: {
     status: SubscriptionStatus;
     tier: SubscriptionTier;
