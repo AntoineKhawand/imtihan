@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { Formula } from "@chemistry/formula";
+import { ChemElements } from "@chemistry/elements";
 import { createSecurityHeaders } from "@/lib/security";
 
 export const runtime = "nodejs";
@@ -35,7 +36,15 @@ export async function POST(request: NextRequest) {
     const input = parsed.data.formula.trim();
 
     const formulaObj = Formula.parse(input);
-    const weight = Formula.convertToWeight(formulaObj);
+    
+    // Calculate molecular weight manually
+    let weight = 0;
+    for (const [symbol, count] of Object.entries(formulaObj)) {
+      const info = ChemElements.getBySymbol(symbol);
+      if (info) {
+        weight += info.mass * (count as number);
+      }
+    }
 
     // Build a human-readable element list
     const elements: Record<string, number> = {};
