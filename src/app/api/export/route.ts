@@ -86,6 +86,7 @@ async function processContentBlocks(
           blocks.push(new Paragraph({
             children: [
               new ImageRun({
+                type: "png",
                 data: buffer,
                 transformation: { width: 480, height: 270 },
               }),
@@ -150,6 +151,16 @@ const RequestSchema = z.object({
     solution: z.object({
       finalAnswer: z.string(),
       methodology: z.string(),
+      bareme: z.array(z.object({
+        label: z.string(),
+        points: z.number(),
+        criterion: z.string(),
+      })).optional(),
+      microBareme: z.array(z.object({
+        step: z.string(),
+        points: z.number(),
+        criterion: z.string(),
+      })).optional(),
     }),
   })),
   format: z.enum(["word", "pdf"]),
@@ -414,8 +425,66 @@ async function generateWordDocument(
       spacing: { before: 240, after: 120 },
     }));
 
+    // Barème table
+    if (ex.solution.bareme && ex.solution.bareme.length > 0) {
+      children.push(new Paragraph({
+        children: [new TextRun({ text: lang === "fr" ? "Barème :" : "Marking Scheme:", bold: true, size: 20, color: primaryColor, font: fontHeader })],
+        spacing: { before: 120, after: 60 },
+      }));
+      children.push(new Table({
+        width: { size: 100, type: WidthType.PERCENTAGE },
+        rows: [
+          new TableRow({
+            tableHeader: true,
+            children: [
+              new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: lang === "fr" ? "Question" : "Question", bold: true, size: 18, color: primaryColor })] })], width: { size: 15, type: WidthType.PERCENTAGE } }),
+              new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: lang === "fr" ? "Points" : "Points", bold: true, size: 18, color: primaryColor })] })], width: { size: 12, type: WidthType.PERCENTAGE } }),
+              new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: lang === "fr" ? "Critère d'attribution" : "Criterion", bold: true, size: 18, color: primaryColor })] })], width: { size: 73, type: WidthType.PERCENTAGE } }),
+            ],
+          }),
+          ...ex.solution.bareme.map((b) => new TableRow({
+            children: [
+              new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: b.label, bold: true, size: 18, font: fontBody })] })] }),
+              new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: String(b.points), size: 18, font: fontBody })] })] }),
+              new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: b.criterion, size: 18, font: fontBody })] })] }),
+            ],
+          })),
+        ],
+      }));
+      children.push(new Paragraph({ text: "" }));
+    }
+
     children.push(...(await processContentBlocks(ex.solution.finalAnswer, { size: 22, font: fontBody, color: textColor })));
     children.push(...(await processContentBlocks(ex.solution.methodology, { size: 20, color: metaColor, font: fontBody })));
+
+    // Micro-barème table
+    if (ex.solution.microBareme && ex.solution.microBareme.length > 0) {
+      children.push(new Paragraph({
+        children: [new TextRun({ text: lang === "fr" ? "Micro-barème :" : "Micro Mark Scheme:", bold: true, size: 20, color: primaryColor, font: fontHeader })],
+        spacing: { before: 160, after: 60 },
+      }));
+      children.push(new Table({
+        width: { size: 100, type: WidthType.PERCENTAGE },
+        rows: [
+          new TableRow({
+            tableHeader: true,
+            children: [
+              new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: lang === "fr" ? "Étape" : "Step", bold: true, size: 18, color: primaryColor })] })], width: { size: 18, type: WidthType.PERCENTAGE } }),
+              new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: "Pts", bold: true, size: 18, color: primaryColor })] })], width: { size: 10, type: WidthType.PERCENTAGE } }),
+              new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: lang === "fr" ? "Critère observable" : "Observable criterion", bold: true, size: 18, color: primaryColor })] })], width: { size: 72, type: WidthType.PERCENTAGE } }),
+            ],
+          }),
+          ...ex.solution.microBareme.map((mb) => new TableRow({
+            children: [
+              new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: mb.step, bold: true, size: 18, font: fontBody })] })] }),
+              new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: String(mb.points), size: 18, font: fontBody })] })] }),
+              new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: mb.criterion, size: 18, font: fontBody })] })] }),
+            ],
+          })),
+        ],
+      }));
+    }
+
     children.push(new Paragraph({ text: "" }));
   }
 

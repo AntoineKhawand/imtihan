@@ -72,6 +72,10 @@ export interface Exercise {
     finalAnswer: string;
     methodology: string; // step-by-step reasoning in markdown
     commonMistakes?: string[];
+    /** Point breakdown per sub-question — e.g. [{label:"1.a", points:2, criterion:"Expression correcte de la loi"}] */
+    bareme?: Array<{ label: string; points: number; criterion: string }>;
+    /** Point criteria per methodology step — for granular grading */
+    microBareme?: Array<{ step: string; points: number; criterion: string }>;
   };
   /** Which curriculum chapters this exercise tests */
   chapterIds: string[];

@@ -429,9 +429,50 @@ export function ExerciseCard({
         )}
 
         {showSolution && (
-          <div className="px-6 pb-5 space-y-4 bg-[var(--bg-subtle)]">
+          <div className="px-6 pb-5 space-y-5 bg-[var(--bg-subtle)]">
+
+            {/* Barème */}
+            {exercise.solution.bareme && exercise.solution.bareme.length > 0 && (
+              <div className="pt-4">
+                <p className="text-xs font-semibold text-[var(--accent)] uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                  <ClipboardList size={11} /> Barème
+                </p>
+                <div className="rounded-xl border border-[var(--border)] overflow-hidden">
+                  <table className="w-full text-xs">
+                    <thead>
+                      <tr className="bg-[var(--accent-light)] border-b border-[var(--border)]">
+                        <th className="text-left px-3 py-2 font-semibold text-[var(--accent)] w-20">Question</th>
+                        <th className="text-center px-3 py-2 font-semibold text-[var(--accent)] w-16">Points</th>
+                        <th className="text-left px-3 py-2 font-semibold text-[var(--accent)]">Critère d&apos;attribution</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[var(--border)]">
+                      {exercise.solution.bareme.map((b, i) => (
+                        <tr key={i} className="bg-[var(--surface)]">
+                          <td className="px-3 py-2 font-semibold text-[var(--text)]">{b.label}</td>
+                          <td className="px-3 py-2 text-center">
+                            <span className="inline-flex items-center justify-center w-8 h-5 rounded-md bg-[var(--accent)] text-white font-bold text-[10px]">{b.points}</span>
+                          </td>
+                          <td className="px-3 py-2 text-[var(--text-secondary)]">{b.criterion}</td>
+                        </tr>
+                      ))}
+                      <tr className="bg-[var(--bg-subtle)] border-t-2 border-[var(--border-strong)]">
+                        <td className="px-3 py-2 font-bold text-[var(--text)]">Total</td>
+                        <td className="px-3 py-2 text-center">
+                          <span className="inline-flex items-center justify-center w-8 h-5 rounded-md bg-[var(--text)] text-[var(--bg)] font-bold text-[10px]">
+                            {exercise.solution.bareme.reduce((s, b) => s + b.points, 0)}
+                          </span>
+                        </td>
+                        <td className="px-3 py-2" />
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
             {/* Final answer */}
-            <div className="pt-4">
+            <div className={exercise.solution.bareme ? "" : "pt-4"}>
               <p className="text-xs font-semibold text-[var(--accent)] uppercase tracking-wider mb-2">
                 Answer
               </p>
@@ -451,6 +492,35 @@ export function ExerciseCard({
                 dangerouslySetInnerHTML={{ __html: renderContent(exercise.solution.methodology) }}
               />
             </div>
+
+            {/* Micro-barème */}
+            {exercise.solution.microBareme && exercise.solution.microBareme.length > 0 && (
+              <div>
+                <p className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                  <ClipboardList size={11} /> Micro-barème
+                </p>
+                <div className="rounded-xl border border-[var(--border)] overflow-hidden">
+                  <table className="w-full text-xs">
+                    <thead>
+                      <tr className="bg-[var(--bg-subtle)] border-b border-[var(--border)]">
+                        <th className="text-left px-3 py-2 font-semibold text-[var(--text-secondary)] w-20">Étape</th>
+                        <th className="text-center px-3 py-2 font-semibold text-[var(--text-secondary)] w-16">Pts</th>
+                        <th className="text-left px-3 py-2 font-semibold text-[var(--text-secondary)]">Critère observable</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[var(--border)]">
+                      {exercise.solution.microBareme.map((mb, i) => (
+                        <tr key={i} className={i % 2 === 0 ? "bg-[var(--surface)]" : "bg-[var(--bg-subtle)]"}>
+                          <td className="px-3 py-2 font-medium text-[var(--text)]">{mb.step}</td>
+                          <td className="px-3 py-2 text-center text-[var(--text-secondary)] font-semibold">{mb.points}</td>
+                          <td className="px-3 py-2 text-[var(--text-secondary)]">{mb.criterion}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
 
             {/* Common mistakes */}
             {exercise.solution.commonMistakes && exercise.solution.commonMistakes.length > 0 && (

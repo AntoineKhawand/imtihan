@@ -510,6 +510,12 @@ SOLUTION QUALITY — The corrigé is what differentiates Imtihan from a simple q
 - commonMistakes: 2–3 specific errors typical students at this level make (not trivial arithmetic slips — conceptual or methodological mistakes).
 - For IB: include mark allocation per step in the methodology (• Method mark [M1]: ..., • Answer mark [A1]: ...).
 
+BARÈME (mandatory for every exercise):
+- bareme: one entry per sub-question (or per main question if no sub-questions). label = the question label ("1.a", "Q2", "Partie B - 3", etc.), points = integer, criterion = one short sentence stating what earns those points (e.g. "Expression correcte de la force de Coulomb" or "Balanced equation with state symbols").
+- microBareme: one entry per methodology step. step = "Étape 1" / "Step 1" / "الخطوة ١" etc., points = fractional or integer (e.g. 0.5 or 1), criterion = the EXACT observable action that earns the mark (e.g. "Writes Newton's second law in vector form" or "Substitutes correct values with units"). microBareme entries must sum to the exercise's total points.
+- For exercises with no sub-questions: bareme has one entry with the full exercise label and points.
+- Keep criterion short (≤ 12 words) — it is read at a glance during grading.
+
 LAYOUT & CONTENT QUALITY:
 - **Markdown Tables**: Use standard Markdown table syntax for data comparisons, experimental results, or organized information.
 - **Graphs/Diagrams**: You cannot generate image files. If a graph is needed, or specifically requested by the user, provide a detailed textual description of the axes, curves, and key points inside a [GRAPH: description] tag. Be highly accurate with coordinates and function behavior.
@@ -530,7 +536,13 @@ JSON schema for each exercise:
   "solution": {
     "finalAnswer": string,
     "methodology": string,
-    "commonMistakes": string[]
+    "commonMistakes": string[],
+    "bareme": [
+      { "label": string, "points": number, "criterion": string }
+    ],
+    "microBareme": [
+      { "step": string, "points": number, "criterion": string }
+    ]
   },
   "chapterIds": string[],
   "estimatedMinutes": number
