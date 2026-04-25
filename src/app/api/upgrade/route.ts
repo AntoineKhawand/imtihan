@@ -27,7 +27,7 @@ function buildAdminEmail(data: z.infer<typeof BodySchema>): { subject: string; h
 <html>
 <body style="font-family:system-ui,sans-serif;font-size:15px;color:#111;padding:24px;max-width:560px;margin:0 auto">
   <div style="display:flex;align-items:center;gap:10px;margin-bottom:24px;padding-bottom:16px;border-bottom:1px solid #e5e7eb">
-    <div style="width:32px;height:32px;border-radius:8px;background:#1a5e3f;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px">إ</div>
+    <img src="https://imtihan.live/Imtihan-logo.png" width="32" height="32" style="border-radius:8px;display:block" alt="Imtihan" />
     <strong style="font-size:16px;color:#1a5e3f">Imtihan — New Upgrade Request</strong>
   </div>
 
@@ -73,7 +73,7 @@ function buildConfirmationEmail(data: z.infer<typeof BodySchema>): { subject: st
 <html>
 <body style="font-family:system-ui,sans-serif;font-size:15px;color:#111;padding:24px;max-width:560px;margin:0 auto">
   <div style="display:flex;align-items:center;gap:10px;margin-bottom:24px;padding-bottom:16px;border-bottom:1px solid #e5e7eb">
-    <div style="width:32px;height:32px;border-radius:8px;background:#1a5e3f;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px">إ</div>
+    <img src="https://imtihan.live/Imtihan-logo.png" width="32" height="32" style="border-radius:8px;display:block" alt="Imtihan" />
     <strong style="font-size:16px">Imtihan</strong>
   </div>
 
