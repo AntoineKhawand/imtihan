@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { renderContent } from "@/lib/renderContent";
-import { Button } from "./Button";
 import type { Exercise } from "@/types/exam";
 import {
   RefreshCw,
@@ -21,8 +20,6 @@ import {
   ClipboardList,
   Loader2,
   Table,
-  Image as ImageIcon,
-  X,
 } from "lucide-react";
 
 const DIFFICULTY_CONFIG = {
@@ -88,8 +85,6 @@ export function ExerciseCard({
   const [rubricLoading, setRubricLoading] = useState(false);
   const [rubricError, setRubricError] = useState<string | null>(null);
   const [showRubric, setShowRubric] = useState(false);
-  const [isAskingVisual, setIsAskingVisual] = useState(false);
-  const [visualPrompt, setVisualPrompt] = useState("");
 
   async function loadRubric() {
     if (rubric) { setShowRubric((v) => !v); return; }
@@ -227,13 +222,6 @@ export function ExerciseCard({
                       <Table size={13} />
                       Format as Table
                     </button>
-                    <button
-                      onClick={() => { setIsAskingVisual(true); setShowActions(false); }}
-                      className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-[var(--text-secondary)] hover:text-[var(--text)] hover:bg-[var(--bg-subtle)] rounded-lg transition-colors"
-                    >
-                      <ImageIcon size={13} />
-                      Add Visual/Graph
-                    </button>
                   </>
                 )}
                 {onSaveToBank && (
@@ -271,56 +259,6 @@ export function ExerciseCard({
           dangerouslySetInnerHTML={{ __html: renderContent(exercise.statement) }}
         />
 
-        {isAskingVisual && (
-          <div className="mt-4 p-4 rounded-xl bg-[var(--accent-light)] border border-[var(--accent)]/20 animate-fade-in">
-            <p className="text-xs font-semibold text-[var(--accent-text)] mb-2 flex items-center gap-1.5">
-              <ImageIcon size={12} />
-              Describe the visual or graph you want to add
-            </p>
-            <div className="flex gap-2">
-              <input 
-                type="text"
-                autoFocus
-                value={visualPrompt}
-                onChange={(e) => setVisualPrompt(e.target.value)}
-                placeholder="e.g. A sine wave graph for y = sin(x)"
-                className="flex-1 min-w-0 bg-white border border-[var(--border)] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/20"
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && visualPrompt.trim()) {
-                    onTransform?.(exercise.id, "image", visualPrompt);
-                    setIsAskingVisual(false);
-                    setVisualPrompt("");
-                  }
-                  if (e.key === "Escape") {
-                    setIsAskingVisual(false);
-                    setVisualPrompt("");
-                  }
-                }}
-              />
-              <Button 
-                size="sm" 
-                onClick={() => {
-                  if (visualPrompt.trim()) {
-                    onTransform?.(exercise.id, "image", visualPrompt);
-                    setIsAskingVisual(false);
-                    setVisualPrompt("");
-                  }
-                }}
-              >
-                Add
-              </Button>
-              <button 
-                onClick={() => setIsAskingVisual(false)}
-                className="p-2 text-[var(--text-tertiary)] hover:text-[var(--text)] transition-colors"
-              >
-                <X size={16} />
-              </button>
-            </div>
-            <p className="text-[10px] text-[var(--text-tertiary)] mt-2 italic">
-              The AI will describe this visual accurately in the text.
-            </p>
-          </div>
-        )}
 
         {/* Sub-questions */}
         {exercise.subQuestions && exercise.subQuestions.length > 0 && (

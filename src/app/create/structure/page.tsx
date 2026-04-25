@@ -253,17 +253,6 @@ export default function StructurePage() {
               <Input type="number" label="Number of Exercises" value={context.exerciseCount} onChange={(e) => update("exerciseCount", parseInt(e.target.value, 10))} placeholder="e.g. 2" />
             </div>
 
-            <div className="mt-6">
-              <Input 
-                label="Visuals & Graphs" 
-                value={context.visualPreference ?? ""} 
-                onChange={(e) => update("visualPreference", e.target.value)} 
-                placeholder="e.g. Include a parabolic function graph for the mechanics exercise" 
-              />
-              <p className="text-[10px] text-[var(--text-tertiary)] mt-1.5 italic">
-                Specify any functions, curves, or diagrams you want to see described.
-              </p>
-            </div>
           </div>
 
 

@@ -135,25 +135,17 @@ async function renderMermaidBlocks(text: string): Promise<string> {
 
 function handleGraphs(text: string): string {
   // Matches [GRAPH: description] or [VISUAL: description]
+  // Renders as a styled description box — no external image service needed
   return text.replace(/\[(?:GRAPH|VISUAL):\s*(.*?)\]/g, (match, description) => {
     const desc = description.trim();
     if (!desc) return "";
-    
-    const encoded = encodeURIComponent(desc + " academic diagram, scientific illustration, white background, high quality, centered");
     return `
-      <div class="my-8 flex flex-col gap-3">
-        <div class="relative aspect-video w-full overflow-hidden rounded-xl border border-[var(--border)] bg-white shadow-sm group">
-          <img 
-            src="https://image.pollinations.ai/prompt/${encoded}?width=800&height=450&nologo=true&model=flux&seed=${Math.floor(Math.random() * 1000)}" 
-            alt="${desc}"
-            class="h-full w-full object-contain p-2 transition-transform duration-500 group-hover:scale-105"
-            loading="lazy"
-            onerror="this.parentElement.innerHTML='<div class=\'h-full flex flex-col items-center justify-center p-8 text-center\'><p class=\'text-xs font-semibold text-[var(--text-secondary)]\'>Visualization Description</p><p class=\'text-[10px] text-[var(--text-tertiary)] mt-2\'>${desc.replace(/'/g, "\\'")}</p></div>'"
-          />
+      <div class="my-4 rounded-xl border border-[var(--border)] bg-[var(--bg-subtle)] px-4 py-3 flex items-start gap-3">
+        <span class="text-[var(--accent)] flex-shrink-0 text-base leading-snug">📊</span>
+        <div>
+          <p class="text-[11px] font-semibold uppercase tracking-wider text-[var(--text-tertiary)] mb-1">Figure description</p>
+          <p class="text-sm text-[var(--text-secondary)] leading-relaxed">${desc}</p>
         </div>
-        <p class="text-[10px] text-center text-[var(--text-tertiary)] italic px-4 leading-relaxed">
-          <strong>Figure:</strong> ${desc}
-        </p>
       </div>
     `;
   });
