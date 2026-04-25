@@ -219,7 +219,7 @@ export default function CreatePage() {
                 </p>
                 
                 <div className="flex flex-col sm:flex-row items-center gap-3 justify-center">
-                  <Link href="/pricing" className="w-full sm:w-auto">
+                  <Link href="/upgrade" className="w-full sm:w-auto">
                     <Button size="lg" className="w-full bg-[var(--accent)] shadow-lg shadow-[var(--accent)]/20 px-8">
                       Upgrade to Pro — $5.99/mo
                     </Button>
@@ -379,7 +379,7 @@ export default function CreatePage() {
               <div className="flex-1">
                 {error}
                 {error.includes("upgrade") && (
-                  <Link href="/pricing" className="ml-2 text-[var(--accent)] hover:underline font-medium">
+                  <Link href="/upgrade" className="ml-2 text-[var(--accent)] hover:underline font-medium">
                     Upgrade to Pro
                   </Link>
                 )}

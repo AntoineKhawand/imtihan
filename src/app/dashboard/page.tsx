@@ -147,7 +147,30 @@ export default function DashboardPage() {
                 Renew via WhatsApp
               </a>
             </>
+          ) : quotaUsed >= FREE_EXAM_LIMIT ? (
+            /* Limit reached */
+            <div className="flex-1 flex flex-col sm:flex-row items-start sm:items-center gap-4">
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-red-600 mb-1">
+                  Free limit reached — {quotaUsed}/{FREE_EXAM_LIMIT} exams used
+                </p>
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 h-1.5 rounded-full bg-red-100">
+                    <div className="h-full w-full rounded-full bg-red-500" />
+                  </div>
+                </div>
+                <p className="text-xs text-[var(--text-tertiary)] mt-1">
+                  Upgrade to Pro for 100 exams/month.
+                </p>
+              </div>
+              <Link href="/upgrade">
+                <Button size="sm" className="bg-[var(--accent)] shadow-md shadow-[var(--accent)]/20 whitespace-nowrap">
+                  Upgrade to Pro — $5.99/mo
+                </Button>
+              </Link>
+            </div>
           ) : (
+            /* Still has quota */
             <>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold text-[var(--text)] mb-2">

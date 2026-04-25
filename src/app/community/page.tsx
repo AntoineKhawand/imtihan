@@ -180,7 +180,7 @@ export default function CommunityPage() {
               <p className="text-sm text-[var(--text-secondary)] mb-8 leading-relaxed">
                 Unlock hundreds of exams shared by teachers. Adapt, remix, and download premium content with a Pro plan.
               </p>
-              <Link href="/pricing" className="block w-full">
+              <Link href="/upgrade" className="block w-full">
                 <Button size="lg" className="w-full bg-[var(--accent)] shadow-lg shadow-[var(--accent)]/20">
                   Upgrade to Pro — $5.99/mo
                 </Button>

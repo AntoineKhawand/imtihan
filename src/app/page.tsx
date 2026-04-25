@@ -4,8 +4,14 @@ import { SchemaOrg } from "@/components/SchemaOrg";
 
 export const metadata: Metadata = {
   title: "Imtihan — Générateur d'examens IA pour enseignants au Liban",
-  description: "Créez des examens alignés sur le Bac Libanais, Bac Français, IB et l'Université en quelques secondes. Corrigé complet inclus. 2 examens gratuits.",
+  description: "Créez des examens alignés Bac Libanais, Bac Français, IB et Université en quelques secondes. Corrigé complet inclus. 2 examens gratuits, sans carte bancaire.",
   alternates: { canonical: "/" },
+  openGraph: {
+    title: "Imtihan — Générateur d'examens IA pour enseignants au Liban",
+    description: "Décrivez votre examen en français, anglais ou arabe. Imtihan génère les questions et le corrigé en quelques secondes. Bac Libanais · Bac Français · IB · Université.",
+    url: "https://www.imtihan.live",
+    images: [{ url: "/opengraph-image", width: 1200, height: 630, alt: "Imtihan — Générateur d'examens IA" }],
+  },
 };
 import Link from "next/link";
 import {

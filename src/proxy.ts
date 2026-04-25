@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const PROTECTED_PATHS = ["/dashboard", "/create", "/bank", "/library", "/account", "/community"];
+const PROTECTED_PATHS = ["/dashboard", "/create", "/bank", "/library", "/account", "/community", "/admin"];
 const AUTH_PATHS = ["/auth/login", "/auth/register"];
 
 export function proxy(request: NextRequest) {

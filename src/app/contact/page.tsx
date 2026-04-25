@@ -4,8 +4,13 @@ import { Logo } from "@/components/ui/Logo";
 
 export const metadata = {
   title: "Contact — Imtihan",
-  description: "Get in touch with the Imtihan team.",
+  description: "Contactez l'équipe Imtihan pour toute question, support technique, ou demande d'abonnement école. Réponse sous 24h.",
   alternates: { canonical: "/contact" },
+  openGraph: {
+    title: "Contacter Imtihan — Support & Questions",
+    description: "Une question sur Imtihan ? Contactez-nous via le formulaire ou directement par email. Support disponible en français, anglais et arabe.",
+    url: "https://www.imtihan.live/contact",
+  },
 };
 
 const TOPICS = [
