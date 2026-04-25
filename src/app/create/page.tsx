@@ -39,6 +39,7 @@ export default function CreatePage() {
   const [uploadedFile, setUploadedFile] = useState<UploadedFile | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analyzeStep, setAnalyzeStep] = useState(0);
+  const [injectingData, setInjectingData] = useState(false);
   const stepTimer = useRef<ReturnType<typeof setInterval> | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -163,6 +164,22 @@ export default function CreatePage() {
     setActiveExample(i);
   }
 
+  async function injectRealData(type: "physics" | "math") {
+    setInjectingData(true);
+    try {
+      const res = await fetch(`/api/tools/context?type=${type}`);
+      const data = await res.json();
+      if (data.success) {
+        const prefix = type === "physics"
+          ? "\n\nReal-world context (live ISS data): "
+          : "\n\nReal-world context: ";
+        setDescription((prev) => prev + prefix + data.data.context);
+        setActiveExample(null);
+      }
+    } catch { /* silent — non-critical */ }
+    finally { setInjectingData(false); }
+  }
+
   return (
     <div className="min-h-screen bg-[var(--bg)] flex flex-col">
 
@@ -283,6 +300,30 @@ export default function CreatePage() {
                 </button>
               ))}
             </div>
+          </div>
+
+          {/* Real-data inject (ISS + Numbers API) */}
+          <div className="mb-6">
+            <p className="text-xs text-[var(--text-tertiary)] mb-2.5">Inject live real-world data:</p>
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={() => injectRealData("physics")}
+                disabled={injectingData}
+                className="text-xs px-3 py-1.5 rounded-full border border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)] hover:text-[var(--accent)] hover:bg-[var(--accent-light)] transition-all duration-200 disabled:opacity-50"
+              >
+                🛸 {injectingData ? "Fetching…" : "Live ISS data (physics)"}
+              </button>
+              <button
+                onClick={() => injectRealData("math")}
+                disabled={injectingData}
+                className="text-xs px-3 py-1.5 rounded-full border border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)] hover:text-[var(--accent)] hover:bg-[var(--accent-light)] transition-all duration-200 disabled:opacity-50"
+              >
+                🔢 {injectingData ? "Fetching…" : "Number fact (math)"}
+              </button>
+            </div>
+            <p className="text-[10px] text-[var(--text-tertiary)] mt-1.5">
+              Appends live ISS position data or a mathematical number fact to ground your exercise in reality.
+            </p>
           </div>
 
           {/* Saved class profiles */}

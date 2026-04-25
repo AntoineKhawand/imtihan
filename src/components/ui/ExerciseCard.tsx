@@ -20,6 +20,7 @@ import {
   ClipboardList,
   Loader2,
   Table,
+  Calculator,
 } from "lucide-react";
 
 const DIFFICULTY_CONFIG = {
@@ -85,6 +86,35 @@ export function ExerciseCard({
   const [rubricLoading, setRubricLoading] = useState(false);
   const [rubricError, setRubricError] = useState<string | null>(null);
   const [showRubric, setShowRubric] = useState(false);
+
+  // Math Verifier (Newton API)
+  const [showMathTool, setShowMathTool] = useState(false);
+  const [mathOp, setMathOp] = useState("simplify");
+  const [mathExpr, setMathExpr] = useState("");
+  const [mathResult, setMathResult] = useState<string | null>(null);
+  const [mathLoading, setMathLoading] = useState(false);
+  const [mathError, setMathError] = useState<string | null>(null);
+
+  async function computeMath() {
+    if (!mathExpr.trim()) return;
+    setMathLoading(true);
+    setMathResult(null);
+    setMathError(null);
+    try {
+      const res = await fetch("/api/tools/math", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ operation: mathOp, expression: mathExpr.trim() }),
+      });
+      const data = await res.json();
+      if (data.success) setMathResult(data.result);
+      else setMathError(data.error ?? "Computation failed.");
+    } catch {
+      setMathError("Network error.");
+    } finally {
+      setMathLoading(false);
+    }
+  }
 
   async function loadRubric() {
     if (rubric) { setShowRubric((v) => !v); return; }
@@ -224,6 +254,14 @@ export function ExerciseCard({
                     </button>
                   </>
                 )}
+                <div className="my-1 border-t border-[var(--border)]" />
+                <button
+                  onClick={() => { setShowMathTool((v) => !v); setShowActions(false); }}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-[var(--text-secondary)] hover:text-[var(--text)] hover:bg-[var(--bg-subtle)] rounded-lg transition-colors"
+                >
+                  <Calculator size={13} />
+                  Math Verifier
+                </button>
                 {onSaveToBank && (
                   <button
                     onClick={() => { onSaveToBank(exercise); setShowActions(false); }}
@@ -259,6 +297,53 @@ export function ExerciseCard({
           dangerouslySetInnerHTML={{ __html: renderContent(exercise.statement) }}
         />
 
+
+        {/* Math Verifier (Newton API) */}
+        {showMathTool && (
+          <div className="mt-4 rounded-xl border border-[var(--accent)]/30 bg-[var(--accent-light)] p-4 space-y-3">
+            <p className="text-xs font-semibold text-[var(--accent)] flex items-center gap-1.5">
+              <Calculator size={12} /> Math Verifier — powered by Newton API
+            </p>
+            <div className="flex gap-2 flex-wrap">
+              <select
+                value={mathOp}
+                onChange={(e) => { setMathOp(e.target.value); setMathResult(null); }}
+                className="h-9 px-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] text-xs text-[var(--text)] focus:outline-none focus:border-[var(--accent)]"
+              >
+                {["simplify","factor","derive","integrate","zeroes","tangent","area","cos","sin","tan","log","abs"].map((op) => (
+                  <option key={op} value={op}>{op.charAt(0).toUpperCase() + op.slice(1)}</option>
+                ))}
+              </select>
+              <input
+                type="text"
+                value={mathExpr}
+                onChange={(e) => { setMathExpr(e.target.value); setMathResult(null); }}
+                onKeyDown={(e) => e.key === "Enter" && computeMath()}
+                placeholder="e.g. x^2+2x  or  x^3-6x^2+9x"
+                className="flex-1 min-w-[160px] h-9 px-3 rounded-lg border border-[var(--border)] bg-[var(--surface)] text-xs text-[var(--text)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]"
+              />
+              <button
+                onClick={computeMath}
+                disabled={!mathExpr.trim() || mathLoading}
+                className="h-9 px-3 rounded-lg bg-[var(--accent)] text-white text-xs font-semibold hover:bg-[var(--accent)]/90 disabled:opacity-50 transition-colors"
+              >
+                {mathLoading ? "…" : "Compute"}
+              </button>
+            </div>
+            {mathResult !== null && (
+              <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white border border-[var(--border)]">
+                <span className="text-[10px] text-[var(--text-tertiary)] uppercase tracking-wider">Result</span>
+                <span className="text-sm font-mono font-semibold text-[var(--text)]">{mathResult}</span>
+              </div>
+            )}
+            {mathError && (
+              <p className="text-[11px] text-red-600">{mathError}</p>
+            )}
+            <p className="text-[10px] text-[var(--text-tertiary)]">
+              Supports: simplify, factor, derive, integrate, zeroes, trig, log — uses Newton open-source API
+            </p>
+          </div>
+        )}
 
         {/* Sub-questions */}
         {exercise.subQuestions && exercise.subQuestions.length > 0 && (
