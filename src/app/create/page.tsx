@@ -42,6 +42,39 @@ export default function CreatePage() {
   const stepTimer = useRef<ReturnType<typeof setInterval> | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  // arXiv research paper search
+  const [arxivQuery, setArxivQuery] = useState("");
+  const [arxivResults, setArxivResults] = useState<Array<{ title: string; abstract: string; authors: string[]; published: string; url: string }>>([]);
+  const [arxivLoading, setArxivLoading] = useState(false);
+  const [arxivError, setArxivError] = useState<string | null>(null);
+
+  async function searchArxiv() {
+    if (!arxivQuery.trim()) return;
+    setArxivLoading(true);
+    setArxivError(null);
+    setArxivResults([]);
+    try {
+      const res = await fetch(`/api/tools/arxiv?q=${encodeURIComponent(arxivQuery)}&max=3`);
+      const data = await res.json();
+      if (data.success) setArxivResults(data.papers);
+      else setArxivError(data.error ?? "Search failed.");
+    } catch {
+      setArxivError("Network error.");
+    } finally {
+      setArxivLoading(false);
+    }
+  }
+
+  function injectPaper(paper: { title: string; abstract: string; authors: string[]; published: string }) {
+    const citation = paper.authors.length > 0
+      ? `${paper.authors[0]} et al. (${paper.published})`
+      : `arXiv (${paper.published})`;
+    const context = `\n\nResearch context [${citation}, "${paper.title}"]: ${paper.abstract.slice(0, 400)}${paper.abstract.length > 400 ? "…" : ""}`;
+    setDescription((prev) => prev + context);
+    setArxivResults([]);
+    setArxivQuery("");
+  }
+
   const ANALYZE_STEPS = [
     "Reading your description…",
     "Detecting curriculum & level…",
@@ -360,6 +393,65 @@ export default function CreatePage() {
               </button>
             </div>
           )}
+
+          {/* arXiv Research Paper Search */}
+          <div className="mb-6">
+            <div className="flex items-center gap-2 mb-2">
+              <BookOpen size={13} className="text-[var(--text-tertiary)]" />
+              <p className="text-sm font-medium text-[var(--text)]">Find a research paper</p>
+              <span className="text-[10px] text-[var(--text-tertiary)] px-2 py-0.5 rounded-full border border-[var(--border)]">Optional · University & IB</span>
+            </div>
+            <p className="text-xs text-[var(--text-secondary)] mb-3 leading-relaxed">
+              Search arXiv for a real paper abstract to ground your exercise in current research.
+            </p>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={arxivQuery}
+                onChange={(e) => setArxivQuery(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && searchArxiv()}
+                placeholder="e.g. quantum entanglement, neural networks, thermodynamics..."
+                className="flex-1 h-10 px-3.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-sm text-[var(--text)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] transition-colors"
+              />
+              <button
+                onClick={searchArxiv}
+                disabled={!arxivQuery.trim() || arxivLoading}
+                className="h-10 px-4 rounded-xl bg-[var(--accent)] text-white text-sm font-medium hover:bg-[var(--accent)]/90 disabled:opacity-50 transition-colors flex-shrink-0"
+              >
+                {arxivLoading ? "…" : "Search"}
+              </button>
+            </div>
+
+            {arxivError && (
+              <p className="text-xs text-red-600 mt-2">{arxivError}</p>
+            )}
+
+            {arxivResults.length > 0 && (
+              <div className="mt-3 space-y-2">
+                {arxivResults.map((paper, i) => (
+                  <div key={i} className="card p-4 space-y-2 hover:border-[var(--accent)]/40 transition-colors">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-semibold text-[var(--text)] leading-snug line-clamp-2">{paper.title}</p>
+                        <p className="text-[10px] text-[var(--text-tertiary)] mt-0.5">
+                          {paper.authors.slice(0, 2).join(", ")}{paper.authors.length > 2 ? " et al." : ""} · {paper.published}
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => injectPaper(paper)}
+                        className="flex-shrink-0 text-[10px] font-semibold px-2.5 py-1.5 rounded-lg bg-[var(--accent)] text-white hover:bg-[var(--accent)]/90 transition-colors whitespace-nowrap"
+                      >
+                        Use context
+                      </button>
+                    </div>
+                    <p className="text-[11px] text-[var(--text-secondary)] leading-relaxed line-clamp-3">
+                      {paper.abstract}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
 
           {/* Upload */}
           <div className="mb-8">

@@ -69,11 +69,26 @@ export function ExerciseCard({
   const [showActions, setShowActions] = useState(false);
 
   const [showMathTool, setShowMathTool] = useState(false);
+  const [mathTab, setMathTab] = useState<"expr" | "stats" | "chem">("expr");
+
+  // Expression checker (symbolic)
   const [mathOp, setMathOp] = useState("simplify");
   const [mathExpr, setMathExpr] = useState("");
   const [mathResult, setMathResult] = useState<string | null>(null);
   const [mathLoading, setMathLoading] = useState(false);
   const [mathError, setMathError] = useState<string | null>(null);
+
+  // Statistics checker (Math.js)
+  const [statsInput, setStatsInput] = useState("");
+  const [statsResult, setStatsResult] = useState<Record<string, string> | null>(null);
+  const [statsLoading, setStatsLoading] = useState(false);
+  const [statsError, setStatsError] = useState<string | null>(null);
+
+  // Chemistry checker
+  const [chemFormula, setChemFormula] = useState("");
+  const [chemResult, setChemResult] = useState<{ weight: number; unit: string; elements: Record<string, number> } | null>(null);
+  const [chemLoading, setChemLoading] = useState(false);
+  const [chemError, setChemError] = useState<string | null>(null);
 
   async function computeMath() {
     if (!mathExpr.trim()) return;
@@ -96,6 +111,52 @@ export function ExerciseCard({
     }
   }
 
+  async function computeStats() {
+    if (!statsInput.trim()) return;
+    setStatsLoading(true);
+    setStatsResult(null);
+    setStatsError(null);
+    try {
+      const numbers = statsInput
+        .split(/[,;\s]+/)
+        .map((s) => parseFloat(s.trim()))
+        .filter((n) => !isNaN(n));
+      if (numbers.length === 0) { setStatsError("Enter valid numbers."); setStatsLoading(false); return; }
+      const res = await fetch("/api/tools/stats", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ numbers }),
+      });
+      const data = await res.json();
+      if (data.success) setStatsResult(data.results);
+      else setStatsError(data.error ?? "Computation failed.");
+    } catch {
+      setStatsError("Network error.");
+    } finally {
+      setStatsLoading(false);
+    }
+  }
+
+  async function computeChem() {
+    if (!chemFormula.trim()) return;
+    setChemLoading(true);
+    setChemResult(null);
+    setChemError(null);
+    try {
+      const res = await fetch("/api/tools/chemistry", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ formula: chemFormula.trim() }),
+      });
+      const data = await res.json();
+      if (data.success) setChemResult({ weight: data.weight, unit: data.unit, elements: data.elements });
+      else setChemError(data.error ?? "Invalid formula.");
+    } catch {
+      setChemError("Network error.");
+    } finally {
+      setChemLoading(false);
+    }
+  }
 
   const difficulty = DIFFICULTY_CONFIG[exercise.difficulty];
   const exerciseLabel = language === "french" ? "Exercice" : "Exercise";
@@ -307,11 +368,11 @@ export function ExerciseCard({
               <div className="flex items-center justify-between mb-2">
                 <p className="text-xs font-semibold text-[var(--accent)] uppercase tracking-wider">Answer</p>
                 <button
-                  onClick={() => { setShowMathTool((v) => !v); setMathResult(null); setMathError(null); }}
+                  onClick={() => { setShowMathTool((v) => !v); setMathResult(null); setMathError(null); setStatsResult(null); setStatsError(null); }}
                   className="inline-flex items-center gap-1 text-[10px] font-medium text-[var(--text-tertiary)] hover:text-[var(--accent)] transition-colors"
                 >
                   <Calculator size={11} />
-                  {showMathTool ? "Hide checker" : "Check an expression"}
+                  {showMathTool ? "Hide checker" : "Check answer"}
                 </button>
               </div>
               <div
@@ -319,42 +380,130 @@ export function ExerciseCard({
                 dangerouslySetInnerHTML={{ __html: renderContent(exercise.solution.finalAnswer) }}
               />
 
-              {/* Inline expression checker */}
+              {/* Answer checker — Expression / Statistics / Chemistry tabs */}
               {showMathTool && (
-                <div className="mt-3 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-3 space-y-2">
-                  <div className="flex gap-2 flex-wrap">
-                    <select
-                      value={mathOp}
-                      onChange={(e) => { setMathOp(e.target.value); setMathResult(null); }}
-                      className="h-8 px-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-xs text-[var(--text)] focus:outline-none focus:border-[var(--accent)]"
-                    >
-                      {["simplify","factor","derive","integrate","zeroes","tangent","area","cos","sin","tan","log","abs"].map((op) => (
-                        <option key={op} value={op}>{op.charAt(0).toUpperCase() + op.slice(1)}</option>
-                      ))}
-                    </select>
-                    <input
-                      type="text"
-                      value={mathExpr}
-                      onChange={(e) => { setMathExpr(e.target.value); setMathResult(null); }}
-                      onKeyDown={(e) => e.key === "Enter" && computeMath()}
-                      placeholder="e.g. x^3-6x^2+9x"
-                      className="flex-1 min-w-[140px] h-8 px-3 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-xs text-[var(--text)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]"
-                    />
-                    <button
-                      onClick={computeMath}
-                      disabled={!mathExpr.trim() || mathLoading}
-                      className="h-8 px-3 rounded-lg bg-[var(--accent)] text-white text-xs font-semibold hover:bg-[var(--accent)]/90 disabled:opacity-50 transition-colors"
-                    >
-                      {mathLoading ? "…" : "→"}
-                    </button>
+                <div className="mt-3 rounded-xl border border-[var(--border)] bg-[var(--surface)] overflow-hidden">
+                  {/* Tab bar */}
+                  <div className="flex border-b border-[var(--border)]">
+                    {([
+                      { id: "expr", label: "Expression" },
+                      { id: "stats", label: "Statistics" },
+                      { id: "chem", label: "Chemistry" },
+                    ] as const).map(({ id, label }) => (
+                      <button
+                        key={id}
+                        onClick={() => {
+                          setMathTab(id);
+                          setMathResult(null); setMathError(null);
+                          setStatsResult(null); setStatsError(null);
+                          setChemResult(null); setChemError(null);
+                        }}
+                        className={`flex-1 py-2 text-[10px] font-bold uppercase tracking-widest transition-colors ${
+                          mathTab === id
+                            ? "bg-[var(--accent-light)] text-[var(--accent)] border-b-2 border-[var(--accent)]"
+                            : "text-[var(--text-tertiary)] hover:text-[var(--text)]"
+                        }`}
+                      >
+                        {label}
+                      </button>
+                    ))}
                   </div>
-                  {mathResult !== null && (
-                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[var(--accent-light)] border border-[var(--accent)]/20">
-                      <span className="text-[10px] text-[var(--accent)] font-semibold uppercase tracking-wider">Result</span>
-                      <span className="text-sm font-mono font-semibold text-[var(--text)]">{mathResult}</span>
-                    </div>
-                  )}
-                  {mathError && <p className="text-[11px] text-red-600">{mathError}</p>}
+
+                  <div className="p-3 space-y-2">
+                    {mathTab === "expr" && (
+                      <>
+                        <div className="flex gap-2 flex-wrap">
+                          <select value={mathOp} onChange={(e) => { setMathOp(e.target.value); setMathResult(null); }}
+                            className="h-8 px-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-xs text-[var(--text)] focus:outline-none focus:border-[var(--accent)]">
+                            {["simplify","factor","derive","integrate","zeroes","tangent","area","cos","sin","tan","log","abs"].map((op) => (
+                              <option key={op} value={op}>{op.charAt(0).toUpperCase() + op.slice(1)}</option>
+                            ))}
+                          </select>
+                          <input type="text" value={mathExpr}
+                            onChange={(e) => { setMathExpr(e.target.value); setMathResult(null); }}
+                            onKeyDown={(e) => e.key === "Enter" && computeMath()}
+                            placeholder="e.g. x^3-6x^2+9x"
+                            className="flex-1 min-w-[120px] h-8 px-3 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-xs text-[var(--text)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]"
+                          />
+                          <button onClick={computeMath} disabled={!mathExpr.trim() || mathLoading}
+                            className="h-8 px-3 rounded-lg bg-[var(--accent)] text-white text-xs font-semibold hover:bg-[var(--accent)]/90 disabled:opacity-50 transition-colors">
+                            {mathLoading ? "…" : "→"}
+                          </button>
+                        </div>
+                        {mathResult !== null && (
+                          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[var(--accent-light)] border border-[var(--accent)]/20">
+                            <span className="text-[10px] text-[var(--accent)] font-semibold uppercase tracking-wider">Result</span>
+                            <span className="text-sm font-mono font-semibold text-[var(--text)]">{mathResult}</span>
+                          </div>
+                        )}
+                        {mathError && <p className="text-[11px] text-red-600">{mathError}</p>}
+                      </>
+                    )}
+
+                    {mathTab === "stats" && (
+                      <>
+                        <div className="flex gap-2">
+                          <input type="text" value={statsInput}
+                            onChange={(e) => { setStatsInput(e.target.value); setStatsResult(null); }}
+                            onKeyDown={(e) => e.key === "Enter" && computeStats()}
+                            placeholder="e.g. 12, 15, 18, 21, 24"
+                            className="flex-1 h-8 px-3 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-xs text-[var(--text)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]"
+                          />
+                          <button onClick={computeStats} disabled={!statsInput.trim() || statsLoading}
+                            className="h-8 px-3 rounded-lg bg-[var(--accent)] text-white text-xs font-semibold hover:bg-[var(--accent)]/90 disabled:opacity-50 transition-colors">
+                            {statsLoading ? "…" : "→"}
+                          </button>
+                        </div>
+                        {statsResult && (
+                          <div className="grid grid-cols-2 gap-1.5">
+                            {Object.entries(statsResult).map(([key, val]) => (
+                              <div key={key} className="flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-[var(--bg-subtle)] border border-[var(--border)]">
+                                <span className="text-[10px] text-[var(--text-tertiary)] capitalize font-medium">{key === "std" ? "Std dev" : key}</span>
+                                <span className="text-xs font-mono font-bold text-[var(--text)]">{val}</span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                        {statsError && <p className="text-[11px] text-red-600">{statsError}</p>}
+                        <p className="text-[10px] text-[var(--text-tertiary)]">Separate numbers with commas, spaces, or semicolons.</p>
+                      </>
+                    )}
+
+                    {mathTab === "chem" && (
+                      <>
+                        <div className="flex gap-2">
+                          <input type="text" value={chemFormula}
+                            onChange={(e) => { setChemFormula(e.target.value); setChemResult(null); }}
+                            onKeyDown={(e) => e.key === "Enter" && computeChem()}
+                            placeholder="e.g. H2O, NaCl, C6H12O6, C2H5OH"
+                            className="flex-1 h-8 px-3 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-xs font-mono text-[var(--text)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]"
+                          />
+                          <button onClick={computeChem} disabled={!chemFormula.trim() || chemLoading}
+                            className="h-8 px-3 rounded-lg bg-[var(--accent)] text-white text-xs font-semibold hover:bg-[var(--accent)]/90 disabled:opacity-50 transition-colors">
+                            {chemLoading ? "…" : "→"}
+                          </button>
+                        </div>
+                        {chemResult && (
+                          <div className="space-y-2">
+                            <div className="flex items-center gap-3 px-3 py-2 rounded-lg bg-[var(--accent-light)] border border-[var(--accent)]/20">
+                              <span className="text-[10px] text-[var(--accent)] font-semibold uppercase tracking-wider">Molar mass</span>
+                              <span className="text-sm font-mono font-bold text-[var(--text)]">{chemResult.weight} {chemResult.unit}</span>
+                            </div>
+                            <div className="grid grid-cols-3 gap-1.5">
+                              {Object.entries(chemResult.elements).map(([el, count]) => (
+                                <div key={el} className="flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-[var(--bg-subtle)] border border-[var(--border)]">
+                                  <span className="text-xs font-bold text-[var(--text)]">{el}</span>
+                                  <span className="text-[10px] text-[var(--text-tertiary)] font-medium">×{count}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                        {chemError && <p className="text-[11px] text-red-600">{chemError}</p>}
+                        <p className="text-[10px] text-[var(--text-tertiary)]">Standard element symbols. Subscripts as numbers (H2O, not H₂O).</p>
+                      </>
+                    )}
+                  </div>
                 </div>
               )}
             </div>
