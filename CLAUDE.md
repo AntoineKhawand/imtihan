@@ -8,7 +8,7 @@
 
 **Imtihan** (امتحان — "exam" in Arabic) is an AI-powered exam generator for teachers in Lebanon, covering school curricula (Bac Libanais, Bac Français, IB) and university courses. Teachers describe what they need, optionally upload course materials, and receive a polished exam + corrigé in Word and PDF formats.
 
-**Owner:** Antoine — solo founder, based in Bsabba, Lebanon.
+**Owner:** Founder — solo founder, based in Bsabba, Lebanon.
 **Status:** MVP in development. Not yet launched.
 **Target launch:** Q3 2026.
 
@@ -62,7 +62,7 @@
 | Components | Custom — no shadcn | Editorial aesthetic, no generic look |
 | Fonts | Fraunces (display serif) + Geist (sans) | Distinctive, not the usual Inter |
 | Animation | Framer Motion | For stage transitions and reveals |
-| Auth | Firebase Auth | Same stack as Antoine's other app (Ruvo) |
+| Auth | Firebase Auth | Standard cloud stack |
 | Database | Firestore | Teacher accounts, saved exams, exam library |
 | Storage | Firebase Storage | Uploaded source documents, generated files |
 | AI | Google Gemini 1.5 Flash | Best quality/cost for exam generation + vision |
@@ -71,7 +71,7 @@
 | Payments | Stripe (v1.1+) | Monthly subscription, USD |
 | Hosting | Vercel | Next.js native |
 
-**Do not swap these without updating this file and getting Antoine's approval.**
+**Do not swap these without updating this file and getting approval.**
 
 ## 4. Directory Conventions
 
@@ -138,7 +138,7 @@ users/{uid}/exams/{examId}
 
 **Security rules:** A user can only read/write their own subcollection. Server-side (Admin SDK) is the only path to cross-user operations.
 
-## 8. Open Decisions (Ask Antoine Before Choosing)
+## 8. Open Decisions (Ask Before Choosing)
 
 - [x] **Domain name** — imtihan.live (purchased)
 - [ ] **Accent color final** — currently emerald `#1a5e3f`. Could also be terracotta.
@@ -185,7 +185,7 @@ If a request implies scope creep, flag it and point back to this section.
 
 - Unit tests for prompt builders (deterministic string output).
 - Integration tests for the generate endpoint using recorded Gemini responses.
-- E2E with Playwright for the full workflow — same pattern Antoine used for Ruvo.
+- E2E with Playwright for the full workflow — same pattern as previous apps.
 
 ## 12. Known Gotchas
 
@@ -201,7 +201,7 @@ If a request implies scope creep, flag it and point back to this section.
 2. Check `ARCHITECTURE.md` for deeper technical rationale.
 3. Check `ROADMAP.md` for what's planned vs. done.
 4. Check `BUGS.md` for known issues before reporting a new one.
-5. Ask Antoine. Don't silently rewrite core decisions.
+5. Ask for approval. Don't silently rewrite core decisions.
 
 ## 14. Definition of Done for Any Feature
 

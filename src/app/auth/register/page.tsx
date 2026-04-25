@@ -184,7 +184,7 @@ function RegisterForm() {
           type="text"
           value={displayName}
           onChange={(e) => setDisplayName(e.target.value)}
-          placeholder="Antoine Khoury"
+          placeholder="Teacher Name"
         />
         <Input
           label="Email"

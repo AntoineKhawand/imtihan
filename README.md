@@ -115,7 +115,7 @@ See `tailwind.config.ts` for design tokens.
 
 ## Team
 
-- **Antoine** — Founder, product direction
+- **Founder** — Product direction
 - **Claude** — AI development assistant (read `CLAUDE.md` before starting any session)
 
 ## License

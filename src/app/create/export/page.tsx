@@ -273,7 +273,7 @@ export default function ExportPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Input label="School name" placeholder="École Évangélique du Liban" value={schoolName} onChange={(e) => setSchoolName(e.target.value)} />
               <Input label="Class" placeholder="Terminale S — Section A" value={className} onChange={(e) => setClassName(e.target.value)} />
-              <Input label="Teacher name" placeholder="M. Antoine Khoury" value={teacherName} onChange={(e) => setTeacherName(e.target.value)} />
+              <Input label="Teacher name" placeholder="M. Teacher Name" value={teacherName} onChange={(e) => setTeacherName(e.target.value)} />
               <Input label="Date" type="date" value={examDate} onChange={(e) => setExamDate(e.target.value)} />
             </div>
           </div>

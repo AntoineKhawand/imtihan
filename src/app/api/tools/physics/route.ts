@@ -24,7 +24,7 @@ function displayValue(raw: string): string {
     .replace(/\s*e([+-]\d+)/i, (_, exp) => {
       const sign = exp[0] === "-" ? "⁻" : "";
       const digits = exp.slice(1).replace(/^0+/, "") || "0";
-      const sup = digits.split("").map((d) => "⁰¹²³⁴⁵⁶⁷⁸⁹"[parseInt(d)]).join("");
+      const sup = digits.split("").map((d: string) => "⁰¹²³⁴⁵⁶⁷⁸⁹"[parseInt(d)]).join("");
       return ` × 10${sign}${sup}`;
     });
 }

@@ -203,7 +203,7 @@ export default function UpgradePage() {
               <div className="border border-[var(--border)] rounded-2xl p-6 bg-[var(--surface)] space-y-4">
                 <h3 className="font-semibold text-[var(--text)] flex items-center gap-2"><User size={15} className="text-[var(--text-tertiary)]" /> Customer Information</h3>
                 <Field label="Full Name" required>
-                  <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="Antoine Khoury" className={inp} required />
+                  <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="Teacher Name" className={inp} required />
                 </Field>
                 <Field label="Email Address" required>
                   <div className="relative">

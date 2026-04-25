@@ -30,7 +30,7 @@ export function shouldShowRenewalWarning(user: UserProfile | null | undefined): 
 }
 
 /**
- * Returns a pre-filled WhatsApp link to Antoine's number.
+ * Returns a pre-filled WhatsApp link to the support number.
  * Set NEXT_PUBLIC_WHATSAPP_NUMBER in .env.local (digits only, e.g. 96171234567).
  */
 export function getWhatsAppRenewalLink(email: string): string {

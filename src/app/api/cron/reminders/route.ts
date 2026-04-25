@@ -21,7 +21,7 @@ function buildReminderEmail(
 
   // ── Customize the pre-filled WhatsApp message below ──────────────────────
   const whatsappMsg = encodeURIComponent(
-    `Hello Antoine! I'd like to renew my Imtihan Pro subscription.\n` +
+    `Hello! I'd like to renew my Imtihan Pro subscription.\n` +
     `📧 Account email: ${email}\n` +
     `📅 Expires on: ${expiryDate}\n\n` +
     `I'll send you the Whish receipt right after payment — please activate my account once confirmed. Thank you!`
@@ -62,7 +62,7 @@ function buildReminderEmail(
       <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:16px;margin-bottom:20px;font-size:13px;color:#374151;line-height:1.7">
         <strong style="color:#111">How to renew (2 steps):</strong><br/>
         1. Click the button below — WhatsApp opens with a pre-filled message.<br/>
-        2. Pay via <strong>Whish Money</strong> and send Antoine the receipt — your account is activated instantly.
+        2. Pay via <strong>Whish Money</strong> and send us the receipt — your account is activated instantly.
       </div>
 
       <!-- WhatsApp CTA — main button -->

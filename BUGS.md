@@ -50,7 +50,7 @@ These are intentional constraints in MVP — document here to avoid re-opening a
 
 ### Free tier: 2 exams lifetime (not monthly)
 **Status:** Product decision
-**Details:** Antoine confirmed: 2 exams total in the free tier to drive conversion, not 3/month. This may change based on conversion data.
+**Details:** Founder confirmed: 2 exams total in the free tier to drive conversion, not 3/month. This may change based on conversion data.
 
 ---
 

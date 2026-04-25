@@ -64,7 +64,7 @@ export default function ContactForm() {
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="Antoine Khoury"
+            placeholder="Teacher Name"
             className={inputCls}
             required
           />
@@ -74,7 +74,7 @@ export default function ContactForm() {
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="antoine@school.edu.lb"
+            placeholder="teacher@school.edu.lb"
             className={inputCls}
             required
           />

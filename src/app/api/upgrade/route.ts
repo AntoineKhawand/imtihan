@@ -58,8 +58,8 @@ function buildConfirmationEmail(data: z.infer<typeof BodySchema>): { subject: st
 
   // ── CUSTOMIZE PAYMENT INSTRUCTIONS BELOW ──────────────────────────────────
   const paymentInstructions: Record<string, string> = {
-    whish: "Send via <strong>Whish Money</strong> to <strong>+961 70 542 238</strong> (Antoine Khawand). Use your email as the reference.",
-    omt:   "Send via <strong>OMT</strong> to <strong>+961 70 542 238</strong> (Antoine Khawand). Use your email as the reference.",
+    whish: "Send via <strong>Whish Money</strong> to <strong>+961 70 542 238</strong>. Use your email as the reference.",
+    omt:   "Send via <strong>OMT</strong> to <strong>+961 70 542 238</strong>. Use your email as the reference.",
     other: "Reply to this email and we'll share the best option for you.",
   };
   // ── END CUSTOMIZATION ──────────────────────────────────────────────────────
