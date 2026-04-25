@@ -28,7 +28,7 @@ export const ScientificService = {
    */
   convert: (value: number | string, fromUnit: string, toUnit: string): number | null => {
     try {
-      return math.unit(value, fromUnit).toNumber(toUnit);
+      return math.unit(Number(value), fromUnit).toNumber(toUnit);
     } catch (error) {
       console.error("Unit conversion failed:", error);
       return null;
