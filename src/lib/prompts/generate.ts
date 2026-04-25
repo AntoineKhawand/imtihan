@@ -468,7 +468,7 @@ You have been given a document uploaded by the teacher (textbook chapter, past e
 6. NOTATION & SPACING (CRITICAL):
    - ALWAYS put a space between a label and its object (e.g., write "plan $P$", "point $A$", "vecteur $\vec{n}$"). NEVER write "planP" or "pointA".
    - VECTORS: Use KaTeX $\vec{v}$ or $\overrightarrow{AB}$. NEVER use text-based arrows like "->".
-   - SYSTEMS OF EQUATIONS: Use KaTeX `\begin{cases} ... \end{cases}` for all parametric equations or systems.
+   - SYSTEMS OF EQUATIONS: Use KaTeX \\begin{cases} ... \\end{cases} for all parametric equations or systems.
    - COORDINATES: Use standard notation $(x; y; z)$ or $A(x; y; z)$.
 7. VISUALS — Use the following for visual elements:
    a) TABLES: Use Markdown table syntax with pipes:
