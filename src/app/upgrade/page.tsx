@@ -6,6 +6,7 @@ import {
   Check, MessageCircle, Zap, ShieldCheck, ArrowRight,
   ArrowLeft, Clock, Star, Mail, Phone, User, CheckCircle2,
 } from "lucide-react";
+import Image from "next/image";
 import { useAuth } from "@/contexts/AuthContext";
 import { Logo } from "@/components/ui/Logo";
 
@@ -47,7 +48,7 @@ export default function UpgradePage() {
   const price     = plan === "yearly" ? YEARLY_PER_MO : MONTHLY_PRICE;
   const total     = plan === "yearly" ? YEARLY_TOTAL   : MONTHLY_PRICE;
   const planLabel = plan === "yearly" ? `Yearly — $${YEARLY_TOTAL}/year` : `Monthly — $${MONTHLY_PRICE}/month`;
-  const isReady   = name.trim().length > 0 && email.includes("@") && phone.trim().length >= 5;
+  const isReady   = name.trim().length > 0 && email.includes("@");
 
   async function handleSubmit(e: React.SyntheticEvent) {
     e.preventDefault();
@@ -157,8 +158,8 @@ export default function UpgradePage() {
               </div>
 
               <div className="flex items-start gap-3 py-4 border-y border-[var(--border)]">
-                <div className="w-11 h-11 rounded-xl bg-[var(--accent)] flex items-center justify-center flex-shrink-0">
-                  <span className="text-white font-serif">إ</span>
+                <div className="w-11 h-11 rounded-xl overflow-hidden flex-shrink-0 border border-[var(--border)]">
+                  <Image src="/Imtihan-logo.png" alt="Imtihan" width={44} height={44} className="object-cover w-full h-full" />
                 </div>
                 <div className="flex-1">
                   <p className="font-semibold text-[var(--text)] text-sm">Imtihan Pro</p>
@@ -210,12 +211,12 @@ export default function UpgradePage() {
                     <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="you@school.edu.lb" className={`${inp} pl-9`} required />
                   </div>
                 </Field>
-                <Field label="Phone Number" required>
+                <Field label="Phone Number (optional)">
                   <div className="flex gap-2">
                     <div className="flex items-center gap-1.5 h-10 px-3 border border-[var(--border)] rounded-xl bg-[var(--bg-subtle)] text-sm text-[var(--text-secondary)] flex-shrink-0 select-none">
                       <Phone size={12} /> +961
                     </div>
-                    <input type="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="70 123 456" className={`${inp} flex-1`} required />
+                    <input type="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="70 123 456" className={`${inp} flex-1`} />
                   </div>
                 </Field>
               </div>

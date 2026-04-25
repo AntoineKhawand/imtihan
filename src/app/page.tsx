@@ -3,14 +3,14 @@ import { cookies } from "next/headers";
 import { SchemaOrg } from "@/components/SchemaOrg";
 
 export const metadata: Metadata = {
-  title: "Imtihan — Générateur d'examens IA pour enseignants au Liban",
-  description: "Créez des examens alignés Bac Libanais, Bac Français, IB et Université en quelques secondes. Corrigé complet inclus. 2 examens gratuits, sans carte bancaire.",
+  title: "Imtihan — AI Exam Generator for Teachers in Lebanon",
+  description: "Create curriculum-aligned exams for Bac Libanais, Bac Français, IB, and University in seconds. Full answer key included. 2 free exams, no credit card required.",
   alternates: { canonical: "/" },
   openGraph: {
-    title: "Imtihan — Générateur d'examens IA pour enseignants au Liban",
-    description: "Décrivez votre examen en français, anglais ou arabe. Imtihan génère les questions et le corrigé en quelques secondes. Bac Libanais · Bac Français · IB · Université.",
+    title: "Imtihan — AI Exam Generator for Teachers in Lebanon",
+    description: "Describe your exam in French, English, or Arabic. Imtihan generates questions and a full corrigé in seconds. Bac Libanais · Bac Français · IB · University.",
     url: "https://www.imtihan.live",
-    images: [{ url: "/opengraph-image", width: 1200, height: 630, alt: "Imtihan — Générateur d'examens IA" }],
+    images: [{ url: "/opengraph-image", width: 1200, height: 630, alt: "Imtihan — AI Exam Generator" }],
   },
 };
 import Link from "next/link";
