@@ -553,7 +553,7 @@ JSON schema for each exercise:
 // User prompt builder
 // ---------------------------------------------------------------------------
 
-export function buildGenerateUserPrompt(context: ExamContext): string {
+export function buildGenerateUserPrompt(context: ExamContext, extraContext?: string): string {
   const difficultyBreakdown = `
 - Easy:   ${Math.round(context.difficultyMix.easy   * context.exerciseCount)} exercise(s) (${Math.round(context.difficultyMix.easy   * 100)}%)
 - Medium: ${Math.round(context.difficultyMix.medium * context.exerciseCount)} exercise(s) (${Math.round(context.difficultyMix.medium * 100)}%)
@@ -572,6 +572,7 @@ Difficulty : ${difficultyBreakdown}
 ${context.teacherNotes ? `\nTeacher notes:\n${context.teacherNotes}` : ""}
 ${context.layoutPreferences ? `\nLayout Preferences (MIMIC THIS STYLE):\n${context.layoutPreferences}` : ""}
 ${context.visualPreference ? `\nVisual & Graph Requirements:\n${context.visualPreference}` : ""}
+${extraContext ? `\nDOMAIN DATA CONTEXT:\n${extraContext}` : ""}
 
 Return the JSON array now.`;
 }

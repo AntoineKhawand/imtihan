@@ -5,6 +5,7 @@ import { getAnthropicClient, isAnthropicConfigured, CLAUDE_MODEL, MAX_TOKENS } f
 import { buildGenerateSystemPrompt, buildGenerateUserPrompt } from "@/lib/prompts/generate";
 import { sanitizeError, createSecurityHeaders } from "@/lib/security";
 import { adminDb, verifySession } from "@/lib/firebase-admin";
+import { getAllElements, formatElementsForPrompt } from "@/lib/chemistry";
 
 const MONTHLY_PERIOD_MS = 30 * 24 * 60 * 60 * 1000;
 const MONTHLY_LIMITS = { free: 2, pro: 100 } as const;
@@ -225,8 +226,20 @@ export async function POST(request: NextRequest) {
     // ────────────────────────────────────────────────────────────────────────
 
     const hasDocument = !!(documentBase64 && documentMimeType);
+    
+    // Fetch domain-specific data if needed
+    let extraContext: string | undefined;
+    if (context.subject === "chemistry") {
+      try {
+        const elements = await getAllElements();
+        extraContext = "USE THESE ATOMIC VALUES FOR CALCULATIONS:\n" + formatElementsForPrompt(elements);
+      } catch (err) {
+        console.warn("[/api/generate] Failed to fetch chemistry data, proceeding without extra context.");
+      }
+    }
+
     const systemPrompt = buildGenerateSystemPrompt(context, hasDocument);
-    const userPrompt = buildGenerateUserPrompt(context);
+    const userPrompt = buildGenerateUserPrompt(context, extraContext);
 
     // ── AI Generation (Primary: Claude, Fallback: Gemini) ───────────────────
     let stream: AsyncIterable<any>;
