@@ -426,7 +426,7 @@ export function ExerciseCard({
               </button>
             </div>
             <p className="text-[10px] text-[var(--text-tertiary)] leading-relaxed italic">
-              Describe the chart, diagram, or data layout you want to add to this exercise.
+              Describe the chart, function, or diagram you want. Imtihan will generate an interactive Mermaid chart (xychart, flowchart, etc.) based on your description.
             </p>
           </div>
         </div>

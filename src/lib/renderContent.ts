@@ -123,11 +123,28 @@ function handleGraphs(text: string): string {
     const desc = description.trim();
     if (!desc) return "";
     return `
-      <div class="my-4 rounded-xl border border-[var(--border)] bg-[var(--bg-subtle)] px-4 py-3 flex items-start gap-3">
-        <span class="text-[var(--accent)] flex-shrink-0 text-base leading-snug">📊</span>
-        <div>
-          <p class="text-[11px] font-semibold uppercase tracking-wider text-[var(--text-tertiary)] mb-1">Figure description</p>
-          <p class="text-sm text-[var(--text-secondary)] leading-relaxed">${desc}</p>
+      <div class="my-6 rounded-xl border-2 border-dashed border-[var(--border-strong)] bg-[var(--bg-subtle)] overflow-hidden">
+        <div class="bg-[var(--bg-subtle)] border-b border-[var(--border)] px-4 py-2 flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="text-lg">📐</span>
+            <span class="text-[10px] font-bold uppercase tracking-widest text-[var(--text-tertiary)]">Visual Representation</span>
+          </div>
+          <span class="text-[9px] font-medium text-[var(--text-tertiary)] italic">Automated Sketch Description</span>
+        </div>
+        <div class="p-6 relative">
+          <!-- Subtle Grid Background for 'Draft' feel -->
+          <div class="absolute inset-0 opacity-[0.03] pointer-events-none" style="background-image: radial-gradient(var(--text) 1px, transparent 1px); background-size: 20px 20px;"></div>
+          <div class="relative z-10 flex flex-col items-center text-center">
+            <div class="w-12 h-12 rounded-full bg-[var(--accent-light)] flex items-center justify-center mb-4">
+              <span class="text-xl">📊</span>
+            </div>
+            <p class="text-sm text-[var(--text-secondary)] leading-relaxed max-w-md mx-auto italic">
+              "${desc}"
+            </p>
+            <div class="mt-4 pt-4 border-t border-[var(--border)] w-full max-w-xs text-[10px] text-[var(--text-tertiary)]">
+              Use the <strong>Add Visual / Graph</strong> tool to convert this description into an interactive chart.
+            </div>
+          </div>
         </div>
       </div>
     `;
@@ -139,10 +156,15 @@ export function renderContent(raw: string): string {
 
   let text = raw;
 
-  // 1. Normalise line endings
+  // 1. Normalise line endings and collapse excessive newlines
   text = text
-    .replace(/\\n\\n/g, "\n\n")
-    .replace(/\\n/g, "\n");
+    .replace(/\\n/g, "\n") // Convert escaped backslashes to real newlines
+    .replace(/\r\n/g, "\n") // Normalize Windows CRLF
+    .replace(/\n\s*\n/g, "\n\n") // Normalize space-filled blank lines
+    .trim();
+
+  // Collapse 3+ newlines into just 2
+  text = text.replace(/\n{3,}/g, "\n\n");
 
   // 2. Pre-process \ce{...}
   text = text.replace(/\\ce\{((?:[^{}]|\{[^{}]*\})*)\}/g, (match) => {
@@ -185,10 +207,16 @@ export function renderContent(raw: string): string {
   // Final cleanup: Wrap in paragraph and remove empty ones produced by block trimming
   html = `<p>${html}</p>`;
   html = html
-    .replace(/<p><\/p>/g, "")
-    .replace(/<p><br \/>/g, "<p>")
+    .replace(/<p class="mt-3">\s*<\/p>/g, "") // Remove empty mt-3 paragraphs
+    .replace(/<p>\s*<\/p>/g, "") // Remove empty paragraphs
+    .replace(/<p><br \/>/g, "<p>") // Remove leading breaks in paragraphs
+    .replace(/<p>\s*<div/g, "<div") // Strip P wrapper around blocks
+    .replace(/<\/div>\s*<\/p>/g, "</div>") // Strip P wrapper around blocks
     .replace(/<br \/>\s*<div/g, "<div")
-    .replace(/<\/div>\s*<br \/>/g, "</div>");
+    .replace(/<\/div>\s*<br \/>/g, "</div>")
+    .replace(/<br \/>\s*<br \/>/g, "<br />") // Collapse double breaks
+    .replace(/<\/div>\s*<p>/g, "</div><p>") // Ensure no gap between block and next p
+    .replace(/<\/p>\s*<div/g, "</p><div"); // Ensure no gap between p and next block
 
   return html;
 }

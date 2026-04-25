@@ -311,7 +311,7 @@ export default function GeneratePage() {
     <div className="min-h-screen bg-[var(--bg)] flex flex-col">
       <header className="grid grid-cols-3 items-center px-6 md:px-10 h-16 border-b border-[var(--border)] bg-[var(--bg)]/90 backdrop-blur-md sticky top-0 z-40">
         <div className="flex items-center">
-          <Link href="/create/structure" className="flex items-center gap-2 text-[var(--text-secondary)] hover:text-[var(--text)] transition-colors">
+          <Link href="/create/confirm" className="flex items-center gap-2 text-[var(--text-secondary)] hover:text-[var(--text)] transition-colors">
             <ArrowLeft size={16} />
             <span className="text-sm hidden sm:block font-medium">Back</span>
           </Link>
@@ -322,7 +322,7 @@ export default function GeneratePage() {
         </div>
 
         <div className="flex items-center justify-end gap-4">
-          <StepIndicator current={4} />
+          <StepIndicator current={3} />
           <UserNav />
         </div>
       </header>
@@ -332,7 +332,7 @@ export default function GeneratePage() {
 
           <div className="mb-8 flex items-start justify-between gap-4">
             <div>
-              <StepLabel step={4} />
+              <StepLabel step={3} />
               <h1 className="serif text-display-lg text-[var(--text)] mb-2">Your exam</h1>
               {status === "done" && (
                 <p className="text-[var(--text-secondary)] text-sm">

@@ -224,7 +224,7 @@ export default function ExportPage() {
         </div>
 
         <div className="flex items-center justify-end gap-4">
-          <StepIndicator current={5} />
+          <StepIndicator current={3} />
           <UserNav />
         </div>
       </header>
@@ -233,7 +233,7 @@ export default function ExportPage() {
         <div className="max-w-2xl mx-auto space-y-6">
 
           <div>
-            <StepLabel step={5} />
+            <StepLabel step={3} />
             <h1 className="serif text-display-lg text-[var(--text)] mb-2">Export your exam</h1>
             <p className="text-[var(--text-secondary)] text-sm leading-relaxed">
               Add optional header info, then download as Word or PDF.

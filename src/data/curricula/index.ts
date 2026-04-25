@@ -20,6 +20,11 @@ export const SUBJECT_GROUPS = {
   professional: ["medicine", "engineering", "architecture", "nursing"],
 };
 
+export const GEOGRAPHIC_SUBJECTS = [
+  "geography", "history-geography", "economics", "ses", "sociology", 
+  "global-politics", "business", "management", "accounting", "civic-education"
+];
+
 export function getCurriculum(id: CurriculumId): Curriculum {
   return CURRICULA[id];
 }

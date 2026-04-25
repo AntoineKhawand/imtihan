@@ -100,7 +100,7 @@ export default function CommunityPage() {
     sessionStorage.setItem("imtihan_exercises_key", JSON.stringify({ c: exam.context }));
     // Provide a hint to the user they are remixing
     sessionStorage.setItem("imtihan_remix_source", exam.title);
-    router.push("/create/structure");
+    router.push("/create/confirm");
   }
 
   const previewExam = previewId ? FEATURED_EXAMS.find((e) => e.id === previewId) : null;

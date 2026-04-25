@@ -7,6 +7,7 @@ import { sanitizeError, createSecurityHeaders } from "@/lib/security";
 import { adminDb, verifySession } from "@/lib/firebase-admin";
 import { getAllElements, formatElementsForPrompt } from "@/lib/chemistry";
 import { getHumanitiesContext } from "@/lib/humanities";
+import { GEOGRAPHIC_SUBJECTS } from "@/data/curricula";
 
 const MONTHLY_PERIOD_MS = 30 * 24 * 60 * 60 * 1000;
 const MONTHLY_LIMITS = { free: 2, pro: 100 } as const;
@@ -239,7 +240,7 @@ export async function POST(request: NextRequest) {
       } catch (err) {
         console.warn("[/api/generate] Failed to fetch chemistry data, proceeding without extra context.");
       }
-    } else if (["economics", "ses", "geography", "sociology"].includes(context.subject)) {
+    } else if (GEOGRAPHIC_SUBJECTS.includes(context.subject as any)) {
       try {
         const humContext = await getHumanitiesContext(context);
         if (humContext) {

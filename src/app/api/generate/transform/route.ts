@@ -36,8 +36,12 @@ export async function POST(request: NextRequest) {
     if (type === "table") {
       instruction = `Transform the statement of this exercise into a well-formatted Markdown Table if applicable, or restructure its data points into a clear Markdown Table within the statement. Do not change the core academic difficulty or points, just improve the layout by using a markdown table for the data/context.`;
     } else {
-      const visualReq = prompt ? `Specific requirement: ${prompt}` : `Add a suitable image or graph placeholder.`;
-      instruction = `${visualReq} Provide a detailed textual description of the axes, curves, or diagrams inside a [GRAPH: description] tag. Ensure it makes sense within the context of the question.`;
+      const visualReq = prompt ? `Specific requirement: ${prompt}` : `Add a suitable mathematical graph, diagram, or chart.`;
+      instruction = `${visualReq} 
+      - For mathematical graphs (functions, parabolas, curves), use Mermaid \`xychart-beta\`.
+      - For diagrams (electrical circuits, chemical setups, biology structures), use Mermaid \`flowchart\`.
+      - Ensure the Mermaid code is valid and well-formatted.
+      - Return the Mermaid block directly within the 'statement' field. Do NOT use the [GRAPH: description] tag anymore.`;
     }
 
     const systemPrompt = `You are an expert exam designer and editor. 

@@ -541,7 +541,7 @@ export default function CreatePage() {
 export function StepIndicator({ current }: { current: number }) {
   return (
     <div className="flex items-center gap-1.5">
-      {[1, 2, 3, 4, 5].map((step) => (
+      {[1, 2, 3].map((step) => (
         <div
           key={step}
           className={cn(
@@ -559,7 +559,7 @@ export function StepIndicator({ current }: { current: number }) {
 export function StepLabel({ step }: { step: number }) {
   return (
     <p className="text-xs uppercase tracking-widest text-[var(--accent)] font-medium mb-3">
-      Step {step} of 5
+      Step {step} of 3
     </p>
   );
 }

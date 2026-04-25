@@ -3,16 +3,19 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, ArrowRight, AlertTriangle, CheckCircle2, Info, X, Layout, FileText, Wand2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, AlertTriangle, CheckCircle2, Info, X, Layout, FileText, Wand2, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Select } from "@/components/ui/FormElements";
 import { cn, SUBJECT_LABELS, LANGUAGE_LABELS, EXAM_TYPE_LABELS } from "@/lib/utils";
-import { CURRICULA, SUBJECT_GROUPS } from "@/data/curricula";
+import { CURRICULA, SUBJECT_GROUPS, GEOGRAPHIC_SUBJECTS } from "@/data/curricula";
 import { Globe } from "lucide-react";
 import type { ExamContext } from "@/types/exam";
 import type { CurriculumId, Subject } from "@/types/curriculum";
 import { StepIndicator, StepLabel } from "@/app/create/page";
 import { Logo } from "@/components/ui/Logo";
+import { Input, Toggle } from "@/components/ui/StructureFormElements";
+import { useAuth } from "@/contexts/AuthContext";
+import { isProActive } from "@/lib/subscription";
 
 const DURATION_OPTIONS = [
   { value: "20",  label: "20 min" },
@@ -31,6 +34,8 @@ export default function ConfirmPage() {
   const [loading, setLoading] = useState(true);
   const [dismissedWarnings, setDismissedWarnings] = useState<number[]>([]);
   const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
+  const { profile } = useAuth();
+  const isFreeTier = !isProActive(profile);
 
   useEffect(() => {
     const raw = sessionStorage.getItem("imtihan_context");
@@ -39,7 +44,10 @@ export default function ConfirmPage() {
       const parsed = JSON.parse(raw);
       setContext({
         ...parsed,
-        templateType: parsed.templateType ?? "modern"
+        templateType: parsed.templateType ?? "modern",
+        totalPoints: parsed.totalPoints ?? 20,
+        exerciseCount: parsed.exerciseCount ?? 3,
+        generateVersionB: parsed.generateVersionB ?? false,
       }); 
       
       const fileRaw = sessionStorage.getItem("imtihan_uploaded_file");
@@ -64,7 +72,7 @@ export default function ConfirmPage() {
   function handleContinue() {
     if (!context) return;
     sessionStorage.setItem("imtihan_context", JSON.stringify(context));
-    router.push("/create/structure");
+    router.push("/create/generate");
   }
 
   if (loading || !context) {
@@ -112,9 +120,9 @@ export default function ConfirmPage() {
 
           <div>
             <StepLabel step={2} />
-            <h1 className="serif text-display-lg text-[var(--text)] mb-2">Confirm your context</h1>
+            <h1 className="serif text-display-lg text-[var(--text)] mb-2">Confirm & Configure</h1>
             <p className="text-[var(--text-secondary)] text-sm leading-relaxed">
-              Imtihan detected these details. Review and adjust anything before generating.
+              Review detection results and define your exam blueprint before generation.
             </p>
           </div>
 
@@ -183,8 +191,8 @@ export default function ConfirmPage() {
                 onChange={(e) => update("duration", Number(e.target.value))} />
             </div>
 
-            {/* Geographic Context (Humanities only) */}
-            {SUBJECT_GROUPS.humanities.includes(context.subject as any) && (
+            {/* Geographic Context (Relevant subjects only) */}
+            {GEOGRAPHIC_SUBJECTS.includes(context.subject as any) && (
               <div className="space-y-3 pt-2">
                 <div className="flex items-center gap-2">
                   <Globe size={14} className="text-[var(--text-tertiary)]" />
@@ -248,6 +256,18 @@ export default function ConfirmPage() {
                 University mode: chapters are inferred from your description and uploaded documents. The AI uses your course content directly.
               </div>
             )}
+
+            {/* Blueprint Extension */}
+            <div className="pt-4 border-t border-[var(--border)] space-y-5">
+              <div className="flex items-center gap-2">
+                <FileText size={14} className="text-[var(--text-tertiary)]" />
+                <p className="text-xs font-semibold text-[var(--text)] uppercase tracking-wide">Exam Blueprint</p>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <Input type="number" label="Total Points" value={context.totalPoints} onChange={(e) => update("totalPoints", parseInt(e.target.value, 10))} />
+                <Input type="number" label="Exercises" value={context.exerciseCount} onChange={(e) => update("exerciseCount", parseInt(e.target.value, 10))} />
+              </div>
+            </div>
           </div>
 
           {/* Template Selection */}
@@ -323,6 +343,25 @@ export default function ConfirmPage() {
             )}
           </div>
 
+          {/* Exam Variants */}
+          <div className="space-y-4">
+            <h3 className="text-sm font-semibold text-[var(--text)] flex items-center gap-2">
+              <Sparkles size={16} className="text-[var(--text-tertiary)]" />
+              Exam Variants
+            </h3>
+            <Toggle
+              label="Generate Version B"
+              description={isFreeTier ? "Available on the Pro plan" : "Shuffles question order and regenerates numerical values."}
+              checked={!!context.generateVersionB}
+              onChange={(checked) => {
+                if (!isFreeTier) {
+                  update("generateVersionB", checked);
+                }
+              }}
+              locked={isFreeTier}
+            />
+          </div>
+
           <Button
             onClick={handleContinue}
             disabled={context.chapterIds.length === 0}
@@ -331,7 +370,7 @@ export default function ConfirmPage() {
             icon={<ArrowRight size={16} />}
             iconPosition="right"
           >
-            Continue to structure
+            Generate Exam
           </Button>
         </div>
       </main>
