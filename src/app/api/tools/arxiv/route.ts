@@ -99,7 +99,7 @@ export async function GET(request: NextRequest) {
 
     if (!res.ok) {
       return NextResponse.json(
-        { success: false, error: `arXiv returned ${res.status}` },
+        { success: false, error: `Research database returned ${res.status}` },
         { status: 502, headers: createSecurityHeaders() }
       );
     }
@@ -121,8 +121,8 @@ export async function GET(request: NextRequest) {
   } catch (err) {
     console.error("[/api/tools/arxiv]", err);
     return NextResponse.json(
-      { success: false, error: "Failed to reach arXiv." },
-      { status: 500, headers: createSecurityHeaders() }
+      { success: false, error: "Failed to reach research database." },
+      { status: 503, headers: createSecurityHeaders() }
     );
   }
 }

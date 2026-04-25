@@ -66,9 +66,8 @@ export default function CreatePage() {
   }
 
   function injectPaper(paper: { title: string; abstract: string; authors: string[]; published: string }) {
-    const citation = paper.authors.length > 0
       ? `${paper.authors[0]} et al. (${paper.published})`
-      : `arXiv (${paper.published})`;
+      : `Source (${paper.published})`;
     const context = `\n\nResearch context [${citation}, "${paper.title}"]: ${paper.abstract.slice(0, 400)}${paper.abstract.length > 400 ? "…" : ""}`;
     setDescription((prev) => prev + context);
     setArxivResults([]);
@@ -394,7 +393,7 @@ export default function CreatePage() {
             </div>
           )}
 
-          {/* arXiv Research Paper Search */}
+          {/* Research Paper Search */}
           <div className="mb-6">
             <div className="flex items-center gap-2 mb-2">
               <BookOpen size={13} className="text-[var(--text-tertiary)]" />
@@ -402,7 +401,7 @@ export default function CreatePage() {
               <span className="text-[10px] text-[var(--text-tertiary)] px-2 py-0.5 rounded-full border border-[var(--border)]">Optional · University & IB</span>
             </div>
             <p className="text-xs text-[var(--text-secondary)] mb-3 leading-relaxed">
-              Search arXiv for a real paper abstract to ground your exercise in current research.
+              Search for a real paper abstract to ground your exercise in current research.
             </p>
             <div className="flex gap-2">
               <input
