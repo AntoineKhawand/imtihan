@@ -69,7 +69,7 @@ export function ExerciseCard({
   const [showActions, setShowActions] = useState(false);
 
   const [showMathTool, setShowMathTool] = useState(false);
-  const [mathTab, setMathTab] = useState<"expr" | "stats" | "chem">("expr");
+  const [mathTab, setMathTab] = useState<"expr" | "stats" | "chem" | "const">("expr");
 
   // Expression checker (symbolic)
   const [mathOp, setMathOp] = useState("simplify");
@@ -89,6 +89,13 @@ export function ExerciseCard({
   const [chemResult, setChemResult] = useState<{ weight: number; unit: string; elements: Record<string, number> } | null>(null);
   const [chemLoading, setChemLoading] = useState(false);
   const [chemError, setChemError] = useState<string | null>(null);
+
+  // Physics constants (NIST)
+  const [constQuery, setConstQuery] = useState("");
+  const [constResults, setConstResults] = useState<Array<{ name: string; valueDisplay: string; uncertainty: string; unit: string }>>([]);
+  const [constLoading, setConstLoading] = useState(false);
+  const [constError, setConstError] = useState<string | null>(null);
+  const [copiedConst, setCopiedConst] = useState<string | null>(null);
 
   async function computeMath() {
     if (!mathExpr.trim()) return;
@@ -156,6 +163,31 @@ export function ExerciseCard({
     } finally {
       setChemLoading(false);
     }
+  }
+
+  async function searchConst() {
+    if (!constQuery.trim()) return;
+    setConstLoading(true);
+    setConstResults([]);
+    setConstError(null);
+    try {
+      const res = await fetch(`/api/tools/physics?q=${encodeURIComponent(constQuery.trim())}`);
+      const data = await res.json();
+      if (data.success) setConstResults(data.constants);
+      else setConstError(data.error ?? "Search failed.");
+    } catch {
+      setConstError("Network error.");
+    } finally {
+      setConstLoading(false);
+    }
+  }
+
+  function copyConst(c: { name: string; valueDisplay: string; uncertainty: string; unit: string }) {
+    const text = `${c.name} = ${c.valueDisplay}${c.unit ? ` ${c.unit}` : ""}${c.uncertainty !== "(exact)" ? ` (± ${c.uncertainty})` : " (exact)"}`;
+    navigator.clipboard.writeText(text).then(() => {
+      setCopiedConst(c.name);
+      setTimeout(() => setCopiedConst(null), 2000);
+    });
   }
 
   const difficulty = DIFFICULTY_CONFIG[exercise.difficulty];
@@ -386,9 +418,10 @@ export function ExerciseCard({
                   {/* Tab bar */}
                   <div className="flex border-b border-[var(--border)]">
                     {([
-                      { id: "expr", label: "Expression" },
+                      { id: "expr",  label: "Expression" },
                       { id: "stats", label: "Statistics" },
-                      { id: "chem", label: "Chemistry" },
+                      { id: "chem",  label: "Chemistry" },
+                      { id: "const", label: "Constants" },
                     ] as const).map(({ id, label }) => (
                       <button
                         key={id}
@@ -397,6 +430,7 @@ export function ExerciseCard({
                           setMathResult(null); setMathError(null);
                           setStatsResult(null); setStatsError(null);
                           setChemResult(null); setChemError(null);
+                          setConstResults([]); setConstError(null);
                         }}
                         className={`flex-1 py-2 text-[10px] font-bold uppercase tracking-widest transition-colors ${
                           mathTab === id
@@ -501,6 +535,57 @@ export function ExerciseCard({
                         )}
                         {chemError && <p className="text-[11px] text-red-600">{chemError}</p>}
                         <p className="text-[10px] text-[var(--text-tertiary)]">Standard element symbols. Subscripts as numbers (H2O, not H₂O).</p>
+                      </>
+                    )}
+
+                    {mathTab === "const" && (
+                      <>
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            value={constQuery}
+                            onChange={(e) => { setConstQuery(e.target.value); setConstResults([]); }}
+                            onKeyDown={(e) => e.key === "Enter" && searchConst()}
+                            placeholder="e.g. speed of light, electron mass, planck…"
+                            className="flex-1 h-8 px-3 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-xs text-[var(--text)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]"
+                          />
+                          <button
+                            onClick={searchConst}
+                            disabled={!constQuery.trim() || constLoading}
+                            className="h-8 px-3 rounded-lg bg-[var(--accent)] text-white text-xs font-semibold hover:bg-[var(--accent)]/90 disabled:opacity-50 transition-colors"
+                          >
+                            {constLoading ? "…" : "→"}
+                          </button>
+                        </div>
+
+                        {constResults.length > 0 && (
+                          <div className="space-y-1.5">
+                            {constResults.map((c, i) => (
+                              <div key={i} className="rounded-lg border border-[var(--border)] bg-[var(--bg-subtle)] px-3 py-2 space-y-0.5">
+                                <p className="text-[10px] text-[var(--text-tertiary)] leading-snug">{c.name}</p>
+                                <div className="flex items-center justify-between gap-2">
+                                  <div className="flex-1 min-w-0">
+                                    <span className="text-xs font-mono font-semibold text-[var(--text)]">{c.valueDisplay}</span>
+                                    {c.unit && <span className="text-[10px] text-[var(--text-secondary)] ml-1.5">{c.unit}</span>}
+                                  </div>
+                                  <button
+                                    onClick={() => copyConst(c)}
+                                    className="flex-shrink-0 text-[10px] font-semibold px-2 py-1 rounded-md bg-[var(--surface)] border border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)] hover:text-[var(--accent)] transition-colors"
+                                  >
+                                    {copiedConst === c.name ? "✓ Copied" : "Copy"}
+                                  </button>
+                                </div>
+                                <p className="text-[10px] text-[var(--text-tertiary)]">
+                                  {c.uncertainty === "(exact)" ? "Exact value (CODATA 2022)" : `Uncertainty: ±${c.uncertainty}`}
+                                </p>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                        {constError && <p className="text-[11px] text-red-600">{constError}</p>}
+                        <p className="text-[10px] text-[var(--text-tertiary)]">
+                          Source: NIST CODATA 2022 · Click Copy to get the formatted value for a Données block.
+                        </p>
                       </>
                     )}
                   </div>
