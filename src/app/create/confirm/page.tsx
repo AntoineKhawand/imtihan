@@ -7,7 +7,8 @@ import { ArrowLeft, ArrowRight, AlertTriangle, CheckCircle2, Info, X, Layout, Fi
 import { Button } from "@/components/ui/Button";
 import { Select } from "@/components/ui/FormElements";
 import { cn, SUBJECT_LABELS, LANGUAGE_LABELS, EXAM_TYPE_LABELS } from "@/lib/utils";
-import { CURRICULA } from "@/data/curricula";
+import { CURRICULA, SUBJECT_GROUPS } from "@/data/curricula";
+import { Globe } from "lucide-react";
 import type { ExamContext } from "@/types/exam";
 import type { CurriculumId, Subject } from "@/types/curriculum";
 import { StepIndicator, StepLabel } from "@/app/create/page";
@@ -181,6 +182,31 @@ export default function ConfirmPage() {
               <Select label="Duration" value={String(context.duration)} options={DURATION_OPTIONS}
                 onChange={(e) => update("duration", Number(e.target.value))} />
             </div>
+
+            {/* Geographic Context (Humanities only) */}
+            {SUBJECT_GROUPS.humanities.includes(context.subject as any) && (
+              <div className="space-y-3 pt-2">
+                <div className="flex items-center gap-2">
+                  <Globe size={14} className="text-[var(--text-tertiary)]" />
+                  <p className="text-xs font-semibold text-[var(--text)] uppercase tracking-wide">Geographic Context</p>
+                </div>
+                <div className="relative group">
+                  <input
+                    type="text"
+                    value={context.geographicContext || "Global"}
+                    onChange={(e) => update("geographicContext", e.target.value)}
+                    placeholder="e.g. Lebanon, France, Japan..."
+                    className="w-full h-11 px-4 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-sm text-[var(--text)] focus:outline-none focus:border-[var(--accent)] transition-all"
+                  />
+                  <div className="mt-2 flex items-center gap-1.5 px-1">
+                    <CheckCircle2 size={10} className="text-[var(--accent)]" />
+                    <p className="text-[10px] text-[var(--text-tertiary)]">
+                      Accurate data (GDP, inflation, population) will be injected automatically for {context.geographicContext || "this region"}.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Chapters */}
             {availableChapters.length > 0 && (

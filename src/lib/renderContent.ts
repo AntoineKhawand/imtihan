@@ -110,27 +110,10 @@ function applyMarkdown(text: string): string {
   return parseTables(md);
 }
 
-async function renderMermaidBlocks(text: string): Promise<string> {
-  const mermaidRegex = /```mermaid\n?([\s\S]*?)```/g;
-  const matches = [...text.matchAll(mermaidRegex)];
-  
-  if (matches.length === 0) return text;
-  
-  let result = text;
-  for (const match of matches) {
-    const code = match[1].trim();
-    const id = `mermaid-${Math.random().toString(36).slice(2, 9)}`;
-    try {
-      const svg = await mermaid.render(id, code);
-      const replacement = `<div class="my-4 p-4 bg-white rounded-lg border border-[var(--border)] overflow-x-auto">${svg}</div>`;
-      result = result.replace(match[0], replacement);
-    } catch (e) {
-      console.warn("[Mermaid] Render error:", e);
-      result = result.replace(match[0], `<pre class="my-4 p-3 bg-red-50 text-red-700 rounded text-xs overflow-x-auto">${code}</pre>`);
-    }
-  }
-  
-  return result;
+function handleMermaid(text: string): string {
+  return text.replace(/```mermaid\n?([\s\S]*?)```/g, (match, code) => {
+    return `<div class="mermaid my-4 p-4 bg-white rounded-lg border border-[var(--border)] overflow-x-auto">${code.trim()}</div>`;
+  });
 }
 
 function handleGraphs(text: string): string {
@@ -184,6 +167,9 @@ export function renderContent(raw: string): string {
       
       // Apply markdown (Tables are handled here)
       let content = applyMarkdown(p.content);
+      
+      // Apply Mermaid
+      content = handleMermaid(content);
       
       // Apply Graphs
       content = handleGraphs(content);

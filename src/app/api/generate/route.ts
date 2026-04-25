@@ -6,6 +6,7 @@ import { buildGenerateSystemPrompt, buildGenerateUserPrompt } from "@/lib/prompt
 import { sanitizeError, createSecurityHeaders } from "@/lib/security";
 import { adminDb, verifySession } from "@/lib/firebase-admin";
 import { getAllElements, formatElementsForPrompt } from "@/lib/chemistry";
+import { getHumanitiesContext } from "@/lib/humanities";
 
 const MONTHLY_PERIOD_MS = 30 * 24 * 60 * 60 * 1000;
 const MONTHLY_LIMITS = { free: 2, pro: 100 } as const;
@@ -237,6 +238,15 @@ export async function POST(request: NextRequest) {
         extraContext = "USE THESE ATOMIC VALUES FOR CALCULATIONS:\n" + formatElementsForPrompt(elements);
       } catch (err) {
         console.warn("[/api/generate] Failed to fetch chemistry data, proceeding without extra context.");
+      }
+    } else if (["economics", "ses", "geography", "sociology"].includes(context.subject)) {
+      try {
+        const humContext = await getHumanitiesContext(context);
+        if (humContext) {
+          extraContext = (extraContext || "") + "\n" + humContext;
+        }
+      } catch (err) {
+        console.warn("[/api/generate] Failed to fetch humanities data:", err);
       }
     }
 

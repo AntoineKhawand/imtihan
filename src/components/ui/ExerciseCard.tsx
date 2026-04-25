@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { renderContent } from "@/lib/renderContent";
+import mermaid from "mermaid";
 import type { Exercise } from "@/types/exam";
 import {
   RefreshCw,
@@ -19,6 +20,8 @@ import {
   Bookmark,
   Table,
   Calculator,
+  Image as ImageIcon,
+  X,
 } from "lucide-react";
 
 const DIFFICULTY_CONFIG = {
@@ -47,7 +50,6 @@ interface ExerciseCardProps {
   onTransform?: (id: string, type: "table" | "image", prompt?: string) => Promise<void>;
   isRegenerating?: boolean;
   savedToBank?: boolean;
-  isFreeTier?: boolean;
   defaultShowSolution?: boolean;
 }
 
@@ -62,7 +64,6 @@ export function ExerciseCard({
   onTransform,
   isRegenerating = false,
   savedToBank = false,
-  isFreeTier = false,
   defaultShowSolution = false,
 }: ExerciseCardProps) {
   const [showSolution, setShowSolution] = useState(defaultShowSolution);
@@ -70,6 +71,9 @@ export function ExerciseCard({
 
   const [showMathTool, setShowMathTool] = useState(false);
   const [mathTab, setMathTab] = useState<"expr" | "stats" | "chem" | "const">("expr");
+
+  const [showVisualPrompt, setShowVisualPrompt] = useState(false);
+  const [visualPrompt, setVisualPrompt] = useState("");
 
   // Expression checker (symbolic)
   const [mathOp, setMathOp] = useState("simplify");
@@ -193,6 +197,16 @@ export function ExerciseCard({
   const difficulty = DIFFICULTY_CONFIG[exercise.difficulty];
   const exerciseLabel = language === "french" ? "Exercice" : "Exercise";
 
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      // Small delay to ensure DOM is ready
+      const timer = setTimeout(() => {
+        mermaid.run().catch(err => console.warn("Mermaid run failed:", err));
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [exercise.statement, showSolution, isRegenerating]);
+
   return (
     <div
       className={cn(
@@ -298,6 +312,13 @@ export function ExerciseCard({
                       <Table size={13} />
                       Format as Table
                     </button>
+                    <button
+                      onClick={() => { setShowVisualPrompt(true); setShowActions(false); }}
+                      className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-[var(--text-secondary)] hover:text-[var(--text)] hover:bg-[var(--bg-subtle)] rounded-lg transition-colors"
+                    >
+                      <ImageIcon size={13} />
+                      Add Visual / Graph
+                    </button>
                   </>
                 )}
                 {onSaveToBank && (
@@ -356,6 +377,60 @@ export function ExerciseCard({
           </div>
         )}
       </div>
+
+      {/* Visual Prompt Input */}
+      {showVisualPrompt && (
+        <div className="px-6 pb-4 animate-in fade-in slide-in-from-top-2 duration-300">
+          <div className="p-3.5 rounded-xl border border-[var(--accent)]/30 bg-[var(--accent-light)]/30 space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <ImageIcon size={13} className="text-[var(--accent)]" />
+                <p className="text-[11px] font-bold uppercase tracking-wider text-[var(--accent)]">Request a visual</p>
+              </div>
+              <button 
+                onClick={() => setShowVisualPrompt(false)}
+                className="text-[var(--text-tertiary)] hover:text-[var(--text)] transition-colors"
+              >
+                <X size={14} />
+              </button>
+            </div>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                autoFocus
+                value={visualPrompt}
+                onChange={(e) => setVisualPrompt(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && visualPrompt.trim() && onTransform) {
+                    onTransform(exercise.id, "image", visualPrompt.trim());
+                    setShowVisualPrompt(false);
+                    setVisualPrompt("");
+                  }
+                }}
+                placeholder="e.g. A demand curve, a titration setup, a table of contents..."
+                className="flex-1 h-9 px-3 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-sm text-[var(--text)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] transition-all"
+              />
+              <button
+                onClick={() => {
+                  if (visualPrompt.trim() && onTransform) {
+                    onTransform(exercise.id, "image", visualPrompt.trim());
+                    setShowVisualPrompt(false);
+                    setVisualPrompt("");
+                  }
+                }}
+                disabled={!visualPrompt.trim()}
+                className="h-9 px-4 rounded-lg bg-[var(--accent)] text-white text-xs font-semibold hover:bg-[var(--accent)]/90 disabled:opacity-50 transition-all flex items-center gap-2"
+              >
+                <Zap size={13} />
+                Generate
+              </button>
+            </div>
+            <p className="text-[10px] text-[var(--text-tertiary)] leading-relaxed italic">
+              Describe the chart, diagram, or data layout you want to add to this exercise.
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Corrigé toggle */}
       <div className="border-t border-[var(--border)]">
@@ -535,6 +610,8 @@ export function ExerciseCard({
                         )}
                         {chemError && <p className="text-[11px] text-red-600">{chemError}</p>}
                         <p className="text-[10px] text-[var(--text-tertiary)]">Standard element symbols. Subscripts as numbers (H2O, not H₂O).</p>
+                        {/* PubChem lookup */}
+                        <PubChemLookup />
                       </>
                     )}
 
@@ -645,6 +722,73 @@ export function ExerciseCard({
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+/** Inline PubChem compound lookup — shown inside the Chemistry tab */
+function PubChemLookup() {
+  const [query, setQuery]   = useState("");
+  const [result, setResult] = useState<{ formula: string; molarMass: string | number; iupacName: string; smiles: string } | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError]   = useState<string | null>(null);
+
+  async function search() {
+    if (!query.trim()) return;
+    setLoading(true); setResult(null); setError(null);
+    try {
+      const res  = await fetch(`/api/tools/pubchem?q=${encodeURIComponent(query.trim())}`);
+      const data = await res.json();
+      if (data.success) setResult(data.compound);
+      else setError(data.error ?? "Not found.");
+    } catch { setError("Network error."); }
+    finally  { setLoading(false); }
+  }
+
+  return (
+    <div className="mt-3 pt-3 border-t border-[var(--border)] space-y-2">
+      <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-tertiary)]">
+        Compound lookup (PubChem)
+      </p>
+      <div className="flex gap-2">
+        <input
+          type="text"
+          value={query}
+          onChange={(e) => { setQuery(e.target.value); setResult(null); }}
+          onKeyDown={(e) => e.key === "Enter" && search()}
+          placeholder="e.g. ethanol, sodium chloride, glucose…"
+          className="flex-1 h-8 px-3 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-xs text-[var(--text)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]"
+        />
+        <button
+          onClick={search}
+          disabled={!query.trim() || loading}
+          className="h-8 px-3 rounded-lg bg-[var(--accent)] text-white text-xs font-semibold hover:bg-[var(--accent)]/90 disabled:opacity-50 transition-colors"
+        >
+          {loading ? "…" : "→"}
+        </button>
+      </div>
+
+      {result && (
+        <div className="rounded-lg border border-[var(--border)] bg-[var(--bg-subtle)] px-3 py-2.5 space-y-1.5 text-xs">
+          <div className="flex gap-3">
+            <span className="text-[var(--text-tertiary)] w-20 flex-shrink-0">Formula</span>
+            <span className="font-mono font-semibold text-[var(--text)]">{result.formula}</span>
+          </div>
+          <div className="flex gap-3">
+            <span className="text-[var(--text-tertiary)] w-20 flex-shrink-0">Molar mass</span>
+            <span className="font-mono font-semibold text-[var(--text)]">{result.molarMass} g/mol</span>
+          </div>
+          <div className="flex gap-3">
+            <span className="text-[var(--text-tertiary)] w-20 flex-shrink-0">IUPAC name</span>
+            <span className="text-[var(--text-secondary)] leading-snug">{result.iupacName}</span>
+          </div>
+          <div className="flex gap-3">
+            <span className="text-[var(--text-tertiary)] w-20 flex-shrink-0">SMILES</span>
+            <span className="font-mono text-[10px] text-[var(--text-secondary)] break-all">{result.smiles}</span>
+          </div>
+        </div>
+      )}
+      {error && <p className="text-[11px] text-red-600">{error}</p>}
     </div>
   );
 }

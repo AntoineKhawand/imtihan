@@ -33,7 +33,8 @@ You must return ONLY a valid JSON object — no prose, no markdown fences, no pr
   "warnings": string[],
   "confidence": number,
   "layoutPreferences": string,
-  "visualPreference": string
+  "visualPreference": string,
+  "geographicContext": string
 }
 
 Rules:
@@ -45,7 +46,8 @@ Rules:
 - warnings: array of strings describing anything you had to guess or that the teacher should verify
 - generateVersionB: true only if teacher explicitly asked for two versions
 - layoutPreferences: If a document is uploaded, describe its visual style in 1-2 sentences. If no doc, leave empty string.
-- visualPreference: If the teacher explicitly asks for graphs, diagrams, curves, or specific visual elements, describe them here in 1-2 sentences.`;
+- visualPreference: If the teacher explicitly asks for graphs, diagrams, curves, or specific visual elements, describe them here in 1-2 sentences.
+- geographicContext: Detect the country or region mentioned in the description (e.g. "Lebanon", "France", "United States"). If none mentioned, default based on curriculum (Bac Libanais = Lebanon, Bac Français = France, IB = Global). Always return a specific string.`;
 }
 
 export function buildAnalyzeUserPrompt({ teacherDescription, hasUploadedDocument, availableCurricula }: AnalyzePromptInput): string {

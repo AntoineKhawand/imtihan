@@ -52,6 +52,8 @@ export interface ExamContext {
   visualPreference?: string;
   /** Template selection */
   templateType?: "modern" | "uploaded";
+  /** Geographic context for Humanities subjects (e.g. "Lebanon", "France") */
+  geographicContext?: string;
 }
 
 export interface Exercise {
