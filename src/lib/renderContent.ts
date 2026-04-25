@@ -189,10 +189,8 @@ export function renderContent(raw: string): string {
       content = handleGraphs(content);
       
       // Smart newline handling to avoid gaps
-      // 1. Collapse multiple newlines
-      // 2. Convert to paragraphs, but trim around block elements (tables/graphs)
+      // Convert to paragraphs, but preserve single newlines as <br />
       return content
-        .trim()
         .replace(/\n\n+/g, "</p><p class=\"mt-3\">")
         .replace(/\n/g, "<br />");
     }).join("");

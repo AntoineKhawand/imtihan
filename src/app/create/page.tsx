@@ -302,29 +302,6 @@ export default function CreatePage() {
             </div>
           </div>
 
-          {/* Real-data inject (ISS + Numbers API) */}
-          <div className="mb-6">
-            <p className="text-xs text-[var(--text-tertiary)] mb-2.5">Inject live real-world data:</p>
-            <div className="flex flex-wrap gap-2">
-              <button
-                onClick={() => injectRealData("physics")}
-                disabled={injectingData}
-                className="text-xs px-3 py-1.5 rounded-full border border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)] hover:text-[var(--accent)] hover:bg-[var(--accent-light)] transition-all duration-200 disabled:opacity-50"
-              >
-                🛸 {injectingData ? "Fetching…" : "Live ISS data (physics)"}
-              </button>
-              <button
-                onClick={() => injectRealData("math")}
-                disabled={injectingData}
-                className="text-xs px-3 py-1.5 rounded-full border border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)] hover:text-[var(--accent)] hover:bg-[var(--accent-light)] transition-all duration-200 disabled:opacity-50"
-              >
-                🔢 {injectingData ? "Fetching…" : "Number fact (math)"}
-              </button>
-            </div>
-            <p className="text-[10px] text-[var(--text-tertiary)] mt-1.5">
-              Appends live ISS position data or a mathematical number fact to ground your exercise in reality.
-            </p>
-          </div>
 
           {/* Saved class profiles */}
           {(profiles.length > 0 || showProfileForm) && (

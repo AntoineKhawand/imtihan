@@ -465,7 +465,12 @@ You have been given a document uploaded by the teacher (textbook chapter, past e
 3. Each exercise must stay within the selected chapters — no out-of-scope content.
 4. MATH & CHEMISTRY NOTATION — JSON requires double-escaped backslashes: write \\frac, \\sqrt, \\alpha, \\vec, \\int. For chemical equations, you MUST use mhchem WITH BRACES: \\ce{CH4 + 2O2 -> CO2 + 2H2O}. NEVER write \\ce without braces (e.g. \\ceCH4 is INVALID). Single backslash is INVALID inside a JSON string and will crash the parser.
 5. SCIENTIFIC ACCURACY: We use a high-precision verification engine (Math.js) for all generated answers. Ensure all numerical values, unit conversions, and statistical results are mathematically exact.
-6. VISUALS — Use the following for visual elements:
+6. NOTATION & SPACING (CRITICAL):
+   - ALWAYS put a space between a label and its object (e.g., write "plan $P$", "point $A$", "vecteur $\vec{n}$"). NEVER write "planP" or "pointA".
+   - VECTORS: Use KaTeX $\vec{v}$ or $\overrightarrow{AB}$. NEVER use text-based arrows like "->".
+   - SYSTEMS OF EQUATIONS: Use KaTeX `\begin{cases} ... \end{cases}` for all parametric equations or systems.
+   - COORDINATES: Use standard notation $(x; y; z)$ or $A(x; y; z)$.
+7. VISUALS — Use the following for visual elements:
    a) TABLES: Use Markdown table syntax with pipes:
        | x | f(x) |
        |---|------|
