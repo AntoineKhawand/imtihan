@@ -39,7 +39,6 @@ export default function CreatePage() {
   const [uploadedFile, setUploadedFile] = useState<UploadedFile | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analyzeStep, setAnalyzeStep] = useState(0);
-  const [injectingData, setInjectingData] = useState(false);
   const stepTimer = useRef<ReturnType<typeof setInterval> | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -164,21 +163,6 @@ export default function CreatePage() {
     setActiveExample(i);
   }
 
-  async function injectRealData(type: "physics" | "math") {
-    setInjectingData(true);
-    try {
-      const res = await fetch(`/api/tools/context?type=${type}`);
-      const data = await res.json();
-      if (data.success) {
-        const prefix = type === "physics"
-          ? "\n\nReal-world context (live ISS data): "
-          : "\n\nReal-world context: ";
-        setDescription((prev) => prev + prefix + data.data.context);
-        setActiveExample(null);
-      }
-    } catch { /* silent — non-critical */ }
-    finally { setInjectingData(false); }
-  }
 
   return (
     <div className="min-h-screen bg-[var(--bg)] flex flex-col">
