@@ -496,6 +496,7 @@ CRITICAL RULES:
 8. SIMPLICITY & PREMIUM STRUCTURE:
    - The user (teacher) and students should see a clean, professional exam.
    - QUESTIONS: Keep them concise and clear. Use "On considère..." to set the scene.
+   - NO REDUNDANCY: If you use 'subQuestions', do NOT list the questions again in the 'statement'. The 'statement' is only for context, diagrams, and data.
    - SOLUTIONS (CORRIGÉS):
      - Break down into clear, numbered steps.
      - Each step should be one logical thought.
@@ -503,7 +504,9 @@ CRITICAL RULES:
      - Avoid redundant technical jargon — explain the physics/math simply.
    - Total points: Must sum exactly to the specified total.
 
-9. OUTPUT: Start your response with [ and end with ]. Output ONLY the raw JSON array — no prose, no markdown fences, no explanation.
+9. CHEMISTRY NOTATION: For all organic molecules, you MUST use \\ce{...}. Example: \\ce{CH3-CH2-OH}.
+
+10. OUTPUT: Start your response with [ and end with ]. Output ONLY the raw JSON array — no prose, no markdown fences, no explanation.
 
 SOLUTION QUALITY — The corrigé must be readable at a glance:
 - Use "**Step 1:**", "**Step 2:**" headers.

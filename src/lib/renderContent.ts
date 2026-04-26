@@ -97,11 +97,22 @@ function parseNakedMath(text: string): string {
     return `$\\frac{d${num}}{d${den}}$`;
   });
 
-  // 2. Heuristic: Wrap isolated patterns like "B = 0,5 T" or "m = 100 g" or "(B = |B|)" in math if they aren't already
-  return processed.replace(/(?<![\$\w])(\(?[A-Za-z]\s*=\s*[^$\n,;!?.]{1,30}?\)?)(?![$\w])/g, (match) => {
-    // Only wrap if it looks scientific (contains =, |, or units)
+  // 2. Heuristic: Wrap isolated patterns like "B = 0,5 T" or "m = 100 g" in math if they aren't already
+  processed = processed.replace(/(?<![\$\w])(\(?[A-Za-z]\s*=\s*[^$\n,;!?.]{1,30}?\)?)(?![$\w])/g, (match) => {
     if (/[=|]/.test(match) || /\b(m|kg|s|N|J|T|Ω|V|A|mol)\b/.test(match)) {
       return `$${match}$`;
+    }
+    return match;
+  });
+
+  // 3. Chemistry Heuristic: Detect common patterns (CH3, H2O, COOH) and wrap in \ce{...}
+  // This catches things like CH3-CH2-OH, H2O, CO2, NaCl, etc.
+  return processed.replace(/(?<![\$\w\\])((\b[A-Z][a-z]?\d?)+([-=≡]\b[A-Z][a-z]?\d?)+|[A-Z][a-z]?\d+(?![a-z])|[A-Z][a-z]?\d{2,})(?![$\w])/g, (match) => {
+    // Avoid common acronyms (AI, IB, TV)
+    if (/^(AI|IB|TV|DC|AC|BC|AD)$/.test(match)) return match;
+    // If it looks like a formula (starts with C, H, O, N or has a number/dash)
+    if (/^[CHON]/.test(match) || /[\d-]/.test(match)) {
+      return `$\\ce{${match}}$`;
     }
     return match;
   });
