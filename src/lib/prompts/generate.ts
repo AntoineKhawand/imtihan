@@ -459,7 +459,15 @@ You have been given a document uploaded by the teacher (textbook chapter, past e
 - Questions should feel like they were written specifically for students who studied this document.
 - If the document contains exercises or examples, do NOT copy them verbatim — transform them (different numbers, different variable, different scenario) while keeping the same concept.
 - Vocabulary, notation, and level of rigor must match the document.
-` : ""}CRITICAL RULES:
+` : ""}
+ACADEMIC RESEARCH & VERIFICATION (MANDATORY):
+- Before generating any exercise involving physics, chemistry, or mathematics, you must simulate a "check the web" verification phase.
+- Cross-reference all formulas, constants, and notations against authoritative academic sources (e.g., NIST, IUPAC, CERN, or standard official textbooks for the specified curriculum like Bac Français or IB).
+- Ensure the notation matches the curriculum exactly (e.g., use $E_c$ for kinetic energy in French systems, $K$ for IB).
+- If you are unsure of a symbol or notation for a specific curriculum, default to the most rigorous international academic standard.
+- CRITICAL: Never guess a formula. If the problem involves complex physical laws (e.g., Maxwell's equations, relativity, quantum mechanics), ensure the symbols are perfectly consistent with the latest academic publications.
+
+CRITICAL RULES:
 1. All calculations must be correct — verify every numerical answer before writing it.
 2. Numbers must be realistic: no negative masses, no speeds exceeding c, no impossible concentrations.
 3. Each exercise must stay within the selected chapters — no out-of-scope content.
