@@ -25,14 +25,12 @@ jobs:
         uses: github/codeql-action/init@v3
         with:
           languages: javascript, typescript
-          # unique category avoids the "only one run allowed" conflict
-          category: "/language:javascript-typescript"
 
       - name: Perform CodeQL Analysis
         # analyze@v3 uploads SARIF automatically — no separate upload-sarif step needed
         uses: github/codeql-action/analyze@v3
         with:
-          category: "/language:javascript-typescript"
+          category: "javascript-typescript"
 
   # ── Shannon dynamic scan ─────────────────────────────────────────────────────
   security-scan:
