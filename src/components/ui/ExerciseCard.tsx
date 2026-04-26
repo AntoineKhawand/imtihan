@@ -273,7 +273,7 @@ export function ExerciseCard({
               <button
                 onClick={() => setShowVisualPrompt(true)}
                 className="w-7 h-7 rounded-md flex items-center justify-center text-[var(--text-tertiary)] hover:text-[var(--accent)] hover:bg-white transition-all"
-                title="AI Image (Gemini + Flux)"
+                title="Generate AI Illustration"
               >
                 <Sparkles size={12} />
               </button>

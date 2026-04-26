@@ -127,20 +127,7 @@ function handleGraphs(text: string): string {
     const desc = description.trim();
     if (!desc) return "";
     const encoded = encodeURIComponent(desc + " academic diagram, scientific illustration, high quality, centered, white background");
-    return `
-      <div class="my-4 flex flex-col items-center gap-2 group">
-        <div class="relative overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--bg-subtle)] shadow-sm">
-          <img 
-            src="https://image.pollinations.ai/prompt/${encoded}?width=800&height=450&nologo=true&model=flux" 
-            alt="${desc}"
-            class="max-w-full h-auto object-cover hover:scale-[1.02] transition-transform duration-500"
-          />
-        </div>
-        <p class="text-[10px] text-[var(--text-tertiary)] italic text-center px-4">
-          AI Illustration: ${desc}
-        </p>
-      </div>
-    `;
+    return `<div class="my-4 flex flex-col items-center gap-2 group"><div class="relative overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--bg-subtle)] shadow-sm"><img src="https://image.pollinations.ai/prompt/${encoded}?width=800&height=450&nologo=true&model=flux" alt="${desc}" class="max-w-full h-auto object-cover hover:scale-[1.02] transition-transform duration-500" /></div><p class="text-[10px] text-[var(--text-tertiary)] italic text-center px-4">AI Illustration: ${desc}</p></div>`;
   });
 
   // 2. Handle [GRAPH: description] or [VISUAL: description] - Legacy placeholder
@@ -148,20 +135,7 @@ function handleGraphs(text: string): string {
   processed = processed.replace(graphRegex, (_, description) => {
     const desc = description.trim();
     if (!desc) return "";
-    return `
-      <div class="my-4 p-5 rounded-2xl bg-[var(--bg-subtle)] border-2 border-dashed border-[var(--border)] flex flex-col items-center gap-4 text-center group hover:border-[var(--accent)] transition-all">
-        <div class="w-12 h-12 rounded-full bg-[var(--surface)] flex items-center justify-center text-[var(--text-tertiary)] group-hover:scale-110 transition-transform">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
-        </div>
-        <div class="space-y-1">
-          <p class="text-xs font-bold text-[var(--text)] uppercase tracking-widest">Visual Placeholder</p>
-          <p class="text-[11px] text-[var(--text-secondary)] italic max-w-sm">"${desc}"</p>
-        </div>
-        <p class="text-[10px] text-[var(--text-tertiary)] max-w-xs">
-          Use the <strong>Add Visual / Graph</strong> tool to convert this description into an interactive chart.
-        </p>
-      </div>
-    `;
+    return `<div class="my-4 p-5 rounded-2xl bg-[var(--bg-subtle)] border-2 border-dashed border-[var(--border)] flex flex-col items-center gap-4 text-center group hover:border-[var(--accent)] transition-all"><div class="w-12 h-12 rounded-full bg-[var(--surface)] flex items-center justify-center text-[var(--text-tertiary)] group-hover:scale-110 transition-transform"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg></div><div class="space-y-1"><p class="text-xs font-bold text-[var(--text)] uppercase tracking-widest">Visual Placeholder</p><p class="text-[11px] text-[var(--text-secondary)] italic max-w-sm">"${desc}"</p></div><p class="text-[10px] text-[var(--text-tertiary)] max-w-xs">Use the <strong>Add Visual / Graph</strong> tool to convert this description into an interactive chart.</p></div>`;
   });
 
   return processed;
