@@ -465,57 +465,40 @@ You have been given a document uploaded by the teacher (textbook chapter, past e
 3. Each exercise must stay within the selected chapters — no out-of-scope content.
 4. MATH & CHEMISTRY NOTATION — JSON requires double-escaped backslashes: write \\frac, \\sqrt, \\alpha, \\vec, \\int. For chemical equations, you MUST use mhchem WITH BRACES: \\ce{CH4 + 2O2 -> CO2 + 2H2O}. NEVER write \\ce without braces (e.g. \\ceCH4 is INVALID). Single backslash is INVALID inside a JSON string and will crash the parser.
 5. SCIENTIFIC ACCURACY: We use a high-precision verification engine (Math.js) for all generated answers. Ensure all numerical values, unit conversions, and statistical results are mathematically exact.
-6. NOTATION & SPACING (CRITICAL):
-   - ALWAYS put a space between a label and its object (e.g., write "plan $P$", "point $A$", "vecteur $\vec{n}$"). NEVER write "planP" or "pointA".
+6. NOTATION & SPACING (CRITICAL — ZERO TOLERANCE FOR PLAIN TEXT MATH):
+   - ALWAYS put a space between a label and its object (e.g., write "plan $P$", "point $A$", "vecteur $\vec{n}$").
    - VECTORS: Use KaTeX $\vec{v}$ or $\overrightarrow{AB}$. NEVER use text-based arrows like "->".
-   - SYSTEMS OF EQUATIONS: Use KaTeX \\begin{cases} ... \\end{cases} for all parametric equations or systems.
+   - FRACTIONS & DERIVATIVES: Use KaTeX $\frac{d^2x}{dt^2}$ or $\frac{1}{2}$. NEVER write "dt2d2x" or "1/2" in plain text.
+   - SYSTEMS OF EQUATIONS: Use KaTeX \begin{cases} ... \end{cases} for all parametric equations or systems.
    - COORDINATES: Use standard notation $(x; y; z)$ or $A(x; y; z)$.
+   - ZERO CODE POLICY: Every single variable, equation, and unit must be wrapped in $...$. If it is a mathematical object, it must be LaTeX. If you output plain text like "dt2d2x", the system will reject your output.
+
 7. VISUALS — Use the following for visual elements:
    a) TABLES: Use Markdown table syntax with pipes:
        | x | f(x) |
        |---|------|
        | 0 |  1   |
-       | 1 |  3   |
-   b) GRAPHS/FUNCTIONS: Use Mermaid xychart-beta:
-       \`\`\`mermaid
-       xychart-beta
-           title "Function f(x) = x²"
-           x-axis [0, 1, 2, 3]
-           y-axis [0, 2, 4, 6]
-           line [0, 1, 4, 9]
-       \`\`\`
-   c) CIRCUITS/DIAGRAMS: Use Mermaid flowchart:
-       \`\`\`mermaid
-       flowchart LR
-           A[Battery] --> B[Resistor]
-           B --> C[LED]
-       \`\`\`
-   d) ORGANIC MECHANISMS: Use Mermaid flowchart with arrows:
-       \`\`\`mermaid
-       flowchart TD
-           A[CH3-Br] --> B[CH3COO-]
-           B -->|attack| C[Transition State]
-       \`\`\`
-   e) DATA PLOTS: Use Mermaid xychart-beta for experimental data:
-       \`\`\`mermaid
-       xychart-beta
-           title "Absorption vs Concentration"
-           x-axis [0, 10, 20, 30, 40]
-           y-axis [0, 0.2, 0.4, 0.6, 0.8]
-           line [0.05, 0.18, 0.42, 0.65, 0.79]
-       \`\`\`
-   IMPORTANT: Close all mermaid code blocks with \`\`\` (three backticks, no language) — NOT with \`\`\`javascript or any other language name.
-7. PROACTIVE VISUALS: For Mathematics, Physics, or Chemistry, you are ENCOURAGED to proactively include a Mermaid chart (xychart-beta or flowchart) in the 'statement' if it helps illustrate the problem. MANDATORY: You MUST wrap the Mermaid code in triple backticks (\`\`\`mermaid ... \`\`\`). NEVER output raw Mermaid code as plain text. Do not use [GRAPH: description] placeholders.
-8. OUTPUT: Start your response with [ and end with ]. Output ONLY the raw JSON array — no prose, no markdown fences, no explanation.
+   b) GRAPHS/DIAGRAMS: You MUST wrap all Mermaid code in triple backticks (\`\`\`mermaid ... \`\`\`).
+       NEVER output raw Mermaid code without backticks. 
+       NEVER output plain text diagrams.
+       If the diagram is too complex, use a clear Markdown table.
 
-SOLUTION QUALITY — The corrigé is what differentiates Imtihan from a simple question generator:
-- Write the methodology as numbered steps in the exam language ("**Étape 1 :**", "**Step 1:**", "**الخطوة ١ :**").
-- Each step states WHAT is done AND WHY (the principle, theorem, or law being applied).
-- Show all intermediate algebra — do not skip steps; a struggling student must be able to follow.
-- State every formula in literal form before substituting numbers.
-- End with a boxed final answer: "$\\\\boxed{value\\\\text{ unit}}$".
-- commonMistakes: 2–3 specific errors typical students at this level make (not trivial arithmetic slips — conceptual or methodological mistakes).
-- For IB: include mark allocation per step in the methodology (• Method mark [M1]: ..., • Answer mark [A1]: ...).
+8. SIMPLICITY & PREMIUM STRUCTURE:
+   - The user (teacher) and students should see a clean, professional exam.
+   - QUESTIONS: Keep them concise and clear. Use "On considère..." to set the scene.
+   - SOLUTIONS (CORRIGÉS):
+     - Break down into clear, numbered steps.
+     - Each step should be one logical thought.
+     - NO DENSE BLOCKS OF CODE. Everything must be beautifully formatted LaTeX.
+     - Avoid redundant technical jargon — explain the physics/math simply.
+   - Total points: Must sum exactly to the specified total.
+
+9. OUTPUT: Start your response with [ and end with ]. Output ONLY the raw JSON array — no prose, no markdown fences, no explanation.
+
+SOLUTION QUALITY — The corrigé must be readable at a glance:
+- Use "**Step 1:**", "**Step 2:**" headers.
+- Show the literal formula BEFORE putting numbers in.
+- End with a boxed final answer: "$\\\\boxed{result}$".
 
 LATEX IN METHODOLOGY (CRITICAL — violations produce unreadable corrigés):
 - EVERY mathematical symbol, formula, equation, fraction, vector, or variable MUST be wrapped in $...$. No exceptions.

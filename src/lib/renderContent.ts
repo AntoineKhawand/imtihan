@@ -77,8 +77,7 @@ function parseTables(text: string): string {
       
       const isHeader = inTable && result[result.length - 1].includes('<table');
       
-      // Build the row as a single string — no \n inside HTML so renderContent
-      // won't convert them to <br> tags (which browsers render before the table)
+      // Build the row
       let row = '<tr class="border-b border-[var(--border)]">';
       for (const cell of cells) {
         const tag = isHeader ? 'th' : 'td';
@@ -100,7 +99,7 @@ function parseTables(text: string): string {
 
   if (inTable) result.push('</table></div>');
 
-  // Join: no \n between HTML blocks, keep \n between plain-text lines only
+  // Join: avoid adding extra \n around HTML blocks
   let output = "";
   for (let i = 0; i < result.length; i++) {
     const part = result[i];
@@ -113,14 +112,11 @@ function parseTables(text: string): string {
 }
 
 function applyMarkdown(text: string): string {
-  let md = text
+  return text
     .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
     .replace(/(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)/g, "<em>$1</em>")
     .replace(/`([^`]+)`/g, '<code class="font-mono text-xs bg-[var(--bg-subtle)] px-1 py-0.5 rounded">$1</code>');
-    
-  return parseTables(md);
 }
-
 
 function handleGraphs(text: string): string {
   let processed = text;
@@ -176,7 +172,7 @@ export function renderContent(raw: string): string {
 
   let text = raw;
 
-  // 0. Detect "naked" mermaid blocks (without backticks) that start at a new line
+  // 0. Detect "naked" mermaid blocks (without backticks)
   const mermaidKeywords = ["graph ", "flowchart ", "sequenceDiagram", "gantt", "classDiagram", "stateDiagram", "pie", "erDiagram", "journey", "gitGraph", "requirementDiagram", "mindmap", "timeline", "xychart-beta"];
   const lines = text.split("\n");
   let inNakedMermaid = false;
@@ -191,8 +187,6 @@ export function renderContent(raw: string): string {
       inNakedMermaid = true;
       nakedMermaidCode = line + "\n";
     } else if (inNakedMermaid) {
-      // Mermaid code usually doesn't contain colon-heavy headers or points like "Données :-"
-      // or "1." at the start of a line. We use these as heuristic terminators.
       const isTerminator = 
         trimmed.includes(":-") || 
         trimmed.startsWith("**") || 
@@ -216,7 +210,7 @@ export function renderContent(raw: string): string {
   }
   text = finalLines.join("\n");
 
-  // 0.5 Extract mermaid blocks FIRST — before any \n processing touches them.
+  // 0.5 Extract mermaid blocks
   const mermaidBlocks: string[] = [];
   text = text.replace(/```mermaid\n?([\s\S]*?)```/g, (_match, code: string) => {
     const idx = mermaidBlocks.length;
@@ -224,22 +218,20 @@ export function renderContent(raw: string): string {
     return `%%MERMAID_${idx}%%`;
   });
 
-  // 1. Normalise line endings and collapse excessive newlines
+  // 1. Normalise line endings
   text = text
     .replace(/\\n/g, "\n")
     .replace(/\r\n/g, "\n")
-    .replace(/\n\s*\n/g, "\n\n")
-    .trim();
-  text = text.replace(/\n{3,}/g, "\n\n");
+    .replace(/\n{3,}/g, "\n\n");
 
-  // 2. Pre-process \ce{...}
-  text = text.replace(/\\ce\{((?:[^{}]|\{[^{}]*\})*)\}/g, (match) => {
-    return `$${match}$`;
-  });
+  // 2. Parse Tables
+  text = parseTables(text);
 
-  // 3. Process blocks (Math, Tables, Graphs)
-  const displayParts = splitMath(text, "$$", "$$");
+  // 3. Apply Markdown
+  text = applyMarkdown(text);
 
+  // 4. Handle math segments (LaTeX)
+  let displayParts = splitMath(text, "$$", "$$");
   let html = displayParts.map((part) => {
     if (part.kind === "math") {
       return renderKaTeX(part.content.trim(), true);
@@ -250,38 +242,38 @@ export function renderContent(raw: string): string {
       if (p.kind === "math") {
         return renderKaTeX(p.content, false);
       }
-
-      let content = applyMarkdown(p.content);
-      content = handleGraphs(content);
-
-      return content
-        .replace(/\n\n+/g, "</p><p class=\"mt-3\">")
-        .replace(/\n/g, "<br />");
+      return handleGraphs(p.content);
     }).join("");
   }).join("");
 
-  // 4. Restore mermaid blocks — newlines are intact, Mermaid.js can parse them
-  if (mermaidBlocks.length > 0) {
-    mermaidBlocks.forEach((code, idx) => {
-      html = html.replace(
-        `%%MERMAID_${idx}%%`,
-        `<div class="mermaid my-4 p-4 bg-white rounded-lg border border-[var(--border)] overflow-x-auto">${code}</div>`
-      );
-    });
+  // 5. Restore Mermaid graphs
+  mermaidBlocks.forEach((code, i) => {
+    html = html.replace(`%%MERMAID_${i}%%`, `<div class="mermaid my-6 flex justify-center bg-white p-4 rounded-xl border border-[var(--border)] shadow-sm overflow-x-auto">${code}</div>`);
+  });
+
+  // 6. FINAL POLISH
+  // Convert newlines to <br/> but avoid breaking HTML structures
+  // We use a safe joiner: newlines between plain text lines become <br/>,
+  // newlines touching HTML tags are removed to avoid gaps.
+  const htmlLines = html.split("\n");
+  let finalHtml = "";
+  for (let i = 0; i < htmlLines.length; i++) {
+    const line = htmlLines[i];
+    if (!line.trim()) continue;
+    
+    if (i > 0) {
+      const prevLine = htmlLines[i-1].trim();
+      const currLine = line.trim();
+      const isPrevHtml = prevLine.endsWith(">");
+      const isCurrHtml = currLine.startsWith("<");
+      
+      if (!isPrevHtml && !isCurrHtml) {
+        finalHtml += "<br />";
+      }
+    }
+    finalHtml += line;
   }
 
-  // Final cleanup: Wrap in paragraph and remove empty ones produced by block trimming
-  html = `<p>${html}</p>`;
-  html = html
-    .replace(/<p(?: class="[^"]*")?>\s*<\/p>/g, "") // Remove empty paragraphs (with or without classes)
-    .replace(/<p>\s*<br \/>/g, "<p>") // Remove leading breaks in paragraphs
-    .replace(/<p(?: class="[^"]*")?>\s*<div/g, "<div") // Strip P wrapper (including mt-3) around blocks
-    .replace(/<\/div>\s*<\/p>/g, "</div>") // Strip P trailing wrapper
-    .replace(/(?:<br \/>\s*)+<div/g, "<div") // Remove breaks before divs
-    .replace(/<\/div>\s*(?:<br \/>\s*)+/g, "</div>") // Remove breaks after divs
-    .replace(/<br \/>\s*<br \/>/g, "<br />") // Collapse double breaks
-    .replace(/<\/div>\s*<p/g, "</div><p") // Ensure no gap between block and next p
-    .replace(/<\/p>\s*<div/g, "</p><div"); // Ensure no gap between p and next block
-
-  return html;
+  // Final collapse of multiple breaks: allow double, collapse triple+
+  return finalHtml.replace(/(<br \/>\s*){3,}/g, "<br /><br />");
 }
