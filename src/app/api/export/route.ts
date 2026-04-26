@@ -400,30 +400,49 @@ async function generateWordDocument(
   }));
 
   // ─── Score Summary Table (Teachers love this) ──────────────
-  const summaryCols = exercises.length + 2;
   children.push(new Table({
     width: { size: 100, type: WidthType.PERCENTAGE },
     margins: { top: 100, bottom: 100, left: 100, right: 100 },
     rows: [
       new TableRow({
         children: [
-          new TableCell({ children: [new Paragraph({ text: exerciseWord, bold: true, alignment: AlignmentType.CENTER, spacing: { before: 40, after: 40 } })], shading: { fill: "F3F4F6" } }),
-          ...exercises.map(ex => new TableCell({ children: [new Paragraph({ text: String(ex.number), alignment: AlignmentType.CENTER, spacing: { before: 40, after: 40 } })] })),
-          new TableCell({ children: [new Paragraph({ text: "Total", bold: true, alignment: AlignmentType.CENTER, spacing: { before: 40, after: 40 } })], shading: { fill: "F3F4F6" } }),
+          new TableCell({ 
+            children: [new Paragraph({ children: [new TextRun({ text: exerciseWord, bold: true })], alignment: AlignmentType.CENTER, spacing: { before: 40, after: 40 } })], 
+            shading: { fill: "F3F4F6" } 
+          }),
+          ...exercises.map(ex => new TableCell({ 
+            children: [new Paragraph({ children: [new TextRun({ text: String(ex.number) })], alignment: AlignmentType.CENTER, spacing: { before: 40, after: 40 } })] 
+          })),
+          new TableCell({ 
+            children: [new Paragraph({ children: [new TextRun({ text: "Total", bold: true })], alignment: AlignmentType.CENTER, spacing: { before: 40, after: 40 } })], 
+            shading: { fill: "F3F4F6" } 
+          }),
         ]
       }),
       new TableRow({
         children: [
-          new TableCell({ children: [new Paragraph({ text: "Max", bold: true, alignment: AlignmentType.CENTER, spacing: { before: 40, after: 40 } })] }),
-          ...exercises.map(ex => new TableCell({ children: [new Paragraph({ text: String(ex.points), alignment: AlignmentType.CENTER, spacing: { before: 40, after: 40 } })] })),
-          new TableCell({ children: [new Paragraph({ text: String(context.totalPoints), bold: true, alignment: AlignmentType.CENTER, spacing: { before: 40, after: 40 } })] }),
+          new TableCell({ 
+            children: [new Paragraph({ children: [new TextRun({ text: "Max", bold: true })], alignment: AlignmentType.CENTER, spacing: { before: 40, after: 40 } })] 
+          }),
+          ...exercises.map(ex => new TableCell({ 
+            children: [new Paragraph({ children: [new TextRun({ text: String(ex.points) })], alignment: AlignmentType.CENTER, spacing: { before: 40, after: 40 } })] 
+          })),
+          new TableCell({ 
+            children: [new Paragraph({ children: [new TextRun({ text: String(context.totalPoints), bold: true })], alignment: AlignmentType.CENTER, spacing: { before: 40, after: 40 } })] 
+          }),
         ]
       }),
       new TableRow({
         children: [
-          new TableCell({ children: [new Paragraph({ text: "Score", bold: true, alignment: AlignmentType.CENTER, spacing: { before: 120, after: 120 } })] }),
-          ...exercises.map(() => new TableCell({ children: [new Paragraph({ text: "" })] })),
-          new TableCell({ children: [new Paragraph({ text: "", spacing: { before: 120, after: 120 } })] }),
+          new TableCell({ 
+            children: [new Paragraph({ children: [new TextRun({ text: "Score", bold: true })], alignment: AlignmentType.CENTER, spacing: { before: 120, after: 120 } })] 
+          }),
+          ...exercises.map(() => new TableCell({ 
+            children: [new Paragraph({ text: "" })] 
+          })),
+          new TableCell({ 
+            children: [new Paragraph({ text: "", spacing: { before: 120, after: 120 } })] 
+          }),
         ]
       })
     ]
