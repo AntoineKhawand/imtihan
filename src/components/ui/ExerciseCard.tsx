@@ -367,6 +367,7 @@ export function ExerciseCard({
               </div>
             </div>
           )}
+          </div>
         </div>
       </div>
 
