@@ -131,54 +131,22 @@ export default function ExportPage() {
     try {
       const exportExercises = variant === "B" ? buildVersionB(exercises, examSeed) : exercises;
       const exportContext = { ...context, language: exportLanguage };
+      const header = { schoolName, className, teacherName, date: examDate };
 
-      // 1. Generate the .docx via /api/export.
-      const res = await fetch("/api/export", {
+      // Unified generate-and-send API
+      const mailRes = await fetch("/api/export/send", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           context: exportContext,
+          templateId,
           exercises: exportExercises,
-          format: "word",
-          includeAnswerKey: emailIncludeSolution,
-          header: { schoolName, className, teacherName, date: examDate },
-        }),
-      });
-      if (!res.ok) throw new Error(`Export failed (${res.status})`);
-
-      // 2. Convert to base64 for the email attachment (safe for binary)
-      const blob = new Blob([await res.arrayBuffer()]);
-      const fileBase64 = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          const base64String = (reader.result as string).split(",")[1];
-          resolve(base64String);
-        };
-        reader.onerror = reject;
-        reader.readAsDataURL(blob);
-      });
-
-      const subject = SUBJECT_LABELS[context.subject]?.fr ?? context.subject;
-      const suffix = variant === "B" ? "_VersionB" : "";
-      const fileName = `Imtihan_${subject}_${context.levelId}${suffix}.docx`;
-
-      // 3. Send via /api/email.
-      const mailRes = await fetch("/api/email", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+          header,
           to: email,
-          subject: `${subject} — ${context.levelId} (${variant === "B" ? "Version B" : "Version A"})`,
-          message: emailIncludeSolution
-            ? "Exam with full corrigé attached."
-            : "Exam attached (without corrigé).",
-          fileBase64,
-          fileName,
-          mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         }),
       });
 
-      const data = await mailRes.json().catch(() => ({ success: false, error: "The email server returned an invalid response. The file might be too large or the session expired." }));
+      const data = await mailRes.json().catch(() => ({ success: false, error: "The email server returned an invalid response. Please try again." }));
       if (!mailRes.ok || !data.success) {
         throw new Error(data.error ?? `Email send failed (Status ${mailRes.status})`);
       }

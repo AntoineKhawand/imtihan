@@ -13,7 +13,7 @@ import {
  */
 async function processContentBlocks(
   text: string, 
-  baseOptions: { size: number; color?: string; font?: string }
+  baseOptions: { size: number; color?: string; font?: string; indent?: number }
 ): Promise<(Paragraph | Table)[]> {
   const blocks: (Paragraph | Table)[] = [];
   
@@ -31,6 +31,7 @@ async function processContentBlocks(
         blocks.push(new Paragraph({
           children: createFormattedTextRuns(content, baseOptions),
           spacing: { after: 120 },
+          indent: baseOptions.indent ? { left: baseOptions.indent } : undefined,
         }));
       }
       currentParagraphLines = [];
@@ -340,7 +341,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-async function generateWordDocument(
+export async function generateWordDocument(
   context: z.infer<typeof RequestSchema>["context"],
   templateId: string,
   exercises: z.infer<typeof RequestSchema>["exercises"],
@@ -472,13 +473,7 @@ async function generateWordDocument(
           indent: { left: 720 },
           spacing: { after: 40 },
         }));
-        children.push(...(await processContentBlocks(sq.statement, { size: 22, font: fontBody, color: textColor })).map(b => {
-          if (b instanceof Paragraph) {
-            // @ts-ignore
-            b.options.indent = { left: 720 };
-          }
-          return b;
-        }));
+        children.push(...(await processContentBlocks(sq.statement, { size: 22, font: fontBody, color: textColor, indent: 720 })));
         children.push(new Paragraph({
           children: [new TextRun({ text: `  (${sq.points} pts)`, size: 20, color: metaColor, font: fontBody })],
           indent: { left: 720 },
