@@ -79,15 +79,18 @@ function parseTables(text: string): string {
       
       const isHeader = inTable && result[result.length - 1].includes('<table');
       
-      result.push('<tr class="border-b border-[var(--border)]">');
+      // Build the row as a single string — no \n inside HTML so renderContent
+      // won't convert them to <br> tags (which browsers render before the table)
+      let row = '<tr class="border-b border-[var(--border)]">';
       for (const cell of cells) {
         const tag = isHeader ? 'th' : 'td';
-        const classes = isHeader 
-          ? 'px-4 py-2 font-semibold text-[var(--text)] bg-[var(--bg-subtle)] border-r border-[var(--border)] last:border-r-0' 
+        const classes = isHeader
+          ? 'px-4 py-2 font-semibold text-[var(--text)] bg-[var(--bg-subtle)] border-r border-[var(--border)] last:border-r-0'
           : 'px-4 py-2 text-[var(--text-secondary)] border-r border-[var(--border)] last:border-r-0';
-        result.push(`<${tag} class="${classes}">${cell}</${tag}>`);
+        row += `<${tag} class="${classes}">${cell}</${tag}>`;
       }
-      result.push('</tr>');
+      row += '</tr>';
+      result.push(row);
     } else {
       if (inTable) {
         result.push('</table></div>');
@@ -96,9 +99,19 @@ function parseTables(text: string): string {
       result.push(lines[i]);
     }
   }
-  
+
   if (inTable) result.push('</table></div>');
-  return result.join("\n");
+
+  // Join: no \n between HTML blocks, keep \n between plain-text lines only
+  let output = "";
+  for (let i = 0; i < result.length; i++) {
+    const part = result[i];
+    if (i === 0) { output += part; continue; }
+    const prevEndsHtml  = result[i - 1].trimEnd().endsWith(">");
+    const currStartsHtml = part.trimStart().startsWith("<");
+    output += (prevEndsHtml || currStartsHtml) ? part : "\n" + part;
+  }
+  return output;
 }
 
 function applyMarkdown(text: string): string {
