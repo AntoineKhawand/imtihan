@@ -97,7 +97,10 @@ export default function ExportPage() {
         }),
       });
 
-      if (!res.ok) { setDownloading(null); return; }
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error ?? `Export failed (${res.status})`);
+      }
 
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
@@ -110,10 +113,12 @@ export default function ExportPage() {
       URL.revokeObjectURL(url);
       setDownloaded(format);
 
-      // Save to library on first download
       if (!savedToLibrary) {
         saveExamToLibrary();
       }
+    } catch (err) {
+      console.error("Download error:", err);
+      alert(err instanceof Error ? err.message : "Failed to download. Please try again.");
     } finally {
       setDownloading(null);
     }
@@ -141,12 +146,17 @@ export default function ExportPage() {
       });
       if (!res.ok) throw new Error(`Export failed (${res.status})`);
 
-      // 2. Convert to base64 for the email attachment.
-      const buf = await res.arrayBuffer();
-      const bytes = new Uint8Array(buf);
-      let binary = "";
-      for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
-      const fileBase64 = btoa(binary);
+      // 2. Convert to base64 for the email attachment (safe for binary)
+      const blob = new Blob([await res.arrayBuffer()]);
+      const fileBase64 = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          const base64String = (reader.result as string).split(",")[1];
+          resolve(base64String);
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
 
       const subject = SUBJECT_LABELS[context.subject]?.fr ?? context.subject;
       const suffix = variant === "B" ? "_VersionB" : "";

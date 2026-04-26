@@ -177,20 +177,47 @@ function applyMarkdown(text: string): string {
 }
 
 function handleGraphs(text: string): string {
-  // Render ALL [IMAGE:...] and [GRAPH:/VISUAL:...] as a reliable description box.
-  // External image services (Pollinations, etc.) are too unreliable for production use.
-  return text
-    .replace(/\[(?:IMAGE|GRAPH|VISUAL):\s*(.*?)\]/gi, (_match, description) => {
-      const desc = description.trim();
-      if (!desc) return "";
-      return `<div class="my-4 rounded-xl border border-[var(--border)] bg-[var(--bg-subtle)] px-4 py-3 flex items-start gap-3">
-        <span class="text-[var(--accent)] flex-shrink-0 text-base leading-snug">📊</span>
-        <div>
-          <p class="text-[11px] font-semibold uppercase tracking-wider text-[var(--text-tertiary)] mb-1">Figure description</p>
-          <p class="text-sm text-[var(--text-secondary)] leading-relaxed">${desc}</p>
+  return text.replace(/\[(?:IMAGE|GRAPH|VISUAL):\s*(.*?)\]/gi, (_match, description) => {
+    const desc = description.trim();
+    if (!desc) return "";
+
+    // Unique ID so the onerror handler can reveal the correct fallback
+    const uid = Math.random().toString(36).slice(2, 8);
+    const safeDesc = desc.replace(/"/g, "&quot;");
+    // Truncate to keep the URL reasonable
+    const prompt = (desc.length > 250 ? desc.slice(0, 250) + "..." : desc)
+      + " academic diagram, scientific illustration, white background, high quality";
+    const src = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=800&height=450&nologo=true&model=flux`;
+
+    return `<div class="my-6">
+      <div class="relative rounded-xl overflow-hidden border border-[var(--border)] bg-[var(--bg-subtle)] min-h-[120px] flex items-center justify-center">
+        <img
+          id="img-${uid}"
+          src="${src}"
+          alt="${safeDesc}"
+          loading="lazy"
+          class="w-full h-auto object-contain rounded-xl transition-opacity duration-500"
+          style="opacity:0"
+          onload="this.style.opacity='1'; document.getElementById('fb-${uid}').style.display='none';"
+          onerror="this.style.display='none'; document.getElementById('fb-${uid}').style.display='flex'; document.getElementById('spin-${uid}').style.display='none';"
+        />
+        <div id="spin-${uid}" class="absolute inset-0 flex items-center justify-center">
+          <svg class="animate-spin w-6 h-6 text-[var(--accent)]" viewBox="0 0 24 24" fill="none">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+          </svg>
         </div>
-      </div>`;
-    });
+        <div id="fb-${uid}" class="absolute inset-0 items-start gap-3 px-4 py-3 hidden">
+          <span class="text-[var(--accent)] flex-shrink-0 text-base">📊</span>
+          <div>
+            <p class="text-[11px] font-semibold uppercase tracking-wider text-[var(--text-tertiary)] mb-1">Figure</p>
+            <p class="text-sm text-[var(--text-secondary)] leading-relaxed">${safeDesc}</p>
+          </div>
+        </div>
+      </div>
+      <p class="text-[10px] text-center text-[var(--text-tertiary)] italic mt-1.5">${safeDesc.length > 80 ? safeDesc.slice(0, 80) + "…" : safeDesc}</p>
+    </div>`;
+  });
 }
 
 export function renderContent(raw: string): string {
