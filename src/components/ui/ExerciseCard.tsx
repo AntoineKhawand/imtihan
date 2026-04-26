@@ -263,11 +263,18 @@ export function ExerciseCard({
                 <Table size={13} />
               </button>
               <button
-                onClick={() => setShowVisualPrompt(true)}
+                onClick={() => onTransform(exercise.id, "visual")}
                 className="w-7 h-7 rounded-md flex items-center justify-center text-[var(--text-tertiary)] hover:text-[var(--accent)] hover:bg-white transition-all"
-                title="Add Visual / Graph"
+                title="Add Diagram / Graph (Mermaid)"
               >
                 <ImageIcon size={13} />
+              </button>
+              <button
+                onClick={() => setShowVisualPrompt(true)}
+                className="w-7 h-7 rounded-md flex items-center justify-center text-[var(--text-tertiary)] hover:text-[var(--accent)] hover:bg-white transition-all"
+                title="AI Image (Gemini + Flux)"
+              >
+                <Sparkles size={12} />
               </button>
             </div>
           )}
@@ -399,14 +406,14 @@ export function ExerciseCard({
         )}
       </div>
 
-      {/* Visual Prompt Input */}
+      {/* AI Image Prompt Input */}
       {showVisualPrompt && (
         <div className="px-6 pb-4 animate-in fade-in slide-in-from-top-2 duration-300">
           <div className="p-3.5 rounded-xl border border-[var(--accent)]/30 bg-[var(--accent-light)]/30 space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <ImageIcon size={13} className="text-[var(--accent)]" />
-                <p className="text-[11px] font-bold uppercase tracking-wider text-[var(--accent)]">Request a visual</p>
+                <Sparkles size={13} className="text-[var(--accent)]" />
+                <p className="text-[11px] font-bold uppercase tracking-wider text-[var(--accent)]">Request AI Illustration</p>
               </div>
               <button 
                 onClick={() => setShowVisualPrompt(false)}
@@ -428,7 +435,7 @@ export function ExerciseCard({
                     setVisualPrompt("");
                   }
                 }}
-                placeholder="e.g. A demand curve, a titration setup, a table of contents..."
+                placeholder="e.g. A photo of a titration setup, a landscape showing erosion..."
                 className="flex-1 h-9 px-3 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-sm text-[var(--text)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] transition-all"
               />
               <button
@@ -447,7 +454,7 @@ export function ExerciseCard({
               </button>
             </div>
             <p className="text-[10px] text-[var(--text-tertiary)] leading-relaxed italic">
-              Describe the chart, function, or diagram you want. Imtihan will generate an interactive Mermaid chart (xychart, flowchart, etc.) based on your description.
+              Describe the illustration or photo you need. Gemini will generate a high-quality prompt and insert the image directly into the question.
             </p>
           </div>
         </div>

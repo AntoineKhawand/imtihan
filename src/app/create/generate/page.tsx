@@ -214,7 +214,7 @@ export default function GeneratePage() {
     }
   }
 
-  async function handleTransform(id: string, type: "table" | "image", prompt?: string) {
+  async function handleTransform(id: string, type: "table" | "visual" | "image", prompt?: string) {
     if (!context) return;
     const exercise = exercises.find(e => e.id === id);
     if (!exercise) return;

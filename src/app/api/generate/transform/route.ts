@@ -6,7 +6,7 @@ import { sanitizeError, createSecurityHeaders } from "@/lib/security";
 
 const RequestSchema = z.object({
   exercise: z.any(),
-  type: z.enum(["table", "image"]),
+  type: z.enum(["table", "visual", "image"]),
   language: z.string(),
   prompt: z.string().optional(),
 });
@@ -35,13 +35,19 @@ export async function POST(request: NextRequest) {
     let instruction = "";
     if (type === "table") {
       instruction = `Transform the statement of this exercise into a well-formatted Markdown Table if applicable, or restructure its data points into a clear Markdown Table within the statement. Do not change the core academic difficulty or points, just improve the layout by using a markdown table for the data/context.`;
-    } else {
+    } else if (type === "visual") {
       const visualReq = prompt ? `Specific requirement: ${prompt}` : `Add a suitable mathematical graph, diagram, or chart.`;
       instruction = `${visualReq} 
       - For mathematical graphs (functions, parabolas, curves), use Mermaid \`xychart-beta\`.
       - For diagrams (electrical circuits, chemical setups, biology structures), use Mermaid \`flowchart\`.
-      - Ensure the Mermaid code is valid and well-formatted.
-      - Return the Mermaid block directly within the 'statement' field. Do NOT use the [GRAPH: description] tag anymore.`;
+      - MANDATORY: Wrap the Mermaid code in triple backticks (e.g., \`\`\`mermaid ... \`\`\`).
+      - Return the Mermaid block directly within the 'statement' field.`;
+    } else if (type === "image") {
+      const imgReq = prompt ? `Specific image requirement: ${prompt}` : `Add a suitable high-quality academic illustration or photo to support this question.`;
+      instruction = `${imgReq}
+      - Use Gemini to describe a high-quality, detailed, and academically relevant image (e.g., "A high-resolution photo of a [subject] in a laboratory setting", "A detailed 3D render of [concept]").
+      - Insert the tag [IMAGE: detailed prompt] exactly where the image should appear in the 'statement'.
+      - Ensure the prompt is in English for the image generator, regardless of the exercise language.`;
     }
 
     const systemPrompt = `You are an expert exam designer and editor. 

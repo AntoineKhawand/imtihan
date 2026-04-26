@@ -123,38 +123,52 @@ function applyMarkdown(text: string): string {
 
 
 function handleGraphs(text: string): string {
-  // Matches [GRAPH: description] or [VISUAL: description]
-  // Renders as a styled description box — no external image service needed
-  return text.replace(/\[(?:GRAPH|VISUAL):\s*(.*?)\]/g, (_match, description) => {
+  let processed = text;
+  
+  // 1. Handle [IMAGE: description] - Renders a live AI illustration
+  const imageRegex = /\[IMAGE:\s*(.*?)\]/gi;
+  processed = processed.replace(imageRegex, (_, description) => {
     const desc = description.trim();
     if (!desc) return "";
+    const encoded = encodeURIComponent(desc + " academic diagram, scientific illustration, high quality, centered, white background");
     return `
-      <div class="my-6 rounded-xl border-2 border-dashed border-[var(--border-strong)] bg-[var(--bg-subtle)] overflow-hidden">
-        <div class="bg-[var(--bg-subtle)] border-b border-[var(--border)] px-4 py-2 flex items-center justify-between">
-          <div class="flex items-center gap-2">
-            <span class="text-lg">📐</span>
-            <span class="text-[10px] font-bold uppercase tracking-widest text-[var(--text-tertiary)]">Visual Representation</span>
-          </div>
-          <span class="text-[9px] font-medium text-[var(--text-tertiary)] italic">Automated Sketch Description</span>
+      <div class="my-4 flex flex-col items-center gap-2 group">
+        <div class="relative overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--bg-subtle)] shadow-sm">
+          <img 
+            src="https://image.pollinations.ai/prompt/${encoded}?width=800&height=450&nologo=true&model=flux" 
+            alt="${desc}"
+            class="max-w-full h-auto object-cover hover:scale-[1.02] transition-transform duration-500"
+          />
         </div>
-        <div class="p-6 relative">
-          <!-- Subtle Grid Background for 'Draft' feel -->
-          <div class="absolute inset-0 opacity-[0.03] pointer-events-none" style="background-image: radial-gradient(var(--text) 1px, transparent 1px); background-size: 20px 20px;"></div>
-          <div class="relative z-10 flex flex-col items-center text-center">
-            <div class="w-12 h-12 rounded-full bg-[var(--accent-light)] flex items-center justify-center mb-4">
-              <span class="text-xl">📊</span>
-            </div>
-            <p class="text-sm text-[var(--text-secondary)] leading-relaxed max-w-md mx-auto italic">
-              "${desc}"
-            </p>
-            <div class="mt-4 pt-4 border-t border-[var(--border)] w-full max-w-xs text-[10px] text-[var(--text-tertiary)]">
-              Use the <strong>Add Visual / Graph</strong> tool to convert this description into an interactive chart.
-            </div>
-          </div>
-        </div>
+        <p class="text-[10px] text-[var(--text-tertiary)] italic text-center px-4">
+          AI Illustration: ${desc}
+        </p>
       </div>
     `;
   });
+
+  // 2. Handle [GRAPH: description] or [VISUAL: description] - Legacy placeholder
+  const graphRegex = /\[(?:GRAPH|VISUAL):\s*(.*?)\]/gi;
+  processed = processed.replace(graphRegex, (_, description) => {
+    const desc = description.trim();
+    if (!desc) return "";
+    return `
+      <div class="my-4 p-5 rounded-2xl bg-[var(--bg-subtle)] border-2 border-dashed border-[var(--border)] flex flex-col items-center gap-4 text-center group hover:border-[var(--accent)] transition-all">
+        <div class="w-12 h-12 rounded-full bg-[var(--surface)] flex items-center justify-center text-[var(--text-tertiary)] group-hover:scale-110 transition-transform">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+        </div>
+        <div class="space-y-1">
+          <p class="text-xs font-bold text-[var(--text)] uppercase tracking-widest">Visual Placeholder</p>
+          <p class="text-[11px] text-[var(--text-secondary)] italic max-w-sm">"${desc}"</p>
+        </div>
+        <p class="text-[10px] text-[var(--text-tertiary)] max-w-xs">
+          Use the <strong>Add Visual / Graph</strong> tool to convert this description into an interactive chart.
+        </p>
+      </div>
+    `;
+  });
+
+  return processed;
 }
 
 export function renderContent(raw: string): string {
@@ -162,9 +176,47 @@ export function renderContent(raw: string): string {
 
   let text = raw;
 
-  // 0. Extract mermaid blocks FIRST — before any \n processing touches them.
-  //    Newlines inside mermaid code are essential for the parser; converting
-  //    them to <br> breaks the chart silently.
+  // 0. Detect "naked" mermaid blocks (without backticks) that start at a new line
+  const mermaidKeywords = ["graph ", "flowchart ", "sequenceDiagram", "gantt", "classDiagram", "stateDiagram", "pie", "erDiagram", "journey", "gitGraph", "requirementDiagram", "mindmap", "timeline", "xychart-beta"];
+  const lines = text.split("\n");
+  let inNakedMermaid = false;
+  let nakedMermaidCode = "";
+  const finalLines: string[] = [];
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    const trimmed = line.trim();
+    
+    if (!inNakedMermaid && mermaidKeywords.some(kw => trimmed.startsWith(kw))) {
+      inNakedMermaid = true;
+      nakedMermaidCode = line + "\n";
+    } else if (inNakedMermaid) {
+      // Mermaid code usually doesn't contain colon-heavy headers or points like "Données :-"
+      // or "1." at the start of a line. We use these as heuristic terminators.
+      const isTerminator = 
+        trimmed.includes(":-") || 
+        trimmed.startsWith("**") || 
+        /^[0-9]\./.test(trimmed) ||
+        (trimmed === "" && i + 1 < lines.length && lines[i+1].trim() !== "" && !mermaidKeywords.some(kw => lines[i+1].trim().startsWith(kw)));
+
+      if (isTerminator) {
+        inNakedMermaid = false;
+        finalLines.push("```mermaid\n" + nakedMermaidCode.trim() + "\n```");
+        finalLines.push(line);
+        nakedMermaidCode = "";
+      } else {
+        nakedMermaidCode += line + "\n";
+      }
+    } else {
+      finalLines.push(line);
+    }
+  }
+  if (inNakedMermaid) {
+    finalLines.push("```mermaid\n" + nakedMermaidCode.trim() + "\n```");
+  }
+  text = finalLines.join("\n");
+
+  // 0.5 Extract mermaid blocks FIRST — before any \n processing touches them.
   const mermaidBlocks: string[] = [];
   text = text.replace(/```mermaid\n?([\s\S]*?)```/g, (_match, code: string) => {
     const idx = mermaidBlocks.length;

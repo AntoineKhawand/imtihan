@@ -505,7 +505,7 @@ You have been given a document uploaded by the teacher (textbook chapter, past e
            line [0.05, 0.18, 0.42, 0.65, 0.79]
        \`\`\`
    IMPORTANT: Close all mermaid code blocks with \`\`\` (three backticks, no language) — NOT with \`\`\`javascript or any other language name.
-7. PROACTIVE VISUALS: For Mathematics, Physics, or Chemistry, you are ENCOURAGED to proactively include a Mermaid chart (xychart-beta or flowchart) in the 'statement' if it helps illustrate the problem. Do not use [GRAPH: description] placeholders.
+7. PROACTIVE VISUALS: For Mathematics, Physics, or Chemistry, you are ENCOURAGED to proactively include a Mermaid chart (xychart-beta or flowchart) in the 'statement' if it helps illustrate the problem. MANDATORY: You MUST wrap the Mermaid code in triple backticks (\`\`\`mermaid ... \`\`\`). NEVER output raw Mermaid code as plain text. Do not use [GRAPH: description] placeholders.
 8. OUTPUT: Start your response with [ and end with ]. Output ONLY the raw JSON array — no prose, no markdown fences, no explanation.
 
 SOLUTION QUALITY — The corrigé is what differentiates Imtihan from a simple question generator:
