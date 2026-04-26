@@ -73,35 +73,24 @@ async function processContentBlocks(
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i].trim();
     
-    // Handle [GRAPH: ...]
-    const graphMatch = line.match(/\[(?:GRAPH|VISUAL):\s*(.*?)\]/i);
+    // Handle [IMAGE: ...] / [GRAPH: ...] / [VISUAL: ...]
+    // We do NOT use external image services (Pollinations etc.) — they are
+    // unreliable on Vercel and cause blank images in the exported document.
+    // Instead, render a clearly-labelled description box, which always works.
+    const graphMatch = line.match(/\[(?:IMAGE|GRAPH|VISUAL):\s*(.*?)\]/i);
     if (graphMatch) {
       flushParagraph();
       const description = graphMatch[1].trim();
-      try {
-        const encoded = encodeURIComponent(description + " academic diagram, scientific illustration, high quality, centered, white background");
-        const imgRes = await fetch(`https://image.pollinations.ai/prompt/${encoded}?width=800&height=450&nologo=true&model=flux`);
-        if (imgRes.ok) {
-          const buffer = await imgRes.arrayBuffer();
-          blocks.push(new Paragraph({
-            children: [
-              new ImageRun({
-                type: "png",
-                data: buffer,
-                transformation: { width: 480, height: 270 },
-              }),
-            ],
-            alignment: AlignmentType.CENTER,
-            spacing: { before: 200, after: 200 },
-          }));
-          blocks.push(new Paragraph({
-            children: [new TextRun({ text: `Figure: ${description}`, italics: true, size: 18, color: "666666" })],
-            alignment: AlignmentType.CENTER,
-            spacing: { after: 200 },
-          }));
-        }
-      } catch (e) {
-        console.error("Failed to fetch graph image for DOCX:", e);
+      if (description) {
+        blocks.push(new Paragraph({
+          children: [new TextRun({ text: "📊  Figure description", bold: true, size: 18, color: "1a5e3f" })],
+          spacing: { before: 240, after: 60 },
+        }));
+        blocks.push(new Paragraph({
+          children: [new TextRun({ text: description, italics: true, size: 18, color: "374151" })],
+          spacing: { after: 240 },
+          indent: { left: 360 },
+        }));
       }
       continue;
     }
@@ -223,8 +212,11 @@ const SUBJECT_LABELS: Record<string, string> = {
 function cleanLatexForWord(text: string): string {
   let cleaned = text;
   
-  // 1. Handle common chemical symbols and indices first
-  cleaned = cleaned.replace(/\\ce\{([^}]+)\}/g, "$1");
+  // 1. Handle \ce{...} - Convert chemical indices to subscript notation _{x}
+  cleaned = cleaned.replace(/\\ce\{([^}]+)\}/g, (_, formula) => {
+    // Basic heuristic to add subscripts to numbers in chemical formulas
+    return formula.replace(/([A-Z][a-z]?)(\d+)/g, "$1_{$2}");
+  });
   
   // 2. Remove math mode markers
   cleaned = cleaned.replace(/\$\$/g, "");
@@ -245,7 +237,8 @@ function cleanLatexForWord(text: string): string {
     "\\circ": "°", "\\times": "×", "\\cdot": "·", "\\approx": "≈", "\\neq": "≠",
     "\\leq": "≤", "\\geq": "≥", "\\infty": "∞", "\\rightarrow": "→", "\\implies": "⇒",
     "\\rightleftharpoons": "⇌", "\\pm": "±", "\\degree": "°", "\\parallel": "∥",
-    "\\perp": "⊥", "\\forall": "∀", "\\exists": "∃", "\\in": "∈", "\\sum": "Σ"
+    "\\perp": "⊥", "\\forall": "∀", "\\exists": "∃", "\\in": "∈", "\\sum": "Σ",
+    "\\dots": "...", "\\dots": "...", "\\cdot": "·", "\\vec": "", "\\overrightarrow": ""
   };
   
   for (const [key, val] of Object.entries(latexMap)) {
@@ -260,6 +253,7 @@ function cleanLatexForWord(text: string): string {
   cleaned = cleaned.replace(/\\(sin|cos|tan|ln|log|exp)/g, "$1");
   cleaned = cleaned.replace(/\\( )/g, " "); // escaped spaces
   cleaned = cleaned.replace(/\\{/g, "{").replace(/\\}/g, "}");
+  cleaned = cleaned.replace(/\\/g, ""); // Remove any remaining backslashes
   
   return cleaned;
 }
@@ -369,7 +363,7 @@ async function generateWordDocument(
   // ─── Header ────────────────────────────────────────────────
   if (header?.schoolName) {
     children.push(new Paragraph({
-      children: [new TextRun({ text: header.schoolName, bold: true, size: 24, font: fontHeader, color: primaryColor })],
+      children: [new TextRun({ text: header.schoolName, bold: true, size: 26, font: fontHeader, color: primaryColor })],
       alignment: AlignmentType.CENTER,
       spacing: { after: 120 },
     }));
@@ -379,7 +373,7 @@ async function generateWordDocument(
     children: [new TextRun({
       text: `${subjectName} — ${context.levelId}`,
       bold: true,
-      size: 28,
+      size: 32,
       font: fontHeader,
       color: textColor,
     })],
@@ -389,26 +383,53 @@ async function generateWordDocument(
 
   children.push(new Paragraph({
     children: [
-      new TextRun({ text: `Durée: ${context.duration} min`, size: 20, font: fontBody, color: metaColor }),
-      new TextRun({ text: "    |    ", size: 20, font: fontBody, color: metaColor }),
-      new TextRun({ text: `Total: ${context.totalPoints} points`, size: 20, font: fontBody, color: metaColor }),
-      header?.date ? new TextRun({ text: `    |    ${header.date}`, size: 20, font: fontBody, color: metaColor }) : new TextRun(""),
+      new TextRun({ text: lang === "fr" ? `Professeur: ${header?.teacherName ?? "..."}` : `Teacher: ${header?.teacherName ?? "..."}`, size: 18, font: fontBody, color: metaColor }),
+      new TextRun({ text: "    |    ", size: 18, font: fontBody, color: metaColor }),
+      new TextRun({ text: lang === "fr" ? `Durée: ${context.duration} min` : `Time: ${context.duration} min`, size: 18, font: fontBody, color: metaColor }),
+      new TextRun({ text: "    |    ", size: 18, font: fontBody, color: metaColor }),
+      new TextRun({ text: `Total: ${context.totalPoints} points`, size: 18, font: fontBody, color: metaColor }),
     ],
     alignment: AlignmentType.CENTER,
+    spacing: { after: 200 },
   }));
 
-  children.push(new Paragraph({ text: "" })); // spacer
+  // Horizontal Rule
   children.push(new Paragraph({
-    border: isFormal ? undefined : { bottom: { style: BorderStyle.SINGLE, size: 6, color: primaryColor } },
-    text: "",
+    border: { bottom: { style: BorderStyle.SINGLE, size: 6, color: primaryColor } },
+    spacing: { after: 240 },
   }));
-  if (isFormal) {
-    children.push(new Paragraph({
-      border: { bottom: { style: BorderStyle.DOUBLE, size: 12, color: "000000" } },
-      text: "",
-    }));
-  }
-  children.push(new Paragraph({ text: "" }));
+
+  // ─── Score Summary Table (Teachers love this) ──────────────
+  const summaryCols = exercises.length + 2;
+  children.push(new Table({
+    width: { size: 100, type: WidthType.PERCENTAGE },
+    margins: { top: 100, bottom: 100, left: 100, right: 100 },
+    rows: [
+      new TableRow({
+        children: [
+          new TableCell({ children: [new Paragraph({ text: exerciseWord, bold: true, alignment: AlignmentType.CENTER, spacing: { before: 40, after: 40 } })], shading: { fill: "F3F4F6" } }),
+          ...exercises.map(ex => new TableCell({ children: [new Paragraph({ text: String(ex.number), alignment: AlignmentType.CENTER, spacing: { before: 40, after: 40 } })] })),
+          new TableCell({ children: [new Paragraph({ text: "Total", bold: true, alignment: AlignmentType.CENTER, spacing: { before: 40, after: 40 } })], shading: { fill: "F3F4F6" } }),
+        ]
+      }),
+      new TableRow({
+        children: [
+          new TableCell({ children: [new Paragraph({ text: "Max", bold: true, alignment: AlignmentType.CENTER, spacing: { before: 40, after: 40 } })] }),
+          ...exercises.map(ex => new TableCell({ children: [new Paragraph({ text: String(ex.points), alignment: AlignmentType.CENTER, spacing: { before: 40, after: 40 } })] })),
+          new TableCell({ children: [new Paragraph({ text: String(context.totalPoints), bold: true, alignment: AlignmentType.CENTER, spacing: { before: 40, after: 40 } })] }),
+        ]
+      }),
+      new TableRow({
+        children: [
+          new TableCell({ children: [new Paragraph({ text: "Score", bold: true, alignment: AlignmentType.CENTER, spacing: { before: 120, after: 120 } })] }),
+          ...exercises.map(() => new TableCell({ children: [new Paragraph({ text: "" })] })),
+          new TableCell({ children: [new Paragraph({ text: "", spacing: { before: 120, after: 120 } })] }),
+        ]
+      })
+    ]
+  }));
+
+  children.push(new Paragraph({ text: "", spacing: { after: 400 } }));
 
   // ─── Exercises ─────────────────────────────────────────────
   for (const ex of exercises) {

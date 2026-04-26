@@ -177,24 +177,20 @@ function applyMarkdown(text: string): string {
 }
 
 function handleGraphs(text: string): string {
-  let processed = text;
-  const imageRegex = /\[IMAGE:\s*(.*?)\]/gi;
-  processed = processed.replace(imageRegex, (_, description) => {
-    const desc = description.trim();
-    if (!desc) return "";
-    const safeDesc = desc.replace(/"/g, "&quot;").replace(/'/g, "&#39;");
-    const urlPrompt = desc.length > 300 ? desc.substring(0, 300) + "..." : desc;
-    const encoded = encodeURIComponent(urlPrompt + " academic diagram, scientific illustration, high quality, centered, white background");
-    return `<div class="my-4 flex flex-col items-center gap-2 group"><div class="relative overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--bg-subtle)] shadow-sm min-h-[100px] flex items-center justify-center"><img src="https://image.pollinations.ai/prompt/${encoded}?width=800&height=450&nologo=true&model=turbo&seed=${Math.floor(Math.random() * 1000)}" alt="${safeDesc}" title="${safeDesc}" class="max-w-full h-auto object-cover hover:scale-[1.02] transition-transform duration-500" onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\'p-8 text-center text-xs text-[var(--text-tertiary)]\'>Illustration generating... (Reload to view)</div>'" /></div><p class="text-[10px] text-[var(--text-tertiary)] italic text-center px-4">AI Illustration: ${desc.substring(0, 100)}${desc.length > 100 ? '...' : ''}</p></div>`;
-  });
-
-  const graphRegex = /\[(?:GRAPH|VISUAL):\s*(.*?)\]/gi;
-  processed = processed.replace(graphRegex, (_, description) => {
-    const desc = description.trim();
-    if (!desc) return "";
-    return `<div class="my-4 p-5 rounded-2xl bg-[var(--bg-subtle)] border-2 border-dashed border-[var(--border)] flex flex-col items-center gap-4 text-center group hover:border-[var(--accent)] transition-all"><div class="w-12 h-12 rounded-full bg-[var(--surface)] flex items-center justify-center text-[var(--text-tertiary)] group-hover:scale-110 transition-transform"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg></div><div class="space-y-1"><p class="text-xs font-bold text-[var(--text)] uppercase tracking-widest">Visual Placeholder</p><p class="text-[11px] text-[var(--text-secondary)] italic max-w-sm">"${desc}"</p></div><p class="text-[10px] text-[var(--text-tertiary)] max-w-xs">Use the <strong>Add Visual / Graph</strong> tool to convert this description into an interactive chart.</p></div>`;
-  });
-  return processed;
+  // Render ALL [IMAGE:...] and [GRAPH:/VISUAL:...] as a reliable description box.
+  // External image services (Pollinations, etc.) are too unreliable for production use.
+  return text
+    .replace(/\[(?:IMAGE|GRAPH|VISUAL):\s*(.*?)\]/gi, (_match, description) => {
+      const desc = description.trim();
+      if (!desc) return "";
+      return `<div class="my-4 rounded-xl border border-[var(--border)] bg-[var(--bg-subtle)] px-4 py-3 flex items-start gap-3">
+        <span class="text-[var(--accent)] flex-shrink-0 text-base leading-snug">📊</span>
+        <div>
+          <p class="text-[11px] font-semibold uppercase tracking-wider text-[var(--text-tertiary)] mb-1">Figure description</p>
+          <p class="text-sm text-[var(--text-secondary)] leading-relaxed">${desc}</p>
+        </div>
+      </div>`;
+    });
 }
 
 export function renderContent(raw: string): string {
