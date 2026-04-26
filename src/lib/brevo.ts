@@ -22,9 +22,9 @@ export interface BrevoPayload {
 export async function sendEmail(payload: BrevoPayload): Promise<{ ok: boolean; error?: string }> {
   const apiKey = process.env.BREVO_API_KEY;
 
-  if (!apiKey) {
-    console.log("[brevo] No BREVO_API_KEY — email not sent:", payload.subject, "→", payload.to);
-    return { ok: true };
+  if (!apiKey || apiKey === "your_brevo_api_key_here") {
+    console.log("[brevo] No valid BREVO_API_KEY — email not sent:", payload.subject, "→", payload.to);
+    return { ok: false, error: "Email service not configured (missing API key)." };
   }
 
   const body: Record<string, unknown> = {

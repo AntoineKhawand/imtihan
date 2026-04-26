@@ -463,7 +463,7 @@ async function generateWordDocument(
 
     children.push(...(await processContentBlocks(ex.statement, { size: 22, font: fontBody, color: textColor })));
 
-    if (ex.subQuestions) {
+    if (ex.subQuestions && Array.isArray(ex.subQuestions) && ex.subQuestions.length > 0) {
       for (const sq of ex.subQuestions) {
         children.push(new Paragraph({
           children: [new TextRun({ text: `${sq.label}  `, bold: true, size: 22, font: fontBody, color: textColor })],
