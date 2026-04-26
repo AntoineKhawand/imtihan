@@ -248,10 +248,17 @@ export async function POST(request: NextRequest) {
       try {
         const humContext = await getHumanitiesContext(context);
         if (humContext) {
-          extraContext = (extraContext || "") + "\n" + humContext;
+          extraContext = humContext;
         }
       } catch (err) {
-        console.warn("[/api/generate] Failed to fetch humanities data:", err);
+        console.warn("[/api/generate] Failed to fetch humanities context.");
+      }
+    } else if (context.subject === "physics") {
+      try {
+        const { getPhysicsPromptContext } = await import("@/lib/physics");
+        extraContext = getPhysicsPromptContext();
+      } catch (err) {
+        console.warn("[/api/generate] Failed to load physics context.");
       }
     }
 
