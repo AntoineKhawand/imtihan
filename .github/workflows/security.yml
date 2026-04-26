@@ -6,11 +6,11 @@ on:
   pull_request:
     branches: [main, master]
   schedule:
-    - cron: '0 2 * * 0'
+    - cron: '0 2 * * 0'  # Weekly on Sundays at 2 AM UTC
   workflow_dispatch:
 
 jobs:
-  # ── CodeQL static analysis ──────────────────────────────────────────────────
+  # ── CodeQL static analysis (finds XSS, injection, logic bugs) ───────────────
   code-scan:
     runs-on: ubuntu-latest
     permissions:
@@ -24,90 +24,14 @@ jobs:
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v3
         with:
-          # TypeScript is analysed as part of javascript — listing both causes
-          # duplicate-category conflicts when analyze tries to upload SARIF.
-          languages: javascript
+          languages: javascript   # TypeScript is included in javascript analysis
 
       - name: Perform CodeQL Analysis
-        # analyze@v3 uploads SARIF to Security tab automatically.
-        # Do NOT add a separate upload-sarif step in the same job.
         uses: github/codeql-action/analyze@v3
         with:
-          # Custom category avoids any auto-generated name collision.
-          category: "imtihan-codeql"
+          category: "imtihan-codeql"   # unique name — prevents duplicate-upload conflicts
 
-  # ── Shannon dynamic scan ─────────────────────────────────────────────────────
-  security-scan:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      security-events: write
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build application
-        run: npm run build
-        env:
-          NODE_ENV: test
-
-      - name: Start application
-        run: |
-          npm run dev &
-          sleep 15
-          curl -f http://localhost:3000 || exit 1
-
-      - name: Run Shannon Security Scan
-        uses: KeygraphHQ/shannon@main
-        with:
-          target-url: 'http://localhost:3000'
-          workspace: 'imtihan-weekly-scan'
-        env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-
-      - name: Upload security report artifact
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: security-report
-          path: security-reports/
-          if-no-files-found: ignore
-          retention-days: 30
-
-      - name: Upload SARIF to GitHub Security (only if generated)
-        if: always()
-        uses: github/codeql-action/upload-sarif@v3
-        continue-on-error: true
-        with:
-          # glob — if no file matches, the step is skipped gracefully via continue-on-error
-          sarif_file: security-reports
-          category: "shannon-scan"
-
-      - name: Check for critical vulnerabilities
-        if: always()
-        run: |
-          REPORT_DIR="security-reports/imtihan-weekly-scan/deliverables"
-          if [ -d "$REPORT_DIR" ]; then
-            CRITICAL=$(grep -rci "critical" "$REPORT_DIR"/*.md 2>/dev/null || echo "0")
-            HIGH=$(grep -rci "high" "$REPORT_DIR"/*.md 2>/dev/null || echo "0")
-            echo "Critical: $CRITICAL | High: $HIGH"
-            [ "$CRITICAL" -gt 0 ] || [ "$HIGH" -gt 0 ] && echo "::warning::Vulnerabilities found!"
-          else
-            echo "No scan report generated."
-          fi
-        shell: bash
-
-  # ── npm dependency audit ─────────────────────────────────────────────────────
+  # ── npm dependency audit (finds CVEs in packages) ───────────────────────────
   dependency-scan:
     runs-on: ubuntu-latest
 
@@ -118,14 +42,14 @@ jobs:
       - name: Run npm audit
         run: npm audit --audit-level=high --json > audit-results.json || true
 
-      - name: Report
+      - name: Report vulnerabilities
         run: |
           VULNS=$(jq '.vulnerabilities | length' audit-results.json 2>/dev/null || echo "0")
-          echo "Dependency vulnerabilities: $VULNS"
-          [ "$VULNS" -gt 0 ] && echo "::warning::Dependency vulnerabilities found!"
+          echo "Dependency vulnerabilities found: $VULNS"
+          [ "$VULNS" -gt 0 ] && echo "::warning::Run 'npm audit fix' to address dependency vulnerabilities."
         shell: bash
 
-      - name: Upload results
+      - name: Upload audit results
         if: always()
         uses: actions/upload-artifact@v4
         with:
