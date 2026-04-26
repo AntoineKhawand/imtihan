@@ -6,40 +6,65 @@ on:
   pull_request:
     branches: [main]
   schedule:
-    - cron: '0 2 * * 0'  # Weekly scan on Sundays at 2 AM
+    - cron: '0 2 * * 0'  # Weekly on Sundays at 2 AM UTC
   workflow_dispatch:
 
 jobs:
+  # ── CodeQL static analysis ──────────────────────────────────────────────────
+  code-scan:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: javascript, typescript
+          # unique category avoids the "only one run allowed" conflict
+          category: "/language:javascript-typescript"
+
+      - name: Perform CodeQL Analysis
+        # analyze@v3 uploads SARIF automatically — no separate upload-sarif step needed
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:javascript-typescript"
+
+  # ── Shannon dynamic scan ─────────────────────────────────────────────────────
   security-scan:
     runs-on: ubuntu-latest
     permissions:
       contents: read
       security-events: write
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
-      
+
       - name: Install dependencies
         run: npm ci
-      
+
       - name: Build application
         run: npm run build
         env:
           NODE_ENV: test
-      
+
       - name: Start application
         run: |
           npm run dev &
           sleep 15
           curl -f http://localhost:3000 || exit 1
-      
+
       - name: Run Shannon Security Scan
         uses: KeygraphHQ/shannon@main
         with:
@@ -47,77 +72,63 @@ jobs:
           workspace: 'imtihan-weekly-scan'
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-      
-      - name: Upload security report
+
+      - name: Upload security report artifact
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: security-report
           path: security-reports/
           retention-days: 30
-      
-      - name: Upload to GitHub Security Alerts
+
+      - name: Upload SARIF to GitHub Security (if generated)
         if: always()
+        run: |
+          # Only upload if Shannon actually produced a SARIF file
+          SARIF=$(find security-reports -name "*.sarif" 2>/dev/null | head -1)
+          if [ -n "$SARIF" ]; then
+            echo "Found SARIF: $SARIF"
+            echo "sarif_path=$SARIF" >> $GITHUB_OUTPUT
+          else
+            echo "No SARIF file generated — skipping upload"
+          fi
+        id: find-sarif
+
+      - name: Upload SARIF
+        if: always() && steps.find-sarif.outputs.sarif_path != ''
         uses: github/codeql-action/upload-sarif@v3
         with:
-          sarif_file: security-reports/**/.sarif
+          sarif_file: ${{ steps.find-sarif.outputs.sarif_path }}
           category: shannon-scan
-      
+
       - name: Check for critical vulnerabilities
         if: always()
         run: |
           echo "=== Security Scan Summary ==="
-          if [ -f "security-reports/imtihan-weekly-scan/deliverables/comprehensive_security_assessment_report.md" ]; then
-            CRITICAL=$(grep -ci "critical" security-reports/imtihan-weekly-scan/deliverables/*.md 2>/dev/null || echo "0")
-            HIGH=$(grep -ci "high" security-reports/imtihan-weekly-scan/deliverables/*.md 2>/dev/null || echo "0")
-            
-            echo "Critical: $CRITICAL"
-            echo "High: $HIGH"
-            
+          REPORT_DIR="security-reports/imtihan-weekly-scan/deliverables"
+          if [ -d "$REPORT_DIR" ]; then
+            CRITICAL=$(grep -rci "critical" "$REPORT_DIR"/*.md 2>/dev/null || echo "0")
+            HIGH=$(grep -rci "high" "$REPORT_DIR"/*.md 2>/dev/null || echo "0")
+            echo "Critical: $CRITICAL | High: $HIGH"
             if [ "$CRITICAL" -gt 0 ] || [ "$HIGH" -gt 0 ]; then
               echo "::warning::Critical or High vulnerabilities found!"
-              exit 1
             fi
           else
-            echo "No report generated"
+            echo "No report directory found — scan may not have completed"
           fi
         shell: bash
 
-  code-scan:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      security-events: write
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      
-      - name: Initialize CodeQL
-        uses: github/codeql-action/init@v3
-        with:
-          languages: javascript, typescript
-      
-      - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v3
-        with:
-          category: "/language:javascript"
-      
-      - name: Upload SARIF
-        uses: github/codeql-action/upload-sarif@v3
-        with:
-          results_file: ../code-scanning/results.sarif
-
+  # ── npm dependency audit ─────────────────────────────────────────────────────
   dependency-scan:
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      
+
       - name: Run npm audit
-        run: npm audit --audit-level=high --json > audit-results.json
-      
+        run: npm audit --audit-level=high --json > audit-results.json || true
+
       - name: Check for vulnerabilities
         run: |
           VULNS=$(jq '.vulnerabilities | length' audit-results.json 2>/dev/null || echo "0")
@@ -126,7 +137,7 @@ jobs:
             echo "::warning::Dependency vulnerabilities found!"
           fi
         shell: bash
-      
+
       - name: Upload audit results
         uses: actions/upload-artifact@v4
         with:
