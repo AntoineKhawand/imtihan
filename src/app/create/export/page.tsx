@@ -178,9 +178,9 @@ export default function ExportPage() {
         }),
       });
 
-      const data = await mailRes.json();
+      const data = await mailRes.json().catch(() => ({ success: false, error: "The email server returned an invalid response. The file might be too large or the session expired." }));
       if (!mailRes.ok || !data.success) {
-        throw new Error(data.error ?? `Email send failed (${mailRes.status})`);
+        throw new Error(data.error ?? `Email send failed (Status ${mailRes.status})`);
       }
 
       setEmailSent(true);

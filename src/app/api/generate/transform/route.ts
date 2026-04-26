@@ -43,10 +43,10 @@ export async function POST(request: NextRequest) {
       - MANDATORY: Wrap the Mermaid code in triple backticks (e.g., \`\`\`mermaid ... \`\`\`).
       - Return the Mermaid block directly within the 'statement' field.`;
     } else if (type === "image") {
-      const imgReq = prompt ? `Specific image requirement: ${prompt}` : `Add a suitable high-quality academic illustration or photo to support this question.`;
-      instruction = `${imgReq}
       - Insert the tag [IMAGE: concise detailed prompt] exactly where the image should appear in the 'statement'.
-      - STRICT: DO NOT use HTML tags (like <img>, <div>, or <a>). Only use the [IMAGE: ...] format.
+      - PROMPT STYLE: Focus on professional high-fidelity mockups, flat design, and minimalist vector illustrations.
+      - IMPORTANT: Minimize text within the image itself. Prefer icons, symbols, and structural clarity over labels.
+      - STRICT: DO NOT use HTML tags. Only use the [IMAGE: ...] format.
       - Keep the JSON EXACTLY the same, only modify 'statement'.`;
     }
 
