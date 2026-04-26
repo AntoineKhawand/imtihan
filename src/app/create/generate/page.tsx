@@ -11,7 +11,6 @@ import { shortId } from "@/lib/utils";
 import { saveToBank, type BankExercise } from "@/lib/storage";
 import type { ExamContext, Exercise } from "@/types/exam";
 import { StepIndicator, StepLabel } from "@/app/create/page";
-import { getChapter } from "@/data/curricula";
 import { useAuth } from "@/contexts/AuthContext";
 import { UserNav } from "@/components/layout/UserNav";
 import { Logo } from "@/components/ui/Logo";
@@ -295,17 +294,6 @@ export default function GeneratePage() {
   );
   const totalEx = exercises.length;
 
-  const chapterCoverage: Array<{ id: string; name: string; count: number; missing: boolean }> = [];
-  if (context && context.curriculumId !== "university") {
-    const counts = new Map<string, number>();
-    for (const ex of exercises) for (const cid of ex.chapterIds ?? []) counts.set(cid, (counts.get(cid) ?? 0) + 1);
-    for (const cid of context.chapterIds) {
-      const ch = getChapter(context.curriculumId, context.levelId, context.subject, cid);
-      const name = ch ? (ch.name.fr ?? ch.name.en ?? cid) : cid;
-      const count = counts.get(cid) ?? 0;
-      chapterCoverage.push({ id: cid, name, count, missing: count === 0 });
-    }
-  }
 
   return (
     <div className="min-h-screen bg-[var(--bg)] flex flex-col">
@@ -422,34 +410,6 @@ export default function GeneratePage() {
             </div>
           )}
 
-          {status === "done" && exercises.length > 0 && chapterCoverage.length > 0 && (
-            <div className="card p-4 mb-3">
-              <p className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-2.5">Chapter coverage</p>
-              <div className="flex flex-wrap gap-1.5">
-                {chapterCoverage.map((c) => (
-                  <span
-                    key={c.id}
-                    className={
-                      c.missing
-                        ? "inline-flex items-center gap-1.5 text-xs px-2 py-0.5 rounded-full border border-red-300 bg-red-50 text-red-600 dark:bg-red-950/20"
-                        : "inline-flex items-center gap-1.5 text-xs px-2 py-0.5 rounded-full border border-[var(--border)] bg-[var(--bg-subtle)] text-[var(--text-secondary)]"
-                    }
-                    title={c.missing ? "No exercise covers this chapter yet" : `${c.count} exercise${c.count > 1 ? "s" : ""}`}
-                  >
-                    {c.name}
-                    <span className={c.missing ? "text-red-500 font-semibold" : "text-[var(--text-tertiary)]"}>
-                      {c.missing ? "!" : `×${c.count}`}
-                    </span>
-                  </span>
-                ))}
-              </div>
-              {chapterCoverage.some((c) => c.missing) && (
-                <p className="text-[11px] text-red-600 mt-2">
-                  Some chapters have no exercise — regenerate individual questions to adjust coverage.
-                </p>
-              )}
-            </div>
-          )}
 
           {status === "done" && exercises.length > 0 && (
             <div className="card p-4 mb-6 flex items-center gap-5 flex-wrap">
