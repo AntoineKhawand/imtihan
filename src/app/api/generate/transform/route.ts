@@ -46,6 +46,7 @@ export async function POST(request: NextRequest) {
       const imgReq = prompt ? `Specific image requirement: ${prompt}` : `Add a suitable high-quality academic illustration or photo to support this question.`;
       instruction = `${imgReq}
       - Insert the tag [IMAGE: concise detailed prompt] exactly where the image should appear in the 'statement'.
+      - STRICT: DO NOT use HTML tags (like <img>, <div>, or <a>). Only use the [IMAGE: ...] format.
       - Keep the JSON EXACTLY the same, only modify 'statement'.`;
     }
 

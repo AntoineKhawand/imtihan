@@ -249,10 +249,11 @@ function cleanLatexForWord(text: string): string {
   cleaned = cleaned.replace(/\\frac\{([^}]+)\}\{([^}]+)\}/g, "$1/$2");
   cleaned = cleaned.replace(/\\sqrt\{([^}]+)\}/g, "√($1)");
   
-  // 6. Cleanup remaining LaTeX commands
+  // 6. Cleanup remaining LaTeX commands and strip HTML tags
   cleaned = cleaned.replace(/\\(sin|cos|tan|ln|log|exp)/g, "$1");
   cleaned = cleaned.replace(/\\( )/g, " "); // escaped spaces
   cleaned = cleaned.replace(/\\{/g, "{").replace(/\\}/g, "}");
+  cleaned = cleaned.replace(/<[^>]*>?/gm, ""); // Strip any accidental HTML tags (like <img>)
   cleaned = cleaned.replace(/\\/g, ""); // Remove any remaining backslashes
   
   return cleaned;
@@ -334,7 +335,8 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error("[/api/export]", error);
-    return NextResponse.json({ error: "Export failed" }, { status: 500 });
+    const msg = error instanceof Error ? error.message : "Export failed";
+    return NextResponse.json({ error: msg }, { status: 500 });
   }
 }
 
