@@ -7,10 +7,12 @@ import { generateWordDocument } from "@/app/api/export/route";
 const RequestSchema = z.object({
   context: z.object({
     subject: z.string(),
+    curriculumId: z.string(),
     levelId: z.string(),
+    language: z.enum(["english", "french", "arabic"]),
+    examType: z.string(),
     duration: z.number(),
     totalPoints: z.number(),
-    language: z.enum(["english", "french", "arabic"]),
   }),
   templateId: z.string(),
   exercises: z.array(z.any()),
