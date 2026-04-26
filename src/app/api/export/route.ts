@@ -6,66 +6,6 @@ import {
   ImageRun
 } from "docx";
 
-const RequestSchema = z.object({
-  context: z.object({
-    subject: z.string(),
-    curriculumId: z.string(),
-    levelId: z.string(),
-    language: z.enum(["english", "french", "arabic"]),
-    examType: z.string(),
-    duration: z.number(),
-    totalPoints: z.number(),
-  }),
-  templateId: z.string(),
-  exercises: z.array(z.any()),
-  format: z.enum(["word", "pdf"]),
-  header: z.object({
-    schoolName: z.string().optional(),
-    teacherName: z.string().optional(),
-  }).optional(),
-});
-
-const SUBJECT_LABELS: Record<string, any> = {
-  mathematics: { en: "Mathematics", fr: "Mathématiques" },
-  physics: { en: "Physics", fr: "Physique" },
-  chemistry: { en: "Chemistry", fr: "Chimie" },
-  biology: { en: "Biology", fr: "Biologie" },
-  philosophy: { en: "Philosophy", fr: "Philosophie" },
-  history: { en: "History", fr: "Histoire" },
-  geography: { en: "Geography", fr: "Géographie" },
-  economics: { en: "Economics", fr: "Économie" },
-  sociology: { en: "Sociology", fr: "Sociologie" },
-};
-
-function cleanLatexForWord(text: string): string {
-  if (!text) return "";
-  return text
-    .replace(/\\ce\{/g, "")
-    .replace(/\\text\{/g, "")
-    .replace(/\}/g, "")
-    .replace(/\$/g, "")
-    .replace(/\\Delta/g, "Δ")
-    .replace(/\\rightarrow/g, "→")
-    .replace(/\\Leftrightarrow/g, "⇌")
-    .replace(/<br\s*\/?>/gi, " ")
-    .replace(/<[^>]*>/g, "");
-}
-
-function createFormattedTextRuns(text: string, baseOptions: any): TextRun[] {
-  const runs: TextRun[] = [];
-  const parts = text.split(/(\*\*.*?\*\*|\*.*?\*)/g);
-
-  for (const part of parts) {
-    if (part.startsWith("**") && part.endsWith("**")) {
-      runs.push(new TextRun({ ...baseOptions, text: part.slice(2, -2), bold: true }));
-    } else if (part.startsWith("*") && part.endsWith("*")) {
-      runs.push(new TextRun({ ...baseOptions, text: part.slice(1, -1), italics: true }));
-    } else {
-      runs.push(new TextRun({ ...baseOptions, text: cleanLatexForWord(part) }));
-    }
-  }
-  return runs;
-}
 
 /**
  * Splits text into paragraphs, tables and images.
