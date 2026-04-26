@@ -45,9 +45,8 @@ export async function POST(request: NextRequest) {
     } else if (type === "image") {
       const imgReq = prompt ? `Specific image requirement: ${prompt}` : `Add a suitable high-quality academic illustration or photo to support this question.`;
       instruction = `${imgReq}
-      - Use Gemini to describe a high-quality, detailed, and academically relevant image (e.g., "A high-resolution photo of a [subject] in a laboratory setting", "A detailed 3D render of [concept]").
-      - Insert the tag [IMAGE: detailed prompt] exactly where the image should appear in the 'statement'.
-      - Ensure the prompt is in English for the image generator, regardless of the exercise language.`;
+      - Insert the tag [IMAGE: concise detailed prompt] exactly where the image should appear in the 'statement'.
+      - Keep the JSON EXACTLY the same, only modify 'statement'.`;
     }
 
     const systemPrompt = `You are an expert exam designer and editor. 
