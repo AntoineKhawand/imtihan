@@ -333,22 +333,19 @@ export default function ExportPage() {
                   {variant === "B" ? "Exercises and sub-questions reordered." : "Original exercise order."}
                 </p>
               </div>
-              <div className="rounded-xl border border-[var(--border)] p-3">
+              <div className="rounded-xl border border-[var(--border)] p-3 bg-[var(--bg-subtle)]/30">
                 <div className="flex items-center gap-2 mb-2">
                   <Globe size={12} className="text-[var(--text-secondary)]" />
-                  <span className="text-xs font-medium text-[var(--text-secondary)]">Language</span>
+                  <span className="text-xs font-medium text-[var(--text-secondary)]">Target Language</span>
                 </div>
-                <select
-                  value={exportLanguage}
-                  onChange={(e) => setExportLanguage(e.target.value as typeof exportLanguage)}
-                  className="w-full text-xs px-2.5 py-1.5 rounded-lg border border-[var(--border)] bg-[var(--surface)] text-[var(--text)] focus:outline-none focus:border-[var(--accent)]"
-                >
-                  <option value="french">Français</option>
-                  <option value="english">English</option>
-                  <option value="arabic">العربية</option>
-                </select>
+                <div className="flex items-center gap-2 px-1">
+                  <span className="text-sm font-semibold text-[var(--text)] capitalize">
+                    {LANGUAGE_LABELS[exportLanguage] ?? exportLanguage}
+                  </span>
+                  <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                </div>
                 <p className="text-[10px] text-[var(--text-tertiary)] mt-1.5">
-                  Headers &amp; labels only. Exercise content stays in its source language.
+                  Exam will be exported in {exportLanguage}.
                 </p>
               </div>
             </div>

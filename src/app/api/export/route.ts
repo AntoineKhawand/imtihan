@@ -238,7 +238,7 @@ function cleanLatexForWord(text: string): string {
     "\\leq": "≤", "\\geq": "≥", "\\infty": "∞", "\\rightarrow": "→", "\\implies": "⇒",
     "\\rightleftharpoons": "⇌", "\\pm": "±", "\\degree": "°", "\\parallel": "∥",
     "\\perp": "⊥", "\\forall": "∀", "\\exists": "∃", "\\in": "∈", "\\sum": "Σ",
-    "\\dots": "...", "\\dots": "...", "\\cdot": "·", "\\vec": "", "\\overrightarrow": ""
+    "\\dots": "...", "\\ldots": "...", "\\vec": "", "\\overrightarrow": ""
   };
   
   for (const [key, val] of Object.entries(latexMap)) {
