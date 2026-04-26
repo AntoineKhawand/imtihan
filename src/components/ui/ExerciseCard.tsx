@@ -22,6 +22,7 @@ import {
   Calculator,
   Image as ImageIcon,
   X,
+  Sparkles,
 } from "lucide-react";
 
 const DIFFICULTY_CONFIG = {
