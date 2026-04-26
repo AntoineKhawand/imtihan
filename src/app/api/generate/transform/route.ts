@@ -53,8 +53,9 @@ export async function POST(request: NextRequest) {
 You will receive a JSON representing a single academic exercise.
 Your task is to:
 1. ${instruction}
-2. Ensure the language remains in ${language}.
-3. Return the EXACT SAME JSON structure for the exercise, but with the 'statement' field updated. Do not wrap the JSON in markdown code blocks. Just return the JSON object.
+2. STRICT PRESERVATION: Do NOT delete, rewrite, or summarize any part of the original text. You must preserve every word of the statement. Only insert the new element.
+3. Ensure the language remains in ${language}.
+4. Return the EXACT SAME JSON structure for the exercise. Do not wrap the JSON in markdown code blocks. Just return the JSON object.
 
 Original Exercise JSON:
 ${JSON.stringify(exercise, null, 2)}`;

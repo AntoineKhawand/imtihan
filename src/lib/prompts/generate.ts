@@ -496,6 +496,7 @@ CRITICAL RULES:
 8. SIMPLICITY & PREMIUM STRUCTURE:
    - The user (teacher) and students should see a clean, professional exam.
    - QUESTIONS: Keep them concise and clear. Use "On considère..." to set the scene.
+   - NO HEADERS: Do NOT include 'Exercise X' or '### Exercise' headers inside the 'statement'. The UI handles numbering automatically.
    - NO REDUNDANCY: If you use 'subQuestions', do NOT list the questions again in the 'statement'. The 'statement' is only for context, diagrams, and data.
    - SOLUTIONS (CORRIGÉS):
      - Break down into clear, numbered steps.
