@@ -12,7 +12,8 @@ const LANGUAGE_INSTRUCTIONS: Record<string, string> = {
 - Use French typography: guillemets «», no space before colon is wrong — leave one space before : ; ! ?
 - Introduce context with "On considère...", "On dispose de...", "On donne :".
 - Label given constants/data in a block starting with "Données :" or "On donne :".
-- MATH & CHEMISTRY: Use KaTeX for all math and chemical formulas. Wrap math in $...$ (e.g. $x^2$, $K_a$). Use \\ce{...} for chemical formulas (e.g. \\ce{H2O}).`,
+- MATH & CHEMISTRY: Use KaTeX for all math and chemical formulas. Wrap math in $...$ (e.g. $x^2$, $K_a$). Use \ce{...} for chemical formulas (e.g. \ce{H2O}).
+- STRICT MONOLINGUALISM: The entire exam must be in French only. DO NOT include English terms or translations in parentheses (e.g., do NOT write "nom systématique (IUPAC name)").`,
 
   english: `Write the entire exam in English.
 - Use international SI notation (m s⁻¹, N, J, mol dm⁻³).
@@ -20,14 +21,15 @@ const LANGUAGE_INSTRUCTIONS: Record<string, string> = {
 - British/international spelling preferred (centre, colour).
 - MATH & CHEMISTRY: Use KaTeX for all math and chemical formulas. Wrap math in $...$ (e.g. $x^2$, $K_a$). Use \\ce{...} for chemical formulas (e.g. \\ce{H2O}).`,
 
-  arabic: `Write the entire exam in Modern Standard Arabic (MSA/الفصحى).
-- All mathematical terms, units, and labels must be in Arabic.
-- Use Arabic mathematical command verbs (see below).
-- Numbers may be written in Eastern Arabic numerals (٠١٢٣٤٥٦٧٨٩) or Western (0-9) — be consistent.
-- Label given data as "معطيات :" or "المعطيات :".
+  arabic: `Write the entire exam in Modern Standard Arabic (MSA).
+- All prose, instructions, and labels must be in Arabic.
+- MATHEMATICAL NOTATION (CRITICAL): Keep all mathematical formulas, symbols, and standard units in Western LaTeX notation ($x^2$, $m/s$, $N$, $J$, $\\vec{F}$, etc.). DO NOT translate variable names or symbols into Arabic script (e.g., keep $x$ as $x$, not Arabic equivalent).
+- Use Arabic mathematical command verbs (e.g., for "Calculate", "Find", "Show that").
+- Numbers must be written in Western numerals (0-9) for scientific consistency.
+- Label given data as "المعطيات :".
 - Exercise header: "تمرين ١", "تمرين ٢", etc.
 - Sub-questions: أ)، ب)، ج) or ١)، ٢)، ٣).
-- RTL text: all prose must be fully right-to-left compatible.`,
+- RTL layout: All Arabic prose must be right-to-left.`,
 };
 
 // ---------------------------------------------------------------------------

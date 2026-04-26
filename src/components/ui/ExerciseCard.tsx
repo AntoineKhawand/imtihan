@@ -379,32 +379,33 @@ export function ExerciseCard({
         </div>
       </div>
 
-      <div className="px-6 pb-4">
-        <div
-          className="text-sm text-[var(--text)] leading-relaxed"
-          dangerouslySetInnerHTML={{ __html: renderContent(exercise.statement) }}
-        />
+      <div className={cn("p-6 pt-0 space-y-6", language === "arabic" && "text-right")} dir={language === "arabic" ? "rtl" : "ltr"}>
+        <div className="space-y-4">
+          <div
+            className="text-[15px] text-[var(--text)] leading-relaxed"
+            dangerouslySetInnerHTML={{ __html: renderContent(exercise.statement) }}
+          />
 
-
-        {/* Sub-questions */}
-        {exercise.subQuestions && exercise.subQuestions.length > 0 && (
-          <div className="mt-4 space-y-3">
-            {exercise.subQuestions.map((sq) => (
-              <div key={sq.label} className="flex gap-3">
-                <span className="text-sm font-semibold text-[var(--accent)] flex-shrink-0 w-6">
-                  {sq.label}
-                </span>
-                <div className="flex-1">
-                  <span
-                    className="text-sm text-[var(--text)] leading-relaxed"
-                    dangerouslySetInnerHTML={{ __html: renderContent(sq.statement) }}
-                  />
-                  <span className="ml-2 text-xs text-[var(--text-tertiary)]">({sq.points} pts)</span>
+          {/* Sub-questions */}
+          {exercise.subQuestions && exercise.subQuestions.length > 0 && (
+            <div className="mt-4 space-y-3">
+              {exercise.subQuestions.map((sq) => (
+                <div key={sq.label} className="flex gap-3">
+                  <span className={cn("text-sm font-semibold text-[var(--accent)] flex-shrink-0", language === "arabic" ? "w-8" : "w-6")}>
+                    {sq.label}
+                  </span>
+                  <div className="flex-1">
+                    <span
+                      className="text-sm text-[var(--text)] leading-relaxed"
+                      dangerouslySetInnerHTML={{ __html: renderContent(sq.statement) }}
+                    />
+                    <span className={cn("text-xs text-[var(--text-tertiary)]", language === "arabic" ? "mr-2" : "ml-2")}>({sq.points} pts)</span>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        )}
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* AI Image Prompt Input */}
@@ -702,44 +703,51 @@ export function ExerciseCard({
               )}
             </div>
 
-            {/* Methodology */}
-            <div>
-              <p className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-2">
-                Methodology
-              </p>
-              <div
-                className="text-sm text-[var(--text-secondary)] leading-relaxed space-y-1"
-                dangerouslySetInnerHTML={{ __html: renderContent(exercise.solution.methodology) }}
-              />
-            </div>
-
-            {/* Micro-barème */}
-            {exercise.solution.microBareme && exercise.solution.microBareme.length > 0 && (
+            <div className={cn("space-y-6", language === "arabic" && "text-right")} dir={language === "arabic" ? "rtl" : "ltr"}>
+              {/* Methodology */}
               <div>
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-tertiary)]">Micro-barème</span>
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[var(--bg-subtle)] border border-[var(--border)] text-[var(--text-tertiary)]">
-                    {exercise.solution.microBareme.reduce((s, mb) => s + mb.points, 0)} pts
-                  </span>
-                </div>
-                <div className="rounded-xl border border-[var(--border)] overflow-hidden divide-y divide-[var(--border)]">
-                  {exercise.solution.microBareme.map((mb, i) => (
-                    <div key={i} className="flex items-start gap-3 px-3 py-2.5 bg-[var(--surface)] hover:bg-[var(--bg-subtle)] transition-colors">
-                      <span className="text-[10px] font-bold text-[var(--accent)] uppercase tracking-widest w-14 flex-shrink-0 pt-0.5 leading-tight">
-                        {mb.step}
-                      </span>
-                      <span
-                        className="flex-1 text-xs text-[var(--text-secondary)] leading-relaxed"
-                        dangerouslySetInnerHTML={{ __html: renderContent(mb.criterion) }}
-                      />
-                      <span className="flex-shrink-0 inline-flex items-center justify-center min-w-[28px] h-5 px-1.5 rounded-full bg-[var(--bg-subtle)] border border-[var(--border)] text-[var(--text-tertiary)] font-bold text-[10px]">
-                        {mb.points}
-                      </span>
-                    </div>
-                  ))}
-                </div>
+                <p className="text-xs font-semibold text-[var(--accent)] uppercase tracking-wider mb-2">
+                  {language === "french" ? "Méthodologie" : language === "arabic" ? "منهجية الحل" : "Methodology"}
+                </p>
+                <div
+                  className="text-sm text-[var(--text-secondary)] leading-relaxed space-y-1"
+                  dangerouslySetInnerHTML={{ __html: renderContent(exercise.solution.methodology) }}
+                />
               </div>
-            )}
+
+              {/* Micro-barème */}
+              {exercise.solution.microBareme && exercise.solution.microBareme.length > 0 && (
+                <div>
+                  <div className={cn("flex items-center justify-between mb-3", language === "arabic" && "flex-row-reverse")}>
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-tertiary)]">
+                      {language === "french" ? "Micro-barème" : language === "arabic" ? "سلم التنقيط" : "Mark Scheme"}
+                    </span>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[var(--bg-subtle)] border border-[var(--border)] text-[var(--text-tertiary)]">
+                      {exercise.solution.microBareme.reduce((s, mb) => s + mb.points, 0)} pts
+                    </span>
+                  </div>
+                  <div className="rounded-xl border border-[var(--border)] overflow-hidden divide-y divide-[var(--border)]">
+                    {exercise.solution.microBareme.map((mb, i) => (
+                      <div key={i} className={cn("flex items-start gap-4 px-4 py-3 bg-[var(--surface)] hover:bg-[var(--bg-subtle)] transition-colors", language === "arabic" && "flex-row-reverse")}>
+                        <span className={cn(
+                          "text-[10px] font-bold text-[var(--accent)] uppercase tracking-widest w-28 flex-shrink-0 pt-0.5 leading-tight break-words",
+                          language === "arabic" ? "pl-2 border-l border-[var(--border)]/50" : "pr-2 border-r border-[var(--border)]/50"
+                        )}>
+                          {mb.step}
+                        </span>
+                        <span
+                          className="flex-1 text-xs text-[var(--text-secondary)] leading-relaxed pt-0.5"
+                          dangerouslySetInnerHTML={{ __html: renderContent(mb.criterion) }}
+                        />
+                        <span className="flex-shrink-0 inline-flex items-center justify-center min-w-[32px] h-6 px-2 rounded-lg bg-[var(--bg-subtle)] border border-[var(--border)] text-[var(--text-tertiary)] font-bold text-[10px] shadow-sm">
+                          {mb.points}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
 
             {/* Common mistakes */}
             {exercise.solution.commonMistakes && exercise.solution.commonMistakes.length > 0 && (
