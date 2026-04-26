@@ -9,10 +9,8 @@
  *  - Mermaid graphs: ```mermaid ... ```
  */
 import katex from "katex";
-import mermaid from "mermaid";
 if (typeof window !== "undefined") {
   require("katex/contrib/mhchem/mhchem");
-  mermaid.initialize({ startOnLoad: false, theme: "base" });
 }
 
 function renderKaTeX(src: string, displayMode: boolean): string {
@@ -123,16 +121,11 @@ function applyMarkdown(text: string): string {
   return parseTables(md);
 }
 
-function handleMermaid(text: string): string {
-  return text.replace(/```mermaid\n?([\s\S]*?)```/g, (match, code) => {
-    return `<div class="mermaid my-4 p-4 bg-white rounded-lg border border-[var(--border)] overflow-x-auto">${code.trim()}</div>`;
-  });
-}
 
 function handleGraphs(text: string): string {
   // Matches [GRAPH: description] or [VISUAL: description]
   // Renders as a styled description box — no external image service needed
-  return text.replace(/\[(?:GRAPH|VISUAL):\s*(.*?)\]/g, (match, description) => {
+  return text.replace(/\[(?:GRAPH|VISUAL):\s*(.*?)\]/g, (_match, description) => {
     const desc = description.trim();
     if (!desc) return "";
     return `
@@ -169,14 +162,22 @@ export function renderContent(raw: string): string {
 
   let text = raw;
 
+  // 0. Extract mermaid blocks FIRST — before any \n processing touches them.
+  //    Newlines inside mermaid code are essential for the parser; converting
+  //    them to <br> breaks the chart silently.
+  const mermaidBlocks: string[] = [];
+  text = text.replace(/```mermaid\n?([\s\S]*?)```/g, (_match, code: string) => {
+    const idx = mermaidBlocks.length;
+    mermaidBlocks.push(code.trim());
+    return `%%MERMAID_${idx}%%`;
+  });
+
   // 1. Normalise line endings and collapse excessive newlines
   text = text
-    .replace(/\\n/g, "\n") // Convert escaped backslashes to real newlines
-    .replace(/\r\n/g, "\n") // Normalize Windows CRLF
-    .replace(/\n\s*\n/g, "\n\n") // Normalize space-filled blank lines
+    .replace(/\\n/g, "\n")
+    .replace(/\r\n/g, "\n")
+    .replace(/\n\s*\n/g, "\n\n")
     .trim();
-
-  // Collapse 3+ newlines into just 2
   text = text.replace(/\n{3,}/g, "\n\n");
 
   // 2. Pre-process \ce{...}
@@ -185,7 +186,6 @@ export function renderContent(raw: string): string {
   });
 
   // 3. Process blocks (Math, Tables, Graphs)
-  // Split by display math $$...$$
   const displayParts = splitMath(text, "$$", "$$");
 
   let html = displayParts.map((part) => {
@@ -193,42 +193,42 @@ export function renderContent(raw: string): string {
       return renderKaTeX(part.content.trim(), true);
     }
 
-    // Within text segments, process inline math $...$
     const inlineParts = splitMath(part.content, "$", "$");
     return inlineParts.map((p) => {
       if (p.kind === "math") {
         return renderKaTeX(p.content, false);
       }
-      
-      // Apply markdown (Tables are handled here)
+
       let content = applyMarkdown(p.content);
-      
-      // Apply Mermaid
-      content = handleMermaid(content);
-      
-      // Apply Graphs
       content = handleGraphs(content);
-      
-      // Smart newline handling to avoid gaps
-      // Convert to paragraphs, but preserve single newlines as <br />
+
       return content
         .replace(/\n\n+/g, "</p><p class=\"mt-3\">")
         .replace(/\n/g, "<br />");
     }).join("");
   }).join("");
 
+  // 4. Restore mermaid blocks — newlines are intact, Mermaid.js can parse them
+  if (mermaidBlocks.length > 0) {
+    mermaidBlocks.forEach((code, idx) => {
+      html = html.replace(
+        `%%MERMAID_${idx}%%`,
+        `<div class="mermaid my-4 p-4 bg-white rounded-lg border border-[var(--border)] overflow-x-auto">${code}</div>`
+      );
+    });
+  }
+
   // Final cleanup: Wrap in paragraph and remove empty ones produced by block trimming
   html = `<p>${html}</p>`;
   html = html
-    .replace(/<p class="mt-3">\s*<\/p>/g, "") // Remove empty mt-3 paragraphs
-    .replace(/<p>\s*<\/p>/g, "") // Remove empty paragraphs
-    .replace(/<p><br \/>/g, "<p>") // Remove leading breaks in paragraphs
-    .replace(/<p>\s*<div/g, "<div") // Strip P wrapper around blocks
-    .replace(/<\/div>\s*<\/p>/g, "</div>") // Strip P wrapper around blocks
-    .replace(/<br \/>\s*<div/g, "<div")
-    .replace(/<\/div>\s*<br \/>/g, "</div>")
+    .replace(/<p(?: class="[^"]*")?>\s*<\/p>/g, "") // Remove empty paragraphs (with or without classes)
+    .replace(/<p>\s*<br \/>/g, "<p>") // Remove leading breaks in paragraphs
+    .replace(/<p(?: class="[^"]*")?>\s*<div/g, "<div") // Strip P wrapper (including mt-3) around blocks
+    .replace(/<\/div>\s*<\/p>/g, "</div>") // Strip P trailing wrapper
+    .replace(/(?:<br \/>\s*)+<div/g, "<div") // Remove breaks before divs
+    .replace(/<\/div>\s*(?:<br \/>\s*)+/g, "</div>") // Remove breaks after divs
     .replace(/<br \/>\s*<br \/>/g, "<br />") // Collapse double breaks
-    .replace(/<\/div>\s*<p>/g, "</div><p>") // Ensure no gap between block and next p
+    .replace(/<\/div>\s*<p/g, "</div><p") // Ensure no gap between block and next p
     .replace(/<\/p>\s*<div/g, "</p><div"); // Ensure no gap between p and next block
 
   return html;

@@ -505,7 +505,8 @@ You have been given a document uploaded by the teacher (textbook chapter, past e
            line [0.05, 0.18, 0.42, 0.65, 0.79]
        \`\`\`
    IMPORTANT: Close all mermaid code blocks with \`\`\` (three backticks, no language) — NOT with \`\`\`javascript or any other language name.
-6. OUTPUT: Start your response with [ and end with ]. Output ONLY the raw JSON array — no prose, no markdown fences, no explanation.
+7. PROACTIVE VISUALS: For Mathematics, Physics, or Chemistry, you are ENCOURAGED to proactively include a Mermaid chart (xychart-beta or flowchart) in the 'statement' if it helps illustrate the problem. Do not use [GRAPH: description] placeholders.
+8. OUTPUT: Start your response with [ and end with ]. Output ONLY the raw JSON array — no prose, no markdown fences, no explanation.
 
 SOLUTION QUALITY — The corrigé is what differentiates Imtihan from a simple question generator:
 - Write the methodology as numbered steps in the exam language ("**Étape 1 :**", "**Step 1:**", "**الخطوة ١ :**").
@@ -515,6 +516,16 @@ SOLUTION QUALITY — The corrigé is what differentiates Imtihan from a simple q
 - End with a boxed final answer: "$\\\\boxed{value\\\\text{ unit}}$".
 - commonMistakes: 2–3 specific errors typical students at this level make (not trivial arithmetic slips — conceptual or methodological mistakes).
 - For IB: include mark allocation per step in the methodology (• Method mark [M1]: ..., • Answer mark [A1]: ...).
+
+LATEX IN METHODOLOGY (CRITICAL — violations produce unreadable corrigés):
+- EVERY mathematical symbol, formula, equation, fraction, vector, or variable MUST be wrapped in $...$. No exceptions.
+- Fractions: $\\\\frac{d^2x}{dt^2}$ NOT "d2x/dt2" or "dt2d2x"
+- Vectors: $\\\\vec{F} = -kx\\\\vec{i}$ NOT "F→ = -kxi" or writing the arrow separately
+- Derivatives: $\\\\frac{d^2x}{dt^2} + \\\\frac{k}{m}x = 0$ NOT "d²x/dt² + k/m·x = 0"
+- Sums: $\\\\sum \\\\vec{F} = m\\\\vec{a}$ NOT "∑F = ma"
+- Period/constants: $T_0 = 2\\\\pi\\\\sqrt{\\\\frac{m}{k}}$ NOT "T0 = 2π√(m/k)"
+- Units inline: $k = 12{,}5 \\\\text{ N/m}$ NOT "k = 12,5 N/m" after a calculation
+- Never write subscripts as plain digits after a variable: always $x_m$, $T_0$, $E_c$ — never "xm", "T0", "Ec".
 
 BARÈME (mandatory for every exercise):
 - bareme: one entry per sub-question (or per main question if no sub-questions). label = the question label ("1.a", "Q2", "Partie B - 3", etc.), points = integer, criterion = one short sentence stating what earns those points (e.g. "Expression correcte de la force de Coulomb" or "Balanced equation with state symbols").

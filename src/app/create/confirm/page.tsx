@@ -42,19 +42,24 @@ export default function ConfirmPage() {
     if (!raw) { router.replace("/create"); return; }
     try { 
       const parsed = JSON.parse(raw);
+      const fileRaw = sessionStorage.getItem("imtihan_uploaded_file");
+      let fileName: string | null = null;
+      if (fileRaw) {
+        const file = JSON.parse(fileRaw);
+        fileName = file.name;
+        setUploadedFileName(fileName);
+      }
+
       setContext({
         ...parsed,
-        templateType: parsed.templateType ?? "modern",
+        // If they uploaded a file, default to 'uploaded' template mode if not already chosen
+        templateType: parsed.templateType ?? (fileName ? "uploaded" : "modern"),
         totalPoints: parsed.totalPoints ?? 20,
         exerciseCount: parsed.exerciseCount ?? 3,
         generateVersionB: parsed.generateVersionB ?? false,
+        // Pre-fill instructions if they chose uploaded but have no prefs yet
+        layoutPreferences: parsed.layoutPreferences ?? (fileName ? `Mimic the header, logo, and general visual layout of the uploaded document "${fileName}".` : ""),
       }); 
-      
-      const fileRaw = sessionStorage.getItem("imtihan_uploaded_file");
-      if (fileRaw) {
-        const file = JSON.parse(fileRaw);
-        setUploadedFileName(file.name);
-      }
     }
     catch { router.replace("/create"); }
     finally { setLoading(false); }
@@ -301,12 +306,17 @@ export default function ConfirmPage() {
               <button
                 onClick={() => update("templateType", "uploaded")}
                 className={cn(
-                  "flex flex-col items-start p-4 rounded-2xl border transition-all text-left group",
+                  "flex flex-col items-start p-4 rounded-2xl border transition-all text-left group relative",
                   context.templateType === "uploaded"
                     ? "bg-[var(--accent-light)] border-[var(--accent)] ring-1 ring-[var(--accent)]"
                     : "bg-[var(--surface)] border-[var(--border)] hover:border-[var(--border-strong)]"
                 )}
               >
+                {uploadedFileName && (
+                  <div className="absolute top-3 right-3 bg-[var(--accent)] text-white text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider animate-pulse">
+                    Recommended
+                  </div>
+                )}
                 <div className={cn(
                   "w-8 h-8 rounded-lg flex items-center justify-center mb-3 transition-colors",
                   context.templateType === "uploaded" ? "bg-[var(--accent)] text-white" : "bg-[var(--bg-subtle)] text-[var(--text-tertiary)] group-hover:text-[var(--text-secondary)]"
@@ -314,11 +324,16 @@ export default function ConfirmPage() {
                   <Wand2 size={16} />
                 </div>
                 <p className="text-sm font-semibold text-[var(--text)] mb-1">Extract Template</p>
-                <p className="text-[11px] text-[var(--text-secondary)] leading-relaxed">
-                  {uploadedFileName 
-                    ? `Use visual elements (logo, header) from ${uploadedFileName}.`
-                    : "Describe a custom layout or upload a template file in Step 1."}
-                </p>
+                <div className="text-[11px] text-[var(--text-secondary)] leading-relaxed">
+                  {uploadedFileName ? (
+                    <div className="flex items-center gap-1 text-[var(--accent)] font-medium">
+                      <FileText size={10} />
+                      <span className="truncate max-w-[140px]">{uploadedFileName}</span>
+                    </div>
+                  ) : (
+                    "Describe a custom layout or upload a template file in Step 1."
+                  )}
+                </div>
               </button>
             </div>
 

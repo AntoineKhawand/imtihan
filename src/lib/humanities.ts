@@ -36,13 +36,14 @@ const INDICATORS = [
   { id: "SP.POP.TOTL", name: "Population Total" },
 ];
 
+import { GEOGRAPHIC_SUBJECTS } from "@/data/curricula";
+
 /**
- * Silent data injection for Humanities subjects (Economics, SES, Geography, Sociology).
+ * Silent data injection for Humanities subjects (Economics, SES, Geography, Sociology, etc.).
  * Fetches real-world figures from World Bank and REST Countries.
  */
 export async function getHumanitiesContext(context: ExamContext): Promise<string | undefined> {
-  const subjectsWithData = ["economics", "ses", "geography", "sociology"];
-  if (!subjectsWithData.includes(context.subject)) return undefined;
+  if (!GEOGRAPHIC_SUBJECTS.includes(context.subject as any)) return undefined;
 
   const country = (context.geographicContext || "Global").toLowerCase();
   const code = COUNTRY_CODES[country];

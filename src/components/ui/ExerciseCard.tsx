@@ -252,22 +252,42 @@ export function ExerciseCard({
         </div>
 
         {/* Action menu trigger */}
-        <div className="relative flex-shrink-0">
-          <button
-            onClick={() => setShowActions(!showActions)}
-            className={cn(
-              "w-8 h-8 rounded-lg flex items-center justify-center transition-colors",
-              showActions
-                ? "bg-[var(--bg-subtle)] text-[var(--text)]"
-                : "text-[var(--text-tertiary)] hover:text-[var(--text)] hover:bg-[var(--bg-subtle)]"
-            )}
-          >
-            {isRegenerating ? (
-              <RefreshCw size={14} className="animate-spin" />
-            ) : (
-              <Zap size={14} />
-            )}
-          </button>
+        <div className="flex items-center gap-1.5 flex-shrink-0">
+          {onTransform && (
+            <div className="flex items-center bg-[var(--bg-subtle)]/50 rounded-lg border border-[var(--border)] p-0.5 mr-1">
+              <button
+                onClick={() => onTransform(exercise.id, "table")}
+                className="w-7 h-7 rounded-md flex items-center justify-center text-[var(--text-tertiary)] hover:text-[var(--accent)] hover:bg-white transition-all"
+                title="Format as Table"
+              >
+                <Table size={13} />
+              </button>
+              <button
+                onClick={() => setShowVisualPrompt(true)}
+                className="w-7 h-7 rounded-md flex items-center justify-center text-[var(--text-tertiary)] hover:text-[var(--accent)] hover:bg-white transition-all"
+                title="Add Visual / Graph"
+              >
+                <ImageIcon size={13} />
+              </button>
+            </div>
+          )}
+
+          <div className="relative">
+            <button
+              onClick={() => setShowActions(!showActions)}
+              className={cn(
+                "w-8 h-8 rounded-lg flex items-center justify-center transition-colors",
+                showActions
+                  ? "bg-[var(--bg-subtle)] text-[var(--text)]"
+                  : "text-[var(--text-tertiary)] hover:text-[var(--text)] hover:bg-[var(--bg-subtle)]"
+              )}
+            >
+              {isRegenerating ? (
+                <RefreshCw size={14} className="animate-spin" />
+              ) : (
+                <Zap size={14} />
+              )}
+            </button>
 
           {showActions && (
             <div className="absolute right-0 top-10 z-10 w-48 bg-[var(--surface)] border border-[var(--border)] rounded-xl shadow-lg overflow-hidden">

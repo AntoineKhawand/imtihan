@@ -4,6 +4,7 @@ import { withRetryAndFallback, geminiErrorMessage, isRetryableError } from "@/li
 import { getAnthropicClient, isAnthropicConfigured, CLAUDE_MODEL, MAX_TOKENS } from "@/lib/anthropic";
 import { buildGenerateSystemPrompt, buildGenerateUserPrompt } from "@/lib/prompts/generate";
 import { sanitizeError, createSecurityHeaders } from "@/lib/security";
+import * as admin from "firebase-admin";
 import { adminDb, verifySession } from "@/lib/firebase-admin";
 import { getAllElements, formatElementsForPrompt } from "@/lib/chemistry";
 import { getHumanitiesContext } from "@/lib/humanities";
@@ -207,21 +208,24 @@ export async function POST(request: NextRequest) {
 
     const userData = userSnap.data()!;
     const isPro = userData.proExpiresAt && userData.proExpiresAt > Date.now();
-    const limit = isPro ? MONTHLY_LIMITS.pro : MONTHLY_LIMITS.free;
     const now = Date.now();
 
-    let monthlyCount: number = userData.monthlyExamsGenerated ?? 0;
+    // 1. Determine which counter and limit to check
+    const quotaUsed = isPro ? (userData.monthlyExamsGenerated ?? 0) : (userData.examsGenerated ?? 0);
+    const limit = isPro ? MONTHLY_LIMITS.pro : MONTHLY_LIMITS.free;
     const periodStart: number = userData.monthlyPeriodStart ?? now;
 
-    if (now - periodStart > MONTHLY_PERIOD_MS) {
-      monthlyCount = 0;
+    // 2. Handle monthly reset for Pro users
+    if (isPro && now - periodStart > MONTHLY_PERIOD_MS) {
       await userRef.update({ monthlyExamsGenerated: 0, monthlyPeriodStart: now });
+      // We don't need to re-read, just assume 0 for this request
     }
 
-    if (monthlyCount >= limit) {
+    // 3. Enforce limit
+    if (quotaUsed >= limit) {
       const msg = isPro
         ? `You have reached your monthly limit of ${limit} exams. Contact support if you need more.`
-        : `You have reached your monthly limit of ${limit} free exams. Upgrade to Pro for 100 exams per month.`;
+        : `You have reached your total limit of ${limit} free exams. Upgrade to Pro for 100 exams per month.`;
       return NextResponse.json(
         { success: false, errors: [msg] },
         { status: 429, headers: createSecurityHeaders() }
@@ -384,9 +388,12 @@ export async function POST(request: NextRequest) {
           controller.enqueue(
             encoder.encode(`data: ${JSON.stringify({ done: true, exercises })}\n\n`)
           );
-          // Increment monthly counter (fire-and-forget)
-          userRef.update({ monthlyExamsGenerated: monthlyCount + 1 })
-            .catch((e) => console.error("[/api/generate] Failed to increment monthly count:", e));
+          // Increment both monthly and lifetime counters (fire-and-forget)
+          userRef.update({ 
+            monthlyExamsGenerated: admin.firestore.FieldValue.increment(1),
+            examsGenerated: admin.firestore.FieldValue.increment(1)
+          })
+            .catch((e) => console.error("[/api/generate] Failed to increment usage counters:", e));
         } catch (err) {
           console.error(`[/api/generate] ${providerName} JSON parse failed. Provider: ${providerName}. Length:`, accumulated.length);
           console.error("[/api/generate] Parse error:", err);

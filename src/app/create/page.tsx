@@ -42,26 +42,26 @@ export default function CreatePage() {
   const stepTimer = useRef<ReturnType<typeof setInterval> | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // arXiv research paper search
-  const [arxivQuery, setArxivQuery] = useState("");
-  const [arxivResults, setArxivResults] = useState<Array<{ title: string; abstract: string; authors: string[]; published: string; url: string }>>([]);
-  const [arxivLoading, setArxivLoading] = useState(false);
-  const [arxivError, setArxivError] = useState<string | null>(null);
+  // Research paper search
+  const [paperQuery, setPaperQuery] = useState("");
+  const [paperResults, setPaperResults] = useState<Array<{ title: string; abstract: string; authors: string[]; published: string; url: string }>>([]);
+  const [paperLoading, setPaperLoading] = useState(false);
+  const [paperError, setPaperError] = useState<string | null>(null);
 
-  async function searchArxiv() {
-    if (!arxivQuery.trim()) return;
-    setArxivLoading(true);
-    setArxivError(null);
-    setArxivResults([]);
+  async function searchPaper() {
+    if (!paperQuery.trim()) return;
+    setPaperLoading(true);
+    setPaperError(null);
+    setPaperResults([]);
     try {
-      const res = await fetch(`/api/tools/arxiv?q=${encodeURIComponent(arxivQuery)}&max=3`);
+      const res = await fetch(`/api/tools/arxiv?q=${encodeURIComponent(paperQuery)}&max=3`);
       const data = await res.json();
-      if (data.success) setArxivResults(data.papers);
-      else setArxivError(data.error ?? "Search failed.");
+      if (data.success) setPaperResults(data.papers);
+      else setPaperError(data.error ?? "Search failed.");
     } catch {
-      setArxivError("Network error.");
+      setPaperError("Network error.");
     } finally {
-      setArxivLoading(false);
+      setPaperLoading(false);
     }
   }
 
@@ -71,8 +71,8 @@ export default function CreatePage() {
       : `Source (${paper.published})`;
     const context = `\n\nResearch context [${citation}, "${paper.title}"]: ${paper.abstract.slice(0, 400)}${paper.abstract.length > 400 ? "…" : ""}`;
     setDescription((prev) => prev + context);
-    setArxivResults([]);
-    setArxivQuery("");
+    setPaperResults([]);
+    setPaperQuery("");
   }
 
   const ANALYZE_STEPS = [
@@ -407,28 +407,28 @@ export default function CreatePage() {
             <div className="flex gap-2">
               <input
                 type="text"
-                value={arxivQuery}
-                onChange={(e) => setArxivQuery(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && searchArxiv()}
+                value={paperQuery}
+                onChange={(e) => setPaperQuery(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && searchPaper()}
                 placeholder="e.g. quantum entanglement, neural networks, thermodynamics..."
                 className="flex-1 h-10 px-3.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-sm text-[var(--text)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] transition-colors"
               />
               <button
-                onClick={searchArxiv}
-                disabled={!arxivQuery.trim() || arxivLoading}
+                onClick={searchPaper}
+                disabled={!paperQuery.trim() || paperLoading}
                 className="h-10 px-4 rounded-xl bg-[var(--accent)] text-white text-sm font-medium hover:bg-[var(--accent)]/90 disabled:opacity-50 transition-colors flex-shrink-0"
               >
-                {arxivLoading ? "…" : "Search"}
+                {paperLoading ? "…" : "Search"}
               </button>
             </div>
 
-            {arxivError && (
-              <p className="text-xs text-red-600 mt-2">{arxivError}</p>
+            {paperError && (
+              <p className="text-xs text-red-600 mt-2">{paperError}</p>
             )}
 
-            {arxivResults.length > 0 && (
+            {paperResults.length > 0 && (
               <div className="mt-3 space-y-2">
-                {arxivResults.map((paper, i) => (
+                {paperResults.map((paper, i) => (
                   <div key={i} className="card p-4 space-y-2 hover:border-[var(--accent)]/40 transition-colors">
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex-1 min-w-0">
