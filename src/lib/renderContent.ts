@@ -20,7 +20,7 @@ function renderKaTeX(src: string, displayMode: boolean): string {
       throwOnError: false,
       strict: false,
       trust: false,
-      output: "html",
+      output: "htmlAndMathml",
     });
   } catch {
     // If KaTeX still fails, show the raw math with a monospace fallback
@@ -90,10 +90,10 @@ function parseNakedMath(text: string): string {
     const x = varMatch ? varMatch[varMatch.length - 1] : "x";
     const t = varMatch ? varMatch[0] : "t";
     return `$\\frac{d^2${x}}{dt^2}$`;
-  }).replace(/(d\s*[a-zA-Z]\/d\s*[a-zA-Z])/gi, (match) => {
-    const parts = match.split("/");
-    const num = parts[0].replace("d", "");
-    const den = parts[1].replace("d", "");
+  }).replace(/(d\s*[a-zA-Z]\/d\s*[a-zA-Z]|d\s*t\s*d\s*[a-zA-Z]|dtd[a-zA-Z])/gi, (match) => {
+    const varMatch = match.match(/[a-zA-Z]/g);
+    const num = varMatch ? varMatch[varMatch.length - 1] : "x";
+    const den = varMatch ? varMatch[0] : "t";
     return `$\\frac{d${num}}{d${den}}$`;
   });
 
