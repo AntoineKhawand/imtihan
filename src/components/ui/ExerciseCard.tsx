@@ -47,7 +47,7 @@ interface ExerciseCardProps {
   onRemove: (id: string) => void;
   onEdit?: (exercise: Exercise) => void;
   onSaveToBank?: (exercise: Exercise) => void;
-  onTransform?: (id: string, type: "table" | "image", prompt?: string) => Promise<void>;
+  onTransform?: (id: string, type: "table" | "visual" | "image", prompt?: string) => Promise<void>;
   isRegenerating?: boolean;
   savedToBank?: boolean;
   defaultShowSolution?: boolean;
