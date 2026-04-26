@@ -460,7 +460,10 @@ export function ExerciseCard({
                   {exercise.solution.bareme.map((b, i) => (
                     <div key={i} className="flex items-start gap-3 rounded-xl bg-[var(--surface)] border border-[var(--border)] px-3 py-2.5 hover:border-[var(--accent)]/30 transition-colors">
                       <span className="text-xs font-bold text-[var(--accent)] w-10 flex-shrink-0 pt-px">{b.label}</span>
-                      <span className="flex-1 text-xs text-[var(--text-secondary)] leading-relaxed">{b.criterion}</span>
+                      <span
+                        className="flex-1 text-xs text-[var(--text-secondary)] leading-relaxed"
+                        dangerouslySetInnerHTML={{ __html: renderContent(b.criterion) }}
+                      />
                       <span className="flex-shrink-0 inline-flex items-center justify-center min-w-[28px] h-5 px-1.5 rounded-full bg-[var(--accent-light)] text-[var(--accent)] font-bold text-[10px] border border-[var(--accent)]/20">
                         {b.points}
                       </span>
@@ -684,19 +687,25 @@ export function ExerciseCard({
             {/* Micro-barème */}
             {exercise.solution.microBareme && exercise.solution.microBareme.length > 0 && (
               <div>
-                <span className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-tertiary)] block mb-3">Micro-barème</span>
-                <div className="relative pl-4 space-y-0">
-                  {/* Vertical timeline line */}
-                  <div className="absolute left-[7px] top-2 bottom-2 w-px bg-[var(--border)]" />
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-tertiary)]">Micro-barème</span>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[var(--bg-subtle)] border border-[var(--border)] text-[var(--text-tertiary)]">
+                    {exercise.solution.microBareme.reduce((s, mb) => s + mb.points, 0)} pts
+                  </span>
+                </div>
+                <div className="rounded-xl border border-[var(--border)] overflow-hidden divide-y divide-[var(--border)]">
                   {exercise.solution.microBareme.map((mb, i) => (
-                    <div key={i} className="relative flex items-start gap-3 pb-2">
-                      {/* Dot */}
-                      <div className="absolute -left-[5px] top-2 w-2.5 h-2.5 rounded-full bg-[var(--surface)] border-2 border-[var(--border-strong)] flex-shrink-0" />
-                      <div className="flex-1 flex items-start gap-3 rounded-lg bg-[var(--surface)] border border-[var(--border)] px-3 py-2">
-                        <span className="text-[10px] font-bold text-[var(--text-tertiary)] uppercase tracking-wide w-14 flex-shrink-0 pt-0.5">{mb.step}</span>
-                        <span className="flex-1 text-xs text-[var(--text-secondary)] leading-relaxed">{mb.criterion}</span>
-                        <span className="flex-shrink-0 text-[10px] font-bold text-[var(--text-tertiary)] pt-0.5">{mb.points} pt{mb.points > 1 ? "s" : ""}</span>
-                      </div>
+                    <div key={i} className="flex items-start gap-3 px-3 py-2.5 bg-[var(--surface)] hover:bg-[var(--bg-subtle)] transition-colors">
+                      <span className="text-[10px] font-bold text-[var(--accent)] uppercase tracking-widest w-14 flex-shrink-0 pt-0.5 leading-tight">
+                        {mb.step}
+                      </span>
+                      <span
+                        className="flex-1 text-xs text-[var(--text-secondary)] leading-relaxed"
+                        dangerouslySetInnerHTML={{ __html: renderContent(mb.criterion) }}
+                      />
+                      <span className="flex-shrink-0 inline-flex items-center justify-center min-w-[28px] h-5 px-1.5 rounded-full bg-[var(--bg-subtle)] border border-[var(--border)] text-[var(--text-tertiary)] font-bold text-[10px]">
+                        {mb.points}
+                      </span>
                     </div>
                   ))}
                 </div>

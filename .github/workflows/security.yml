@@ -2,11 +2,11 @@ name: Security Scan
 
 on:
   push:
-    branches: [main, develop]
+    branches: [main, master, develop]
   pull_request:
-    branches: [main]
+    branches: [main, master]
   schedule:
-    - cron: '0 2 * * 0'  # Weekly on Sundays at 2 AM UTC
+    - cron: '0 2 * * 0'
   workflow_dispatch:
 
 jobs:
@@ -18,19 +18,23 @@ jobs:
       security-events: write
 
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
 
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v3
         with:
-          languages: javascript, typescript
+          # TypeScript is analysed as part of javascript — listing both causes
+          # duplicate-category conflicts when analyze tries to upload SARIF.
+          languages: javascript
 
       - name: Perform CodeQL Analysis
-        # analyze@v3 uploads SARIF automatically — no separate upload-sarif step needed
+        # analyze@v3 uploads SARIF to Security tab automatically.
+        # Do NOT add a separate upload-sarif step in the same job.
         uses: github/codeql-action/analyze@v3
         with:
-          category: "javascript-typescript"
+          # Custom category avoids any auto-generated name collision.
+          category: "imtihan-codeql"
 
   # ── Shannon dynamic scan ─────────────────────────────────────────────────────
   security-scan:
@@ -40,7 +44,7 @@ jobs:
       security-events: write
 
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
 
       - name: Setup Node.js
@@ -77,42 +81,29 @@ jobs:
         with:
           name: security-report
           path: security-reports/
+          if-no-files-found: ignore
           retention-days: 30
 
-      - name: Upload SARIF to GitHub Security (if generated)
+      - name: Upload SARIF to GitHub Security (only if generated)
         if: always()
-        run: |
-          # Only upload if Shannon actually produced a SARIF file
-          SARIF=$(find security-reports -name "*.sarif" 2>/dev/null | head -1)
-          if [ -n "$SARIF" ]; then
-            echo "Found SARIF: $SARIF"
-            echo "sarif_path=$SARIF" >> $GITHUB_OUTPUT
-          else
-            echo "No SARIF file generated — skipping upload"
-          fi
-        id: find-sarif
-
-      - name: Upload SARIF
-        if: always() && steps.find-sarif.outputs.sarif_path != ''
         uses: github/codeql-action/upload-sarif@v3
+        continue-on-error: true
         with:
-          sarif_file: ${{ steps.find-sarif.outputs.sarif_path }}
-          category: shannon-scan
+          # glob — if no file matches, the step is skipped gracefully via continue-on-error
+          sarif_file: security-reports
+          category: "shannon-scan"
 
       - name: Check for critical vulnerabilities
         if: always()
         run: |
-          echo "=== Security Scan Summary ==="
           REPORT_DIR="security-reports/imtihan-weekly-scan/deliverables"
           if [ -d "$REPORT_DIR" ]; then
             CRITICAL=$(grep -rci "critical" "$REPORT_DIR"/*.md 2>/dev/null || echo "0")
             HIGH=$(grep -rci "high" "$REPORT_DIR"/*.md 2>/dev/null || echo "0")
             echo "Critical: $CRITICAL | High: $HIGH"
-            if [ "$CRITICAL" -gt 0 ] || [ "$HIGH" -gt 0 ]; then
-              echo "::warning::Critical or High vulnerabilities found!"
-            fi
+            [ "$CRITICAL" -gt 0 ] || [ "$HIGH" -gt 0 ] && echo "::warning::Vulnerabilities found!"
           else
-            echo "No report directory found — scan may not have completed"
+            echo "No scan report generated."
           fi
         shell: bash
 
@@ -121,23 +112,23 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
 
       - name: Run npm audit
         run: npm audit --audit-level=high --json > audit-results.json || true
 
-      - name: Check for vulnerabilities
+      - name: Report
         run: |
           VULNS=$(jq '.vulnerabilities | length' audit-results.json 2>/dev/null || echo "0")
-          echo "Found $VULNS dependency vulnerabilities"
-          if [ "$VULNS" -gt 0 ]; then
-            echo "::warning::Dependency vulnerabilities found!"
-          fi
+          echo "Dependency vulnerabilities: $VULNS"
+          [ "$VULNS" -gt 0 ] && echo "::warning::Dependency vulnerabilities found!"
         shell: bash
 
-      - name: Upload audit results
+      - name: Upload results
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: audit-results
           path: audit-results.json
+          if-no-files-found: ignore
