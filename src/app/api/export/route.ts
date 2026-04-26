@@ -106,6 +106,45 @@ async function processContentBlocks(
       continue;
     }
 
+    // Handle Mermaid blocks
+    if (line.startsWith("```mermaid")) {
+      flushParagraph();
+      let mermaidCode = "";
+      i++; // Skip the ```mermaid line
+      while (i < lines.length && !lines[i].trim().startsWith("```")) {
+        mermaidCode += lines[i] + "\n";
+        i++;
+      }
+      
+      if (mermaidCode.trim()) {
+        try {
+          // Use mermaid.ink to get a PNG of the chart
+          const base64Code = Buffer.from(mermaidCode.trim()).toString('base64');
+          const imgRes = await fetch(`https://mermaid.ink/img/${base64Code}?type=png`);
+          
+          if (imgRes.ok) {
+            const buffer = await imgRes.arrayBuffer();
+            blocks.push(new Paragraph({
+              children: [
+                new ImageRun({
+                  type: "png",
+                  data: buffer,
+                  transformation: { width: 450, height: 300 },
+                }),
+              ],
+              alignment: AlignmentType.CENTER,
+              spacing: { before: 200, after: 200 },
+            }));
+          }
+        } catch (e) {
+          console.error("Failed to fetch mermaid image for DOCX:", e);
+          // Fallback: just show the code or a placeholder
+          currentParagraphLines.push("[Diagramme Mermaid]");
+        }
+      }
+      continue;
+    }
+
     if (line.startsWith("|") && line.endsWith("|")) {
       flushParagraph();
       currentTableLines.push(line);
