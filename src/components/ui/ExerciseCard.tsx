@@ -456,7 +456,7 @@ export function ExerciseCard({
               </button>
             </div>
             <p className="text-[10px] text-[var(--text-tertiary)] leading-relaxed italic">
-              Describe the illustration or photo you need. Gemini will generate a high-quality prompt and insert the image directly into the question.
+              Describe the illustration or photo you need. Imtihan AI will generate a high-quality prompt and insert the image directly into the question.
             </p>
           </div>
         </div>

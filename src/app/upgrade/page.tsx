@@ -113,11 +113,14 @@ export default function UpgradePage() {
   return (
     <div className="min-h-screen bg-[var(--bg)] flex flex-col">
       <nav className="flex items-center justify-between px-6 md:px-10 h-16 border-b border-[var(--border)] bg-[var(--bg)]/80 backdrop-blur-md sticky top-0 z-50">
-        <Logo size={28} />
-        <Link href="/" className="flex items-center gap-2 text-sm text-[var(--text-secondary)] hover:text-[var(--text)] transition-colors group">
-          <ArrowLeft size={15} className="group-hover:-translate-x-0.5 transition-transform" />
-          Back to Homepage
-        </Link>
+        <div className="flex items-center gap-6">
+          <Link href="/dashboard" className="flex items-center gap-2 text-sm text-[var(--text-secondary)] hover:text-[var(--text)] transition-colors group">
+            <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
+            <span className="hidden md:inline">Dashboard</span>
+          </Link>
+          <div className="w-px h-6 bg-[var(--border)] hidden md:block" />
+          <Logo size={28} />
+        </div>
       </nav>
 
       <main className="flex-1 max-w-5xl mx-auto w-full px-6 md:px-10 py-12 md:py-16 space-y-20">

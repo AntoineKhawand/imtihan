@@ -147,36 +147,7 @@ export default function DashboardPage() {
           </Link>
         </div>
 
-        {/* Teacher's Assistant Suite */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-          <Link href="/scanner" className="group">
-            <div className="card p-4 h-full border-dashed hover:border-[var(--accent)] hover:bg-[var(--accent-light)]/30 transition-all">
-              <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                <Search size={20} />
-              </div>
-              <h3 className="text-sm font-semibold text-[var(--text)] mb-1">AI Scanner</h3>
-              <p className="text-[11px] text-[var(--text-secondary)] leading-relaxed">Digitize paper exams or photos into editable text instantly.</p>
-            </div>
-          </Link>
-          <Link href="/grade" className="group">
-            <div className="card p-4 h-full border-dashed hover:border-[var(--accent)] hover:bg-[var(--accent-light)]/30 transition-all">
-              <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                <CheckCircle2 size={20} />
-              </div>
-              <h3 className="text-sm font-semibold text-[var(--text)] mb-1">AI Grading</h3>
-              <p className="text-[11px] text-[var(--text-secondary)] leading-relaxed">Grade student answers against your marking scheme with AI feedback.</p>
-            </div>
-          </Link>
-          <Link href="/analytics" className="group">
-            <div className="card p-4 h-full border-dashed hover:border-[var(--accent)] hover:bg-[var(--accent-light)]/30 transition-all">
-              <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                <TrendingUp size={20} />
-              </div>
-              <h3 className="text-sm font-semibold text-[var(--text)] mb-1">Analytics</h3>
-              <p className="text-[11px] text-[var(--text-secondary)] leading-relaxed">Track syllabus coverage and monitor student difficulty trends.</p>
-            </div>
-          </Link>
-        </div>
+
 
         {/* Stats row */}
         <div className="grid grid-cols-3 gap-4 mb-8">

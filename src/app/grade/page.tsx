@@ -230,7 +230,7 @@ export default function GradePage() {
                   </div>
                   <h3 className="serif text-2xl text-[var(--text)] mb-2">Ready for Grading</h3>
                   <p className="text-sm text-[var(--text-tertiary)] max-w-sm">
-                    Once you upload a photo, Gemini will analyze the handwriting and evaluate it against your criteria.
+                    Once you upload a photo, Imtihan AI will analyze the handwriting and evaluate it against your criteria.
                   </p>
                 </div>
               )}

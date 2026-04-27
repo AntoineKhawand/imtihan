@@ -130,7 +130,7 @@ export default function ScannerPage() {
           <div className="mb-10 animate-in fade-in slide-in-from-top-4 duration-700">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-50 text-amber-600 text-[10px] font-bold uppercase tracking-widest mb-4 border border-amber-100">
               <Sparkles size={12} />
-              Gemini Vision Powered
+              AI Vision Powered
             </div>
             <h1 className="serif text-5xl text-[var(--text)] mb-3 tracking-tight">AI Exam Scanner</h1>
             <p className="text-[var(--text-secondary)] text-lg max-w-2xl font-light">
@@ -239,7 +239,7 @@ export default function ScannerPage() {
                     
                     <h2 className="serif text-3xl text-[var(--text)] mb-2">Processing with AI</h2>
                     <p className="text-[var(--text-secondary)] mb-8 max-w-sm">
-                      Gemini is currently reading your handwriting and converting it to professional LaTeX notation.
+                      Imtihan AI is currently reading your handwriting and converting it to professional LaTeX notation.
                     </p>
 
                     <div className="w-full max-w-xs space-y-4">

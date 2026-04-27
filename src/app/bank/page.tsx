@@ -18,9 +18,15 @@ import {
   Share2,
   Download,
   ShieldCheck,
-  Zap
+  Zap,
+  X,
+  Mail,
+  Copy,
+  CheckCircle2,
+  Send
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import { toast } from "sonner";
 import { renderContent } from "@/lib/renderContent";
 import { cn, SUBJECT_LABELS, formatDate } from "@/lib/utils";
 import { getBankExercises, removeFromBank, type BankExercise } from "@/lib/storage";
@@ -78,6 +84,7 @@ export default function BankPage() {
   const [tab, setTab] = useState<"personal" | "school">("personal");
   const [query, setQuery] = useState("");
   const [mounted, setMounted] = useState(false);
+  const [isInviteOpen, setIsInviteOpen] = useState(false);
 
   useEffect(() => {
     setEntries(getBankExercises());
@@ -176,9 +183,88 @@ export default function BankPage() {
                 <p className="text-[11px] text-indigo-700">Collaborating with 14 other teachers.</p>
               </div>
             </div>
-            <Button variant="secondary" size="sm" className="bg-white border-indigo-200 text-indigo-600" icon={<Share2 size={12} />}>
+            <Button 
+              variant="secondary" 
+              size="sm" 
+              className="bg-white border-indigo-200 text-indigo-600" 
+              icon={<Share2 size={12} />}
+              onClick={() => setIsInviteOpen(true)}
+            >
               Invite Colleagues
             </Button>
+          </div>
+        )}
+
+        {/* Invite Modal */}
+        {isInviteOpen && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setIsInviteOpen(false)} />
+            <div className="relative w-full max-w-md bg-white rounded-[2.5rem] border border-[var(--border)] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
+              <div className="p-8">
+                <div className="flex items-center justify-between mb-8">
+                  <div className="w-12 h-12 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600">
+                    <Users size={24} />
+                  </div>
+                  <button onClick={() => setIsInviteOpen(false)} className="w-10 h-10 rounded-xl hover:bg-[var(--bg-subtle)] flex items-center justify-center text-[var(--text-tertiary)] transition-colors">
+                    <X size={20} />
+                  </button>
+                </div>
+
+                <h3 className="serif text-3xl text-[var(--text)] mb-2">Invite Colleagues</h3>
+                <p className="text-sm text-[var(--text-secondary)] leading-relaxed mb-8">
+                  Collaborate with other teachers at <span className="font-bold text-indigo-600">Verdun School</span> to build a shared repository of high-quality exercises.
+                </p>
+
+                <div className="space-y-6">
+                  <div>
+                    <label className="block text-[10px] font-bold text-[var(--text-tertiary)] uppercase tracking-widest mb-3">Invitation Link</label>
+                    <div className="flex gap-2">
+                      <div className="flex-1 h-12 px-4 bg-[var(--bg-subtle)] border border-[var(--border)] rounded-xl flex items-center text-xs text-[var(--text-secondary)] truncate">
+                        imtihan.live/join/verdun-2024
+                      </div>
+                      <button 
+                        onClick={() => {
+                          navigator.clipboard.writeText("imtihan.live/join/verdun-2024");
+                          toast.success("Invitation link copied!");
+                        }}
+                        className="h-12 w-12 rounded-xl border border-[var(--border)] flex items-center justify-center text-[var(--text-secondary)] hover:border-indigo-500 hover:text-indigo-600 transition-all active:scale-95"
+                      >
+                        <Copy size={18} />
+                      </button>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-bold text-[var(--text-tertiary)] uppercase tracking-widest mb-3">Email Invitation</label>
+                    <div className="relative">
+                      <Mail size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)]" />
+                      <input 
+                        type="email" 
+                        placeholder="colleague@school.edu.lb"
+                        className="w-full h-12 pl-12 pr-4 rounded-xl border border-[var(--border)] text-sm focus:outline-none focus:border-indigo-500 transition-all"
+                      />
+                    </div>
+                  </div>
+
+                  <Button 
+                    className="w-full h-14 rounded-2xl bg-indigo-600 shadow-xl shadow-indigo-200"
+                    icon={<Send size={18} />}
+                    onClick={() => {
+                      toast.success("Invitation sent successfully!");
+                      setIsInviteOpen(false);
+                    }}
+                  >
+                    Send Invitation
+                  </Button>
+                </div>
+              </div>
+
+              <div className="bg-slate-50 p-6 border-t border-[var(--border)] text-center">
+                <p className="text-[10px] text-[var(--text-tertiary)] leading-relaxed">
+                  Colleagues will receive an email with instructions to join your school's private question bank.
+                </p>
+              </div>
+            </div>
           </div>
         )}
 

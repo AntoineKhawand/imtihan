@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Plus, Search, Users, Heart, Download, BookOpen, Eye, X, Copy, CheckCircle2, Send, FileText, Star, ArrowRight } from "lucide-react";
+import { Plus, Search, Users, Heart, Download, BookOpen, Eye, X, Copy, CheckCircle2, Send, FileText, Star, ArrowRight, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Logo } from "@/components/ui/Logo";
 import { cn, SUBJECT_LABELS } from "@/lib/utils";
@@ -157,7 +157,14 @@ export default function CommunityPage() {
     <div className="min-h-screen bg-[var(--bg)]">
       {/* Nav */}
       <nav className="flex items-center justify-between px-6 md:px-10 h-16 border-b border-[var(--border)] bg-[var(--bg)]/90 backdrop-blur-md sticky top-0 z-40">
-        <Logo size={28} />
+        <div className="flex items-center gap-6">
+          <Link href="/dashboard" className="flex items-center gap-2 text-sm text-[var(--text-secondary)] hover:text-[var(--text)] transition-colors group">
+            <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
+            <span className="hidden md:inline">Dashboard</span>
+          </Link>
+          <div className="w-px h-6 bg-[var(--border)] hidden md:block" />
+          <Logo size={28} />
+        </div>
         <div className="flex items-center gap-4">
           <Link href="/create"><Button size="sm" icon={<Plus size={13} />}>New exam</Button></Link>
           <UserNav />

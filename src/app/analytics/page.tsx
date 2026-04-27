@@ -15,9 +15,11 @@ import {
   Calendar,
   Layers,
   Zap,
-  Globe
+  Globe,
+  Plus
 } from "lucide-react";
 import Link from "next/link";
+import { Button } from "@/components/ui/Button";
 import { Logo } from "@/components/ui/Logo";
 import { UserNav } from "@/components/layout/UserNav";
 import { DashboardSidebar } from "@/components/layout/DashboardSidebar";
@@ -70,11 +72,22 @@ export default function AnalyticsPage() {
 
   return (
     <div className="min-h-screen bg-[var(--bg)] flex flex-col">
-      <nav className="flex items-center justify-between px-6 md:px-10 h-16 border-b border-[var(--border)] bg-[var(--bg)]/80 backdrop-blur-xl sticky top-0 z-40">
-        <Logo size={24} />
-        <UserNav />
+      {/* Nav */}
+      <nav className="flex items-center justify-between px-6 md:px-10 h-16 border-b border-[var(--border)] bg-[var(--bg)]/90 backdrop-blur-md sticky top-0 z-40">
+        <div className="flex items-center gap-6">
+          <Link href="/dashboard" className="flex items-center gap-2 text-sm text-[var(--text-secondary)] hover:text-[var(--text)] transition-colors group">
+            <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
+            <span className="hidden md:inline">Dashboard</span>
+          </Link>
+          <div className="w-px h-6 bg-[var(--border)] hidden md:block" />
+          <Logo size={28} />
+        </div>
+        <div className="flex items-center gap-4">
+          <Link href="/create"><Button size="sm" icon={<Plus size={13} />}>New exam</Button></Link>
+          <UserNav />
+        </div>
       </nav>
-
+      
       <div className="flex flex-1">
         <DashboardSidebar />
         
@@ -112,18 +125,18 @@ export default function AnalyticsPage() {
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-12">
             {/* Coverage Hero Card */}
-            <div className="lg:col-span-4 card p-8 bg-gradient-to-br from-indigo-700 to-violet-800 text-white border-none shadow-2xl shadow-indigo-200 rounded-[2.5rem] flex flex-col items-center text-center overflow-hidden relative">
-              {/* Background Art */}
-              <div className="absolute top-0 right-0 p-4 opacity-5">
-                <PieChart size={180} />
+            <div className="lg:col-span-4 card p-10 bg-gradient-to-br from-indigo-700 to-violet-800 text-white border-none shadow-2xl shadow-indigo-300 rounded-[3rem] flex flex-col items-center text-center overflow-hidden relative">
+              {/* Background Art - Logo Watermark */}
+              <div className="absolute -top-10 -right-10 opacity-10 pointer-events-none scale-150 rotate-12">
+                <Logo size={240} showText={false} />
               </div>
               
-              <div className="relative w-40 h-40 mb-8">
-                <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
+              <div className="relative w-48 h-48 mb-10 flex items-center justify-center">
+                <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 36 36">
                   <path
                     className="text-white/10"
                     strokeDasharray="100, 100"
-                    strokeWidth="2.5"
+                    strokeWidth="1.5"
                     stroke="currentColor"
                     fill="none"
                     d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
@@ -131,31 +144,34 @@ export default function AnalyticsPage() {
                   <path
                     className="text-white transition-all duration-1000 ease-out"
                     strokeDasharray={`${coveragePercent}, 100`}
-                    strokeWidth="2.5"
+                    strokeWidth="1.5"
                     strokeLinecap="round"
                     stroke="currentColor"
                     fill="none"
                     d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
                   />
                 </svg>
-                <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <span className="serif text-5xl font-light">{coveragePercent}%</span>
-                  <span className="text-[10px] font-bold uppercase tracking-[0.2em] opacity-60">Complete</span>
+                {/* Center dot in circle */}
+                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-white shadow-xl shadow-white/50 z-10" />
+                
+                <div className="flex flex-col items-center justify-center z-10">
+                  <span className="serif text-6xl font-light tracking-tighter leading-none mb-1">{coveragePercent}%</span>
+                  <span className="text-[10px] font-bold uppercase tracking-[0.3em] opacity-70">Complete</span>
                 </div>
               </div>
               
-              <h3 className="serif text-2xl mb-2">Teaching Mastery</h3>
-              <p className="text-indigo-100/80 text-sm font-light leading-relaxed mb-6">
-                You have covered <strong>{coveredChapterIds.size}</strong> out of <strong>{allChapters.length}</strong> core chapters for {level?.name?.en || "this level"}.
+              <h3 className="serif text-3xl mb-4 tracking-tight">Teaching Mastery</h3>
+              <p className="text-indigo-100/70 text-sm font-light leading-relaxed mb-10 max-w-[240px]">
+                You have covered <strong>{coveredChapterIds.size}</strong> out of <strong>{allChapters.length || 0}</strong> core chapters for this level.
               </p>
               
-              <div className="w-full bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/10">
-                <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-widest mb-2">
-                  <span>Current Pace</span>
+              <div className="w-full bg-white/10 backdrop-blur-md rounded-3xl p-5 border border-white/10 mt-auto shadow-inner">
+                <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-widest mb-3">
+                  <span className="opacity-70">Current Pace</span>
                   <span className="text-emerald-300">+12% vs last month</span>
                 </div>
                 <div className="h-1.5 w-full bg-white/10 rounded-full overflow-hidden">
-                  <div className="h-full bg-emerald-400" style={{ width: '70%' }} />
+                  <div className="h-full bg-emerald-400 shadow-sm shadow-emerald-400/50" style={{ width: '70%' }} />
                 </div>
               </div>
             </div>

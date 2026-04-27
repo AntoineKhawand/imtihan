@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, Suspense } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, Sparkles, Lightbulb, Upload, BookOpen, Trash2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Dropzone } from "@/components/ui/Dropzone";
@@ -33,7 +33,7 @@ const EXAMPLE_PROMPTS = [
 
 const CHAR_MAX = 1000;
 
-export default function CreatePage() {
+function CreatePageContent() {
   const router = useRouter();
   const [description, setDescription] = useState("");
   const [uploadedFile, setUploadedFile] = useState<UploadedFile | null>(null);
@@ -93,16 +93,32 @@ export default function CreatePage() {
   const isFreeTier = !isProActive(profile);
   const quotaUsed = profile?.examsGenerated ?? 0;
 
+  const searchParams = useSearchParams();
+
   useEffect(() => {
     setProfiles(getClassProfiles());
-    // Restore description + uploaded file if the user navigated back here
+    
+    // 1. Handle incoming syllabus parameters
+    const chapterId = searchParams.get("chapter");
+    const subject = searchParams.get("subject");
+    const levelId = searchParams.get("level");
+    const curriculumId = searchParams.get("curriculum");
+
+    if (chapterId && subject) {
+      const subjectLabel = subject.charAt(0).toUpperCase() + subject.slice(1);
+      const prompt = `Generate a ${subjectLabel} exam for ${levelId} (${curriculumId}). \nFocus on the chapter: ${chapterId}. \nInclude 3 exercises with mixed difficulty.`;
+      setDescription(prompt);
+      return; // Skip restoring session storage if we have a direct intent
+    }
+
+    // 2. Restore description + uploaded file if the user navigated back here
     const savedDesc = sessionStorage.getItem("imtihan_description");
     if (savedDesc) setDescription(savedDesc);
     const savedFileRaw = sessionStorage.getItem("imtihan_uploaded_file");
     if (savedFileRaw) {
       try { setUploadedFile(JSON.parse(savedFileRaw) as UploadedFile); } catch { /* ignore */ }
     }
-  }, []);
+  }, [searchParams]);
 
   // Persist the draft as the user types so nothing is lost on back-navigation.
   useEffect(() => {
@@ -533,6 +549,14 @@ export default function CreatePage() {
         ))}
       </div>
     </div>
+  );
+}
+
+export default function CreatePage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[var(--bg)] flex items-center justify-center"><div className="w-8 h-8 rounded-full border-2 border-[var(--accent)] border-t-transparent animate-spin" /></div>}>
+      <CreatePageContent />
+    </Suspense>
   );
 }
 
