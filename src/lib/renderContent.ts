@@ -9,9 +9,7 @@
  *  - Mermaid graphs: ```mermaid ... ```
  */
 import katex from "katex";
-if (typeof window !== "undefined") {
-  require("katex/contrib/mhchem/mhchem");
-}
+import "katex/contrib/mhchem";
 
 function renderKaTeX(src: string, displayMode: boolean): string {
   try {
@@ -171,7 +169,6 @@ function applyMarkdown(text: string): string {
     .replace(/`([^`]+)`/g, '<code class="font-mono text-xs bg-[var(--bg-subtle)] px-1 py-0.5 rounded">$1</code>');
   
   // Apply math and list parsing
-  md = parseNakedMath(md);
   md = parseLists(md);
   return parseTables(md);
 }
@@ -233,6 +230,8 @@ export function renderContent(raw: string): string {
   });
 
   text = text.replace(/\\n/g, "\n").replace(/\r\n/g, "\n").replace(/\n{3,}/g, "\n\n");
+
+  text = parseNakedMath(text);
 
   let displayParts = splitMath(text, "$$", "$$");
   let html = displayParts.map((part) => {
