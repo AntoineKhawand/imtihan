@@ -125,7 +125,7 @@ export default function AnalyticsPage() {
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-12">
             {/* Coverage Hero Card */}
-            <div className="lg:col-span-4 card p-10 bg-gradient-to-br from-indigo-700 to-violet-800 text-white border-none shadow-2xl shadow-indigo-300 rounded-[3rem] flex flex-col items-center text-center overflow-hidden relative">
+            <div className="lg:col-span-4 card p-10 bg-gradient-to-br from-emerald-800 to-teal-950 text-white border-none shadow-2xl shadow-emerald-200 rounded-[3rem] flex flex-col items-center text-center overflow-hidden relative">
               {/* Background Art - Logo Watermark */}
               <div className="absolute -top-10 -right-10 opacity-10 pointer-events-none scale-150 rotate-12">
                 <Logo size={240} showText={false} />
@@ -161,7 +161,7 @@ export default function AnalyticsPage() {
               </div>
               
               <h3 className="serif text-3xl mb-4 tracking-tight">Teaching Mastery</h3>
-              <p className="text-indigo-100/70 text-sm font-light leading-relaxed mb-10 max-w-[240px]">
+              <p className="text-emerald-100/70 text-sm font-light leading-relaxed mb-10 max-w-[240px]">
                 You have covered <strong>{coveredChapterIds.size}</strong> out of <strong>{allChapters.length || 0}</strong> core chapters for this level.
               </p>
               
@@ -233,10 +233,10 @@ export default function AnalyticsPage() {
 
           {/* Detailed Breakdown */}
           <div className="card overflow-hidden bg-white border-none shadow-2xl shadow-black/5 rounded-[2.5rem]">
-            <div className="p-8 border-b border-[var(--border)] flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gradient-to-r from-slate-50 to-white">
+            <div className="p-8 border-b border-[var(--border)] flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gradient-to-r from-emerald-50/30 to-white">
               <div>
                 <h3 className="serif text-2xl text-[var(--text)] mb-1 flex items-center gap-3">
-                  <Layers size={24} className="text-indigo-600" />
+                  <Layers size={24} className="text-emerald-700" />
                   Syllabus Breakdown
                 </h3>
                 <p className="text-sm text-[var(--text-secondary)] font-light">Chapter-by-chapter coverage for {level?.name?.en || curriculumId}.</p>
@@ -286,7 +286,7 @@ export default function AnalyticsPage() {
                         </div>
                       ) : (
                         <Link href={`/create?chapter=${chapter.id}&subject=${currentSubject}&level=${firstExam?.context.levelId}&curriculum=${curriculumId}`}>
-                          <button className="h-10 px-5 rounded-xl border border-[var(--border)] text-slate-500 hover:border-indigo-600 hover:text-indigo-600 hover:bg-indigo-50/50 text-xs font-bold transition-all flex items-center gap-2 group-hover:scale-105">
+                          <button className="h-10 px-5 rounded-xl border border-[var(--border)] text-slate-500 hover:border-emerald-700 hover:text-emerald-700 hover:bg-emerald-50/50 text-xs font-bold transition-all flex items-center gap-2 group-hover:scale-105">
                             Generate Exam <ChevronRight size={14} />
                           </button>
                         </Link>
@@ -299,7 +299,7 @@ export default function AnalyticsPage() {
             
             <div className="p-10 bg-slate-50 text-center">
               <div className="inline-flex items-center gap-3 px-4 py-2 rounded-2xl bg-white border border-slate-200 text-slate-500 text-xs font-medium shadow-sm">
-                <Globe size={14} className="text-indigo-600" />
+                <Globe size={14} className="text-emerald-700" />
                 Data sourced from official Ministry of Education & IB guidelines
               </div>
             </div>

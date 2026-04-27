@@ -116,12 +116,6 @@ export default function DashboardPage() {
         <Logo size={28} />
         <div className="flex items-center gap-6">
           <div className="hidden md:flex items-center gap-3">
-            <Link href="/bank">
-              <Button variant="secondary" size="sm" icon={<Bookmark size={13} />}>Bank</Button>
-            </Link>
-            <Link href="/community">
-              <Button variant="secondary" size="sm" icon={<Users size={13} />}>Community</Button>
-            </Link>
             <Link href="/create">
               <Button size="sm" icon={<Plus size={13} />}>New exam</Button>
             </Link>

@@ -85,6 +85,10 @@ export default function BankPage() {
   const [query, setQuery] = useState("");
   const [mounted, setMounted] = useState(false);
   const [isInviteOpen, setIsInviteOpen] = useState(false);
+  
+  // In a real app, this would come from the user's profile
+  const userSchool = "Lycée Franco-Libanais"; 
+  const schoolSlug = userSchool.toLowerCase().replace(/\s+/g, "-");
 
   useEffect(() => {
     setEntries(getBankExercises());
@@ -173,20 +177,20 @@ export default function BankPage() {
         </div>
 
         {tab === "school" && (
-          <div className="mb-6 p-4 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-between">
+          <div className="mb-6 p-4 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center border border-indigo-200">
-                <Globe size={18} className="text-indigo-600" />
+              <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center border border-emerald-200">
+                <Globe size={18} className="text-emerald-600" />
               </div>
               <div>
-                <p className="text-xs font-bold text-indigo-900 uppercase tracking-wider">Verdun Shared Bank</p>
-                <p className="text-[11px] text-indigo-700">Collaborating with 14 other teachers.</p>
+                <p className="text-xs font-bold text-emerald-900 uppercase tracking-wider">{userSchool} Shared Bank</p>
+                <p className="text-[11px] text-emerald-700">Collaborating with 14 other teachers.</p>
               </div>
             </div>
             <Button 
               variant="secondary" 
               size="sm" 
-              className="bg-white border-indigo-200 text-indigo-600" 
+              className="bg-white border-emerald-200 text-emerald-600" 
               icon={<Share2 size={12} />}
               onClick={() => setIsInviteOpen(true)}
             >
@@ -202,7 +206,7 @@ export default function BankPage() {
             <div className="relative w-full max-w-md bg-white rounded-[2.5rem] border border-[var(--border)] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
               <div className="p-8">
                 <div className="flex items-center justify-between mb-8">
-                  <div className="w-12 h-12 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600">
+                  <div className="w-12 h-12 rounded-2xl bg-emerald-50 flex items-center justify-center text-emerald-600">
                     <Users size={24} />
                   </div>
                   <button onClick={() => setIsInviteOpen(false)} className="w-10 h-10 rounded-xl hover:bg-[var(--bg-subtle)] flex items-center justify-center text-[var(--text-tertiary)] transition-colors">
@@ -212,7 +216,7 @@ export default function BankPage() {
 
                 <h3 className="serif text-3xl text-[var(--text)] mb-2">Invite Colleagues</h3>
                 <p className="text-sm text-[var(--text-secondary)] leading-relaxed mb-8">
-                  Collaborate with other teachers at <span className="font-bold text-indigo-600">Verdun School</span> to build a shared repository of high-quality exercises.
+                  Collaborate with other teachers at <span className="font-bold text-emerald-600">{userSchool}</span> to build a shared repository of high-quality exercises.
                 </p>
 
                 <div className="space-y-6">
@@ -220,14 +224,14 @@ export default function BankPage() {
                     <label className="block text-[10px] font-bold text-[var(--text-tertiary)] uppercase tracking-widest mb-3">Invitation Link</label>
                     <div className="flex gap-2">
                       <div className="flex-1 h-12 px-4 bg-[var(--bg-subtle)] border border-[var(--border)] rounded-xl flex items-center text-xs text-[var(--text-secondary)] truncate">
-                        imtihan.live/join/verdun-2024
+                        imtihan.live/join/{schoolSlug}-2024
                       </div>
                       <button 
                         onClick={() => {
                           navigator.clipboard.writeText("imtihan.live/join/verdun-2024");
                           toast.success("Invitation link copied!");
                         }}
-                        className="h-12 w-12 rounded-xl border border-[var(--border)] flex items-center justify-center text-[var(--text-secondary)] hover:border-indigo-500 hover:text-indigo-600 transition-all active:scale-95"
+                        className="h-12 w-12 rounded-xl border border-[var(--border)] flex items-center justify-center text-[var(--text-secondary)] hover:border-emerald-500 hover:text-emerald-600 transition-all active:scale-95"
                       >
                         <Copy size={18} />
                       </button>
@@ -241,13 +245,13 @@ export default function BankPage() {
                       <input 
                         type="email" 
                         placeholder="colleague@school.edu.lb"
-                        className="w-full h-12 pl-12 pr-4 rounded-xl border border-[var(--border)] text-sm focus:outline-none focus:border-indigo-500 transition-all"
+                        className="w-full h-12 pl-12 pr-4 rounded-xl border border-[var(--border)] text-sm focus:outline-none focus:border-emerald-500 transition-all"
                       />
                     </div>
                   </div>
 
                   <Button 
-                    className="w-full h-14 rounded-2xl bg-indigo-600 shadow-xl shadow-indigo-200"
+                    className="w-full h-14 rounded-2xl bg-emerald-700 shadow-xl shadow-emerald-100"
                     icon={<Send size={18} />}
                     onClick={() => {
                       toast.success("Invitation sent successfully!");
