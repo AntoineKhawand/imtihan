@@ -510,7 +510,7 @@ export async function generateWordDocument(
             alignment: isArabic ? AlignmentType.RIGHT : undefined,
             children: [
               new TextRun({ text: `${sq.label}  `, bold: true, size: 22, font: fontBody, color: textColor, rightToLeft: isArabic }),
-              ...createFormattedTextRuns(firstLine, { size: 22, font: fontBody, color: textColor, rightToLeft: isArabic }),
+              ...createFormattedTextRuns(firstLine, { size: 22, font: fontBody, color: textColor, bidirectional: isArabic }),
               new TextRun({ text: `  (${sq.points} pts)`, size: 20, color: metaColor, font: fontBody, italics: true, rightToLeft: isArabic }),
             ],
           }));
