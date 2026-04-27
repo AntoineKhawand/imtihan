@@ -487,12 +487,12 @@ export async function generateWordDocument(
       alignment: isArabic ? AlignmentType.RIGHT : undefined,
     }));
 
-    children.push(...(await processContentBlocks(ex.statement, { size: 22, font: fontBody, color: textColor, rightToLeft: isArabic })));
+    children.push(...(await processContentBlocks(ex.statement, { size: 22, font: fontBody, color: textColor, bidirectional: isArabic })));
 
     if (ex.subQuestions && Array.isArray(ex.subQuestions) && ex.subQuestions.length > 0) {
       for (const sq of ex.subQuestions) {
         // Handle sub-questions by merging label, statement, and points on one line if possible
-        const statementBlocks = await processContentBlocks(sq.statement, { size: 22, font: fontBody, color: textColor, indent: 720, rightToLeft: isArabic });
+        const statementBlocks = await processContentBlocks(sq.statement, { size: 22, font: fontBody, color: textColor, indent: 720, bidirectional: isArabic });
         
         if (statementBlocks.length > 0 && statementBlocks[0] instanceof Paragraph) {
           // Take the children of the first paragraph and prepend the label + append points
@@ -517,7 +517,7 @@ export async function generateWordDocument(
 
           // If there were other blocks (tables, more lines), add them
           if (remainingLines.trim()) {
-            children.push(...(await processContentBlocks(remainingLines, { size: 22, font: fontBody, color: textColor, indent: 720, rightToLeft: isArabic })));
+            children.push(...(await processContentBlocks(remainingLines, { size: 22, font: fontBody, color: textColor, indent: 720, bidirectional: isArabic })));
           }
           // If there were other non-paragraph blocks from the original statement, add them
           const nonParaBlocks = statementBlocks.slice(1).filter(b => !(b instanceof Paragraph));
@@ -593,7 +593,7 @@ export async function generateWordDocument(
                 verticalAlign: AlignmentType.CENTER
               }),
               new TableCell({ 
-                children: [new Paragraph({ children: createFormattedTextRuns(b.criterion, { size: 18, font: fontBody, color: textColor }), spacing: { before: 40, after: 40 } })],
+                children: [new Paragraph({ children: createFormattedTextRuns(b.criterion, { size: 18, font: fontBody, color: textColor, bidirectional: isArabic }), spacing: { before: 40, after: 40 }, bidirectional: isArabic })],
                 verticalAlign: AlignmentType.CENTER
               }),
             ],
@@ -610,7 +610,7 @@ export async function generateWordDocument(
     if (ex.solution.microBareme && ex.solution.microBareme.length > 0) {
       const microWord = lang === "fr" ? "Micro-barème :" : lang === "ar" ? "سلم تنقيط تفصيلي:" : "Micro Mark Scheme:";
       children.push(new Paragraph({
-        children: [new TextRun({ text: microWord, bold: true, size: 20, color: primaryColor, font: fontHeader, bidirectional: isArabic })],
+        children: [new TextRun({ text: microWord, bold: true, size: 20, color: primaryColor, font: fontHeader, rightToLeft: isArabic })],
         spacing: { before: 160, after: 60 },
         bidirectional: isArabic,
         alignment: isArabic ? AlignmentType.RIGHT : undefined,
@@ -637,7 +637,7 @@ export async function generateWordDocument(
                 verticalAlign: AlignmentType.CENTER
               }),
               new TableCell({ 
-                children: [new Paragraph({ children: createFormattedTextRuns(mb.criterion, { size: 18, font: fontBody, color: textColor }), spacing: { before: 40, after: 40 } })],
+                children: [new Paragraph({ children: createFormattedTextRuns(mb.criterion, { size: 18, font: fontBody, color: textColor, bidirectional: isArabic }), spacing: { before: 40, after: 40 }, bidirectional: isArabic })],
                 verticalAlign: AlignmentType.CENTER
               }),
             ],
