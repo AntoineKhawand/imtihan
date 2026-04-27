@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
+import { FREE_EXAM_LIMIT } from "@/lib/utils";
 
 interface AdminUser {
   uid: string;
@@ -157,7 +158,7 @@ export default function AdminPage() {
               <tbody className="divide-y divide-gray-50">
                 {filtered.map((u) => {
                   const isPro = !!(u.proExpiresAt && u.proExpiresAt > Date.now());
-                  const monthlyLimit = isPro ? 100 : 3;
+                  const monthlyLimit = isPro ? 100 : FREE_EXAM_LIMIT;
                   const monthlyUsed = u.monthlyExamsGenerated ?? 0;
                   const isNearLimit = monthlyUsed >= monthlyLimit * 0.8;
 
