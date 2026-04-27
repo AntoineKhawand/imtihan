@@ -12,7 +12,7 @@ import {
  */
 async function processContentBlocks(
   text: string, 
-  baseOptions: { size: number; color?: string; font?: string; indent?: number }
+  baseOptions: { size: number; color?: string; font?: string; indent?: number; bidirectional?: boolean }
 ): Promise<(Paragraph | Table)[]> {
   const blocks: (Paragraph | Table)[] = [];
   
@@ -31,6 +31,8 @@ async function processContentBlocks(
           children: createFormattedTextRuns(content, baseOptions),
           spacing: { after: 120 },
           indent: baseOptions.indent ? { left: baseOptions.indent } : undefined,
+          bidirectional: baseOptions.bidirectional,
+          alignment: baseOptions.bidirectional ? AlignmentType.RIGHT : undefined,
         }));
       }
       currentParagraphLines = [];
@@ -50,8 +52,9 @@ async function processContentBlocks(
             children: cells.map(cell => new TableCell({
               children: [new Paragraph({ 
                 children: createFormattedTextRuns(cell.trim(), { ...baseOptions, size: baseOptions.size - 2 }),
-                alignment: AlignmentType.CENTER,
-                spacing: { before: 40, after: 40 }
+                alignment: baseOptions.bidirectional ? AlignmentType.RIGHT : AlignmentType.CENTER,
+                spacing: { before: 40, after: 40 },
+                bidirectional: baseOptions.bidirectional,
               })],
               verticalAlign: AlignmentType.CENTER,
               width: { size: 100 / cells.length, type: WidthType.PERCENTAGE },
@@ -272,7 +275,7 @@ function cleanLatexForWord(text: string): string {
  */
 function createFormattedTextRuns(
   text: string,
-  baseOptions: { size: number; color?: string; font?: string }
+  baseOptions: { size: number; color?: string; font?: string; bidirectional?: boolean }
 ): TextRun[] {
   const runs: TextRun[] = [];
   const cleanText = cleanLatexForWord(text.replace(/`(.*?)`/g, '$1'));
@@ -297,7 +300,7 @@ function createFormattedTextRuns(
     } else if (supSingle) {
       runs.push(new TextRun({ ...baseOptions, text: supSingle, superScript: true }));
     } else if (plainText) {
-      runs.push(new TextRun({ ...baseOptions, text: plainText }));
+      runs.push(new TextRun({ ...baseOptions, text: plainText, bidirectional: baseOptions.bidirectional }));
     }
   }
 
@@ -347,8 +350,13 @@ export async function generateWordDocument(
   header: z.infer<typeof RequestSchema>["header"]
 ): Promise<Buffer> {
   const subjectName = SUBJECT_LABELS[context.subject] ?? context.subject;
-  const lang = context.language === "french" ? "fr" : "en";
-  const exerciseWord = lang === "fr" ? "Exercice" : "Exercise";
+  const lang = context.language === "french" ? "fr" : context.language === "arabic" ? "ar" : "en";
+  const isArabic = lang === "ar";
+  const exerciseWord = lang === "fr" ? "Exercice" : lang === "ar" ? "تمرين" : "Exercise";
+  const pointsWord = lang === "ar" ? "نقاط" : "points";
+  const professorWord = lang === "fr" ? "Professeur" : lang === "ar" ? "الأستاذ" : "Teacher";
+  const durationWord = lang === "fr" ? "Durée" : lang === "ar" ? "المدة" : "Duration";
+  const totalWord = lang === "ar" ? "المجموع" : "Total";
 
   // Template configuration
   const isModern = templateId === "modern";
@@ -365,9 +373,10 @@ export async function generateWordDocument(
   // ─── Header ────────────────────────────────────────────────
   if (header?.schoolName) {
     children.push(new Paragraph({
-      children: [new TextRun({ text: header.schoolName, bold: true, size: 26, font: fontHeader, color: primaryColor })],
+      children: [new TextRun({ text: header.schoolName, bold: true, size: 26, font: fontHeader, color: primaryColor, bidirectional: isArabic })],
       alignment: AlignmentType.CENTER,
       spacing: { after: 120 },
+      bidirectional: isArabic,
     }));
   }
 
@@ -378,21 +387,24 @@ export async function generateWordDocument(
       size: 32,
       font: fontHeader,
       color: textColor,
+      bidirectional: isArabic,
     })],
     alignment: AlignmentType.CENTER,
     heading: HeadingLevel.HEADING_1,
+    bidirectional: isArabic,
   }));
 
   children.push(new Paragraph({
     children: [
-      new TextRun({ text: lang === "fr" ? `Professeur: ${header?.teacherName ?? "..."}` : `Teacher: ${header?.teacherName ?? "..."}`, size: 18, font: fontBody, color: metaColor }),
+      new TextRun({ text: `${professorWord}: ${header?.teacherName ?? "..."}`, size: 18, font: fontBody, color: metaColor, bidirectional: isArabic }),
       new TextRun({ text: "    |    ", size: 18, font: fontBody, color: metaColor }),
-      new TextRun({ text: lang === "fr" ? `Durée: ${context.duration} min` : `Time: ${context.duration} min`, size: 18, font: fontBody, color: metaColor }),
+      new TextRun({ text: `${durationWord}: ${context.duration} min`, size: 18, font: fontBody, color: metaColor, bidirectional: isArabic }),
       new TextRun({ text: "    |    ", size: 18, font: fontBody, color: metaColor }),
-      new TextRun({ text: `Total: ${context.totalPoints} points`, size: 18, font: fontBody, color: metaColor }),
+      new TextRun({ text: `${totalWord}: ${context.totalPoints} ${pointsWord}`, size: 18, font: fontBody, color: metaColor, bidirectional: isArabic }),
     ],
     alignment: AlignmentType.CENTER,
     spacing: { after: 200 },
+    bidirectional: isArabic,
   }));
 
   // Horizontal Rule
@@ -463,19 +475,21 @@ export async function generateWordDocument(
   for (const ex of exercises) {
     children.push(new Paragraph({
       children: [
-        new TextRun({ text: `${exerciseWord} ${isFormal ? String(ex.number) + "." : ex.number}`, bold: true, size: 24, color: primaryColor, font: fontHeader }),
-        new TextRun({ text: `  (${ex.points} points)`, size: 20, color: metaColor, font: fontBody }),
+        new TextRun({ text: `${exerciseWord} ${isFormal ? String(ex.number) + "." : ex.number}`, bold: true, size: 24, color: primaryColor, font: fontHeader, bidirectional: isArabic }),
+        new TextRun({ text: `  (${ex.points} ${pointsWord})`, size: 20, color: metaColor, font: fontBody, bidirectional: isArabic }),
       ],
       heading: HeadingLevel.HEADING_2,
       spacing: { before: 240, after: 120 },
+      bidirectional: isArabic,
+      alignment: isArabic ? AlignmentType.RIGHT : undefined,
     }));
 
-    children.push(...(await processContentBlocks(ex.statement, { size: 22, font: fontBody, color: textColor })));
+    children.push(...(await processContentBlocks(ex.statement, { size: 22, font: fontBody, color: textColor, bidirectional: isArabic })));
 
     if (ex.subQuestions && Array.isArray(ex.subQuestions) && ex.subQuestions.length > 0) {
       for (const sq of ex.subQuestions) {
         // Handle sub-questions by merging label, statement, and points on one line if possible
-        const statementBlocks = await processContentBlocks(sq.statement, { size: 22, font: fontBody, color: textColor, indent: 720 });
+        const statementBlocks = await processContentBlocks(sq.statement, { size: 22, font: fontBody, color: textColor, indent: 720, bidirectional: isArabic });
         
         if (statementBlocks.length > 0 && statementBlocks[0] instanceof Paragraph) {
           // Take the children of the first paragraph and prepend the label + append points
@@ -489,16 +503,18 @@ export async function generateWordDocument(
           children.push(new Paragraph({
             indent: { left: 720 },
             spacing: { before: 80, after: 80 },
+            bidirectional: isArabic,
+            alignment: isArabic ? AlignmentType.RIGHT : undefined,
             children: [
-              new TextRun({ text: `${sq.label}  `, bold: true, size: 22, font: fontBody, color: textColor }),
-              ...createFormattedTextRuns(firstLine, { size: 22, font: fontBody, color: textColor }),
-              new TextRun({ text: `  (${sq.points} pts)`, size: 20, color: metaColor, font: fontBody, italics: true }),
+              new TextRun({ text: `${sq.label}  `, bold: true, size: 22, font: fontBody, color: textColor, bidirectional: isArabic }),
+              ...createFormattedTextRuns(firstLine, { size: 22, font: fontBody, color: textColor, bidirectional: isArabic }),
+              new TextRun({ text: `  (${sq.points} pts)`, size: 20, color: metaColor, font: fontBody, italics: true, bidirectional: isArabic }),
             ],
           }));
 
           // If there were other blocks (tables, more lines), add them
           if (remainingLines.trim()) {
-            children.push(...(await processContentBlocks(remainingLines, { size: 22, font: fontBody, color: textColor, indent: 720 })));
+            children.push(...(await processContentBlocks(remainingLines, { size: 22, font: fontBody, color: textColor, indent: 720, bidirectional: isArabic })));
           }
           // If there were other non-paragraph blocks from the original statement, add them
           const nonParaBlocks = statementBlocks.slice(1).filter(b => !(b instanceof Paragraph));
@@ -507,11 +523,13 @@ export async function generateWordDocument(
           // Fallback
           children.push(new Paragraph({
             children: [
-              new TextRun({ text: `${sq.label}  `, bold: true, size: 22, font: fontBody, color: textColor }),
-              new TextRun({ text: `  (${sq.points} pts)`, size: 20, color: metaColor, font: fontBody, italics: true }),
+              new TextRun({ text: `${sq.label}  `, bold: true, size: 22, font: fontBody, color: textColor, bidirectional: isArabic }),
+              new TextRun({ text: `  (${sq.points} pts)`, size: 20, color: metaColor, font: fontBody, italics: true, bidirectional: isArabic }),
             ],
             indent: { left: 720 },
             spacing: { before: 80, after: 80 },
+            bidirectional: isArabic,
+            alignment: isArabic ? AlignmentType.RIGHT : undefined,
           }));
           children.push(...statementBlocks);
         }
@@ -522,26 +540,33 @@ export async function generateWordDocument(
   }
 
   // ─── Corrigé ──────────────────────────────────────────────
+  const corrigWord = lang === "fr" ? "CORRIGÉ" : lang === "ar" ? "الإجابة النموذجية" : "ANSWER KEY";
   children.push(new Paragraph({
     pageBreakBefore: true,
-    children: [new TextRun({ text: lang === "fr" ? "CORRIGÉ" : "ANSWER KEY", bold: true, size: 28, font: fontHeader, color: textColor })],
+    children: [new TextRun({ text: corrigWord, bold: true, size: 28, font: fontHeader, color: textColor, bidirectional: isArabic })],
     heading: HeadingLevel.HEADING_1,
     alignment: AlignmentType.CENTER,
+    bidirectional: isArabic,
   }));
   children.push(new Paragraph({ text: "" }));
 
   for (const ex of exercises) {
     children.push(new Paragraph({
-      children: [new TextRun({ text: `${exerciseWord} ${isFormal ? String(ex.number) + "." : ex.number}`, bold: true, size: 24, color: primaryColor, font: fontHeader })],
+      children: [new TextRun({ text: `${exerciseWord} ${isFormal ? String(ex.number) + "." : ex.number}`, bold: true, size: 24, color: primaryColor, font: fontHeader, bidirectional: isArabic })],
       heading: HeadingLevel.HEADING_2,
       spacing: { before: 240, after: 120 },
+      bidirectional: isArabic,
+      alignment: isArabic ? AlignmentType.RIGHT : undefined,
     }));
 
     // Barème table
     if (ex.solution.bareme && ex.solution.bareme.length > 0) {
+      const baremeWord = lang === "fr" ? "Barème :" : lang === "ar" ? "سلم التصحيح:" : "Marking Scheme:";
       children.push(new Paragraph({
-        children: [new TextRun({ text: lang === "fr" ? "Barème :" : "Marking Scheme:", bold: true, size: 20, color: primaryColor, font: fontHeader })],
+        children: [new TextRun({ text: baremeWord, bold: true, size: 20, color: primaryColor, font: fontHeader, bidirectional: isArabic })],
         spacing: { before: 120, after: 60 },
+        bidirectional: isArabic,
+        alignment: isArabic ? AlignmentType.RIGHT : undefined,
       }));
       children.push(new Table({
         width: { size: 100, type: WidthType.PERCENTAGE },
@@ -575,14 +600,17 @@ export async function generateWordDocument(
       children.push(new Paragraph({ text: "" }));
     }
 
-    children.push(...(await processContentBlocks(ex.solution.finalAnswer, { size: 22, font: fontBody, color: textColor })));
-    children.push(...(await processContentBlocks(ex.solution.methodology, { size: 20, color: metaColor, font: fontBody })));
+    children.push(...(await processContentBlocks(ex.solution.finalAnswer, { size: 22, font: fontBody, color: textColor, bidirectional: isArabic })));
+    children.push(...(await processContentBlocks(ex.solution.methodology, { size: 20, color: metaColor, font: fontBody, bidirectional: isArabic })));
 
     // Micro-barème table
     if (ex.solution.microBareme && ex.solution.microBareme.length > 0) {
+      const microWord = lang === "fr" ? "Micro-barème :" : lang === "ar" ? "سلم تنقيط تفصيلي:" : "Micro Mark Scheme:";
       children.push(new Paragraph({
-        children: [new TextRun({ text: lang === "fr" ? "Micro-barème :" : "Micro Mark Scheme:", bold: true, size: 20, color: primaryColor, font: fontHeader })],
+        children: [new TextRun({ text: microWord, bold: true, size: 20, color: primaryColor, font: fontHeader, bidirectional: isArabic })],
         spacing: { before: 160, after: 60 },
+        bidirectional: isArabic,
+        alignment: isArabic ? AlignmentType.RIGHT : undefined,
       }));
       children.push(new Table({
         width: { size: 100, type: WidthType.PERCENTAGE },

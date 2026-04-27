@@ -265,5 +265,5 @@ export function renderContent(raw: string): string {
     }
     finalHtml += line;
   }
-  return finalHtml.replace(/(<br \/>\s*){3,}/g, "<br /><br />");
+  return `<div dir="auto">${finalHtml.replace(/(<br \/>\s*){3,}/g, "<br /><br />")}</div>`;
 }

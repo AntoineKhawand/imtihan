@@ -40,14 +40,30 @@ export default function PrintPage() {
     }
   }, [router]);
 
-  if (!ready || !context) return <div className="p-10 text-center font-mono">Preparing document...</div>;
+  const isArabic = context.language === "arabic";
+  const lang = isArabic ? "ar" : context.language === "french" ? "fr" : "en";
+  const subjectName = SUBJECT_LABELS[context.subject]?.[lang === "ar" ? "fr" : lang] ?? context.subject; // fallback to fr for now if ar missing
+  
+  const durationWord = lang === "ar" ? "المدة" : "Durée";
+  const totalWord = lang === "ar" ? "المجموع" : "Total";
+  const pointsWord = lang === "ar" ? "نقاط" : "points";
+  const professorWord = lang === "ar" ? "الأستاذ" : "Prof";
+  const exerciseWord = lang === "ar" ? "تمرين" : "Exercice";
+  const corrigWord = lang === "ar" ? "الإجابة النموذجية" : "CORRIGÉ";
+  const responseWord = lang === "ar" ? "الإجابة" : "Réponse";
+  const baremeWord = lang === "ar" ? "سلم التصحيح" : "Barème de correction";
+  const questionWord = lang === "ar" ? "السؤال" : "Question";
+  const criterionWord = lang === "ar" ? "المعيار" : "Critère";
+  const methodologyWord = lang === "ar" ? "منهجية الحل" : "Méthodologie";
+  const stepWord = lang === "ar" ? "الخطوة" : "Étape";
+  const observableWord = lang === "ar" ? "المعيار الملاحظ" : "Critère observable";
 
-  const subjectName = SUBJECT_LABELS[context.subject]?.fr ?? context.subject;
   const isModern = templateId === "modern";
   const isFormal = templateId === "formal";
 
   return (
     <div
+      dir={isArabic ? "rtl" : "ltr"}
       className={cn(
         "bg-white text-black min-h-screen p-8 mx-auto max-w-[210mm]", // A4 width approx
         isFormal ? "font-serif" : isModern ? "font-sans" : "font-serif"
@@ -76,13 +92,13 @@ export default function PrintPage() {
           {subjectName} — {context.levelId}
         </h1>
         <div className={cn("flex justify-center items-center gap-4 text-sm", isModern ? "text-gray-600 font-medium" : "text-gray-800")}>
-          <span>Durée: {context.duration} min</span>
+          <span>{durationWord}: {context.duration} min</span>
           <span>|</span>
-          <span>Total: {context.totalPoints} points</span>
+          <span>{totalWord}: {context.totalPoints} {pointsWord}</span>
           {schoolSettings.teacherName && (
             <>
               <span>|</span>
-              <span>Prof: {schoolSettings.teacherName}</span>
+              <span>{professorWord}: {schoolSettings.teacherName}</span>
             </>
           )}
         </div>
@@ -94,10 +110,10 @@ export default function PrintPage() {
           <div key={ex.id} className="no-break">
             <div className="flex items-end gap-3 mb-4">
               <h3 className={cn("text-2xl font-bold", isModern ? "text-blue-700" : isFormal ? "text-black" : "text-emerald-800")}>
-                Exercice {isFormal ? `${i + 1}.` : i + 1}
+                {exerciseWord} {isFormal ? `${i + 1}.` : i + 1}
               </h3>
               <span className={cn("text-sm font-medium pb-1", isModern ? "text-gray-500" : "text-gray-600")}>
-                ({ex.points} points)
+                ({ex.points} {pointsWord})
               </span>
             </div>
             
@@ -110,13 +126,13 @@ export default function PrintPage() {
               <div className="pl-6 space-y-4 mt-4">
                 {ex.subQuestions.map((sq, sqIdx) => (
                   <div key={sqIdx} className="flex gap-3">
-                    <span className="font-bold flex-shrink-0">{sq.label}</span>
+                    <span className={cn("font-bold flex-shrink-0", isArabic ? "ml-1" : "")}>{sq.label}</span>
                     <div className="flex-1">
                       <div 
                         className="inline-block"
                         dangerouslySetInnerHTML={{ __html: renderContent(sq.statement) }}
                       />
-                      <span className="ml-2 text-sm text-gray-500">({sq.points} pts)</span>
+                      <span className={cn("text-sm text-gray-500", isArabic ? "mr-2" : "ml-2")}>({sq.points} pts)</span>
                     </div>
                   </div>
                 ))}
@@ -129,30 +145,30 @@ export default function PrintPage() {
       {/* Answer Key / Corrigé */}
       <div className="page-break mt-12 pt-12">
         <h1 className={cn("text-3xl font-bold text-center mb-10", isModern ? "text-gray-900" : "text-black")}>
-          CORRIGÉ
+          {corrigWord}
         </h1>
 
         <div className="space-y-12">
           {exercises.map((ex, i) => (
             <div key={ex.id} className="no-break">
               <h3 className={cn("text-xl font-bold mb-4", isModern ? "text-blue-700" : isFormal ? "text-black" : "text-emerald-800")}>
-                Exercice {isFormal ? `${i + 1}.` : i + 1}
+                {exerciseWord} {isFormal ? `${i + 1}.` : i + 1}
               </h3>
               
               <div className="mb-4">
-                <span className="font-bold">Réponse: </span>
+                <span className="font-bold">{responseWord}: </span>
                 <span dangerouslySetInnerHTML={{ __html: renderContent(ex.solution.finalAnswer) }} />
               </div>
 
               {ex.solution.bareme && ex.solution.bareme.length > 0 && (
                 <div className="mb-6">
-                  <h4 className="text-sm font-bold uppercase tracking-wider text-gray-700 mb-2">Barème de correction</h4>
+                  <h4 className="text-sm font-bold uppercase tracking-wider text-gray-700 mb-2">{baremeWord}</h4>
                   <table className="w-full border-collapse border border-gray-300 text-xs">
                     <thead>
                       <tr className="bg-gray-100">
-                        <th className="border border-gray-300 p-2 text-left w-20">Question</th>
-                        <th className="border border-gray-300 p-2 text-left w-16">Points</th>
-                        <th className="border border-gray-300 p-2 text-left">Critère</th>
+                        <th className={cn("border border-gray-300 p-2 w-20", isArabic ? "text-right" : "text-left")}>{questionWord}</th>
+                        <th className={cn("border border-gray-300 p-2 w-16", isArabic ? "text-right" : "text-left")}>{pointsWord}</th>
+                        <th className={cn("border border-gray-300 p-2", isArabic ? "text-right" : "text-left")}>{criterionWord}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -168,8 +184,8 @@ export default function PrintPage() {
                 </div>
               )}
 
-              <div className="pl-4 border-l-2 border-gray-300 mb-6">
-                <p className="text-[10px] font-bold text-gray-500 uppercase mb-1">Méthodologie</p>
+              <div className={cn("pl-4 mb-6", isArabic ? "pr-4 border-r-2 border-l-0" : "pl-4 border-l-2")}>
+                <p className="text-[10px] font-bold text-gray-500 uppercase mb-1">{methodologyWord}</p>
                 <div 
                   className="text-sm text-gray-700 leading-relaxed"
                   dangerouslySetInnerHTML={{ __html: renderContent(ex.solution.methodology) }}
@@ -178,13 +194,13 @@ export default function PrintPage() {
 
               {ex.solution.microBareme && ex.solution.microBareme.length > 0 && (
                 <div className="mt-4">
-                  <h4 className="text-sm font-bold uppercase tracking-wider text-gray-700 mb-2">Micro-barème détaillé</h4>
+                  <h4 className="text-sm font-bold uppercase tracking-wider text-gray-700 mb-2">{microWord ?? "Micro-barème"}</h4>
                   <table className="w-full border-collapse border border-gray-300 text-xs">
                     <thead>
                       <tr className="bg-gray-100">
-                        <th className="border border-gray-300 p-2 text-left w-24">Étape</th>
-                        <th className="border border-gray-300 p-2 text-left w-12">Pts</th>
-                        <th className="border border-gray-300 p-2 text-left">Critère observable</th>
+                        <th className={cn("border border-gray-300 p-2 w-24", isArabic ? "text-right" : "text-left")}>{stepWord}</th>
+                        <th className={cn("border border-gray-300 p-2 w-12", isArabic ? "text-right" : "text-left")}>Pts</th>
+                        <th className={cn("border border-gray-300 p-2", isArabic ? "text-right" : "text-left")}>{observableWord}</th>
                       </tr>
                     </thead>
                     <tbody>
