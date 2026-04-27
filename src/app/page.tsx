@@ -152,6 +152,24 @@ export default async function LandingPage() {
     }))
   };
 
+  const organizationSchema = {
+    "@context": "https://schema.org",
+    "@type": "EducationalOrganization",
+    "name": "Imtihan",
+    "url": "https://www.imtihan.live",
+    "logo": "https://www.imtihan.live/Imtihan-logo.png",
+    "address": {
+      "@type": "PostalAddress",
+      "addressLocality": "Beirut",
+      "addressCountry": "LB"
+    },
+    "geo": {
+      "@type": "GeoCoordinates",
+      "latitude": "33.8938",
+      "longitude": "35.5018"
+    }
+  };
+
   const softwareSchema = {
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
@@ -168,7 +186,7 @@ export default async function LandingPage() {
 
   return (
     <div className="min-h-screen bg-[var(--bg)]">
-      <SchemaOrg schema={[softwareSchema, faqSchema]} />
+      <SchemaOrg schema={[softwareSchema, faqSchema, organizationSchema]} />
 
       {/* ── NAV ─────────────────────────────────────────────────────── */}
       <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 md:px-10 h-16 bg-[var(--bg)]/75 backdrop-blur-xl border-b border-[var(--border)]/60 transition-colors">
