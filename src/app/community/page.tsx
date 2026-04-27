@@ -14,10 +14,22 @@ import { renderContent } from "@/lib/renderContent";
 import { useRouter } from "next/navigation";
 
 const SUBJECT_ICONS: Record<string, string> = {
-  physics: "⚛", mathematics: "∑", chemistry: "⚗", biology: "🧬",
-  philosophy: "💭", history: "📜", english: "📖", french: "📝",
-  arabic: "ع", informatics: "💻", economics: "📈", svt: "🌿",
-  geography: "🗺", accounting: "🧾", management: "📊", law: "⚖️",
+  physics: "fa-solid fa-atom",
+  mathematics: "fa-solid fa-square-root-variable",
+  chemistry: "fa-solid fa-flask-vial",
+  biology: "fa-solid fa-dna",
+  philosophy: "fa-solid fa-brain",
+  history: "fa-solid fa-scroll",
+  english: "fa-solid fa-language",
+  french: "fa-solid fa-pen-nib",
+  arabic: "fa-solid fa-font",
+  informatics: "fa-solid fa-laptop-code",
+  economics: "fa-solid fa-chart-line",
+  svt: "fa-solid fa-leaf",
+  geography: "fa-solid fa-earth-americas",
+  accounting: "fa-solid fa-file-invoice-dollar",
+  management: "fa-solid fa-chart-bar",
+  law: "fa-solid fa-scale-balanced",
 };
 
 const CURRICULUM_LABELS: Record<string, string> = {
@@ -221,8 +233,12 @@ export default function CommunityPage() {
                     <div className="p-5 flex-1 space-y-3">
                       {/* Title row */}
                       <div className="flex items-start gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-[var(--accent-light)] flex items-center justify-center flex-shrink-0 text-lg">
-                          {icon}
+                        <div className="w-10 h-10 rounded-xl bg-[var(--accent-light)] flex items-center justify-center flex-shrink-0 text-[var(--accent)] text-lg">
+                          {icon.startsWith("fa-") ? (
+                            <i className={cn(icon, "text-base")} />
+                          ) : (
+                            <span>{icon}</span>
+                          )}
                         </div>
                         <div className="flex-1 min-w-0">
                           <div 

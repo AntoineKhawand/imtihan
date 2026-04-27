@@ -14,10 +14,21 @@ import { UserNav } from "@/components/layout/UserNav";
 import { Logo } from "@/components/ui/Logo";
 
 const SUBJECT_ICONS: Record<string, string> = {
-  physics: "⚛", mathematics: "∑", chemistry: "⚗", biology: "🧬",
-  philosophy: "💭", history: "📜", english: "📖", french: "📝",
-  arabic: "ع", informatics: "💻", economics: "📈", svt: "🌿",
-  geography: "🗺", accounting: "🧾", psychology: "🧠",
+  physics: "fa-solid fa-atom",
+  mathematics: "fa-solid fa-square-root-variable",
+  chemistry: "fa-solid fa-flask-vial",
+  biology: "fa-solid fa-dna",
+  philosophy: "fa-solid fa-brain",
+  history: "fa-solid fa-scroll",
+  english: "fa-solid fa-language",
+  french: "fa-solid fa-pen-nib",
+  arabic: "fa-solid fa-font",
+  informatics: "fa-solid fa-laptop-code",
+  economics: "fa-solid fa-chart-line",
+  svt: "fa-solid fa-leaf",
+  geography: "fa-solid fa-earth-americas",
+  accounting: "fa-solid fa-file-invoice-dollar",
+  psychology: "fa-solid fa-comment-medical",
 };
 
 export default function DashboardPage() {
@@ -295,8 +306,12 @@ function ExamRow({
     <div className="card overflow-hidden">
       {/* Main row */}
       <div className="flex items-center gap-4 p-4">
-        <div className="w-10 h-10 rounded-xl bg-[var(--accent-light)] flex items-center justify-center flex-shrink-0 text-lg">
-          {icon}
+        <div className="w-10 h-10 rounded-xl bg-[var(--accent-light)] flex items-center justify-center flex-shrink-0 text-[var(--accent)]">
+          {icon.startsWith("fa-") ? (
+            <i className={cn(icon, "text-base")} />
+          ) : (
+            <span className="text-lg">{icon}</span>
+          )}
         </div>
         <div className="flex-1 min-w-0">
           <p className="font-medium text-[var(--text)] truncate">{exam.title}</p>
