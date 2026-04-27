@@ -40,6 +40,8 @@ export default function PrintPage() {
     }
   }, [router]);
 
+  if (!context) return null;
+
   const isArabic = context.language === "arabic";
   const lang = isArabic ? "ar" : context.language === "french" ? "fr" : "en";
   const subjectName = SUBJECT_LABELS[context.subject]?.[lang === "ar" ? "fr" : lang] ?? context.subject; // fallback to fr for now if ar missing
