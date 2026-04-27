@@ -59,6 +59,7 @@ export default function PrintPage() {
   const methodologyWord = lang === "ar" ? "منهجية الحل" : "Méthodologie";
   const stepWord = lang === "ar" ? "الخطوة" : "Étape";
   const observableWord = lang === "ar" ? "المعيار الملاحظ" : "Critère observable";
+  const microWord = lang === "ar" ? "الميكرو-باريم" : "Micro-barème";
 
   const isModern = templateId === "modern";
   const isFormal = templateId === "formal";
