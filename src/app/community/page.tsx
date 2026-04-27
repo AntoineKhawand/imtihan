@@ -238,22 +238,28 @@ export default function CommunityPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {filtered.map((exam) => {
                 const liked = likedIds.has(exam.id);
-                const icon = SUBJECT_ICONS[exam.context.subject] ?? "📄";
-                const curriculum = CURRICULUM_LABELS[exam.curriculum ?? exam.context.curriculumId] ?? exam.context.curriculumId;
+                              const curriculum = CURRICULUM_LABELS[exam.curriculum ?? exam.context.curriculumId] ?? exam.context.curriculumId;
 
                 return (
                   <div key={exam.id} className="card flex flex-col hover:shadow-md transition-shadow duration-200">
                     {/* Card body */}
                     <div className="p-5 flex-1 space-y-3">
                       {/* Title row */}
-                      <div className="flex items-start gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-[var(--accent-light)] flex items-center justify-center flex-shrink-0 text-[var(--accent)] text-lg">
-                          {icon.startsWith("fa-") ? (
-                            <i className={cn(icon, "text-base")} />
-                          ) : (
-                            <span>{icon}</span>
-                          )}
-                        </div>
+                      <div className="flex items-start gap-4">
+                        {(() => {
+                          const sKey = (exam.subject ?? exam.context?.subject)?.toLowerCase() || "";
+                          const iconClass = SUBJECT_ICONS[sKey] ?? "📄";
+                          const isFaIcon = iconClass.startsWith("fa-");
+                          return (
+                            <div className="w-12 h-12 rounded-2xl bg-[var(--accent-light)] flex items-center justify-center flex-shrink-0 text-[var(--accent)] text-2xl">
+                              {isFaIcon ? (
+                                <i className={iconClass} aria-hidden="true" />
+                              ) : (
+                                <span>{iconClass}</span>
+                              )}
+                            </div>
+                          );
+                        })()}
                         <div className="flex-1 min-w-0">
                           <div 
                             className="font-semibold text-[var(--text)] text-sm leading-snug line-clamp-2 mb-1"

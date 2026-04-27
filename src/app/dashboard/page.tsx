@@ -282,7 +282,6 @@ function ExamRow({
 }) {
   const [open, setOpen] = useState(false);
   const [downloading, setDownloading] = useState<"word" | "pdf" | null>(null);
-  const icon = SUBJECT_ICONS[exam.context.subject] ?? "📄";
 
   const diffCount = exam.exercises.reduce(
     (acc, e) => { acc[e.difficulty] = (acc[e.difficulty] ?? 0) + 1; return acc; },
@@ -317,13 +316,17 @@ function ExamRow({
     }
   }
 
+  const subjectKey = exam.context.subject?.toLowerCase() || "";
+  const icon = SUBJECT_ICONS[subjectKey] ?? "📄";
+  const isFa = icon.startsWith("fa-");
+
   return (
     <div className="card overflow-hidden">
       {/* Main row */}
       <div className="flex items-center gap-4 p-4">
         <div className="w-10 h-10 rounded-xl bg-[var(--accent-light)] flex items-center justify-center flex-shrink-0 text-[var(--accent)]">
-          {icon.startsWith("fa-") ? (
-            <i className={cn(icon, "text-base")} />
+          {isFa ? (
+            <i className={cn(icon, "text-base")} aria-hidden="true" />
           ) : (
             <span className="text-lg">{icon}</span>
           )}
