@@ -11,11 +11,16 @@ import {
   ArrowLeft,
   PieChart,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  Calendar,
+  Layers,
+  Zap,
+  Globe
 } from "lucide-react";
 import Link from "next/link";
 import { Logo } from "@/components/ui/Logo";
 import { UserNav } from "@/components/layout/UserNav";
+import { DashboardSidebar } from "@/components/layout/DashboardSidebar";
 import { getSavedExams, type SavedExam } from "@/lib/storage";
 import { bacLibanais } from "@/data/curricula/bac-libanais";
 import { bacFrancais } from "@/data/curricula/bac-francais";
@@ -64,184 +69,227 @@ export default function AnalyticsPage() {
     : 0;
 
   return (
-    <div className="min-h-screen bg-[var(--bg)]">
-      <nav className="flex items-center justify-between px-6 md:px-10 h-16 border-b border-[var(--border)] bg-[var(--bg)]/90 backdrop-blur-md sticky top-0 z-40">
-        <div className="flex items-center gap-4">
-          <Link href="/dashboard" className="p-2 hover:bg-[var(--bg-subtle)] rounded-lg transition-colors text-[var(--text-secondary)]">
-            <ArrowLeft size={20} />
-          </Link>
-          <Logo size={24} />
-        </div>
+    <div className="min-h-screen bg-[var(--bg)] flex flex-col">
+      <nav className="flex items-center justify-between px-6 md:px-10 h-16 border-b border-[var(--border)] bg-[var(--bg)]/80 backdrop-blur-xl sticky top-0 z-40">
+        <Logo size={24} />
         <UserNav />
       </nav>
 
-      <main className="max-w-5xl mx-auto px-6 py-12">
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
-          <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[var(--accent-light)] text-[var(--accent)] text-xs font-semibold mb-3">
-              <TrendingUp size={12} />
-              Curriculum Tracking
-            </div>
-            <h1 className="serif text-4xl text-[var(--text)] mb-2">Teaching Analytics</h1>
-            <p className="text-[var(--text-secondary)]">Monitor your curriculum coverage and exam difficulty trends.</p>
-          </div>
-
-          <div className="flex items-center gap-3 bg-[var(--surface)] p-1.5 rounded-2xl border border-[var(--border)]">
-            {subjects.map(s => (
-              <button
-                key={s}
-                onClick={() => setSelectedSubject(s)}
-                className={cn(
-                  "px-4 py-2 rounded-xl text-xs font-semibold transition-all",
-                  selectedSubject === s 
-                    ? "bg-[var(--accent)] text-white shadow-md shadow-[var(--accent)]/20" 
-                    : "text-[var(--text-secondary)] hover:text-[var(--text)] hover:bg-[var(--bg-subtle)]"
-                )}
-              >
-                {SUBJECT_LABELS[s]?.fr || s}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-          {/* Coverage Card */}
-          <div className="card p-6 flex flex-col items-center text-center">
-            <div className="relative w-32 h-32 mb-6">
-              <svg className="w-full h-full" viewBox="0 0 36 36">
-                <path
-                  className="text-[var(--border)]"
-                  strokeDasharray="100, 100"
-                  strokeWidth="3"
-                  stroke="currentColor"
-                  fill="none"
-                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                />
-                <path
-                  className="text-[var(--accent)] transition-all duration-1000"
-                  strokeDasharray={`${coveragePercent}, 100`}
-                  strokeWidth="3"
-                  strokeLinecap="round"
-                  stroke="currentColor"
-                  fill="none"
-                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                />
-              </svg>
-              <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className="serif text-3xl font-light text-[var(--text)]">{coveragePercent}%</span>
-                <span className="text-[10px] text-[var(--text-tertiary)] uppercase font-bold tracking-wider">Coverage</span>
+      <div className="flex flex-1">
+        <DashboardSidebar />
+        
+        <main className="flex-1 max-w-6xl mx-auto px-6 py-10">
+          {/* Header */}
+          <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8 mb-12 animate-in fade-in slide-in-from-top-4 duration-700">
+            <div>
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 text-emerald-600 text-[10px] font-bold uppercase tracking-widest mb-4 border border-emerald-100">
+                <Target size={12} />
+                Syllabus Tracker
               </div>
+              <h1 className="serif text-5xl text-[var(--text)] mb-3 tracking-tight">Curriculum Analytics</h1>
+              <p className="text-[var(--text-secondary)] text-lg max-w-2xl font-light">
+                Monitor your progress through the official {curriculum?.name?.en || curriculumId} syllabus.
+              </p>
             </div>
-            <h3 className="font-semibold text-[var(--text)] mb-1">Syllabus Progress</h3>
-            <p className="text-xs text-[var(--text-secondary)]">
-              You have covered {coveredChapterIds.size} out of {allChapters.length} core chapters for {level?.name?.en || "this level"}.
-            </p>
+
+            <div className="flex items-center gap-2 bg-[var(--surface)] p-1.5 rounded-2xl border border-[var(--border)] shadow-xl shadow-black/5">
+              {subjects.map(s => (
+                <button
+                  key={s}
+                  onClick={() => setSelectedSubject(s)}
+                  className={cn(
+                    "px-5 py-2.5 rounded-xl text-xs font-bold transition-all",
+                    selectedSubject === s 
+                      ? "bg-[var(--accent)] text-white shadow-lg shadow-[var(--accent)]/20" 
+                      : "text-[var(--text-secondary)] hover:text-[var(--text)] hover:bg-[var(--bg-subtle)]"
+                  )}
+                >
+                  {SUBJECT_LABELS[s]?.fr || s}
+                </button>
+              ))}
+            </div>
           </div>
 
-          {/* Difficulty Trends */}
-          <div className="card p-6 lg:col-span-2">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="font-semibold text-[var(--text)] flex items-center gap-2">
-                <BarChart3 size={18} className="text-[var(--accent)]" />
-                Difficulty Distribution
-              </h3>
-              <div className="flex gap-4">
-                <div className="flex items-center gap-1.5 text-[10px] font-bold text-[var(--text-tertiary)]">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500" /> EASY
-                </div>
-                <div className="flex items-center gap-1.5 text-[10px] font-bold text-[var(--text-tertiary)]">
-                  <span className="w-2 h-2 rounded-full bg-amber-500" /> MEDIUM
-                </div>
-                <div className="flex items-center gap-1.5 text-[10px] font-bold text-[var(--text-tertiary)]">
-                  <span className="w-2 h-2 rounded-full bg-red-500" /> HARD
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-12">
+            {/* Coverage Hero Card */}
+            <div className="lg:col-span-4 card p-8 bg-gradient-to-br from-indigo-700 to-violet-800 text-white border-none shadow-2xl shadow-indigo-200 rounded-[2.5rem] flex flex-col items-center text-center overflow-hidden relative">
+              {/* Background Art */}
+              <div className="absolute top-0 right-0 p-4 opacity-5">
+                <PieChart size={180} />
+              </div>
+              
+              <div className="relative w-40 h-40 mb-8">
+                <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
+                  <path
+                    className="text-white/10"
+                    strokeDasharray="100, 100"
+                    strokeWidth="2.5"
+                    stroke="currentColor"
+                    fill="none"
+                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                  />
+                  <path
+                    className="text-white transition-all duration-1000 ease-out"
+                    strokeDasharray={`${coveragePercent}, 100`}
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    stroke="currentColor"
+                    fill="none"
+                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                  />
+                </svg>
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                  <span className="serif text-5xl font-light">{coveragePercent}%</span>
+                  <span className="text-[10px] font-bold uppercase tracking-[0.2em] opacity-60">Complete</span>
                 </div>
               </div>
+              
+              <h3 className="serif text-2xl mb-2">Teaching Mastery</h3>
+              <p className="text-indigo-100/80 text-sm font-light leading-relaxed mb-6">
+                You have covered <strong>{coveredChapterIds.size}</strong> out of <strong>{allChapters.length}</strong> core chapters for {level?.name?.en || "this level"}.
+              </p>
+              
+              <div className="w-full bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/10">
+                <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-widest mb-2">
+                  <span>Current Pace</span>
+                  <span className="text-emerald-300">+12% vs last month</span>
+                </div>
+                <div className="h-1.5 w-full bg-white/10 rounded-full overflow-hidden">
+                  <div className="h-full bg-emerald-400" style={{ width: '70%' }} />
+                </div>
+              </div>
+            </div>
+
+            {/* Distribution Graph */}
+            <div className="lg:col-span-8 card p-10 bg-white border-none shadow-2xl shadow-black/5 rounded-[2.5rem]">
+              <div className="flex items-center justify-between mb-10">
+                <div>
+                  <h3 className="serif text-2xl text-[var(--text)] mb-1">Difficulty Trends</h3>
+                  <p className="text-sm text-[var(--text-secondary)] font-light">Distribution of exercise levels across your recent exams.</p>
+                </div>
+                <div className="hidden md:flex gap-6">
+                  <div className="flex items-center gap-2 text-[10px] font-bold text-[var(--text-tertiary)] tracking-widest">
+                    <span className="w-3 h-3 rounded-full bg-emerald-500 shadow-lg shadow-emerald-200" /> EASY
+                  </div>
+                  <div className="flex items-center gap-2 text-[10px] font-bold text-[var(--text-tertiary)] tracking-widest">
+                    <span className="w-3 h-3 rounded-full bg-amber-500 shadow-lg shadow-amber-200" /> MEDIUM
+                  </div>
+                  <div className="flex items-center gap-2 text-[10px] font-bold text-[var(--text-tertiary)] tracking-widest">
+                    <span className="w-3 h-3 rounded-full bg-red-500 shadow-lg shadow-red-200" /> HARD
+                  </div>
+                </div>
+              </div>
+              
+              <div className="space-y-10">
+                {subjectExams.slice(0, 4).map((exam, i) => {
+                  const easy = exam.exercises.filter(e => e.difficulty === 'easy').length;
+                  const medium = exam.exercises.filter(e => e.difficulty === 'medium').length;
+                  const hard = exam.exercises.filter(e => e.difficulty === 'hard').length;
+                  const total = exam.exercises.length;
+                  
+                  return (
+                    <div key={exam.id} className="group relative">
+                      <div className="flex items-end justify-between mb-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-xl bg-[var(--bg-subtle)] flex items-center justify-center text-[var(--text-secondary)] group-hover:bg-[var(--accent-light)] group-hover:text-[var(--accent)] transition-all">
+                            <Calendar size={18} />
+                          </div>
+                          <div>
+                            <span className="text-sm font-bold text-[var(--text)] group-hover:text-[var(--accent)] transition-colors">{exam.title}</span>
+                            <p className="text-[10px] text-[var(--text-tertiary)] uppercase tracking-widest mt-0.5">{new Date(exam.createdAt).toLocaleDateString()}</p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <span className="text-xs font-bold text-[var(--text-secondary)]">{total} Exercises</span>
+                        </div>
+                      </div>
+                      <div className="flex h-3 rounded-full overflow-hidden bg-[var(--bg-subtle)] p-0.5 border border-[var(--border)]">
+                        <div className="bg-emerald-500 rounded-l-full transition-all duration-1000" style={{ width: `${(easy / total) * 100}%` }} />
+                        <div className="bg-amber-500 transition-all duration-1000" style={{ width: `${(medium / total) * 100}%` }} />
+                        <div className="bg-red-500 rounded-r-full transition-all duration-1000" style={{ width: `${(hard / total) * 100}%` }} />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+
+          {/* Detailed Breakdown */}
+          <div className="card overflow-hidden bg-white border-none shadow-2xl shadow-black/5 rounded-[2.5rem]">
+            <div className="p-8 border-b border-[var(--border)] flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gradient-to-r from-slate-50 to-white">
+              <div>
+                <h3 className="serif text-2xl text-[var(--text)] mb-1 flex items-center gap-3">
+                  <Layers size={24} className="text-indigo-600" />
+                  Syllabus Breakdown
+                </h3>
+                <p className="text-sm text-[var(--text-secondary)] font-light">Chapter-by-chapter coverage for {level?.name?.en || curriculumId}.</p>
+              </div>
+              {coveragePercent < 100 && (
+                <div className="px-4 py-2 rounded-2xl bg-amber-50 border border-amber-100 text-amber-700 text-[10px] font-bold flex items-center gap-2 shadow-sm">
+                  <AlertCircle size={14} />
+                  {allChapters.length - coveredChapterIds.size} CHAPTERS REMAINING
+                </div>
+              )}
             </div>
             
-            <div className="space-y-6">
-              {subjectExams.slice(0, 5).map((exam, i) => {
-                const easy = exam.exercises.filter(e => e.difficulty === 'easy').length;
-                const medium = exam.exercises.filter(e => e.difficulty === 'medium').length;
-                const hard = exam.exercises.filter(e => e.difficulty === 'hard').length;
-                const total = exam.exercises.length;
-                
+            <div className="divide-y divide-[var(--border)]">
+              {allChapters.map((chapter: any) => {
+                const isCovered = coveredChapterIds.has(chapter.id);
                 return (
-                  <div key={exam.id} className="group">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs font-medium text-[var(--text)] group-hover:text-[var(--accent)] transition-colors">{exam.title}</span>
-                      <span className="text-[10px] text-[var(--text-tertiary)]">{new Date(exam.createdAt).toLocaleDateString()}</span>
+                  <div key={chapter.id} className="p-8 flex items-start justify-between gap-10 hover:bg-slate-50/50 transition-all group">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-4 mb-3">
+                        <div className={cn(
+                          "w-10 h-10 rounded-2xl flex items-center justify-center transition-all",
+                          isCovered ? "bg-emerald-100 text-emerald-600 shadow-lg shadow-emerald-100" : "bg-slate-100 text-slate-400"
+                        )}>
+                          {isCovered ? <CheckCircle2 size={20} /> : <BookOpen size={20} />}
+                        </div>
+                        <div>
+                          <h4 className={cn("font-bold text-lg tracking-tight", isCovered ? "text-[var(--text)]" : "text-slate-400")}>
+                            {chapter.name.en}
+                          </h4>
+                          <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">{chapter.id}</p>
+                        </div>
+                      </div>
+                      <div className="flex flex-wrap gap-x-6 gap-y-2 pl-14">
+                        {chapter.objectives.map((obj: string) => (
+                          <div key={obj} className="flex items-center gap-2 text-xs text-slate-500 font-medium">
+                            <div className={cn("w-1.5 h-1.5 rounded-full", isCovered ? "bg-emerald-400" : "bg-slate-200")} />
+                            {obj}
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                    <div className="flex h-2 rounded-full overflow-hidden bg-[var(--bg-subtle)]">
-                      <div className="bg-emerald-500 transition-all" style={{ width: `${(easy / total) * 100}%` }} />
-                      <div className="bg-amber-500 transition-all" style={{ width: `${(medium / total) * 100}%` }} />
-                      <div className="bg-red-500 transition-all" style={{ width: `${(hard / total) * 100}%` }} />
+                    
+                    <div className="flex-shrink-0 pt-1">
+                      {isCovered ? (
+                        <div className="px-4 py-1.5 rounded-xl bg-emerald-50 text-emerald-600 text-[10px] font-bold border border-emerald-100 flex items-center gap-2">
+                          <CheckCircle2 size={12} /> COVERED
+                        </div>
+                      ) : (
+                        <Link href={`/create?chapter=${chapter.id}&subject=${currentSubject}&level=${firstExam?.context.levelId}&curriculum=${curriculumId}`}>
+                          <button className="h-10 px-5 rounded-xl border border-[var(--border)] text-slate-500 hover:border-indigo-600 hover:text-indigo-600 hover:bg-indigo-50/50 text-xs font-bold transition-all flex items-center gap-2 group-hover:scale-105">
+                            Generate Exam <ChevronRight size={14} />
+                          </button>
+                        </Link>
+                      )}
                     </div>
                   </div>
                 );
               })}
             </div>
-          </div>
-        </div>
-
-        {/* Detailed Chapter Breakdown */}
-        <div className="card overflow-hidden">
-          <div className="p-6 border-b border-[var(--border)] flex items-center justify-between bg-[var(--surface)]">
-            <h3 className="font-semibold text-[var(--text)] flex items-center gap-2">
-              <BookOpen size={18} className="text-[var(--accent)]" />
-              Syllabus Chapters — {level?.name?.en || curriculumId}
-            </h3>
-            {coveragePercent < 100 && (
-              <div className="px-3 py-1 rounded-lg bg-amber-50 border border-amber-100 text-amber-700 text-[10px] font-bold flex items-center gap-1.5">
-                <AlertCircle size={12} />
-                {allChapters.length - coveredChapterIds.size} CHAPTERS REMAINING
+            
+            <div className="p-10 bg-slate-50 text-center">
+              <div className="inline-flex items-center gap-3 px-4 py-2 rounded-2xl bg-white border border-slate-200 text-slate-500 text-xs font-medium shadow-sm">
+                <Globe size={14} className="text-indigo-600" />
+                Data sourced from official Ministry of Education & IB guidelines
               </div>
-            )}
+            </div>
           </div>
-          
-          <div className="divide-y divide-[var(--border)]">
-            {allChapters.map((chapter: any) => {
-              const isCovered = coveredChapterIds.has(chapter.id);
-              return (
-                <div key={chapter.id} className="p-6 flex items-start justify-between gap-6 hover:bg-[var(--bg-subtle)]/50 transition-colors">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-1">
-                      <h4 className={cn("font-medium text-sm", isCovered ? "text-[var(--text)]" : "text-[var(--text-secondary)]")}>
-                        {chapter.name.en}
-                      </h4>
-                      {isCovered && (
-                        <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-[9px] font-bold uppercase tracking-wider">
-                          Covered
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex flex-wrap gap-x-4 gap-y-1">
-                      {chapter.objectives.map((obj: string) => (
-                        <div key={obj} className="flex items-center gap-1.5 text-[11px] text-[var(--text-tertiary)]">
-                          <div className={cn("w-1 h-1 rounded-full", isCovered ? "bg-emerald-400" : "bg-[var(--border)]")} />
-                          {obj}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="flex-shrink-0 pt-1">
-                    {isCovered ? (
-                      <div className="w-8 h-8 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center">
-                        <CheckCircle2 size={18} />
-                      </div>
-                    ) : (
-                      <Link href={`/create?chapter=${chapter.id}&subject=${currentSubject}&level=${firstExam?.context.levelId}&curriculum=${curriculumId}`}>
-                        <button className="h-8 px-3 rounded-lg border border-[var(--border)] text-[var(--text-tertiary)] hover:border-[var(--accent)] hover:text-[var(--accent)] text-xs font-semibold transition-all flex items-center gap-2">
-                          Generate <ChevronRight size={12} />
-                        </button>
-                      </Link>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </main>
+        </main>
+      </div>
     </div>
   );
 }

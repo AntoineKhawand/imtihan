@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Plus, BookOpen, Clock, Award, Search, Sparkles, FileText, Copy, Trash2, ChevronRight, Bookmark, Users, Zap, CreditCard, CheckCircle2, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import { DashboardSidebar } from "@/components/layout/DashboardSidebar";
 import { RenewalBanner } from "@/components/ui/RenewalBanner";
 import { cn, formatDate, SUBJECT_LABELS, FREE_EXAM_LIMIT, shortId } from "@/lib/utils";
 import { isProActive, isInGracePeriod, getWhatsAppUpgradeLink } from "@/lib/subscription";
@@ -130,7 +131,10 @@ export default function DashboardPage() {
         </div>
       </nav>
 
-      <main className="max-w-3xl mx-auto px-6 md:px-10 py-12">
+      <div className="flex">
+        <DashboardSidebar />
+        
+        <main className="flex-1 max-w-4xl mx-auto px-6 md:px-10 py-12">
 
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
@@ -302,7 +306,8 @@ export default function DashboardPage() {
           </div>
         )}
 
-      </main>
+        </main>
+      </div>
     </div>
   );
 }
