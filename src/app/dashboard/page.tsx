@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Plus, BookOpen, Clock, Award, Search, Sparkles, FileText, Copy, Trash2, ChevronRight, Bookmark, Users, Zap, CreditCard } from "lucide-react";
+import { Plus, BookOpen, Clock, Award, Search, Sparkles, FileText, Copy, Trash2, ChevronRight, Bookmark, Users, Zap, CreditCard, CheckCircle2, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { RenewalBanner } from "@/components/ui/RenewalBanner";
 import { cn, formatDate, SUBJECT_LABELS, FREE_EXAM_LIMIT, shortId } from "@/lib/utils";
@@ -133,9 +133,45 @@ export default function DashboardPage() {
       <main className="max-w-3xl mx-auto px-6 md:px-10 py-12">
 
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="serif text-display-lg text-[var(--text)] mb-1">My Library</h1>
-          <p className="text-[var(--text-secondary)] text-sm">Your generated exams, ready to download anytime.</p>
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
+          <div>
+            <h1 className="serif text-display-lg text-[var(--text)] mb-1">My Library</h1>
+            <p className="text-[var(--text-secondary)] text-sm">Your generated exams and professional tools.</p>
+          </div>
+          <Link href="/create">
+            <Button icon={<Plus size={16} />} className="shadow-lg shadow-[var(--accent)]/20">New exam</Button>
+          </Link>
+        </div>
+
+        {/* Teacher's Assistant Suite */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+          <Link href="/scanner" className="group">
+            <div className="card p-4 h-full border-dashed hover:border-[var(--accent)] hover:bg-[var(--accent-light)]/30 transition-all">
+              <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                <Search size={20} />
+              </div>
+              <h3 className="text-sm font-semibold text-[var(--text)] mb-1">AI Scanner</h3>
+              <p className="text-[11px] text-[var(--text-secondary)] leading-relaxed">Digitize paper exams or photos into editable text instantly.</p>
+            </div>
+          </Link>
+          <Link href="/grade" className="group">
+            <div className="card p-4 h-full border-dashed hover:border-[var(--accent)] hover:bg-[var(--accent-light)]/30 transition-all">
+              <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                <CheckCircle2 size={20} />
+              </div>
+              <h3 className="text-sm font-semibold text-[var(--text)] mb-1">AI Grading</h3>
+              <p className="text-[11px] text-[var(--text-secondary)] leading-relaxed">Grade student answers against your marking scheme with AI feedback.</p>
+            </div>
+          </Link>
+          <Link href="/analytics" className="group">
+            <div className="card p-4 h-full border-dashed hover:border-[var(--accent)] hover:bg-[var(--accent-light)]/30 transition-all">
+              <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                <TrendingUp size={20} />
+              </div>
+              <h3 className="text-sm font-semibold text-[var(--text)] mb-1">Analytics</h3>
+              <p className="text-[11px] text-[var(--text-secondary)] leading-relaxed">Track syllabus coverage and monitor student difficulty trends.</p>
+            </div>
+          </Link>
         </div>
 
         {/* Stats row */}
