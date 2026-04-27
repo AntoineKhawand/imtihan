@@ -10,6 +10,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { isProActive } from "@/lib/subscription";
 import { UserNav } from "@/components/layout/UserNav";
 import { FEATURED_EXAMS } from "@/data/communityExams";
+import { renderContent } from "@/lib/renderContent";
 import { useRouter } from "next/navigation";
 
 const SUBJECT_ICONS: Record<string, string> = {
@@ -372,13 +373,19 @@ export default function CommunityPage() {
                         </span>
                         <span className="text-xs text-[var(--text-tertiary)]">{ex.points} pts</span>
                       </div>
-                      <p className="text-sm text-[var(--text)] leading-relaxed line-clamp-4">{ex.statement}</p>
+                      <div 
+                        className="text-sm text-[var(--text)] leading-relaxed line-clamp-4"
+                        dangerouslySetInnerHTML={{ __html: renderContent(ex.statement) }}
+                      />
                       {ex.subQuestions && ex.subQuestions.length > 0 && (
                         <div className="space-y-1 pt-1 border-t border-[var(--border)]">
                           {ex.subQuestions.map((sq, j) => (
                             <div key={j} className="flex gap-2 text-xs text-[var(--text-secondary)]">
                               <span className="font-semibold text-[var(--accent)] flex-shrink-0">{sq.label}</span>
-                              <span className="leading-relaxed line-clamp-2">{sq.statement}</span>
+                              <span 
+                                className="leading-relaxed line-clamp-2"
+                                dangerouslySetInnerHTML={{ __html: renderContent(sq.statement) }}
+                              />
                               <span className="flex-shrink-0 text-[var(--text-tertiary)]">({sq.points})</span>
                             </div>
                           ))}
