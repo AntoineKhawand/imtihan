@@ -225,9 +225,10 @@ export default function CommunityPage() {
                           {icon}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="font-semibold text-[var(--text)] text-sm leading-snug line-clamp-2 mb-1">
-                            {exam.title}
-                          </p>
+                          <div 
+                            className="font-semibold text-[var(--text)] text-sm leading-snug line-clamp-2 mb-1"
+                            dangerouslySetInnerHTML={{ __html: renderContent(exam.title) }}
+                          />
                           <p className="text-xs text-[var(--text-tertiary)]">
                             {curriculum} · {exam.context.levelId} · {exam.context.language}
                           </p>
