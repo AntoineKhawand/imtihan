@@ -474,17 +474,47 @@ export async function generateWordDocument(
 
     if (ex.subQuestions && Array.isArray(ex.subQuestions) && ex.subQuestions.length > 0) {
       for (const sq of ex.subQuestions) {
-        children.push(new Paragraph({
-          children: [new TextRun({ text: `${sq.label}  `, bold: true, size: 22, font: fontBody, color: textColor })],
-          indent: { left: 720 },
-          spacing: { after: 40 },
-        }));
-        children.push(...(await processContentBlocks(sq.statement, { size: 22, font: fontBody, color: textColor, indent: 720 })));
-        children.push(new Paragraph({
-          children: [new TextRun({ text: `  (${sq.points} pts)`, size: 20, color: metaColor, font: fontBody })],
-          indent: { left: 720 },
-          spacing: { after: 80 },
-        }));
+        // Handle sub-questions by merging label, statement, and points on one line if possible
+        const statementBlocks = await processContentBlocks(sq.statement, { size: 22, font: fontBody, color: textColor, indent: 720 });
+        
+        if (statementBlocks.length > 0 && statementBlocks[0] instanceof Paragraph) {
+          // Take the children of the first paragraph and prepend the label + append points
+          const firstBlock = statementBlocks[0] as any;
+          // Note: In docx, we can't easily merge existing Paragraph objects without internal access.
+          // Instead, we re-parse the first line of the statement.
+          const lines = sq.statement.split("\n").filter(l => l.trim());
+          const firstLine = lines[0] || "";
+          const remainingLines = lines.slice(1).join("\n");
+
+          children.push(new Paragraph({
+            indent: { left: 720 },
+            spacing: { before: 80, after: 80 },
+            children: [
+              new TextRun({ text: `${sq.label}  `, bold: true, size: 22, font: fontBody, color: textColor }),
+              ...createFormattedTextRuns(firstLine, { size: 22, font: fontBody, color: textColor }),
+              new TextRun({ text: `  (${sq.points} pts)`, size: 20, color: metaColor, font: fontBody, italics: true }),
+            ],
+          }));
+
+          // If there were other blocks (tables, more lines), add them
+          if (remainingLines.trim()) {
+            children.push(...(await processContentBlocks(remainingLines, { size: 22, font: fontBody, color: textColor, indent: 720 })));
+          }
+          // If there were other non-paragraph blocks from the original statement, add them
+          const nonParaBlocks = statementBlocks.slice(1).filter(b => !(b instanceof Paragraph));
+          children.push(...nonParaBlocks);
+        } else {
+          // Fallback
+          children.push(new Paragraph({
+            children: [
+              new TextRun({ text: `${sq.label}  `, bold: true, size: 22, font: fontBody, color: textColor }),
+              new TextRun({ text: `  (${sq.points} pts)`, size: 20, color: metaColor, font: fontBody, italics: true }),
+            ],
+            indent: { left: 720 },
+            spacing: { before: 80, after: 80 },
+          }));
+          children.push(...statementBlocks);
+        }
       }
     }
 
