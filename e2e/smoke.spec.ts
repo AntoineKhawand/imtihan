@@ -19,7 +19,7 @@ test("landing page loads without errors", async ({ page }) => {
 
 test("landing page displays app name in header", async ({ page }) => {
   await page.goto("http://localhost:3000");
-  await expect(page.getByRole("link", { name: "إ Imtihan" })).toBeVisible();
+  await expect(page.getByRole("navigation").getByRole("link", { name: "Imtihan", exact: false })).toBeVisible();
 });
 
 test("pricing page loads", async ({ page }) => {

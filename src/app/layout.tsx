@@ -90,10 +90,22 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={`${GeistSans.variable} ${GeistMono.variable}`} suppressHydrationWarning>
       <head>
-        {/* Google Fonts performance: preconnect before @import in CSS */}
+        {/* Resource Hints */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" />
+        <link rel="preconnect" href="https://cdn.jsdelivr.net" />
+        <link rel="preconnect" href="https://cdnjs.cloudflare.com" />
+        
+        {/* KaTeX - Preload for performance, but load normally to avoid hydration issues in SSR */}
+        <link 
+          rel="preload" 
+          href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" 
+          as="style" 
+        />
+        <link 
+          rel="stylesheet" 
+          href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" 
+        />
       </head>
       <body>
         <AuthProvider>
