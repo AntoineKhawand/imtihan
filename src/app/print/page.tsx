@@ -144,12 +144,61 @@ export default function PrintPage() {
                 <span dangerouslySetInnerHTML={{ __html: renderContent(ex.solution.finalAnswer) }} />
               </div>
 
-              <div className="pl-4 border-l-2 border-gray-300">
+              {ex.solution.bareme && ex.solution.bareme.length > 0 && (
+                <div className="mb-6">
+                  <h4 className="text-sm font-bold uppercase tracking-wider text-gray-700 mb-2">Barème de correction</h4>
+                  <table className="w-full border-collapse border border-gray-300 text-xs">
+                    <thead>
+                      <tr className="bg-gray-100">
+                        <th className="border border-gray-300 p-2 text-left w-20">Question</th>
+                        <th className="border border-gray-300 p-2 text-left w-16">Points</th>
+                        <th className="border border-gray-300 p-2 text-left">Critère</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {ex.solution.bareme.map((b, bIdx) => (
+                        <tr key={bIdx}>
+                          <td className="border border-gray-300 p-2 font-bold">{b.label}</td>
+                          <td className="border border-gray-300 p-2">{b.points}</td>
+                          <td className="border border-gray-300 p-2" dangerouslySetInnerHTML={{ __html: renderContent(b.criterion) }} />
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              <div className="pl-4 border-l-2 border-gray-300 mb-6">
+                <p className="text-[10px] font-bold text-gray-500 uppercase mb-1">Méthodologie</p>
                 <div 
-                  className="text-sm text-gray-700 space-y-2"
+                  className="text-sm text-gray-700 leading-relaxed"
                   dangerouslySetInnerHTML={{ __html: renderContent(ex.solution.methodology) }}
                 />
               </div>
+
+              {ex.solution.microBareme && ex.solution.microBareme.length > 0 && (
+                <div className="mt-4">
+                  <h4 className="text-sm font-bold uppercase tracking-wider text-gray-700 mb-2">Micro-barème détaillé</h4>
+                  <table className="w-full border-collapse border border-gray-300 text-xs">
+                    <thead>
+                      <tr className="bg-gray-100">
+                        <th className="border border-gray-300 p-2 text-left w-24">Étape</th>
+                        <th className="border border-gray-300 p-2 text-left w-12">Pts</th>
+                        <th className="border border-gray-300 p-2 text-left">Critère observable</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {ex.solution.microBareme.map((mb, mIdx) => (
+                        <tr key={mIdx}>
+                          <td className="border border-gray-300 p-2 font-medium">{mb.step}</td>
+                          <td className="border border-gray-300 p-2">{mb.points}</td>
+                          <td className="border border-gray-300 p-2" dangerouslySetInnerHTML={{ __html: renderContent(mb.criterion) }} />
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
           ))}
         </div>

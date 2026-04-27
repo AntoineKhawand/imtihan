@@ -404,46 +404,53 @@ export async function generateWordDocument(
   // ─── Score Summary Table (Teachers love this) ──────────────
   children.push(new Table({
     width: { size: 100, type: WidthType.PERCENTAGE },
-    margins: { top: 100, bottom: 100, left: 100, right: 100 },
+    margins: { top: 120, bottom: 120, left: 120, right: 120 },
     rows: [
       new TableRow({
         children: [
           new TableCell({ 
-            children: [new Paragraph({ children: [new TextRun({ text: exerciseWord, bold: true })], alignment: AlignmentType.CENTER, spacing: { before: 40, after: 40 } })], 
-            shading: { fill: "F3F4F6" } 
+            children: [new Paragraph({ children: [new TextRun({ text: exerciseWord, bold: true, size: 20 })], alignment: AlignmentType.CENTER, spacing: { before: 80, after: 80 } })], 
+            shading: { fill: "F3F4F6" },
+            verticalAlign: AlignmentType.CENTER
           }),
           ...exercises.map(ex => new TableCell({ 
-            children: [new Paragraph({ children: [new TextRun({ text: String(ex.number) })], alignment: AlignmentType.CENTER, spacing: { before: 40, after: 40 } })] 
+            children: [new Paragraph({ children: [new TextRun({ text: String(ex.number), bold: true, size: 20 })], alignment: AlignmentType.CENTER, spacing: { before: 80, after: 80 } })],
+            verticalAlign: AlignmentType.CENTER
           })),
           new TableCell({ 
-            children: [new Paragraph({ children: [new TextRun({ text: "Total", bold: true })], alignment: AlignmentType.CENTER, spacing: { before: 40, after: 40 } })], 
-            shading: { fill: "F3F4F6" } 
+            children: [new Paragraph({ children: [new TextRun({ text: "Total", bold: true, size: 20 })], alignment: AlignmentType.CENTER, spacing: { before: 80, after: 80 } })], 
+            shading: { fill: "F3F4F6" },
+            verticalAlign: AlignmentType.CENTER
           }),
         ]
       }),
       new TableRow({
         children: [
           new TableCell({ 
-            children: [new Paragraph({ children: [new TextRun({ text: "Max", bold: true })], alignment: AlignmentType.CENTER, spacing: { before: 40, after: 40 } })] 
+            children: [new Paragraph({ children: [new TextRun({ text: "Max", bold: true, size: 18 })], alignment: AlignmentType.CENTER, spacing: { before: 80, after: 80 } })],
+            shading: { fill: "F9FAFB" }
           }),
           ...exercises.map(ex => new TableCell({ 
-            children: [new Paragraph({ children: [new TextRun({ text: String(ex.points) })], alignment: AlignmentType.CENTER, spacing: { before: 40, after: 40 } })] 
+            children: [new Paragraph({ children: [new TextRun({ text: String(ex.points), size: 18 })], alignment: AlignmentType.CENTER, spacing: { before: 80, after: 80 } })] 
           })),
           new TableCell({ 
-            children: [new Paragraph({ children: [new TextRun({ text: String(context.totalPoints), bold: true })], alignment: AlignmentType.CENTER, spacing: { before: 40, after: 40 } })] 
+            children: [new Paragraph({ children: [new TextRun({ text: String(context.totalPoints), bold: true, size: 18 })], alignment: AlignmentType.CENTER, spacing: { before: 80, after: 80 } })],
+            shading: { fill: "F9FAFB" }
           }),
         ]
       }),
       new TableRow({
         children: [
           new TableCell({ 
-            children: [new Paragraph({ children: [new TextRun({ text: "Score", bold: true })], alignment: AlignmentType.CENTER, spacing: { before: 120, after: 120 } })] 
+            children: [new Paragraph({ children: [new TextRun({ text: "Score", bold: true, size: 18 })], alignment: AlignmentType.CENTER, spacing: { before: 200, after: 200 } })],
+            shading: { fill: "F9FAFB" }
           }),
           ...exercises.map(() => new TableCell({ 
             children: [new Paragraph({ text: "" })] 
           })),
           new TableCell({ 
-            children: [new Paragraph({ text: "", spacing: { before: 120, after: 120 } })] 
+            children: [new Paragraph({ text: "", spacing: { before: 200, after: 200 } })],
+            shading: { fill: "F9FAFB" }
           }),
         ]
       })
@@ -519,9 +526,18 @@ export async function generateWordDocument(
           }),
           ...ex.solution.bareme.map((b) => new TableRow({
             children: [
-              new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: b.label, bold: true, size: 18, font: fontBody })] })] }),
-              new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: String(b.points), size: 18, font: fontBody })] })] }),
-              new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: b.criterion, size: 18, font: fontBody })] })] }),
+              new TableCell({ 
+                children: [new Paragraph({ children: [new TextRun({ text: b.label, bold: true, size: 18, font: fontBody })], spacing: { before: 40, after: 40 } })],
+                verticalAlign: AlignmentType.CENTER
+              }),
+              new TableCell({ 
+                children: [new Paragraph({ children: [new TextRun({ text: String(b.points), size: 18, font: fontBody })], alignment: AlignmentType.CENTER, spacing: { before: 40, after: 40 } })],
+                verticalAlign: AlignmentType.CENTER
+              }),
+              new TableCell({ 
+                children: [new Paragraph({ children: createFormattedTextRuns(b.criterion, { size: 18, font: fontBody, color: textColor }), spacing: { before: 40, after: 40 } })],
+                verticalAlign: AlignmentType.CENTER
+              }),
             ],
           })),
         ],
@@ -551,9 +567,18 @@ export async function generateWordDocument(
           }),
           ...ex.solution.microBareme.map((mb) => new TableRow({
             children: [
-              new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: mb.step, bold: true, size: 18, font: fontBody })] })] }),
-              new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: String(mb.points), size: 18, font: fontBody })] })] }),
-              new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: mb.criterion, size: 18, font: fontBody })] })] }),
+              new TableCell({ 
+                children: [new Paragraph({ children: [new TextRun({ text: mb.step, bold: true, size: 18, font: fontBody })], spacing: { before: 40, after: 40 } })],
+                verticalAlign: AlignmentType.CENTER
+              }),
+              new TableCell({ 
+                children: [new Paragraph({ children: [new TextRun({ text: String(mb.points), size: 18, font: fontBody })], alignment: AlignmentType.CENTER, spacing: { before: 40, after: 40 } })],
+                verticalAlign: AlignmentType.CENTER
+              }),
+              new TableCell({ 
+                children: [new Paragraph({ children: createFormattedTextRuns(mb.criterion, { size: 18, font: fontBody, color: textColor }), spacing: { before: 40, after: 40 } })],
+                verticalAlign: AlignmentType.CENTER
+              }),
             ],
           })),
         ],

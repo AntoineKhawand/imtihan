@@ -489,7 +489,7 @@ export function ExerciseCard({
                 <div className="space-y-1.5">
                   {exercise.solution.bareme.map((b, i) => (
                     <div key={i} className="flex items-start gap-3 rounded-xl bg-[var(--surface)] border border-[var(--border)] px-3 py-2.5 hover:border-[var(--accent)]/30 transition-colors">
-                      <span className="text-xs font-bold text-[var(--accent)] w-10 flex-shrink-0 pt-px">{b.label}</span>
+                      <span className="text-xs font-bold text-[var(--accent)] w-24 flex-shrink-0 pt-px leading-tight break-words">{b.label}</span>
                       <span
                         className="flex-1 text-xs text-[var(--text-secondary)] leading-relaxed"
                         dangerouslySetInnerHTML={{ __html: renderContent(b.criterion) }}
