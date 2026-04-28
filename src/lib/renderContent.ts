@@ -193,41 +193,26 @@ export function renderContent(raw: string): string {
   if (!raw) return "";
   let text = raw.replace(/\\n/g, "\n").replace(/\r\n/g, "\n").replace(/\n{3,}/g, "\n\n");
 
-  const mermaidKeywords = ["graph ", "flowchart ", "sequenceDiagram", "gantt", "classDiagram", "stateDiagram", "pie ", "erDiagram", "journey", "gitGraph", "requirementDiagram", "mindmap", "timeline", "xychart-beta", "block-beta", "chart ", "quadrantChart"];
-  const lines = text.split("\n");
-  let inNakedMermaid = false;
-  let nakedMermaidCode = "";
-  const finalLines: string[] = [];
-
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
-    const trimmed = line.trim();
-    if (!inNakedMermaid && mermaidKeywords.some(kw => trimmed.startsWith(kw))) {
-      inNakedMermaid = true;
-      nakedMermaidCode = line + "\n";
-    } else if (inNakedMermaid) {
-      const isTerminator = trimmed.includes(":-") || trimmed.startsWith("**") || /^[0-9]\./.test(trimmed) || (trimmed === "" && i + 1 < lines.length && lines[i+1].trim() !== "" && !mermaidKeywords.some(kw => lines[i+1].trim().startsWith(kw)));
-      if (isTerminator) {
-        inNakedMermaid = false;
-        finalLines.push("```mermaid\n" + nakedMermaidCode.trim() + "\n```");
-        finalLines.push(line);
-        nakedMermaidCode = "";
-      } else {
-        nakedMermaidCode += line + "\n";
-      }
-    } else {
-      finalLines.push(line);
-    }
-  }
-  if (inNakedMermaid) finalLines.push("```mermaid\n" + nakedMermaidCode.trim() + "\n```");
-  text = finalLines.join("\n");
-
+  // 1. Identify all Mermaid blocks (both fenced and naked)
   const mermaidBlocks: string[] = [];
+  const mermaidPatterns = ["graph\\s", "flowchart\\s", "sequenceDiagram", "gantt", "classDiagram", "stateDiagram", "pie\\s", "erDiagram", "journey", "gitGraph", "requirementDiagram", "mindmap", "timeline", "xychart-beta", "block-beta", "chart\\s", "quadrantChart"];
+  const patternStr = mermaidPatterns.join("|");
+  
+  // First, handle standard fenced blocks
   text = text.replace(/```mermaid\n?([\s\S]*?)```/g, (_match, code: string) => {
     const idx = mermaidBlocks.length;
     mermaidBlocks.push(code.trim());
     return `%%MERMAID_${idx}%%`;
   });
+
+  // Then, handle naked blocks that start at the beginning of a line
+  const nakedMermaidRegex = new RegExp(`(\\n|^)(${patternStr})([\\s\\S]*?)(?=\\n\\n|\\n\\*\\*|\\n[0-9]\\.|$)`, "g");
+  text = text.replace(nakedMermaidRegex, (_match, prefix, keyword, content) => {
+    const idx = mermaidBlocks.length;
+    mermaidBlocks.push((keyword + content).trim());
+    return (prefix || "") + `%%MERMAID_${idx}%%`;
+  });
+
 
 
 

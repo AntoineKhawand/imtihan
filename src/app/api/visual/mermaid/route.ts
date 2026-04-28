@@ -23,9 +23,20 @@ export async function GET(req: NextRequest) {
     const json = JSON.stringify(config);
     const b64 = Buffer.from(json).toString("base64");
     
-    // Redirect to the rendering service
-    return NextResponse.redirect(`https://mermaid.ink/img/${b64}`, {
+    // Fetch the image from the rendering service and return it directly
+    // This avoids issues with redirects and CSP in some browsers
+    const response = await fetch(`https://mermaid.ink/img/${b64}`, {
+      next: { revalidate: 3600 } // Cache for 1 hour
+    });
+
+    if (!response.ok) {
+      throw new Error(`Rendering service returned ${response.status}`);
+    }
+
+    const blob = await response.blob();
+    return new NextResponse(blob, {
       headers: {
+        "Content-Type": "image/png",
         "Cache-Control": "public, max-age=3600, s-maxage=3600",
       }
     });
