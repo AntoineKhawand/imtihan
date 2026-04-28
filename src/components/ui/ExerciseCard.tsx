@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { renderContent } from "@/lib/renderContent";
-import mermaid from "mermaid";
 import type { Exercise } from "@/types/exam";
 import {
   RefreshCw,
@@ -198,25 +197,7 @@ export function ExerciseCard({
   const difficulty = DIFFICULTY_CONFIG[exercise.difficulty];
   const exerciseLabel = language === "french" ? "Exercice" : "Exercise";
   
-  // Initialize mermaid globally once
-  useEffect(() => {
-    mermaid.initialize({
-      startOnLoad: false,
-      theme: 'neutral',
-      securityLevel: 'loose',
-      fontFamily: 'var(--font-geist)',
-    });
-  }, []);
 
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      // Small delay to ensure DOM is ready
-      const timer = setTimeout(() => {
-        mermaid.run().catch(err => console.warn("Mermaid run failed:", err));
-      }, 100);
-      return () => clearTimeout(timer);
-    }
-  }, [exercise, showSolution, isRegenerating]);
 
   return (
     <div
