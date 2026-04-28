@@ -216,7 +216,7 @@ export function ExerciseCard({
       }, 100);
       return () => clearTimeout(timer);
     }
-  }, [exercise.statement, showSolution, isRegenerating]);
+  }, [exercise, showSolution, isRegenerating]);
 
   return (
     <div

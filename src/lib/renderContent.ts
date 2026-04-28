@@ -191,9 +191,9 @@ function handleGraphs(text: string): string {
 
 export function renderContent(raw: string): string {
   if (!raw) return "";
-  let text = raw;
+  let text = raw.replace(/\\n/g, "\n").replace(/\r\n/g, "\n").replace(/\n{3,}/g, "\n\n");
 
-  const mermaidKeywords = ["graph ", "flowchart ", "sequenceDiagram", "gantt", "classDiagram", "stateDiagram", "pie", "erDiagram", "journey", "gitGraph", "requirementDiagram", "mindmap", "timeline", "xychart-beta", "block-beta"];
+  const mermaidKeywords = ["graph ", "flowchart ", "sequenceDiagram", "gantt", "classDiagram", "stateDiagram", "pie", "erDiagram", "journey", "gitGraph", "requirementDiagram", "mindmap", "timeline", "xychart-beta", "block-beta", "chart "];
   const lines = text.split("\n");
   let inNakedMermaid = false;
   let nakedMermaidCode = "";
@@ -229,7 +229,7 @@ export function renderContent(raw: string): string {
     return `%%MERMAID_${idx}%%`;
   });
 
-  text = text.replace(/\\n/g, "\n").replace(/\r\n/g, "\n").replace(/\n{3,}/g, "\n\n");
+
 
   text = parseNakedMath(text);
 
