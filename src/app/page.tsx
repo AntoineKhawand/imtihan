@@ -209,7 +209,7 @@ export default async function LandingPage() {
                 Sign in
               </Link>
               <Link
-                href="/auth/register"
+                href="/auth/login"
                 className="inline-flex items-center gap-1.5 h-9 px-4 rounded-xl bg-[var(--accent)] text-white text-sm font-medium hover:opacity-90 transition-opacity shadow-sm"
               >
                 Try free <ArrowRight size={14} />
@@ -249,7 +249,7 @@ export default async function LandingPage() {
 
           <div className="flex flex-col sm:flex-row gap-3">
             <Link
-              href={isAuthenticated ? "/create" : "/auth/register"}
+              href={isAuthenticated ? "/create" : "/auth/login"}
               className="inline-flex items-center justify-center gap-2 h-12 px-7 rounded-xl bg-[var(--accent)] text-white text-base font-medium hover:bg-[var(--accent)]/90 active:scale-[0.98] transition-all duration-300 shadow-[0_0_15px_rgba(26,94,63,0.2)] hover:shadow-[0_0_25px_rgba(26,94,63,0.35)] ring-1 ring-inset ring-white/20"
             >
               Create your first exam <ArrowRight size={16} />
