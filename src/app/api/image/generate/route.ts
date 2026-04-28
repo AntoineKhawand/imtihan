@@ -21,6 +21,19 @@ export async function GET(request: NextRequest) {
   const cleanPrompt = encodeURIComponent(prompt);
   const imageUrl = `https://image.pollinations.ai/prompt/${cleanPrompt}?width=${width}&height=${height}&nologo=true&seed=${seed}&model=flux`;
 
-  // Redirecting to the image provider. This is faster than proxying the buffer.
-  return NextResponse.redirect(imageUrl);
+  try {
+    const res = await fetch(imageUrl);
+    if (!res.ok) throw new Error("Failed to fetch image from provider");
+    
+    const buffer = await res.arrayBuffer();
+    return new NextResponse(buffer, {
+      headers: {
+        "Content-Type": "image/webp",
+        "Cache-Control": "public, max-age=31536000, immutable",
+      },
+    });
+  } catch (err) {
+    console.error("[ImageProxy] Error:", err);
+    return NextResponse.json({ error: "Failed to generate image" }, { status: 500 });
+  }
 }
