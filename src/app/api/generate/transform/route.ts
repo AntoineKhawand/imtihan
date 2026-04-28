@@ -39,7 +39,9 @@ export async function POST(request: NextRequest) {
       const visualReq = prompt ? `Specific requirement: ${prompt}` : `Add a suitable mathematical graph, diagram, or chart.`;
       instruction = `${visualReq} 
       - For mathematical graphs (functions, parabolas, curves), use Mermaid \`xychart-beta\`.
-      - For diagrams (electrical circuits, chemical setups, biology structures), use Mermaid \`flowchart\`.
+      - For diagrams (electrical circuits, chemical setups, biology structures), use Mermaid \`flowchart TD\`.
+      - IMPORTANT: Mermaid is NOT a function plotter. You MUST provide explicit data points. e.g., \`x-axis [0, 1, 2, 3]\` and \`line [0, 1, 4, 9]\`.
+      - QUOTING: Always wrap labels in double quotes to avoid errors with special characters (e.g., A["f(x) = x^2"]).
       - MANDATORY: Wrap the Mermaid code in triple backticks (e.g., \`\`\`mermaid ... \`\`\`).
       - Return the Mermaid block directly within the 'statement' field.`;
     } else if (type === "image") {

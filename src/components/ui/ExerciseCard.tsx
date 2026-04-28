@@ -197,6 +197,16 @@ export function ExerciseCard({
 
   const difficulty = DIFFICULTY_CONFIG[exercise.difficulty];
   const exerciseLabel = language === "french" ? "Exercice" : "Exercise";
+  
+  // Initialize mermaid globally once
+  useEffect(() => {
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: 'neutral',
+      securityLevel: 'loose',
+      fontFamily: 'var(--font-geist)',
+    });
+  }, []);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -713,7 +723,7 @@ export function ExerciseCard({
                   className="text-sm text-[var(--text-secondary)] leading-relaxed space-y-1"
                   dangerouslySetInnerHTML={{ 
                     __html: renderContent(
-                      (exercise.solution.methodology || "").replace(/(?<!^|[\n\r])(\*\*?(?:Étape|Step|خطوة)\s*\d+(?:\s*[:：])?)/gi, "\n$1")
+                      (exercise.solution.methodology || "").replace(/(?<!^|[\n\r])(\*\*?(?:Étape|Step|خطوة)\s*\d+(?:\s*[:：])?)/gi, "\n\n$1")
                     ) 
                   }}
                 />

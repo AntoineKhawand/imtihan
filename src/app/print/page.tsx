@@ -191,7 +191,11 @@ export default function PrintPage() {
                 <p className="text-[10px] font-bold text-gray-500 uppercase mb-1">{methodologyWord}</p>
                 <div 
                   className="text-sm text-gray-700 leading-relaxed"
-                  dangerouslySetInnerHTML={{ __html: renderContent(ex.solution.methodology) }}
+                  dangerouslySetInnerHTML={{ 
+                    __html: renderContent(
+                      (ex.solution.methodology || "").replace(/(?<!^|[\n\r])(\*\*?(?:Étape|Step|خطوة)\s*\d+(?:\s*[:：])?)/gi, "\n\n$1")
+                    ) 
+                  }}
                 />
               </div>
 

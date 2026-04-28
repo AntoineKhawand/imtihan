@@ -604,7 +604,8 @@ export async function generateWordDocument(
     }
 
     children.push(...(await processContentBlocks(ex.solution.finalAnswer, { size: 22, font: fontBody, color: textColor, bidirectional: isArabic })));
-    children.push(...(await processContentBlocks(ex.solution.methodology, { size: 20, color: metaColor, font: fontBody, bidirectional: isArabic })));
+    const formattedMethodology = (ex.solution.methodology || "").replace(/(?<!^|[\n\r])(\*\*?(?:Étape|Step|خطوة)\s*\d+(?:\s*[:：])?)/gi, "\n\n$1");
+    children.push(...(await processContentBlocks(formattedMethodology, { size: 20, color: metaColor, font: fontBody, bidirectional: isArabic })));
 
     // Micro-barème table
     if (ex.solution.microBareme && ex.solution.microBareme.length > 0) {

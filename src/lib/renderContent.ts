@@ -193,7 +193,7 @@ export function renderContent(raw: string): string {
   if (!raw) return "";
   let text = raw;
 
-  const mermaidKeywords = ["graph ", "flowchart ", "sequenceDiagram", "gantt", "classDiagram", "stateDiagram", "pie", "erDiagram", "journey", "gitGraph", "requirementDiagram", "mindmap", "timeline", "xychart-beta"];
+  const mermaidKeywords = ["graph ", "flowchart ", "sequenceDiagram", "gantt", "classDiagram", "stateDiagram", "pie", "erDiagram", "journey", "gitGraph", "requirementDiagram", "mindmap", "timeline", "xychart-beta", "block-beta"];
   const lines = text.split("\n");
   let inNakedMermaid = false;
   let nakedMermaidCode = "";
