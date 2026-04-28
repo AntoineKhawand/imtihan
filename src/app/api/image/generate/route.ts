@@ -19,11 +19,23 @@ export async function GET(request: NextRequest) {
   // By proxying through our own API, we can add caching or switch providers (OpenAI/Stability) 
   // without changing the frontend code.
   const cleanPrompt = encodeURIComponent(prompt);
-  const imageUrl = `https://image.pollinations.ai/prompt/${cleanPrompt}?width=${width}&height=${height}&nologo=true&seed=${seed}&model=flux`;
+  const fluxUrl = `https://image.pollinations.ai/prompt/${cleanPrompt}?width=${width}&height=${height}&nologo=true&seed=${seed}&model=flux`;
+  const turboUrl = `https://image.pollinations.ai/prompt/${cleanPrompt}?width=${width}&height=${height}&nologo=true&seed=${seed}&model=turbo`;
+
+  async function fetchImage(url: string) {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error("Failed to fetch image");
+    return res;
+  }
 
   try {
-    const res = await fetch(imageUrl);
-    if (!res.ok) throw new Error("Failed to fetch image from provider");
+    let res;
+    try {
+      res = await fetchImage(fluxUrl);
+    } catch (err) {
+      console.warn("[ImageProxy] Flux failed, trying Turbo...", err);
+      res = await fetchImage(turboUrl);
+    }
     
     const buffer = await res.arrayBuffer();
     return new NextResponse(buffer, {
@@ -33,7 +45,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (err) {
-    console.error("[ImageProxy] Error:", err);
+    console.error("[ImageProxy] Final failure:", err);
     return NextResponse.json({ error: "Failed to generate image" }, { status: 500 });
   }
 }
