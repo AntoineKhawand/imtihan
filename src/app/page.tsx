@@ -158,15 +158,31 @@ export default async function LandingPage() {
     "name": "Imtihan",
     "url": "https://www.imtihan.live",
     "logo": "https://www.imtihan.live/Imtihan-logo.png",
+    "sameAs": [
+      "https://www.facebook.com/imtihan.live",
+      "https://www.linkedin.com/company/imtihan-lebanon"
+    ],
     "address": {
       "@type": "PostalAddress",
       "addressLocality": "Beirut",
-      "addressCountry": "LB"
+      "addressRegion": "Beirut Governorate",
+      "addressCountry": "LB",
+      "postalCode": "1107"
     },
     "geo": {
       "@type": "GeoCoordinates",
       "latitude": "33.8938",
       "longitude": "35.5018"
+    },
+    "areaServed": {
+      "@type": "Country",
+      "name": "Lebanon"
+    },
+    "contactPoint": {
+      "@type": "ContactPoint",
+      "contactType": "Customer Support",
+      "email": "contact@imtihan.live",
+      "availableLanguage": ["French", "English", "Arabic"]
     }
   };
 

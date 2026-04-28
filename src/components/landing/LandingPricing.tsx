@@ -99,7 +99,7 @@ export function LandingPricing({ isAuthenticated }: { isAuthenticated?: boolean 
             </ul>
 
             <Link
-              href={isAuthenticated ? "/create" : "/auth/register"}
+              href={isAuthenticated ? "/create" : "/auth/login"}
               className="w-full flex items-center justify-center gap-2 h-12 rounded-2xl border border-[var(--border)] text-sm font-semibold text-[var(--text)] hover:bg-[var(--bg-subtle)] hover:border-[var(--border-strong)] active:scale-[0.98] transition-all duration-300"
             >
               Get started free

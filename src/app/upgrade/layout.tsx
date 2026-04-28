@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Activer Imtihan Pro",
-  description: "Passez à Imtihan Pro en quelques minutes via WhatsApp. 100 examens par mois, activation instantanée après paiement.",
+  title: "Upgrade to Imtihan Pro — Pricing for Lebanese Teachers",
+  description: "Unlock 100 exams per month. Pay via WHISH Money in Lebanon. Instant activation for Bac Libanais, Brevet, and school exams.",
   alternates: { canonical: "/upgrade" },
-  robots: { index: false, follow: false },
+  robots: { index: true, follow: true },
 };
 
 export default function UpgradeLayout({ children }: { children: React.ReactNode }) {

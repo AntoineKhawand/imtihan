@@ -3,12 +3,12 @@ import { ArrowLeft, Mail, MessageSquare, BookOpen, AlertCircle } from "lucide-re
 import { Logo } from "@/components/ui/Logo";
 
 export const metadata = {
-  title: "Contact — Imtihan",
-  description: "Contactez l'équipe Imtihan pour toute question, support technique, ou demande d'abonnement école. Réponse sous 24h.",
+  title: "Contact — Imtihan Support Lebanon",
+  description: "Contactez l'équipe Imtihan au Liban pour toute question, support technique, ou demande d'abonnement école. Réponse sous 24h en Français, Anglais ou Arabe.",
   alternates: { canonical: "/contact" },
   openGraph: {
-    title: "Contacter Imtihan — Support & Questions",
-    description: "Une question sur Imtihan ? Contactez-nous via le formulaire ou directement par email. Support disponible en français, anglais et arabe.",
+    title: "Contacter Imtihan Liban — Support & Questions",
+    description: "Une question sur Imtihan ? Contactez notre équipe basée à Beyrouth via le formulaire ou directement par email. Support spécialisé pour le programme libanais.",
     url: "https://www.imtihan.live/contact",
   },
 };
