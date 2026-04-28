@@ -248,28 +248,9 @@ export function renderContent(raw: string): string {
   }).join("");
 
   mermaidBlocks.forEach((code, i) => {
-    // Use mermaid.ink API for robust server-side rendering
-    // This handles versioning and complex syntax better than client-side libs
-    const json = JSON.stringify({
-      code,
-      mermaid: { 
-        theme: "neutral",
-        fontFamily: "Geist, system-ui, sans-serif"
-      }
-    });
-    
-    // Universal Base64 encoding
-    let b64;
-    try {
-      b64 = typeof window !== 'undefined' 
-        ? btoa(encodeURIComponent(json).replace(/%([0-9A-F]{2})/g, (match, p1) => String.fromCharCode(parseInt(p1, 16))))
-        : Buffer.from(json).toString('base64');
-    } catch {
-      b64 = "";
-    }
-    
-    const src = `https://mermaid.ink/img/${b64}`;
-    html = html.replace(`%%MERMAID_${i}%%`, `<div class="my-6 flex justify-center bg-white p-4 rounded-xl border border-[var(--border)] shadow-sm overflow-x-auto"><img src="${src}" alt="Diagram" class="max-w-full h-auto" onError="this.parentElement.innerHTML='<div class=text-xs>Visual error: try regenerating</div>'" /></div>`);
+    // Use internal API for robust server-side rendering
+    const src = `/api/visual/mermaid?code=${encodeURIComponent(code)}`;
+    html = html.replace(`%%MERMAID_${i}%%`, `<div class="my-6 flex justify-center bg-white p-4 rounded-xl border border-[var(--border)] shadow-sm overflow-x-auto"><img src="${src}" alt="Diagram" class="max-w-full h-auto" onError="this.parentElement.innerHTML='<div class=text-xs>Visual rendering error.</div>'" /></div>`);
   });
 
   const htmlLines = html.split("\n");
