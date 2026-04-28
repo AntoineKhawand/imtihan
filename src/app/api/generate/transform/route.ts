@@ -36,22 +36,21 @@ export async function POST(request: NextRequest) {
     if (type === "table") {
       instruction = `Transform the statement of this exercise into a well-formatted Markdown Table if applicable, or restructure its data points into a clear Markdown Table within the statement. Do not change the core academic difficulty or points, just improve the layout by using a markdown table for the data/context.`;
     } else if (type === "visual") {
-      const visualReq = prompt ? `Specific requirement: ${prompt}` : `Add a suitable mathematical graph, diagram, or chart.`;
-      instruction = `${visualReq} 
-      - For mathematical graphs (functions, parabolas, curves), use Mermaid \`xychart-beta\`.
-      - For diagrams (electrical circuits, chemical setups, biology structures), use Mermaid \`flowchart TD\`.
-      - IMPORTANT: Mermaid is NOT a function plotter. You MUST provide explicit data points. e.g., \`x-axis [0, 1, 2, 3]\` and \`line [0, 1, 4, 9]\`.
-      - QUOTING: Always wrap labels in double quotes to avoid errors with special characters (e.g., A["f(x) = x^2"]).
-      - MANDATORY: Wrap the Mermaid code in triple backticks (e.g., \`\`\`mermaid ... \`\`\`).
-      - Return the Mermaid block directly within the 'statement' field.`;
+      const visualReq = prompt ? `The user wants: "${prompt}"` : `Add a suitable mathematical graph or logical diagram.`;
+      instruction = `- Task: Create a highly relevant Mermaid.js diagram by reading the exercise content.
+      - ${visualReq}
+      - CONTEXT: Use the specific data, values, functions, or logical steps described in the exercise to make the diagram accurate.
+      - Use Mermaid \`xychart-beta\` for graphs and \`flowchart TD\` for diagrams.
+      - MANDATORY: Wrap code in triple backticks. Return within 'statement'.`;
     } else if (type === "image") {
-      const imageReq = prompt ? `Specific image requirement: ${prompt}` : `Insert a suitable scientific illustration or academic visual.`;
-      instruction = `- ${imageReq}
-      - Insert the tag [IMAGE: concise detailed prompt] exactly where the image should appear in the 'statement' (usually at the beginning or right after the context).
-      - PROMPT STYLE: Focus on professional high-fidelity mockups, flat design, and minimalist vector illustrations.
-      - IMPORTANT: Minimize text within the image itself. Prefer icons, symbols, and structural clarity over labels.
-      - STRICT: DO NOT use HTML tags. Only use the [IMAGE: ...] format.
-      - Keep the JSON EXACTLY the same, only modify 'statement'.`;
+      const imageReq = prompt ? `The user wants: "${prompt}"` : `Add a suitable scientific illustration.`;
+      instruction = `- Task: Generate a highly descriptive and relevant image prompt based on the user's request AND the exercise content.
+      - ${imageReq}
+      - YOUR GOAL: Expand the user's short request into a detailed, professional prompt for a high-end image generator (like FLUX or DALL-E).
+      - CONTEXT: Read the exercise statement and questions. Include specific data/concepts from the text in the prompt.
+      - FORMAT: Insert the tag [IMAGE: your_expanded_descriptive_prompt] where it makes sense.
+      - STYLE: Academic, clean vector illustration, minimalist, high-fidelity scientific mockup, white background.
+      - Keep JSON EXACTLY the same, only modify 'statement'.`;
     }
 
     const systemPrompt = `You are an expert exam designer and editor. 
