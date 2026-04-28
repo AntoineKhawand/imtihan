@@ -99,6 +99,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (currentUser) {
         subscribeToProfile(currentUser);
+        // Update last login timestamp
+        updateDoc(doc(db, "users", currentUser.uid), {
+          lastLoginAt: Date.now()
+        }).catch(err => console.error("Failed to update lastLoginAt:", err));
       } else {
         // Signed out — tear down the profile listener
         profileUnsub.current?.();

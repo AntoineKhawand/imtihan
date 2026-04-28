@@ -17,8 +17,11 @@ export async function GET(request: NextRequest) {
         email: d.email ?? "",
         displayName: d.displayName ?? "",
         createdAt: d.createdAt?.toMillis?.() ?? d.createdAt ?? 0,
+        lastLoginAt: d.lastLoginAt ?? null,
+        renewalRequested: d.renewalRequested ?? false,
         proExpiresAt: d.proExpiresAt ?? null,
         examsGenerated: d.examsGenerated ?? 0,
+        monthlyExamsGenerated: d.monthlyExamsGenerated ?? 0,
       };
     });
     return NextResponse.json({ users });

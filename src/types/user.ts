@@ -20,6 +20,10 @@ export interface UserProfile {
   proExpiresAt?: number;
   /** Unix ms of the last renewal reminder email sent — prevents duplicate sends. */
   lastReminderSentAt?: number;
+  /** Unix ms of the last login. */
+  lastLoginAt?: number;
+  /** True if the user has manually requested a renewal in-app. */
+  renewalRequested?: boolean;
   subscription: {
     status: SubscriptionStatus;
     tier: SubscriptionTier;

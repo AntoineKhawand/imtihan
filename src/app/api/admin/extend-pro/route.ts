@@ -37,6 +37,7 @@ export async function POST(request: NextRequest) {
       proExpiresAt: newExpiry,
       monthlyExamsGenerated: 0,
       monthlyPeriodStart: Date.now(),
+      renewalRequested: false,
     });
 
     return NextResponse.json({

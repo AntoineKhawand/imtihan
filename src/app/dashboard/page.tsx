@@ -95,6 +95,27 @@ export default function DashboardPage() {
     }
   }
 
+  const [requestingRenewal, setRequestingRenewal] = useState(false);
+  const [renewalRequested, setRenewalRequested] = useState(profile?.renewalRequested ?? false);
+
+  async function handleRequestRenewal() {
+    setRequestingRenewal(true);
+    try {
+      const token = await user?.getIdToken();
+      const res = await fetch("/api/user/request-renewal", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error("Failed to request renewal");
+      setRenewalRequested(true);
+    } catch (err) {
+      console.error(err);
+      alert("Something went wrong. Please try again.");
+    } finally {
+      setRequestingRenewal(false);
+    }
+  }
+
   function handleUpgrade() {
     const link = getWhatsAppUpgradeLink(profile?.email ?? "");
     window.open(link, "_blank", "noopener,noreferrer");
@@ -168,15 +189,30 @@ export default function DashboardPage() {
                 <p className="text-sm font-semibold text-[var(--text)] mb-1">Pro plan</p>
                 <p className="text-xs text-[var(--text-tertiary)]">{profile?.monthlyExamsGenerated ?? 0}/100 exams this month</p>
               </div>
-              <a
-                href={getWhatsAppUpgradeLink(profile?.email ?? "")}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg border border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--border-strong)] hover:text-[var(--text)] transition-colors"
-              >
-                <CreditCard size={12} />
-                Renew via WhatsApp
-              </a>
+              <div className="flex items-center gap-2">
+                {renewalRequested ? (
+                  <span className="text-[10px] font-bold text-amber-600 bg-amber-50 px-2 py-1 rounded-lg border border-amber-100">
+                    RENEWAL PENDING
+                  </span>
+                ) : (
+                  <button
+                    onClick={handleRequestRenewal}
+                    disabled={requestingRenewal}
+                    className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg bg-[var(--accent)] text-white hover:opacity-90 transition-opacity disabled:opacity-50"
+                  >
+                    {requestingRenewal ? "..." : "Request Renewal"}
+                  </button>
+                )}
+                <a
+                  href={getWhatsAppUpgradeLink(profile?.email ?? "")}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg border border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--border-strong)] hover:text-[var(--text)] transition-colors"
+                >
+                  <CreditCard size={12} />
+                  WhatsApp
+                </a>
+              </div>
             </>
           ) : quotaUsed >= FREE_EXAM_LIMIT ? (
             /* Limit reached */
@@ -196,11 +232,26 @@ export default function DashboardPage() {
                   Upgrade to Pro for 100 exams/month and advanced AI tools.
                 </p>
               </div>
-              <Link href="/upgrade">
-                <Button size="sm" className="bg-[var(--accent)] shadow-md shadow-[var(--accent)]/20 whitespace-nowrap">
-                  Upgrade to Pro — $5.99/mo
-                </Button>
-              </Link>
+              <div className="flex flex-col items-end gap-2">
+                <Link href="/upgrade">
+                  <Button size="sm" className="bg-[var(--accent)] shadow-md shadow-[var(--accent)]/20 whitespace-nowrap">
+                    Upgrade to Pro — $5.99/mo
+                  </Button>
+                </Link>
+                {renewalRequested ? (
+                  <span className="text-[10px] font-bold text-amber-600 bg-amber-50 px-2 py-1 rounded-lg border border-amber-100">
+                    REQUEST PENDING
+                  </span>
+                ) : (
+                  <button
+                    onClick={handleRequestRenewal}
+                    disabled={requestingRenewal}
+                    className="text-[10px] font-medium text-[var(--text-secondary)] hover:text-[var(--text)] underline underline-offset-2"
+                  >
+                    {requestingRenewal ? "..." : "Request in-app"}
+                  </button>
+                )}
+              </div>
             </div>
           ) : (
             /* Still has quota */

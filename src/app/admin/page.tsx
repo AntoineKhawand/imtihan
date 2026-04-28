@@ -10,6 +10,8 @@ interface AdminUser {
   email: string;
   displayName: string;
   createdAt: number;
+  lastLoginAt: number | null;
+  renewalRequested?: boolean;
   proExpiresAt: number | null;
   examsGenerated: number;
   monthlyExamsGenerated?: number;
@@ -41,6 +43,7 @@ export default function AdminPage() {
   const [error, setError] = useState<string | null>(null);
   const [extending, setExtending] = useState<string | null>(null);
   const [search, setSearch] = useState("");
+  const [filterDate, setFilterDate] = useState(""); // YYYY-MM-DD
 
   async function fetchUsers() {
     if (!user) return;
@@ -86,12 +89,23 @@ export default function AdminPage() {
     }
   }
 
-  const filtered = search
-    ? users.filter((u) =>
-        u.email.toLowerCase().includes(search.toLowerCase()) ||
-        u.displayName.toLowerCase().includes(search.toLowerCase())
-      )
-    : users;
+  const filtered = users.filter((u) => {
+    // Search filter
+    const matchesSearch = !search || 
+      u.email.toLowerCase().includes(search.toLowerCase()) ||
+      u.displayName.toLowerCase().includes(search.toLowerCase());
+    
+    // Date filter
+    let matchesDate = true;
+    if (filterDate) {
+      const targetDate = new Date(filterDate).toDateString();
+      const regDate = new Date(u.createdAt).toDateString();
+      const logDate = u.lastLoginAt ? new Date(u.lastLoginAt).toDateString() : "";
+      matchesDate = regDate === targetDate || logDate === targetDate;
+    }
+
+    return matchesSearch && matchesDate;
+  });
 
   const proCount = users.filter((u) => u.proExpiresAt && u.proExpiresAt > Date.now()).length;
   const expiredCount = users.filter((u) => u.proExpiresAt && u.proExpiresAt <= Date.now()).length;
@@ -128,14 +142,33 @@ export default function AdminPage() {
           ))}
         </div>
 
-        {/* Search */}
-        <input
-          type="text"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search by email or name…"
-          className="w-full mb-4 h-10 px-4 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:border-emerald-500"
-        />
+        {/* Search & Filter */}
+        <div className="flex gap-4 mb-4">
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search by email or name…"
+            className="flex-1 h-10 px-4 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:border-emerald-500"
+          />
+          <div className="flex items-center gap-2 bg-white px-3 border border-gray-200 rounded-xl">
+            <span className="text-xs text-gray-400">Filter by date:</span>
+            <input
+              type="date"
+              value={filterDate}
+              onChange={(e) => setFilterDate(e.target.value)}
+              className="text-sm bg-transparent focus:outline-none"
+            />
+            {filterDate && (
+              <button 
+                onClick={() => setFilterDate("")}
+                className="text-gray-400 hover:text-gray-600 p-1"
+              >
+                ×
+              </button>
+            )}
+          </div>
+        </div>
 
         {/* Table */}
         {loading ? (
@@ -148,10 +181,10 @@ export default function AdminPage() {
               <thead>
                 <tr className="border-b border-gray-100 bg-gray-50 text-xs text-gray-500 uppercase tracking-wide">
                   <th className="text-left px-4 py-3 font-medium">User</th>
+                  <th className="text-left px-4 py-3 font-medium">Registered / Login</th>
                   <th className="text-left px-4 py-3 font-medium">Status</th>
                   <th className="text-left px-4 py-3 font-medium">Expires</th>
-                  <th className="text-right px-4 py-3 font-medium">This month</th>
-                  <th className="text-right px-4 py-3 font-medium">Total</th>
+                  <th className="text-right px-4 py-3 font-medium">Quota</th>
                   <th className="text-right px-4 py-3 font-medium">Actions</th>
                 </tr>
               </thead>
@@ -165,20 +198,31 @@ export default function AdminPage() {
                   return (
                     <tr key={u.uid} className="hover:bg-gray-50 transition-colors">
                       <td className="px-4 py-3">
-                        <p className="font-medium text-gray-900 truncate max-w-[200px]">{u.email}</p>
-                        {u.displayName && <p className="text-xs text-gray-400">{u.displayName}</p>}
+                        <div className="flex flex-col">
+                          <p className="font-medium text-gray-900 truncate max-w-[180px]">{u.email}</p>
+                          {u.displayName && <p className="text-[10px] text-gray-400 truncate max-w-[180px]">{u.displayName}</p>}
+                          {u.renewalRequested && (
+                            <span className="inline-flex mt-1 items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-700 animate-pulse">
+                              RENEWAL REQUESTED
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-4 py-3">
+                        <p className="text-xs text-gray-600">R: {formatDate(u.createdAt)}</p>
+                        <p className="text-[10px] text-gray-400">L: {formatDate(u.lastLoginAt)}</p>
                       </td>
                       <td className="px-4 py-3">
                         <ProBadge expiresAt={u.proExpiresAt} />
                       </td>
                       <td className="px-4 py-3 text-gray-500 text-xs">{formatDate(u.proExpiresAt)}</td>
                       <td className="px-4 py-3 text-right">
-                        <span className={`text-xs tabular-nums font-medium ${isNearLimit ? "text-amber-600" : "text-gray-500"}`}>
-                          {monthlyUsed}/{monthlyLimit}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-right text-gray-500 tabular-nums text-xs">
-                        {u.examsGenerated}
+                        <div className="flex flex-col items-end">
+                          <span className={`text-xs tabular-nums font-medium ${isNearLimit ? "text-amber-600" : "text-gray-500"}`}>
+                            {monthlyUsed}/{monthlyLimit}
+                          </span>
+                          <span className="text-[10px] text-gray-400 tabular-nums">Total: {u.examsGenerated}</span>
+                        </div>
                       </td>
                       <td className="px-4 py-3 text-right">
                         <div className="flex items-center justify-end gap-2">
