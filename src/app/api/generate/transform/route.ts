@@ -37,19 +37,19 @@ export async function POST(request: NextRequest) {
       instruction = `Transform the statement of this exercise into a well-formatted Markdown Table if applicable, or restructure its data points into a clear Markdown Table within the statement. Do not change the core academic difficulty or points, just improve the layout by using a markdown table for the data/context.`;
     } else if (type === "visual") {
       const visualReq = prompt ? `The user wants: "${prompt}"` : `Add a suitable mathematical graph or logical diagram.`;
-      instruction = `- Task: Create a highly relevant Mermaid.js diagram by reading the exercise content.
+      instruction = `- Task: Create a MATHEMATICALLY ACCURATE Mermaid.js diagram.
       - ${visualReq}
-      - CONTEXT: Use the specific data, values, functions, or logical steps described in the exercise to make the diagram accurate.
-      - Use Mermaid \`xychart-beta\` for graphs and \`flowchart TD\` for diagrams.
+      - ACCURACY: Ensure that data points, coordinates, and trends perfectly match the exercise and real-world scientific principles.
+      - CONTEXT: Use the specific data, values, or functions from the text.
+      - Use Mermaid \`xychart-beta\` for precise plotting and \`flowchart TD\` for logical flows.
       - MANDATORY: Wrap code in triple backticks. Return within 'statement'.`;
     } else if (type === "image") {
       const imageReq = prompt ? `The user wants: "${prompt}"` : `Add a suitable scientific illustration.`;
-      instruction = `- Task: Generate a highly descriptive and relevant image prompt based on the user's request AND the exercise content.
+      instruction = `- Task: Generate a SCIENTIFICALLY ACCURATE and highly descriptive image prompt.
       - ${imageReq}
-      - YOUR GOAL: Expand the user's short request into a detailed, professional prompt for a high-end image generator (like FLUX or DALL-E).
-      - CONTEXT: Read the exercise statement and questions. Include specific data/concepts from the text in the prompt.
-      - FORMAT: Insert the tag [IMAGE: your_expanded_descriptive_prompt] where it makes sense.
-      - STYLE: Academic, clean vector illustration, minimalist, high-fidelity scientific mockup, white background.
+      - REALISM: The prompt must describe a visual that is factually correct according to scientific standards (e.g., correct lab equipment, accurate biological structures).
+      - YOUR GOAL: Expand the request into a detailed, professional prompt for FLUX. Describe exactly what should be visible to ensure relevance.
+      - STYLE: Academic, clean vector illustration, minimalist, high-fidelity, white background.
       - Keep JSON EXACTLY the same, only modify 'statement'.`;
     }
 
