@@ -33,7 +33,7 @@ export function UserNav() {
           Sign in
         </Link>
         <Link
-          href="/auth/register"
+          href="/auth/login"
           className="inline-flex items-center gap-1.5 h-9 px-4 rounded-xl bg-[var(--accent)] text-white text-sm font-medium hover:opacity-90 transition-opacity shadow-sm"
         >
           Try free <ArrowRight size={14} />
