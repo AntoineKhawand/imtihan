@@ -113,7 +113,7 @@ export default function DashboardPage() {
       <RenewalBanner />
       {/* Nav */}
       <nav className="flex items-center justify-between px-6 md:px-10 h-16 border-b border-[var(--border)] bg-[var(--bg)]/90 backdrop-blur-md sticky top-0 z-40">
-        <Logo size={28} />
+        <Logo size={26} />
         <div className="flex items-center gap-6">
           <div className="hidden md:flex items-center gap-3">
             <Link href="/create">

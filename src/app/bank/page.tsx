@@ -128,7 +128,7 @@ export default function BankPage() {
           <Link href="/dashboard" className="p-2 hover:bg-[var(--bg-subtle)] rounded-lg transition-colors text-[var(--text-secondary)]">
             <ArrowLeft size={20} />
           </Link>
-          <Logo size={24} />
+          <Logo size={26} />
         </div>
         <div className="flex items-center gap-4">
           <Link href="/create">

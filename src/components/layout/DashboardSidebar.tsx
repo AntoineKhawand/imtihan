@@ -72,8 +72,9 @@ export function DashboardSidebar() {
       <div className="p-4 border-t border-[var(--border)]">
         <Link 
           href="/upgrade"
-          className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-semibold bg-gradient-to-br from-indigo-600 to-violet-700 text-white shadow-xl shadow-indigo-200 hover:scale-[1.02] transition-transform"
+          className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-bold bg-gradient-to-br from-emerald-600 to-teal-800 text-white shadow-lg shadow-emerald-200 hover:scale-[1.02] transition-transform group overflow-hidden relative"
         >
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:animate-shine" />
           <CreditCard size={18} />
           Upgrade to Pro
         </Link>

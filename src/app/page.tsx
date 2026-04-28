@@ -190,7 +190,7 @@ export default async function LandingPage() {
 
       {/* ── NAV ─────────────────────────────────────────────────────── */}
       <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 md:px-10 h-16 bg-[var(--bg)]/75 backdrop-blur-xl border-b border-[var(--border)]/60 transition-colors">
-        <Logo />
+        <Logo size={26} />
         <div className="hidden md:flex items-center gap-6 text-sm text-[var(--text-secondary)]">
           <Link href="#how" className="hover:text-[var(--text)] transition-colors">How it works</Link>
           <Link href="#subjects" className="hover:text-[var(--text)] transition-colors">Subjects</Link>

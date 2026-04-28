@@ -81,7 +81,7 @@ export default function AnalyticsPage() {
             <span className="hidden md:inline">Dashboard</span>
           </Link>
           <div className="w-px h-6 bg-[var(--border)] hidden md:block" />
-          <Logo size={28} />
+          <Logo size={26} />
         </div>
         <div className="flex items-center gap-4">
           <Link href="/create"><Button size="sm" icon={<Plus size={13} />}>New exam</Button></Link>

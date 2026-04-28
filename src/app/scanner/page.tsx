@@ -118,7 +118,7 @@ export default function ScannerPage() {
     <div className="min-h-screen bg-[var(--bg)] flex flex-col">
       <nav className="flex items-center justify-between px-6 md:px-10 h-16 border-b border-[var(--border)] bg-[var(--bg)]/80 backdrop-blur-xl sticky top-0 z-40">
         <div className="flex items-center gap-4">
-          <Logo size={24} />
+          <Logo size={26} />
         </div>
         <UserNav />
       </nav>

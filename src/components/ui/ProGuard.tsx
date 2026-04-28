@@ -33,60 +33,61 @@ export function ProGuard({ children, featureName, featureDescription }: ProGuard
       </div>
       
       {/* Premium Upgrade Card */}
-      <div className="relative w-full max-w-xl p-10 md:p-12 bg-white/70 backdrop-blur-3xl border border-white/60 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.1)] rounded-[4rem] text-center animate-in zoom-in-95 fade-in duration-1000">
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-amber-50 to-orange-50 text-amber-700 text-[11px] font-bold uppercase tracking-[0.2em] mb-10 border border-amber-100/50 shadow-sm">
-          <Zap size={14} className="fill-amber-500" />
-          Premium Feature
+      <div className="relative w-full max-w-lg p-8 md:p-10 bg-white/80 backdrop-blur-3xl border border-white/60 shadow-[0_40px_80px_-20px_rgba(0,0,0,0.12)] rounded-[3rem] text-center animate-in zoom-in-95 fade-in duration-1000">
+        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-50 text-emerald-700 text-[10px] font-bold uppercase tracking-[0.25em] mb-8 border border-emerald-100/50 shadow-sm">
+          <Zap size={12} className="fill-emerald-500" />
+          Pro Exclusive
         </div>
 
-        <div className="relative w-32 h-32 mx-auto mb-10">
+        <div className="relative w-28 h-28 mx-auto mb-8">
           <div className="absolute inset-0 bg-emerald-500/10 rounded-full blur-3xl" />
-          <div className="relative w-full h-full bg-gradient-to-br from-emerald-600 via-emerald-700 to-teal-800 rounded-[2.5rem] shadow-[0_20px_40px_-10px_rgba(5,150,105,0.4)] flex items-center justify-center text-white animate-float border border-white/20">
-            <Lock size={48} strokeWidth={1.5} />
+          <div className="relative w-full h-full bg-gradient-to-br from-emerald-600 via-emerald-700 to-teal-800 rounded-[2rem] shadow-[0_15px_30px_-5px_rgba(5,150,105,0.4)] flex items-center justify-center text-white animate-float border border-white/20">
+            <Lock size={40} strokeWidth={1.5} />
           </div>
-          <div className="absolute -top-6 -right-6 w-12 h-12 bg-white rounded-2xl shadow-xl flex items-center justify-center text-amber-500 border border-amber-50">
-            <Sparkles size={24} />
+          <div className="absolute -top-4 -right-4 w-10 h-10 bg-white rounded-xl shadow-lg flex items-center justify-center text-emerald-600 border border-emerald-50">
+            <Sparkles size={20} />
           </div>
         </div>
 
-        <h2 className="serif text-5xl text-[var(--text)] mb-5 tracking-tight">Unlock {featureName}</h2>
-        <p className="text-[var(--text-secondary)] text-lg mb-12 leading-relaxed font-light max-w-md mx-auto">
+        <h2 className="serif text-4xl text-[var(--text)] mb-4 tracking-tight">Unlock {featureName}</h2>
+        <p className="text-[var(--text-secondary)] text-base mb-10 leading-relaxed font-light max-w-sm mx-auto">
           {featureDescription}
         </p>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-12 text-left">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-10 text-left">
           {[
-            { name: "AI Vision Analysis", icon: <ShieldCheck size={14} /> },
-            { name: "Advanced Pedagogy AI", icon: <Zap size={14} /> },
-            { name: "Syllabus Tracking", icon: <Sparkles size={14} /> },
-            { name: "Unlimited Exports", icon: <ArrowRight size={14} /> },
-            { name: "School Collaboration", icon: <Lock size={14} /> },
-            { name: "Priority Support", icon: <ShieldCheck size={14} /> }
+            { name: "AI Vision Analysis", icon: <ShieldCheck size={12} /> },
+            { name: "Advanced Pedagogy", icon: <Zap size={12} /> },
+            { name: "Syllabus Tracking", icon: <Sparkles size={12} /> },
+            { name: "Unlimited Exports", icon: <ArrowRight size={12} /> }
           ].map((feat, i) => (
             <div 
               key={feat.name} 
-              className="flex items-center gap-3 text-sm text-[var(--text-secondary)] bg-white/40 p-3 rounded-2xl border border-white/60 transition-all hover:scale-105 hover:bg-white/60"
+              className="flex items-center gap-2.5 text-xs text-[var(--text-secondary)] bg-emerald-50/30 p-2.5 rounded-xl border border-emerald-100/30 transition-all hover:bg-emerald-50/50"
               style={{ animationDelay: `${i * 100}ms` }}
             >
-              <div className="w-6 h-6 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center flex-shrink-0 shadow-inner">
+              <div className="w-5 h-5 rounded-lg bg-emerald-100/50 text-emerald-700 flex items-center justify-center flex-shrink-0 shadow-inner">
                 {feat.icon}
               </div>
-              <span className="font-medium tracking-tight">{feat.name}</span>
+              <span className="font-semibold tracking-tight">{feat.name}</span>
             </div>
           ))}
         </div>
 
-        <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-5">
           <Link href="/upgrade">
-            <Button className="w-full h-18 text-xl rounded-3xl bg-emerald-700 hover:bg-emerald-800 shadow-[0_20px_40px_-10px_rgba(5,150,105,0.3)] group py-8">
-              <span className="font-bold">Upgrade to Pro</span>
+            <Button className="w-full h-16 text-lg rounded-2xl bg-gradient-to-r from-emerald-600 to-emerald-800 hover:from-emerald-700 hover:to-emerald-900 shadow-[0_15px_30px_-5px_rgba(5,150,105,0.3)] group relative overflow-hidden">
+              {/* Shine effect */}
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:animate-shine" />
+              
+              <span className="font-bold">Get Pro Access</span>
               <span className="mx-2 opacity-50 font-light">—</span>
-              <span className="font-medium">$5.99/mo</span>
-              <ArrowRight size={22} className="ml-3 group-hover:translate-x-2 transition-transform" />
+              <span className="font-medium">$5.99</span>
+              <ArrowRight size={18} className="ml-2 group-hover:translate-x-1.5 transition-transform" />
             </Button>
           </Link>
-          <Link href="/dashboard" className="text-sm font-bold text-[var(--text-tertiary)] hover:text-emerald-700 transition-colors uppercase tracking-widest">
-            Maybe later
+          <Link href="/dashboard" className="text-[10px] font-bold text-[var(--text-tertiary)] hover:text-emerald-700 transition-colors uppercase tracking-[0.2em]">
+            Back to Dashboard
           </Link>
         </div>
       </div>
