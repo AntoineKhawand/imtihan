@@ -173,21 +173,6 @@ function applyMarkdown(text: string): string {
   return parseTables(md);
 }
 
-function handleGraphs(text: string): string {
-  return text.replace(/\[(?:IMAGE|GRAPH|VISUAL):\s*(.*?)\]/gi, (_match, description) => {
-    const desc = description.trim();
-    if (!desc) return "";
-
-    const uid = Math.random().toString(36).slice(2, 8);
-    const safeDesc = desc.replace(/"/g, "&quot;");
-    const prompt = (desc.length > 300 ? desc.slice(0, 300) : desc)
-      + ", professional scientific diagram, clean vector illustration, high resolution, 8k, publication quality, white background, minimalist academic aesthetic, sharp lines, clear structure";
-    const src = `/api/image/generate?prompt=${encodeURIComponent(prompt)}&width=800&height=450&seed=${uid}`;
-
-    // Return as single line to avoid breaking the renderer's line-by-line <br/> logic
-    return `<div class="my-6"><div class="relative rounded-xl overflow-hidden border border-[var(--border)] bg-[var(--bg-subtle)] min-h-[140px] flex items-center justify-center"><img id="img-${uid}" src="${src}" alt="${safeDesc}" loading="lazy" class="w-full h-auto object-contain rounded-xl transition-opacity duration-500" style="opacity:0" onload="this.style.opacity='1'; document.getElementById('fb-${uid}').style.display='none'; document.getElementById('spin-${uid}').style.display='none';" onerror="this.style.display='none'; document.getElementById('fb-${uid}').style.display='flex'; document.getElementById('spin-${uid}').style.display='none';"/><div id="spin-${uid}" class="absolute inset-0 flex items-center justify-center bg-[var(--bg-subtle)]"><div class="flex flex-col items-center gap-2"><svg class="animate-spin w-5 h-5 text-[var(--accent)]" viewBox="0 0 24 24" fill="none"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg><span class="text-[9px] font-bold uppercase tracking-widest text-[var(--text-tertiary)] animate-pulse">Generating Visual...</span></div></div><div id="fb-${uid}" class="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-[var(--bg-subtle)] hidden"><span class="text-xl opacity-40">📊</span><p class="text-[10px] font-bold uppercase tracking-tighter text-[var(--text-tertiary)]">Visual Representation</p></div></div><p class="text-[9px] text-center text-[var(--text-tertiary)] italic mt-2 opacity-60">${safeDesc.length > 100 ? safeDesc.slice(0, 100) + "…" : safeDesc}</p></div>`;
-  });
-}
 
 export function renderContent(raw: string): string {
   if (!raw) return "";
@@ -213,8 +198,25 @@ export function renderContent(raw: string): string {
     return (prefix || "") + `%%MERMAID_${idx}%%`;
   });
 
+  // 2. Identify and placeholder-ize [IMAGE:] [GRAPH:] [VISUAL:] tags
+  // We do this EARLY to prevent parseNakedMath from wrapping parts of the prompt in math delimiters.
+  const visualBlocks: string[] = [];
+  text = text.replace(/\[(?:IMAGE|GRAPH|VISUAL):\s*([\s\S]*?)\]/gi, (_match, description) => {
+    const idx = visualBlocks.length;
+    const desc = description.trim();
+    if (!desc) return "";
+    
+    const uid = Math.random().toString(36).slice(2, 8);
+    const safeDesc = desc.replace(/"/g, "&quot;");
+    const prompt = (desc.length > 300 ? desc.slice(0, 300) : desc)
+      + ", professional scientific diagram, clean vector illustration, high resolution, 8k, publication quality, white background, minimalist academic aesthetic, sharp lines, clear structure";
+    const src = `/api/image/generate?prompt=${encodeURIComponent(prompt)}&width=800&height=450&seed=${uid}`;
 
-
+    const html = `<div class="my-6"><div class="relative rounded-xl overflow-hidden border border-[var(--border)] bg-[var(--bg-subtle)] min-h-[140px] flex items-center justify-center"><img id="img-${uid}" src="${src}" alt="${safeDesc}" loading="lazy" class="w-full h-auto object-contain rounded-xl transition-opacity duration-500" style="opacity:0" onload="this.style.opacity='1'; document.getElementById('fb-${uid}').style.display='none'; document.getElementById('spin-${uid}').style.display='none';" onerror="this.style.display='none'; document.getElementById('fb-${uid}').style.display='flex'; document.getElementById('spin-${uid}').style.display='none';"/><div id="spin-${uid}" class="absolute inset-0 flex items-center justify-center bg-[var(--bg-subtle)]"><div class="flex flex-col items-center gap-2"><svg class="animate-spin w-5 h-5 text-[var(--accent)]" viewBox="0 0 24 24" fill="none"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg><span class="text-[9px] font-bold uppercase tracking-widest text-[var(--text-tertiary)] animate-pulse">Generating Visual...</span></div></div><div id="fb-${uid}" class="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-[var(--bg-subtle)] hidden"><span class="text-xl opacity-40">📊</span><p class="text-[10px] font-bold uppercase tracking-tighter text-[var(--text-tertiary)]">Visual Representation</p></div></div><p class="text-[9px] text-center text-[var(--text-tertiary)] italic mt-2 opacity-60">${safeDesc.length > 100 ? safeDesc.slice(0, 100) + "…" : safeDesc}</p></div>`;
+    
+    visualBlocks.push(html);
+    return `%%VISUAL_${idx}%%`;
+  });
 
   text = parseNakedMath(text);
 
@@ -228,9 +230,14 @@ export function renderContent(raw: string): string {
       if (p.kind === "math") {
         return renderKaTeX(p.content, false);
       }
-      return handleGraphs(applyMarkdown(p.content));
+      return applyMarkdown(p.content);
     }).join("");
   }).join("");
+
+  // 3. Put Visual blocks back
+  visualBlocks.forEach((visualHtml, i) => {
+    html = html.replace(`%%VISUAL_${i}%%`, visualHtml);
+  });
 
   mermaidBlocks.forEach((code, i) => {
     // Use internal API for robust server-side rendering

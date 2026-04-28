@@ -51,7 +51,7 @@ export default function DashboardPage() {
   const [exams, setExams] = useState<SavedExam[]>([]);
   const [query, setQuery] = useState("");
   const [mounted, setMounted] = useState(false);
-  const { profile, loading: authLoading } = useAuth();
+  const { user: currentUser, profile, loading: authLoading } = useAuth();
   const router = useRouter();
 
   const isPro = isProActive(profile) || isInGracePeriod(profile);
@@ -101,7 +101,7 @@ export default function DashboardPage() {
   async function handleRequestRenewal() {
     setRequestingRenewal(true);
     try {
-      const token = await user?.getIdToken();
+      const token = await currentUser?.getIdToken();
       const res = await fetch("/api/user/request-renewal", {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
