@@ -44,7 +44,9 @@ export default function AdminPage() {
   const [extending, setExtending] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [filterDate, setFilterDate] = useState(""); // YYYY-MM-DD
+  const [view, setView] = useState<"all" | "requests">("all");
 
+  async function fetchUsers() {
   async function fetchUsers() {
     if (!user) return;
     try {
@@ -79,7 +81,7 @@ export default function AdminPage() {
       const data = await res.json();
       setUsers((prev) =>
         prev.map((u) => u.uid === targetUid
-          ? { ...u, proExpiresAt: data.proExpiresAt, monthlyExamsGenerated: 0 }
+          ? { ...u, proExpiresAt: data.proExpiresAt, monthlyExamsGenerated: 0, renewalRequested: false }
           : u)
       );
     } catch (e) {
@@ -104,69 +106,114 @@ export default function AdminPage() {
       matchesDate = regDate === targetDate || logDate === targetDate;
     }
 
-    return matchesSearch && matchesDate;
+    // View filter
+    const matchesView = view === "all" || u.renewalRequested;
+
+    return matchesSearch && matchesDate && matchesView;
   });
 
   const proCount = users.filter((u) => u.proExpiresAt && u.proExpiresAt > Date.now()).length;
-  const expiredCount = users.filter((u) => u.proExpiresAt && u.proExpiresAt <= Date.now()).length;
+  const requestCount = users.filter((u) => u.renewalRequested).length;
+  const newTodayCount = users.filter((u) => {
+    const today = new Date().toDateString();
+    return new Date(u.createdAt).toDateString() === today;
+  }).length;
+  const activeTodayCount = users.filter((u) => {
+    const today = new Date().toDateString();
+    return u.lastLoginAt && new Date(u.lastLoginAt).toDateString() === today;
+  }).length;
 
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-6xl mx-auto px-6 py-10">
-        <div className="mb-8">
-          <h1 className="text-2xl font-bold text-gray-900 mb-1">Admin — Subscriptions</h1>
-          <p className="text-sm text-gray-500">
-            Manage manual Whish renewals.
-            <span className="ml-2 font-medium text-gray-700">Monthly plan ($5.99) → +30 days.</span>
-            <span className="ml-2 font-medium text-gray-700">Yearly plan ($47.88) → +1 Year.</span>
-            <span className="ml-2 text-emerald-600 font-medium">Monthly quota resets automatically on each renewal.</span>
-          </p>
-          {user && (
-            <p className="mt-2 text-xs text-gray-400 font-mono bg-gray-100 rounded px-2 py-1 inline-block">
-              Your UID: {user.uid}
+        <div className="mb-8 flex justify-between items-end">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900 mb-1">Admin Dashboard</h1>
+            <p className="text-sm text-gray-500">
+              Manage subscriptions and monitor user activity.
             </p>
-          )}
+          </div>
+          <div className="flex items-center gap-3">
+            <button 
+              onClick={fetchUsers}
+              className="text-xs font-medium px-3 py-1.5 rounded-lg bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors"
+            >
+              Refresh Data
+            </button>
+          </div>
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-3 gap-4 mb-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
           {[
-            { label: "Total users", value: users.length },
-            { label: "Active Pro", value: proCount },
-            { label: "Expired Pro", value: expiredCount },
+            { label: "Total Users", value: users.length, color: "text-gray-900" },
+            { label: "Active Pro", value: proCount, color: "text-emerald-600" },
+            { label: "New Today", value: newTodayCount, color: "text-blue-600" },
+            { label: "Active Today", value: activeTodayCount, color: "text-violet-600" },
           ].map((s) => (
-            <div key={s.label} className="bg-white rounded-xl border border-gray-200 p-4 text-center">
-              <div className="text-2xl font-bold text-gray-900 tabular-nums">{s.value}</div>
-              <div className="text-xs text-gray-500 mt-0.5">{s.label}</div>
+            <div key={s.label} className="bg-white rounded-xl border border-gray-200 p-4">
+              <div className={`text-2xl font-bold ${s.color} tabular-nums`}>{s.value}</div>
+              <div className="text-[10px] uppercase tracking-wider font-semibold text-gray-400 mt-0.5">{s.label}</div>
             </div>
           ))}
         </div>
 
-        {/* Search & Filter */}
-        <div className="flex gap-4 mb-4">
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by email or name…"
-            className="flex-1 h-10 px-4 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:border-emerald-500"
-          />
-          <div className="flex items-center gap-2 bg-white px-3 border border-gray-200 rounded-xl">
-            <span className="text-xs text-gray-400">Filter by date:</span>
-            <input
-              type="date"
-              value={filterDate}
-              onChange={(e) => setFilterDate(e.target.value)}
-              className="text-sm bg-transparent focus:outline-none"
-            />
-            {filterDate && (
-              <button 
-                onClick={() => setFilterDate("")}
-                className="text-gray-400 hover:text-gray-600 p-1"
-              >
-                ×
-              </button>
-            )}
+        {/* Filters */}
+        <div className="flex flex-col md:flex-row gap-4 mb-6">
+          <div className="flex-1 flex gap-2">
+            <button
+              onClick={() => setView("all")}
+              className={`px-4 h-10 rounded-xl text-sm font-medium transition-all ${
+                view === "all" 
+                  ? "bg-gray-900 text-white shadow-lg shadow-gray-200" 
+                  : "bg-white border border-gray-200 text-gray-600 hover:bg-gray-50"
+              }`}
+            >
+              All Users
+            </button>
+            <button
+              onClick={() => setView("requests")}
+              className={`px-4 h-10 rounded-xl text-sm font-medium transition-all flex items-center gap-2 ${
+                view === "requests" 
+                  ? "bg-amber-500 text-white shadow-lg shadow-amber-100" 
+                  : "bg-white border border-gray-200 text-gray-600 hover:bg-gray-50"
+              }`}
+            >
+              Renewal Requests
+              {requestCount > 0 && (
+                <span className={`px-1.5 py-0.5 rounded-md text-[10px] ${view === "requests" ? "bg-white text-amber-600" : "bg-amber-100 text-amber-600"}`}>
+                  {requestCount}
+                </span>
+              )}
+            </button>
+          </div>
+
+          <div className="flex gap-2">
+            <div className="relative">
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search email..."
+                className="w-64 h-10 px-4 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:border-emerald-500 transition-all"
+              />
+            </div>
+            <div className="flex items-center gap-2 bg-white px-3 border border-gray-200 rounded-xl">
+              <input
+                type="date"
+                value={filterDate}
+                onChange={(e) => setFilterDate(e.target.value)}
+                className="text-sm bg-transparent focus:outline-none"
+              />
+              {filterDate && (
+                <button 
+                  onClick={() => setFilterDate("")}
+                  className="text-gray-400 hover:text-gray-600 p-1"
+                >
+                  ×
+                </button>
+              )}
+            </div>
           </div>
         </div>
 
