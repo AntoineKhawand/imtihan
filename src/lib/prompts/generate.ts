@@ -12,14 +12,14 @@ const LANGUAGE_INSTRUCTIONS: Record<string, string> = {
 - Use French typography: guillemets «», no space before colon is wrong — leave one space before : ; ! ?
 - Introduce context with "On considère...", "On dispose de...", "On donne :".
 - Label given constants/data in a block starting with "Données :" or "On donne :".
-- MATH & CHEMISTRY: Use KaTeX for all math and chemical formulas. Wrap math in $...$ (e.g. $x^2$, $K_a$). Use \ce{...} for chemical formulas (e.g. \ce{H2O}).
+- MATH & CHEMISTRY: Use KaTeX for all math and chemical formulas. Wrap math in $...$ (e.g. $x^2$, $K_a$). Use \\ce{...} for chemical formulas (e.g. \\ce{H2O}).
 - STRICT MONOLINGUALISM: The entire exam must be in French only. DO NOT include English terms or translations in parentheses (e.g., do NOT write "nom systématique (IUPAC name)").`,
 
   english: `Write the entire exam in English.
 - Use international SI notation (m s⁻¹, N, J, mol dm⁻³).
 - Use "Given:" or "Data:" before providing constants.
 - British/international spelling preferred (centre, colour).
-- MATH & CHEMISTRY: Use KaTeX for all math and chemical formulas. Wrap math in $...$ (e.g. $x^2$, $K_a$). Use \ce{...} for chemical formulas (e.g. \ce{H2O}).
+- MATH & CHEMISTRY: Use KaTeX for all math and chemical formulas. Wrap math in $...$ (e.g. $x^2$, $K_a$). Use \\ce{...} for chemical formulas (e.g. \\ce{H2O}).
 - STRICT MONOLINGUALISM: The entire exam must be in English only. Even if the source material is in French or Arabic, you MUST translate every word into English.`,
 
   arabic: `Write the entire exam in Modern Standard Arabic (MSA).
@@ -253,7 +253,7 @@ Exercice 1 (5 points)
 
 Partie A : On considère la fonction g définie sur ]0 ; +∞[ par g(x) = ln(x²) + x − 2.
 
-1. Calculer lim g(x) quand x→0⁺ et lim g(x) quand x→+∞.
+1. Calculer lim g(x) quand x→0⁺ and lim g(x) quand x→+∞.
 2. Étudier les variations de g sur ]0 ; +∞[.
 3. a) Montrer qu'il existe un unique réel strictement positif α tel que g(α) = 0.
    b) Vérifier que 1,37 < α < 1,38.
@@ -475,24 +475,24 @@ CRITICAL RULES:
 1. All calculations must be correct — verify every numerical answer before writing it.
 2. Numbers must be realistic: no negative masses, no speeds exceeding c, no impossible concentrations.
 3. Each exercise must stay within the selected chapters — no out-of-scope content.
-4. MATH & CHEMISTRY NOTATION — JSON requires double-escaped backslashes: write \\frac, \\sqrt, \\alpha, \\vec, \\int. For chemical equations, you MUST use mhchem WITH BRACES: \\ce{CH4 + 2O2 -> CO2 + 2H2O}. NEVER write \\ce without braces (e.g. \\ceCH4 is INVALID). Single backslash is INVALID inside a JSON string and will crash the parser.
+4. MATH & CHEMISTRY NOTATION — JSON requires double-escaped backslashes: write \\\\frac, \\\\sqrt, \\\\alpha, \\\\vec, \\\\int. For chemical equations, you MUST use mhchem WITH BRACES: \\\\ce{CH4 + 2O2 -> CO2 + 2H2O}. NEVER write \\\\ce without braces (e.g. \\\\ceCH4 is INVALID). Single backslash is INVALID inside a JSON string and will crash the parser.
 5. SCIENTIFIC ACCURACY: We use a high-precision verification engine (Math.js) for all generated answers. Ensure all numerical values, unit conversions, and statistical results are mathematically exact.
 6. NOTATION & SPACING (CRITICAL — ZERO TOLERANCE FOR PLAIN TEXT MATH):
-   - ALWAYS put a space between a label and its object (e.g., write "plan $P$", "point $A$", "vecteur $\vec{n}$").
-   - VECTORS: Use KaTeX $\vec{v}$ or $\overrightarrow{AB}$. NEVER use text-based arrows like "->".
-   - FRACTIONS & DERIVATIVES: Use KaTeX $\frac{d^2x}{dt^2}$ or $\frac{1}{2}$. NEVER write "dt2d2x" or "1/2" in plain text.
-   - SYSTEMS OF EQUATIONS: Use KaTeX \begin{cases} ... \end{cases} for all parametric equations or systems.
+   - ALWAYS put a space between a label and its object (e.g., write "plan $P$", "point $A$", "vecteur $\\vec{n}$").
+   - VECTORS: Use KaTeX $\\vec{v}$ or $\\overrightarrow{AB}$. NEVER use text-based arrows like "->".
+   - FRACTIONS & DERIVATIVES: Use KaTeX $\\frac{d^2x}{dt^2}$ or $\\frac{1}{2}$. NEVER write "dt2d2x" or "1/2" in plain text.
+   - SYSTEMS OF EQUATIONS: Use KaTeX \\begin{cases} ... \\end{cases} for all parametric equations or systems.
    - COORDINATES: Use standard notation $(x; y; z)$ or $A(x; y; z)$.
    - ZERO CODE POLICY: Every single variable, equation, and unit must be wrapped in $...$. If it is a mathematical object, it must be LaTeX.
-   - **NEVER use backticks (`)** for mathematical expressions or LaTeX commands. Backticks are for code only.
-   - **NO NESTED \ce**: Never write \ce{\ce{...}}. Use a single \ce{...} for the entire formula or equation.
+   - **NEVER use backticks (\\\`)** for mathematical expressions or LaTeX commands. Backticks are for code only.
+   - **NO NESTED \\\\ce**: Never write \\\\ce{\\\\ce{...}}. Use a single \\\\ce{...} for the entire formula or equation.
 
 7. VISUALS — Use the following for visual elements:
    a) TABLES: Use Markdown table syntax with pipes:
        | x | f(x) |
        |---|------|
        | 0 |  1   |
-   b) GRAPHS/DIAGRAMS: You MUST wrap all Mermaid code in triple backticks (\`\`\`mermaid ... \`\`\`).
+   b) GRAPHS/DIAGRAMS: You MUST wrap all Mermaid code in triple backticks (\\\`\\\`\\\`mermaid ... \\\`\\\`\\\`).
        NEVER output raw Mermaid code without backticks. 
        NEVER output plain text diagrams.
        If the diagram is too complex, use a clear Markdown table.
@@ -509,23 +509,23 @@ CRITICAL RULES:
      - Avoid redundant technical jargon — explain the physics/math simply.
    - Total points: Must sum exactly to the specified total.
 
-9. CHEMISTRY NOTATION: For all organic molecules, you MUST use \\ce{...}. Example: \\ce{CH3-CH2-OH}.
+9. CHEMISTRY NOTATION: For all organic molecules, you MUST use \\\\ce{...}. Example: \\\\ce{CH3-CH2-OH}.
 
 10. OUTPUT: Start your response with [ and end with ]. Output ONLY the raw JSON array — no prose, no markdown fences, no explanation.
 
 SOLUTION QUALITY — The corrigé must be readable at a glance:
 - Use "**Step 1:**", "**Step 2:**" headers.
 - Show the literal formula BEFORE putting numbers in.
-- End with a boxed final answer: "$\\\\boxed{result}$".
+- End with a boxed final answer: "$\\\\\\\\boxed{result}$".
 
 LATEX IN METHODOLOGY (CRITICAL — violations produce unreadable corrigés):
 - EVERY mathematical symbol, formula, equation, fraction, vector, or variable MUST be wrapped in $...$. No exceptions.
-- Fractions: $\\\\frac{d^2x}{dt^2}$ NOT "d2x/dt2" or "dt2d2x"
-- Vectors: $\\\\vec{F} = -kx\\\\vec{i}$ NOT "F→ = -kxi" or writing the arrow separately
-- Derivatives: $\\\\frac{d^2x}{dt^2} + \\\\frac{k}{m}x = 0$ NOT "d²x/dt² + k/m·x = 0"
-- Sums: $\\\\sum \\\\vec{F} = m\\\\vec{a}$ NOT "∑F = ma"
-- Period/constants: $T_0 = 2\\\\pi\\\\sqrt{\\\\frac{m}{k}}$ NOT "T0 = 2π√(m/k)"
-- Units inline: $k = 12{,}5 \\\\text{ N/m}$ NOT "k = 12,5 N/m" after a calculation
+- Fractions: $\\\\\\\\frac{d^2x}{dt^2}$ NOT "d2x/dt2" or "dt2d2x"
+- Vectors: $\\\\\\\\vec{F} = -kx\\\\\\\\vec{i}$ NOT "F→ = -kxi" or writing the arrow separately
+- Derivatives: $\\\\\\\\frac{d^2x}{dt^2} + \\\\\\\\frac{k}{m}x = 0$ NOT "d²x/dt² + k/m·x = 0"
+- Sums: $\\\\\\\\sum \\\\\\\\vec{F} = m\\\\\\\\vec{a}$ NOT "∑F = ma"
+- Period/constants: $T_0 = 2\\\\\\\\pi\\\\\\\\sqrt{\\\\\\\\frac{m}{k}}$ NOT "T0 = 2π√(m/k)"
+- Units inline: $k = 12{,}5 \\\\\\\\text{ N/m}$ NOT "k = 12,5 N/m" after a calculation
 - Never write subscripts as plain digits after a variable: always $x_m$, $T_0$, $E_c$ — never "xm", "T0", "Ec".
 
 BARÈME (mandatory for every exercise):
@@ -536,15 +536,15 @@ BARÈME (mandatory for every exercise):
 
 LAYOUT & CONTENT QUALITY:
 - **Markdown Tables**: Use standard Markdown table syntax for data comparisons, experimental results, or organized information.
-- **Graphs & Diagrams**: You cannot generate static image files (PNG/JPG). Instead, you MUST use Mermaid code blocks (\`\`\`mermaid ... \`\`\`) for logical diagrams (flowcharts, sequence diagrams).
-    - **MATHEMATICAL PLOTS**: For mathematical functions (e.g. $f(x) = \sin(x)$), DO NOT use Mermaid. Instead:
+- **Graphs & Diagrams**: You cannot generate static image files (PNG/JPG). Instead, you MUST use Mermaid code blocks (\\\`\\\`\\\`mermaid ... \\\`\\\`\\\`) for logical diagrams (flowcharts, sequence diagrams).
+    - **MATHEMATICAL PLOTS**: For mathematical functions (e.g. $f(x) = \\sin(x)$), DO NOT use Mermaid. Instead:
         1. Add the equation (e.g. "sin(x)") to the \`mathPlots\` array.
         2. Or use the tag \`[GRAPH: sin(x)]\` inside the \`statement\` to generate an AI-assisted visual.
     - Use \`flowchart TD\` for logical flows, processes, and experiments.
     - If a visual is absolutely too complex for Mermaid, use a LaTeX \`picture\` environment or a high-quality Markdown Table.
     - **NO NAKED DIAGRAMS**: Always wrap Mermaid code in triple backticks. Do not use generic keywords like "chart" without backticks.
 - **Layout Consistency**: If the user provided a reference document (Teacher notes or grounding data), observe its structure (e.g., header style, question numbering) and attempt to mimic it in the text output.
-- **Scientific notation**: Use KaTeX for math and \ce{...} for chemistry.
+- **Scientific notation**: Use KaTeX for math and \\\\ce{...} for chemistry.
 
 JSON schema for each exercise:
 {
@@ -570,7 +570,7 @@ JSON schema for each exercise:
   },
   "chapterIds": string[],
   "estimatedMinutes": number
-}`;
+}\`;
 }
 
 // ---------------------------------------------------------------------------
@@ -578,29 +578,29 @@ JSON schema for each exercise:
 // ---------------------------------------------------------------------------
 
 export function buildGenerateUserPrompt(context: ExamContext, extraContext?: string): string {
-  const difficultyBreakdown = `
-- Easy:   ${Math.round(context.difficultyMix.easy   * context.exerciseCount)} exercise(s) (${Math.round(context.difficultyMix.easy   * 100)}%)
-- Medium: ${Math.round(context.difficultyMix.medium * context.exerciseCount)} exercise(s) (${Math.round(context.difficultyMix.medium * 100)}%)
-- Hard:   ${Math.round(context.difficultyMix.hard   * context.exerciseCount)} exercise(s) (${Math.round(context.difficultyMix.hard   * 100)}%)`;
+  const difficultyBreakdown = \`
+- Easy:   \${Math.round(context.difficultyMix.easy   * context.exerciseCount)} exercise(s) (\${Math.round(context.difficultyMix.easy   * 100)}%)
+- Medium: \${Math.round(context.difficultyMix.medium * context.exerciseCount)} exercise(s) (\${Math.round(context.difficultyMix.medium * 100)}%)
+- Hard:   \${Math.round(context.difficultyMix.hard   * context.exerciseCount)} exercise(s) (\${Math.round(context.difficultyMix.hard   * 100)}%)\`;
 
-  return `Generate ${context.exerciseCount} exercises. Reply with ONLY a JSON array starting with [ and ending with ] — no markdown, no prose, no explanation. Output must be valid parseable JSON.
+  return \`Generate \${context.exerciseCount} exercises. Reply with ONLY a JSON array starting with [ and ending with ] — no markdown, no prose, no explanation. Output must be valid parseable JSON.
 
-Curriculum : ${context.curriculumId}
-Level      : ${context.levelId}
-Subject    : ${context.subject}
-Language   : ${context.language}
-Exam type  : ${context.examType}
-Duration   : ${context.duration} minutes
-Total points: ${context.totalPoints} (points must sum to exactly ${context.totalPoints})
-Difficulty : ${difficultyBreakdown}
-${context.teacherNotes ? `\nTeacher notes:\n${context.teacherNotes}` : ""}
-${context.templateType === "modern" 
-  ? "\nTEMPLATE: Use the standard Modern (Standard) layout. Ignore the visual layout of any uploaded documents — use them for content only." 
-  : `\nTEMPLATE: Extract and replicate the visual layout, header, and formatting from the uploaded document. Instructions: ${context.layoutPreferences || "Mimic the general header and question structure."}`}
-${context.visualPreference ? `\nVisual & Graph Requirements:\n${context.visualPreference}` : ""}
-${extraContext ? `\nDOMAIN DATA CONTEXT:\n${extraContext}` : ""}
+Curriculum : \${context.curriculumId}
+Level      : \${context.levelId}
+Subject    : \${context.subject}
+Language   : \${context.language}
+Exam type  : \${context.examType}
+Duration   : \${context.duration} minutes
+Total points: \${context.totalPoints} (points must sum to exactly \${context.totalPoints})
+Difficulty : \${difficultyBreakdown}
+\${context.teacherNotes ? \`\\nTeacher notes:\\n\${context.teacherNotes}\` : ""}
+\${context.templateType === "modern" 
+  ? "\\nTEMPLATE: Use the standard Modern (Standard) layout. Ignore the visual layout of any uploaded documents — use them for content only." 
+  : \`\\nTEMPLATE: Extract and replicate the visual layout, header, and formatting from the uploaded document. Instructions: \${context.layoutPreferences || "Mimic the general header and question structure."}\`}
+\${context.visualPreference ? \`\\nVisual & Graph Requirements:\\n\${context.visualPreference}\` : ""}
+\${extraContext ? \`\\nDOMAIN DATA CONTEXT:\\n\${extraContext}\` : ""}
 
-Return the JSON array now.`;
+Return the JSON array now.\`;
 }
 
 // ---------------------------------------------------------------------------
@@ -616,22 +616,22 @@ export function buildRegenerateExercisePrompt(
   const isUniversity = context.curriculumId === "university";
 
   const chapterBlock = isUniversity
-    ? `<course_context>University mode — use the teacher's course description for topic scope.</course_context>`
-    : `<selected_chapters>
-${buildChaptersSummary(context.curriculumId, context.levelId, context.subject, context.chapterIds)}
-</selected_chapters>`;
+    ? \`<course_context>University mode — use the teacher's course description for topic scope.</course_context>\`
+    : \`<selected_chapters>
+\${buildChaptersSummary(context.curriculumId, context.levelId, context.subject, context.chapterIds)}
+</selected_chapters>\`;
 
-  return `Generate a NEW, DIFFERENT replacement for exercise #${exerciseNumber}.
-Current difficulty: ${currentDifficulty}.${targetDifficulty ? `\nTarget difficulty: ${targetDifficulty}.` : " Keep the same difficulty but use fresh numbers and a different approach."}
+  return \`Generate a NEW, DIFFERENT replacement for exercise #\${exerciseNumber}.
+Current difficulty: \${currentDifficulty}.\${targetDifficulty ? \`\\nTarget difficulty: \${targetDifficulty}.\` : " Keep the same difficulty but use fresh numbers and a different approach."}
 
-Curriculum: ${context.curriculumId} | Level: ${context.levelId} | Subject: ${context.subject} | Language: ${context.language}
+Curriculum: \${context.curriculumId} | Level: \${context.levelId} | Subject: \${context.subject} | Language: \${context.language}
 
-${chapterBlock}
+\${chapterBlock}
 
 STRICT MONOLINGUALISM:
-- You MUST write the entire exercise in ${context.language} ONLY. 
+- You MUST write the entire exercise in \${context.language} ONLY. 
 - If the original exercise or subject data is in a different language, translate it fully.
 - NO mixed languages (e.g., no English terms in a French exam).
 
-Return ONLY a single JSON exercise object (not an array). No markdown, no prose, no explanation. Output must be valid parseable JSON.`;
+Return ONLY a single JSON exercise object (not an array). No markdown, no prose, no explanation. Output must be valid parseable JSON.\`;
 }
