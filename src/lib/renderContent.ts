@@ -202,6 +202,30 @@ export function renderContent(raw: string): string {
 
   // 2. Identify and placeholder-ize [IMAGE:] [GRAPH:] [VISUAL:] tags
   const visualBlocks: string[] = [];
+
+  // NEW: Catch-all for naked charts (xychart-beta or blocks starting with axis definitions)
+  // This handles the case where the AI outputs a chart config without backticks.
+  const nakedChartRegex = /(\n|^)(xychart-beta|title\s+".*?"\s*\n\s*x-axis|x-axis\s+".*?"\s*\[)([\s\S]*?)(?=\n\n|\n\*|\n[0-9]\.|(?:\n|^)```|$)/g;
+  text = text.replace(nakedChartRegex, (_match, prefix, firstLine, content) => {
+    const fullContent = (firstLine + content).trim();
+    if (!fullContent) return _match;
+
+    const idx = visualBlocks.length;
+    const uid = Math.random().toString(36).slice(2, 8);
+    // Create a clean description for the AI image generator
+    const cleanDesc = fullContent.replace(/\n/g, " ").replace(/\s+/g, " ").trim();
+    const safeDesc = cleanDesc.replace(/"/g, "&quot;");
+    
+    // We use the AI Image Generator as a high-quality fallback for these charts
+    const prompt = `Professional scientific chart: ${cleanDesc}. Minimalist, publication quality, white background, accurate axis and trends.`;
+    const src = `/api/image/generate?prompt=${encodeURIComponent(prompt)}&width=800&height=450&seed=${uid}`;
+
+    const html = `<div class="relative group my-6"><button data-action="remove-visual" data-type="tag" data-content="${safeDesc}" class="absolute top-2 right-2 z-20 w-6 h-6 rounded-full bg-white/90 backdrop-blur-sm border border-red-100 text-red-500 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center hover:bg-red-50 shadow-sm" title="Remove Visual"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button><div class="relative rounded-xl overflow-hidden border border-[var(--border)] bg-[var(--bg-subtle)] min-h-[140px] flex items-center justify-center"><img id="img-${uid}" src="${src}" alt="Scientific Chart" loading="lazy" class="w-full h-auto object-contain rounded-xl transition-opacity duration-500" style="opacity:0" onload="this.style.opacity='1'; document.getElementById('fb-${uid}').style.display='none'; document.getElementById('spin-${uid}').style.display='none';" onerror="this.style.display='none'; document.getElementById('fb-${uid}').style.display='flex'; document.getElementById('spin-${uid}').style.display='none';"/><div id="spin-${uid}" class="absolute inset-0 flex items-center justify-center bg-[var(--bg-subtle)]"><div class="flex flex-col items-center gap-2"><svg class="animate-spin w-5 h-5 text-[var(--accent)]" viewBox="0 0 24 24" fill="none"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg><span class="text-[9px] font-bold uppercase tracking-widest text-[var(--text-tertiary)] animate-pulse">Generating Chart...</span></div></div><div id="fb-${uid}" class="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-[var(--bg-subtle)] hidden"><span class="text-xl opacity-40">📊</span><p class="text-[10px] font-bold uppercase tracking-tighter text-[var(--text-tertiary)]">Visual Representation</p></div></div></div>`;
+    
+    visualBlocks.push(html);
+    return (prefix || "") + `%%VISUAL_${idx}%%`;
+  });
+
   text = text.replace(/\[(?:IMAGE|GRAPH|VISUAL):\s*([\s\S]*?)\]/gi, (_match, description) => {
     const idx = visualBlocks.length;
     const desc = description.trim();
@@ -213,7 +237,6 @@ export function renderContent(raw: string): string {
       + ", professional scientific diagram, minimalist vector, publication quality, white background";
     const src = `/api/image/generate?prompt=${encodeURIComponent(prompt)}&width=800&height=450&seed=${uid}`;
 
-    // We keep the HTML compact (no internal newlines) to prevent the newline-to-br logic from breaking attributes
     const html = `<div class="relative group my-6"><button data-action="remove-visual" data-type="tag" data-content="[${_match.split(':')[0].slice(1).toUpperCase()}: ${desc.replace(/"/g, "&quot;")}]" class="absolute top-2 right-2 z-20 w-6 h-6 rounded-full bg-white/90 backdrop-blur-sm border border-red-100 text-red-500 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center hover:bg-red-50 shadow-sm" title="Remove Visual"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button><div class="relative rounded-xl overflow-hidden border border-[var(--border)] bg-[var(--bg-subtle)] min-h-[140px] flex items-center justify-center"><img id="img-${uid}" src="${src}" alt="${safeDesc}" loading="lazy" class="w-full h-auto object-contain rounded-xl transition-opacity duration-500" style="opacity:0" onload="this.style.opacity='1'; document.getElementById('fb-${uid}').style.display='none'; document.getElementById('spin-${uid}').style.display='none';" onerror="this.style.display='none'; document.getElementById('fb-${uid}').style.display='flex'; document.getElementById('spin-${uid}').style.display='none';"/><div id="spin-${uid}" class="absolute inset-0 flex items-center justify-center bg-[var(--bg-subtle)]"><div class="flex flex-col items-center gap-2"><svg class="animate-spin w-5 h-5 text-[var(--accent)]" viewBox="0 0 24 24" fill="none"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg><span class="text-[9px] font-bold uppercase tracking-widest text-[var(--text-tertiary)] animate-pulse">Generating Visual...</span></div></div><div id="fb-${uid}" class="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-[var(--bg-subtle)] hidden"><span class="text-xl opacity-40">📊</span><p class="text-[10px] font-bold uppercase tracking-tighter text-[var(--text-tertiary)]">Visual Representation</p></div></div><p class="text-[9px] text-center text-[var(--text-tertiary)] italic mt-2 opacity-60">${safeDesc.length > 100 ? safeDesc.slice(0, 100) + "…" : safeDesc}</p></div>`;
     
     visualBlocks.push(html);
