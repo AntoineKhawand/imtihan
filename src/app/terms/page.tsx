@@ -91,7 +91,7 @@ export default function TermsPage() {
                 <ul>
                   <li>You are responsible for maintaining the confidentiality of your login credentials.</li>
                   <li>You are responsible for all activity that occurs under your account.</li>
-                  <li>Notify us immediately at <a href="mailto:support@imtihan.live" className="text-[var(--accent)] hover:underline">support@imtihan.live</a> if you suspect unauthorized access.</li>
+                  <li>Notify us immediately at <a href="mailto:admin@imtihan.live" className="text-[var(--accent)] hover:underline">admin@imtihan.live</a> if you suspect unauthorized access.</li>
                 </ul>
               </Section>
 
@@ -159,8 +159,8 @@ export default function TermsPage() {
               <Section title="13. Contact" id="contact">
                 <p>
                   For questions about these Terms, contact us at:{" "}
-                  <a href="mailto:legal@imtihan.live" className="text-[var(--accent)] hover:underline">
-                    legal@imtihan.live
+                  <a href="mailto:admin@imtihan.live" className="text-[var(--accent)] hover:underline">
+                    admin@imtihan.live
                   </a>
                 </p>
               </Section>

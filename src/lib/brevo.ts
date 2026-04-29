@@ -1,5 +1,5 @@
 const BREVO_API = "https://api.brevo.com/v3/smtp/email";
-const SENDER = { name: "Imtihan", email: "billing@imtihan.live" };
+const SENDER = { name: "Imtihan", email: "admin@imtihan.live" };
 
 export interface BrevoAttachment {
   name: string;
