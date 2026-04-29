@@ -201,6 +201,17 @@ export function renderContent(raw: string): string {
   // 2. Identify and placeholder-ize [IMAGE:] [GRAPH:] [VISUAL:] tags
   // We do this EARLY to prevent parseNakedMath from wrapping parts of the prompt in math delimiters.
   const visualBlocks: string[] = [];
+  text = text.replace(/\[(?:IMAGE|GRAPH|VISUAL):\s*([\s\S]*?)\]/gi, (_match, description) => {
+    const idx = visualBlocks.length;
+    const desc = description.trim();
+    if (!desc) return "";
+    
+    const uid = Math.random().toString(36).slice(2, 8);
+    const safeDesc = desc.replace(/"/g, "&quot;");
+    const prompt = (desc.length > 200 ? desc.slice(0, 200) : desc)
+      + ", professional scientific diagram, minimalist vector, publication quality, white background";
+    const src = `/api/image/generate?prompt=${encodeURIComponent(prompt)}&width=800&height=450&seed=${uid}`;
+
     const html = `
       <div class="relative group my-6">
         <button 
