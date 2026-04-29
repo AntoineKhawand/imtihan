@@ -483,7 +483,9 @@ CRITICAL RULES:
    - FRACTIONS & DERIVATIVES: Use KaTeX $\frac{d^2x}{dt^2}$ or $\frac{1}{2}$. NEVER write "dt2d2x" or "1/2" in plain text.
    - SYSTEMS OF EQUATIONS: Use KaTeX \begin{cases} ... \end{cases} for all parametric equations or systems.
    - COORDINATES: Use standard notation $(x; y; z)$ or $A(x; y; z)$.
-   - ZERO CODE POLICY: Every single variable, equation, and unit must be wrapped in $...$. If it is a mathematical object, it must be LaTeX. If you output plain text like "dt2d2x", the system will reject your output.
+   - ZERO CODE POLICY: Every single variable, equation, and unit must be wrapped in $...$. If it is a mathematical object, it must be LaTeX.
+   - **NEVER use backticks (`)** for mathematical expressions or LaTeX commands. Backticks are for code only.
+   - **NO NESTED \ce**: Never write \ce{\ce{...}}. Use a single \ce{...} for the entire formula or equation.
 
 7. VISUALS — Use the following for visual elements:
    a) TABLES: Use Markdown table syntax with pipes:

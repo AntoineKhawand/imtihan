@@ -355,6 +355,29 @@ export async function generateWordDocument(
 ): Promise<Buffer> {
   const subjectName = SUBJECT_LABELS[context.subject] ?? context.subject;
   const lang = context.language === "french" ? "fr" : context.language === "arabic" ? "ar" : "en";
+
+  // Pre-process "Code Leaks" and AI errors in all exercises before generating doc
+  exercises.forEach(ex => {
+    const cleanup = (str: string) => {
+      if (!str) return str;
+      // Convert backticks containing LaTeX triggers to math blocks
+      let s = str.replace(/`([^`]*[\\^_{][^`]*)`/g, "$$$1$$");
+      // Fix nested \ce{\ce{...}} hallucinations
+      s = s.replace(/\\ce\s*\{(?:\s*\\ce\s*\{([\s\S]*?)\}|([\s\S]*?))\}/g, (_m, i1, i2) => {
+        return `\\ce{${(i1 || i2 || "").trim()}}`;
+      });
+      return s;
+    };
+    ex.statement = cleanup(ex.statement);
+    if (ex.subQuestions) {
+      ex.subQuestions.forEach(sq => { sq.statement = cleanup(sq.statement); });
+    }
+    if (ex.solution) {
+      ex.solution.finalAnswer = cleanup(ex.solution.finalAnswer);
+      ex.solution.methodology = cleanup(ex.solution.methodology);
+    }
+  });
+
   const isArabic = lang === "ar";
   const exerciseWord = lang === "fr" ? "Exercice" : lang === "ar" ? "تمرين" : "Exercise";
   const pointsWord = lang === "ar" ? "نقاط" : "points";

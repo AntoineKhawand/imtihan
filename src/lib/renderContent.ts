@@ -178,6 +178,14 @@ export function renderContent(raw: string): string {
   if (!raw) return "";
   let text = raw.replace(/\\n/g, "\n").replace(/\r\n/g, "\n").replace(/\n{3,}/g, "\n\n");
 
+  // 0. Pre-process "Code Leaks" and AI errors
+  // Convert backticks containing LaTeX triggers (\, ^, _, {) to math blocks
+  text = text.replace(/`([^`]*[\\^_{][^`]*)`/g, "$$$1$$");
+  // Fix nested \ce{\ce{...}} hallucinations
+  text = text.replace(/\\ce\s*\{(?:\s*\\ce\s*\{([\s\S]*?)\}|([\s\S]*?))\}/g, (_match, inner1, inner2) => {
+    return `\\ce{${(inner1 || inner2 || "").trim()}}`;
+  });
+
   // 1. Identify all Mermaid blocks (both fenced and naked)
   const mermaidBlocks: Array<{ code: string; raw: string }> = [];
   // Removed generic "chart" as it causes false positives with plain text descriptions.
