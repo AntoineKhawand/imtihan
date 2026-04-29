@@ -19,8 +19,8 @@ export function MathPlot({ equation, title, width = 600, height = 400 }: MathPlo
     // If no equation, just render a grid
     const data = equation.trim() ? [{
       fn: equation.replace(/^(y|f\(x\))\s*=\s*/i, "").trim(),
-      sampler: "builtIn",
-      graphType: "polyline",
+      sampler: "builtIn" as const,
+      graphType: "polyline" as const,
     }] : [];
 
     try {
