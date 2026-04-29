@@ -461,6 +461,7 @@ export default function GeneratePage() {
                     onEdit={handleEdit}
                     onSaveToBank={handleSaveToBank}
                     onTransform={handleTransform}
+                    onUpdate={handleEditorSave}
                     savedToBank={savedIds.has(exercise.id)}
                     isRegenerating={regeneratingId === exercise.id || transformingId === exercise.id}
                     defaultShowSolution={true}

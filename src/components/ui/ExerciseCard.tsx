@@ -48,6 +48,7 @@ interface ExerciseCardProps {
   onRegenerate: (id: string, targetDifficulty?: "easy" | "medium" | "hard") => Promise<void>;
   onRemove: (id: string) => void;
   onEdit?: (exercise: Exercise) => void;
+  onUpdate?: (exercise: Exercise) => void;
   onSaveToBank?: (exercise: Exercise) => void;
   onTransform?: (id: string, type: "table" | "visual" | "image" | "plot", prompt?: string) => Promise<void>;
   isRegenerating?: boolean;
@@ -62,6 +63,7 @@ export function ExerciseCard({
   onRegenerate,
   onRemove,
   onEdit,
+  onUpdate,
   onSaveToBank,
   onTransform,
   isRegenerating = false,
@@ -200,6 +202,27 @@ export function ExerciseCard({
   const exerciseLabel = language === "french" ? "Exercice" : "Exercise";
   
 
+  function handleRemovePlot(idx: number) {
+    if (!onUpdate || !exercise.mathPlots) return;
+    const nextPlots = exercise.mathPlots.filter((_, i) => i !== idx);
+    onUpdate({ ...exercise, mathPlots: nextPlots });
+  }
+
+  function handleClearVisuals() {
+    if (!onUpdate) return;
+    // Remove Mermaid blocks and [IMAGE/GRAPH/VISUAL] tags
+    const cleanStatement = exercise.statement
+      .replace(/```mermaid[\s\S]*?```/g, "")
+      .replace(/\[(?:IMAGE|GRAPH|VISUAL):[\s\S]*?\]/gi, "")
+      .trim();
+    
+    onUpdate({
+      ...exercise,
+      statement: cleanStatement,
+      mathPlots: [],
+    });
+  }
+
   return (
     <div
       className={cn(
@@ -272,6 +295,14 @@ export function ExerciseCard({
                 title="Generate AI Illustration"
               >
                 <Sparkles size={12} />
+              </button>
+              <div className="w-px h-4 bg-[var(--border)] mx-1" />
+              <button
+                onClick={handleClearVisuals}
+                className="w-7 h-7 rounded-md flex items-center justify-center text-[var(--text-tertiary)] hover:text-[var(--danger)] hover:bg-red-50 transition-all"
+                title="Clear all visuals (Plots, Diagrams, Images)"
+              >
+                <Trash2 size={12} />
               </button>
             </div>
           )}
@@ -362,7 +393,16 @@ export function ExerciseCard({
           {exercise.mathPlots && exercise.mathPlots.length > 0 && (
             <div className="space-y-4">
               {exercise.mathPlots.map((plot, i) => (
-                <MathPlot key={i} equation={plot} />
+                <div key={i} className="relative group">
+                  <button
+                    onClick={() => handleRemovePlot(i)}
+                    className="absolute top-2 right-2 z-10 w-6 h-6 rounded-full bg-white/80 backdrop-blur-sm border border-red-100 text-red-500 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center hover:bg-red-50 shadow-sm"
+                    title="Remove Plot"
+                  >
+                    <X size={12} />
+                  </button>
+                  <MathPlot equation={plot} />
+                </div>
               ))}
             </div>
           )}
