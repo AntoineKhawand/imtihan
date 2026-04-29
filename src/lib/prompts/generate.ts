@@ -455,9 +455,9 @@ ${fewShotExample}
 ` : ""}
 ${chapterBlock}
 
+${hasDocument ? `
 - Vocabulary, notation, and level of rigor must match the document, but **EVERY WORD must be in the target language (${context.language})**.
-- TRANSLATION: If the uploaded document is in a different language than ${context.language}, you MUST translate all contexts, scenarios, and scientific terminology into ${context.language}. DO NOT leave any part of the source text in its original language.
-` : ""}
+- TRANSLATION: If the uploaded document is in a different language than ${context.language}, you MUST translate all contexts, scenarios, and scientific terminology into ${context.language}. DO NOT leave any part of the source text in its original language.` : ""}
 ACADEMIC RESEARCH & VERIFICATION (MANDATORY):
 - Before generating any exercise involving physics, chemistry, or mathematics, you must simulate a "check the web" verification phase.
 - Cross-reference all formulas, constants, and notations against authoritative academic sources (e.g., NIST, IUPAC, CERN, or standard official textbooks for the specified curriculum like Bac Français or IB).
