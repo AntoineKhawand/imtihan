@@ -72,8 +72,8 @@ export function ExerciseCard({
   const [showMathTool, setShowMathTool] = useState(false);
   const [mathTab, setMathTab] = useState<"expr" | "stats" | "chem" | "const">("expr");
 
-  const [showVisualPrompt, setShowVisualPrompt] = useState(false);
-  const [visualPrompt, setVisualPrompt] = useState("");
+  const [transformType, setTransformType] = useState<"visual" | "image" | null>(null);
+  const [transformPrompt, setTransformPrompt] = useState("");
 
   // Expression checker (symbolic)
   const [mathOp, setMathOp] = useState("simplify");
@@ -255,14 +255,14 @@ export function ExerciseCard({
                 <Table size={13} />
               </button>
               <button
-                onClick={() => onTransform(exercise.id, "visual")}
+                onClick={() => { setTransformType("visual"); setTransformPrompt(""); }}
                 className="w-7 h-7 rounded-md flex items-center justify-center text-[var(--text-tertiary)] hover:text-[var(--accent)] hover:bg-white transition-all"
                 title="Add Diagram / Graph (Mermaid)"
               >
                 <ImageIcon size={13} />
               </button>
               <button
-                onClick={() => setShowVisualPrompt(true)}
+                onClick={() => { setTransformType("image"); setTransformPrompt(""); }}
                 className="w-7 h-7 rounded-md flex items-center justify-center text-[var(--text-tertiary)] hover:text-[var(--accent)] hover:bg-white transition-all"
                 title="Generate AI Illustration"
               >
@@ -380,17 +380,19 @@ export function ExerciseCard({
         </div>
       </div>
 
-      {/* AI Image Prompt Input */}
-      {showVisualPrompt && (
+      {/* AI Visual Prompt Input */}
+      {transformType && (
         <div className="px-6 pb-4 animate-in fade-in slide-in-from-top-2 duration-300">
           <div className="p-3.5 rounded-xl border border-[var(--accent)]/30 bg-[var(--accent-light)]/30 space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Sparkles size={13} className="text-[var(--accent)]" />
-                <p className="text-[11px] font-bold uppercase tracking-wider text-[var(--accent)]">Request AI Illustration</p>
+                {transformType === "image" ? <Sparkles size={13} className="text-[var(--accent)]" /> : <ImageIcon size={13} className="text-[var(--accent)]" />}
+                <p className="text-[11px] font-bold uppercase tracking-wider text-[var(--accent)]">
+                  {transformType === "image" ? "Request AI Illustration" : "Add Graph / Diagram"}
+                </p>
               </div>
               <button 
-                onClick={() => setShowVisualPrompt(false)}
+                onClick={() => setTransformType(null)}
                 className="text-[var(--text-tertiary)] hover:text-[var(--text)] transition-colors"
               >
                 <X size={14} />
@@ -400,35 +402,38 @@ export function ExerciseCard({
               <input
                 type="text"
                 autoFocus
-                value={visualPrompt}
-                onChange={(e) => setVisualPrompt(e.target.value)}
+                value={transformPrompt}
+                onChange={(e) => setTransformPrompt(e.target.value)}
                 onKeyDown={(e) => {
-                  if (e.key === "Enter" && visualPrompt.trim() && onTransform) {
-                    onTransform(exercise.id, "image", visualPrompt.trim());
-                    setShowVisualPrompt(false);
-                    setVisualPrompt("");
+                  if (e.key === "Enter" && onTransform) {
+                    onTransform(exercise.id, transformType, transformPrompt.trim());
+                    setTransformType(null);
                   }
                 }}
-                placeholder="e.g. A photo of a titration setup, a landscape showing erosion..."
+                placeholder={transformType === "image" 
+                  ? "e.g. A photo of a titration setup, human heart anatomy..." 
+                  : "e.g. Plot f(x)=sin(x), show a bar chart of the values..."
+                }
                 className="flex-1 h-9 px-3 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-sm text-[var(--text)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] transition-all"
               />
               <button
                 onClick={() => {
-                  if (visualPrompt.trim() && onTransform) {
-                    onTransform(exercise.id, "image", visualPrompt.trim());
-                    setShowVisualPrompt(false);
-                    setVisualPrompt("");
+                  if (onTransform) {
+                    onTransform(exercise.id, transformType, transformPrompt.trim());
+                    setTransformType(null);
                   }
                 }}
-                disabled={!visualPrompt.trim()}
-                className="h-9 px-4 rounded-lg bg-[var(--accent)] text-white text-xs font-semibold hover:bg-[var(--accent)]/90 disabled:opacity-50 transition-all flex items-center gap-2"
+                className="h-9 px-4 rounded-lg bg-[var(--accent)] text-white text-xs font-semibold hover:bg-[var(--accent)]/90 transition-all flex items-center gap-2"
               >
                 <Zap size={13} />
-                Generate
+                Add
               </button>
             </div>
             <p className="text-[10px] text-[var(--text-tertiary)] leading-relaxed italic">
-              Describe the illustration or photo you need. Imtihan AI will generate a high-quality prompt and insert the image directly into the question.
+              {transformType === "image" 
+                ? "Describe the illustration you need. Leave empty to let the AI decide based on the question."
+                : "Describe the graph or diagram you want to plot. Leave empty to auto-generate from data."
+              }
             </p>
           </div>
         </div>
