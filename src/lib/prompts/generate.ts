@@ -19,7 +19,8 @@ const LANGUAGE_INSTRUCTIONS: Record<string, string> = {
 - Use international SI notation (m s⁻¹, N, J, mol dm⁻³).
 - Use "Given:" or "Data:" before providing constants.
 - British/international spelling preferred (centre, colour).
-- MATH & CHEMISTRY: Use KaTeX for all math and chemical formulas. Wrap math in $...$ (e.g. $x^2$, $K_a$). Use \\ce{...} for chemical formulas (e.g. \\ce{H2O}).`,
+- MATH & CHEMISTRY: Use KaTeX for all math and chemical formulas. Wrap math in $...$ (e.g. $x^2$, $K_a$). Use \ce{...} for chemical formulas (e.g. \ce{H2O}).
+- STRICT MONOLINGUALISM: The entire exam must be in English only. Even if the source material is in French or Arabic, you MUST translate every word into English.`,
 
   arabic: `Write the entire exam in Modern Standard Arabic (MSA).
 - All prose, instructions, and labels must be in Arabic.
@@ -454,13 +455,8 @@ ${fewShotExample}
 ` : ""}
 ${chapterBlock}
 
-${hasDocument ? `DOCUMENT GROUNDING:
-You have been given a document uploaded by the teacher (textbook chapter, past exam, or course notes).
-- Read it carefully before generating any question.
-- Draw numerical values, formulas, diagrams, and context directly from that document when possible.
-- Questions should feel like they were written specifically for students who studied this document.
-- If the document contains exercises or examples, do NOT copy them verbatim — transform them (different numbers, different variable, different scenario) while keeping the same concept.
-- Vocabulary, notation, and level of rigor must match the document.
+- Vocabulary, notation, and level of rigor must match the document, but **EVERY WORD must be in the target language (${context.language})**.
+- TRANSLATION: If the uploaded document is in a different language than ${context.language}, you MUST translate all contexts, scenarios, and scientific terminology into ${context.language}. DO NOT leave any part of the source text in its original language.
 ` : ""}
 ACADEMIC RESEARCH & VERIFICATION (MANDATORY):
 - Before generating any exercise involving physics, chemistry, or mathematics, you must simulate a "check the web" verification phase.
@@ -468,6 +464,12 @@ ACADEMIC RESEARCH & VERIFICATION (MANDATORY):
 - Ensure the notation matches the curriculum exactly (e.g., use $E_c$ for kinetic energy in French systems, $K$ for IB).
 - If you are unsure of a symbol or notation for a specific curriculum, default to the most rigorous international academic standard.
 - CRITICAL: Never guess a formula. If the problem involves complex physical laws (e.g., Maxwell's equations, relativity, quantum mechanics), ensure the symbols are perfectly consistent with the latest academic publications.
+
+STRICT MONOLINGUALISM (ZERO TOLERANCE FOR MIXED LANGUAGES):
+1. **NO FRANGALIS / ARABGLISH**: Do not mix English and French, or English and Arabic.
+2. **TOTAL TRANSLATION**: Every label, description, context, and instruction must be in ${context.language} only.
+3. **NO PARENTHESES**: Do not provide translations in parentheses (e.g., do NOT write "L'énergie cinétique (Kinetic energy)").
+4. **CONSISTENCY**: If the target language is French, use "Exercice", "Données", "Calculer". If English, use "Question", "Data", "Calculate". If Arabic, use "تمرين", "المعطيات", "احسب".
 
 CRITICAL RULES:
 1. All calculations must be correct — verify every numerical answer before writing it.
