@@ -6,7 +6,7 @@ import { sanitizeError, createSecurityHeaders } from "@/lib/security";
 
 const RequestSchema = z.object({
   exercise: z.any(),
-  type: z.enum(["table", "visual", "image"]),
+  type: z.enum(["table", "visual", "image", "plot"]),
   language: z.string(),
   prompt: z.string().optional(),
 });
@@ -51,6 +51,14 @@ export async function POST(request: NextRequest) {
       - YOUR GOAL: Expand the request into a detailed, professional prompt for FLUX. Describe exactly what should be visible to ensure relevance.
       - STYLE: Academic, clean vector illustration, minimalist, high-fidelity, white background.
       - Keep JSON EXACTLY the same, only modify 'statement'.`;
+    } else if (type === "plot") {
+      const plotReq = prompt ? `The user wants: "${prompt}"` : `Plot the main function described in the problem.`;
+      instruction = `- Task: Identify the mathematical function or coordinate grid requested.
+      - ${plotReq}
+      - OUTPUT: Add the equation string (e.g., "sin(x)", "x^2", "2*x + 1") to a NEW property in the JSON called "mathPlots". "mathPlots" is an array of strings.
+      - BLANK GRID: If the user wants a grid for the student to draw on (e.g. prompt "blank grid", "for student", "empty"), add an empty string "" to mathPlots.
+      - FORMAT: Use standard mathematical notation compatible with function-plot/D3 (e.g., x^2, sin(x), exp(x)).
+      - Keep the rest of the JSON exactly the same.`;
     }
 
     const systemPrompt = `You are an expert exam designer and editor. 

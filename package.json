@@ -26,6 +26,7 @@
     "firebase": "^11.10.0",
     "firebase-admin": "^13.0.2",
     "framer-motion": "^11.15.0",
+    "function-plot": "^1.25.4",
     "geist": "^1.7.0",
     "katex": "^0.16.45",
     "lucide-react": "^0.468.0",

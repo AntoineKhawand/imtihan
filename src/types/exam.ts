@@ -85,6 +85,8 @@ export interface Exercise {
   chapterIds: string[];
   /** Estimated time for a student to solve, in minutes */
   estimatedMinutes: number;
+  /** Optional mathematical function plots */
+  mathPlots?: string[];
 }
 
 export interface Exam {

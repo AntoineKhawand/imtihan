@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { renderContent } from "@/lib/renderContent";
 import type { Exercise } from "@/types/exam";
+import { MathPlot } from "./MathPlot";
 import {
   RefreshCw,
   ChevronDown,
@@ -20,6 +21,7 @@ import {
   Table,
   Calculator,
   Image as ImageIcon,
+  LineChart,
   X,
   Sparkles,
 } from "lucide-react";
@@ -47,7 +49,7 @@ interface ExerciseCardProps {
   onRemove: (id: string) => void;
   onEdit?: (exercise: Exercise) => void;
   onSaveToBank?: (exercise: Exercise) => void;
-  onTransform?: (id: string, type: "table" | "visual" | "image", prompt?: string) => Promise<void>;
+  onTransform?: (id: string, type: "table" | "visual" | "image" | "plot", prompt?: string) => Promise<void>;
   isRegenerating?: boolean;
   savedToBank?: boolean;
   defaultShowSolution?: boolean;
@@ -72,7 +74,7 @@ export function ExerciseCard({
   const [showMathTool, setShowMathTool] = useState(false);
   const [mathTab, setMathTab] = useState<"expr" | "stats" | "chem" | "const">("expr");
 
-  const [transformType, setTransformType] = useState<"visual" | "image" | null>(null);
+  const [transformType, setTransformType] = useState<"visual" | "image" | "plot" | null>(null);
   const [transformPrompt, setTransformPrompt] = useState("");
 
   // Expression checker (symbolic)
@@ -198,7 +200,6 @@ export function ExerciseCard({
   const exerciseLabel = language === "french" ? "Exercice" : "Exercise";
   
 
-
   return (
     <div
       className={cn(
@@ -224,17 +225,14 @@ export function ExerciseCard({
               </span>
             </div>
             <div className="flex items-center gap-2 mt-1">
-              {/* Difficulty badge */}
               <span className={cn("inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium", difficulty.color)}>
                 <span className={cn("w-1.5 h-1.5 rounded-full", difficulty.dot)} />
                 {difficulty.label}
               </span>
-              {/* Points */}
               <span className="inline-flex items-center gap-1 text-xs text-[var(--text-tertiary)]">
                 <Award size={11} />
                 {exercise.points} pts
               </span>
-              {/* Time */}
               <span className="inline-flex items-center gap-1 text-xs text-[var(--text-tertiary)]">
                 <Clock size={11} />
                 ~{exercise.estimatedMinutes} min
@@ -255,9 +253,16 @@ export function ExerciseCard({
                 <Table size={13} />
               </button>
               <button
+                onClick={() => { setTransformType("plot"); setTransformPrompt(""); }}
+                className="w-7 h-7 rounded-md flex items-center justify-center text-[var(--text-tertiary)] hover:text-[var(--accent)] hover:bg-white transition-all"
+                title="Add Math Plot (SVG)"
+              >
+                <LineChart size={13} />
+              </button>
+              <button
                 onClick={() => { setTransformType("visual"); setTransformPrompt(""); }}
                 className="w-7 h-7 rounded-md flex items-center justify-center text-[var(--text-tertiary)] hover:text-[var(--accent)] hover:bg-white transition-all"
-                title="Add Diagram / Graph (Mermaid)"
+                title="Add Diagram (Mermaid)"
               >
                 <ImageIcon size={13} />
               </button>
@@ -353,6 +358,15 @@ export function ExerciseCard({
 
       <div className={cn("p-6 pt-0 space-y-6", language === "arabic" && "text-right")} dir={language === "arabic" ? "rtl" : "ltr"}>
         <div className="space-y-4">
+          {/* Math Plots */}
+          {exercise.mathPlots && exercise.mathPlots.length > 0 && (
+            <div className="space-y-4">
+              {exercise.mathPlots.map((plot, i) => (
+                <MathPlot key={i} equation={plot} />
+              ))}
+            </div>
+          )}
+
           <div
             className="text-[15px] text-[var(--text)] leading-relaxed"
             dangerouslySetInnerHTML={{ __html: renderContent(exercise.statement) }}
@@ -386,9 +400,15 @@ export function ExerciseCard({
           <div className="p-3.5 rounded-xl border border-[var(--accent)]/30 bg-[var(--accent-light)]/30 space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                {transformType === "image" ? <Sparkles size={13} className="text-[var(--accent)]" /> : <ImageIcon size={13} className="text-[var(--accent)]" />}
+                {transformType === "image" ? (
+                  <Sparkles size={13} className="text-[var(--accent)]" />
+                ) : transformType === "plot" ? (
+                  <LineChart size={13} className="text-[var(--accent)]" />
+                ) : (
+                  <ImageIcon size={13} className="text-[var(--accent)]" />
+                )}
                 <p className="text-[11px] font-bold uppercase tracking-wider text-[var(--accent)]">
-                  {transformType === "image" ? "Request AI Illustration" : "Add Graph / Diagram"}
+                  {transformType === "image" ? "Request AI Illustration" : transformType === "plot" ? "Plot Mathematical Graph" : "Add Diagram"}
                 </p>
               </div>
               <button 
@@ -412,7 +432,9 @@ export function ExerciseCard({
                 }}
                 placeholder={transformType === "image" 
                   ? "e.g. A photo of a titration setup, human heart anatomy..." 
-                  : "e.g. Plot f(x)=sin(x), show a bar chart of the values..."
+                  : transformType === "plot"
+                  ? "e.g. sin(x), x^2 + 2x - 5 (leave empty for a blank grid)"
+                  : "e.g. flowchart, sequence diagram..."
                 }
                 className="flex-1 h-9 px-3 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-sm text-[var(--text)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] transition-all"
               />
@@ -432,7 +454,9 @@ export function ExerciseCard({
             <p className="text-[10px] text-[var(--text-tertiary)] leading-relaxed italic">
               {transformType === "image" 
                 ? "Describe the illustration you need. Leave empty to let the AI decide based on the question."
-                : "Describe the graph or diagram you want to plot. Leave empty to auto-generate from data."
+                : transformType === "plot"
+                ? "Enter a function like sin(x) or x^2. Leave empty to provide a blank grid for students."
+                : "Describe the diagram or flowchart you want to add."
               }
             </p>
           </div>
