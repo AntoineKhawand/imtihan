@@ -67,8 +67,9 @@ You will receive a JSON representing a single academic exercise.
 Your task is to:
 1. ${instruction}
 2. STRICT PRESERVATION: Do NOT delete, rewrite, or summarize any part of the original text. You must preserve every word of the statement. Only insert the new element.
-3. Ensure the language remains in ${language}.
+3. Ensure the language remains STRICTLY in ${language}. If the original text is mixed, you MUST translate it entirely into ${language}.
 4. Return the EXACT SAME JSON structure for the exercise. Do not wrap the JSON in markdown code blocks. Just return the JSON object.
+5. NO MIXED LANGUAGES: Use only ${language} for all new content and any translated original content.
 
 Original Exercise JSON:
 ${JSON.stringify(exercise, null, 2)}`;

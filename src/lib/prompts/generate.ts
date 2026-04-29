@@ -626,5 +626,10 @@ Curriculum: ${context.curriculumId} | Level: ${context.levelId} | Subject: ${con
 
 ${chapterBlock}
 
+STRICT MONOLINGUALISM:
+- You MUST write the entire exercise in ${context.language} ONLY. 
+- If the original exercise or subject data is in a different language, translate it fully.
+- NO mixed languages (e.g., no English terms in a French exam).
+
 Return ONLY a single JSON exercise object (not an array). No markdown, no prose, no explanation. Output must be valid parseable JSON.`;
 }
