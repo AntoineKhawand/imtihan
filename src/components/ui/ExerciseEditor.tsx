@@ -1,13 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { X, Plus, Trash2, Save, Eye, Edit3 } from "lucide-react";
+import { Columns, Eye, Edit3, X, Plus, Trash2, Save, LineChart } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Exercise } from "@/types/exam";
 import { renderContent } from "@/lib/renderContent";
 import { useEffect, useRef } from "react";
 import { MathPlot } from "./MathPlot";
-import { Columns, Eye, Edit3, X, Plus, Trash2, Save, LineChart } from "lucide-react";
 
 interface ExerciseEditorProps {
   exercise: Exercise;
