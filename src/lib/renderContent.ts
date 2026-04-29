@@ -179,7 +179,7 @@ export function renderContent(raw: string): string {
   let text = raw.replace(/\\n/g, "\n").replace(/\r\n/g, "\n").replace(/\n{3,}/g, "\n\n");
 
   // 1. Identify all Mermaid blocks (both fenced and naked)
-  const mermaidBlocks: string[] = [];
+  const mermaidBlocks: Array<{ code: string; raw: string }> = [];
   // Removed generic "chart" as it causes false positives with plain text descriptions.
   const mermaidPatterns = ["graph\\s", "flowchart\\s", "sequenceDiagram", "gantt", "classDiagram", "stateDiagram", "pie\\s", "erDiagram", "journey", "gitGraph", "requirementDiagram", "mindmap", "timeline", "block-beta", "quadrantChart"];
   const patternStr = mermaidPatterns.join("|");
@@ -187,7 +187,7 @@ export function renderContent(raw: string): string {
   // First, handle standard fenced blocks
   text = text.replace(/```mermaid\n?([\s\S]*?)```/g, (_match, code: string) => {
     const idx = mermaidBlocks.length;
-    mermaidBlocks.push(code.trim());
+    mermaidBlocks.push({ code: code.trim(), raw: _match });
     return `%%MERMAID_${idx}%%`;
   });
 
@@ -196,7 +196,8 @@ export function renderContent(raw: string): string {
   const nakedMermaidRegex = new RegExp(`(\\n|^)(${patternStr})([\\s\\S]*?)(?=\\n\\n|\\n\\*\\*|\\n[0-9]\\.|$)`, "g");
   text = text.replace(nakedMermaidRegex, (_match, prefix, keyword, content) => {
     const idx = mermaidBlocks.length;
-    mermaidBlocks.push((keyword + content).trim());
+    const rawContent = keyword + content;
+    mermaidBlocks.push({ code: rawContent.trim(), raw: rawContent });
     return (prefix || "") + `%%MERMAID_${idx}%%`;
   });
 
@@ -210,11 +211,12 @@ export function renderContent(raw: string): string {
     const fullContent = (firstLine + content).trim();
     if (!fullContent) return _match;
 
+    const rawToReplace = (firstLine + content);
     const idx = visualBlocks.length;
     const uid = Math.random().toString(36).slice(2, 8);
     // Create a clean description for the AI image generator
     const cleanDesc = fullContent.replace(/\n/g, " ").replace(/\s+/g, " ").trim();
-    const safeDesc = cleanDesc.replace(/"/g, "&quot;");
+    const safeDesc = rawToReplace.replace(/"/g, "&quot;");
     
     // We use the AI Image Generator as a high-quality fallback for these charts
     const prompt = `Professional scientific chart: ${cleanDesc}. Minimalist, publication quality, white background, accurate axis and trends.`;
@@ -233,11 +235,12 @@ export function renderContent(raw: string): string {
     
     const uid = Math.random().toString(36).slice(2, 8);
     const safeDesc = desc.replace(/"/g, "&quot;");
+    const rawToReplace = _match.replace(/"/g, "&quot;");
     const prompt = (desc.length > 200 ? desc.slice(0, 200) : desc)
       + ", professional scientific diagram, minimalist vector, publication quality, white background";
     const src = `/api/image/generate?prompt=${encodeURIComponent(prompt)}&width=800&height=450&seed=${uid}`;
 
-    const html = `<div class="relative group my-6"><button data-action="remove-visual" data-type="tag" data-content="[${_match.split(':')[0].slice(1).toUpperCase()}: ${desc.replace(/"/g, "&quot;")}]" class="absolute top-2 right-2 z-20 w-6 h-6 rounded-full bg-white/90 backdrop-blur-sm border border-red-100 text-red-500 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center hover:bg-red-50 shadow-sm" title="Remove Visual"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button><div class="relative rounded-xl overflow-hidden border border-[var(--border)] bg-[var(--bg-subtle)] min-h-[140px] flex items-center justify-center"><img id="img-${uid}" src="${src}" alt="${safeDesc}" loading="lazy" class="w-full h-auto object-contain rounded-xl transition-opacity duration-500" style="opacity:0" onload="this.style.opacity='1'; document.getElementById('fb-${uid}').style.display='none'; document.getElementById('spin-${uid}').style.display='none';" onerror="this.style.display='none'; document.getElementById('fb-${uid}').style.display='flex'; document.getElementById('spin-${uid}').style.display='none';"/><div id="spin-${uid}" class="absolute inset-0 flex items-center justify-center bg-[var(--bg-subtle)]"><div class="flex flex-col items-center gap-2"><svg class="animate-spin w-5 h-5 text-[var(--accent)]" viewBox="0 0 24 24" fill="none"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg><span class="text-[9px] font-bold uppercase tracking-widest text-[var(--text-tertiary)] animate-pulse">Generating Visual...</span></div></div><div id="fb-${uid}" class="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-[var(--bg-subtle)] hidden"><span class="text-xl opacity-40">📊</span><p class="text-[10px] font-bold uppercase tracking-tighter text-[var(--text-tertiary)]">Visual Representation</p></div></div><p class="text-[9px] text-center text-[var(--text-tertiary)] italic mt-2 opacity-60">${safeDesc.length > 100 ? safeDesc.slice(0, 100) + "…" : safeDesc}</p></div>`;
+    const html = `<div class="relative group my-6"><button data-action="remove-visual" data-type="tag" data-content="${rawToReplace}" class="absolute top-2 right-2 z-20 w-6 h-6 rounded-full bg-white/90 backdrop-blur-sm border border-red-100 text-red-500 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center hover:bg-red-50 shadow-sm" title="Remove Visual"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button><div class="relative rounded-xl overflow-hidden border border-[var(--border)] bg-[var(--bg-subtle)] min-h-[140px] flex items-center justify-center"><img id="img-${uid}" src="${src}" alt="${safeDesc}" loading="lazy" class="w-full h-auto object-contain rounded-xl transition-opacity duration-500" style="opacity:0" onload="this.style.opacity='1'; document.getElementById('fb-${uid}').style.display='none'; document.getElementById('spin-${uid}').style.display='none';" onerror="this.style.display='none'; document.getElementById('fb-${uid}').style.display='flex'; document.getElementById('spin-${uid}').style.display='none';"/><div id="spin-${uid}" class="absolute inset-0 flex items-center justify-center bg-[var(--bg-subtle)]"><div class="flex flex-col items-center gap-2"><svg class="animate-spin w-5 h-5 text-[var(--accent)]" viewBox="0 0 24 24" fill="none"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg><span class="text-[9px] font-bold uppercase tracking-widest text-[var(--text-tertiary)] animate-pulse">Generating Visual...</span></div></div><div id="fb-${uid}" class="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-[var(--bg-subtle)] hidden"><span class="text-xl opacity-40">📊</span><p class="text-[10px] font-bold uppercase tracking-tighter text-[var(--text-tertiary)]">Visual Representation</p></div></div><p class="text-[9px] text-center text-[var(--text-tertiary)] italic mt-2 opacity-60">${safeDesc.length > 100 ? safeDesc.slice(0, 100) + "…" : safeDesc}</p></div>`;
     
     visualBlocks.push(html);
     return `%%VISUAL_${idx}%%`;
@@ -287,10 +290,10 @@ export function renderContent(raw: string): string {
     finalHtml = finalHtml.replace(`%%VISUAL_${i}%%`, visualHtml);
   });
 
-  mermaidBlocks.forEach((code, i) => {
-    const src = `/api/visual/mermaid?code=${encodeURIComponent(code)}`;
-    // Keep this HTML compact too
-    const visualHtml = `<div class="relative group my-6"><button data-action="remove-visual" data-type="mermaid" data-content="\`\`\`mermaid\n${code.replace(/"/g, "&quot;")}\n\`\`\`" class="absolute top-2 right-2 z-20 w-6 h-6 rounded-full bg-white/90 backdrop-blur-sm border border-red-100 text-red-500 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center hover:bg-red-50 shadow-sm" title="Remove Diagram"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button><div class="flex justify-center bg-white p-4 rounded-xl border border-[var(--border)] shadow-sm overflow-x-auto"><img src="${src}" alt="Diagram" class="max-w-full h-auto" onError="this.parentElement.innerHTML='<div class=text-xs>Visual rendering error.</div>'" /></div></div>`;
+  mermaidBlocks.forEach((block, i) => {
+    const src = `/api/visual/mermaid?code=${encodeURIComponent(block.code)}`;
+    const rawToReplace = block.raw.replace(/"/g, "&quot;");
+    const visualHtml = `<div class="relative group my-6"><button data-action="remove-visual" data-type="mermaid" data-content="${rawToReplace}" class="absolute top-2 right-2 z-20 w-6 h-6 rounded-full bg-white/90 backdrop-blur-sm border border-red-100 text-red-500 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center hover:bg-red-50 shadow-sm" title="Remove Diagram"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button><div class="flex justify-center bg-white p-4 rounded-xl border border-[var(--border)] shadow-sm overflow-x-auto"><img src="${src}" alt="Diagram" class="max-w-full h-auto" onError="this.parentElement.innerHTML='<div class=text-xs>Visual rendering error.</div>'" /></div></div>`;
     finalHtml = finalHtml.replace(`%%MERMAID_${i}%%`, visualHtml);
   });
 
