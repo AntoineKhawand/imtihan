@@ -6,6 +6,8 @@ import { cn } from "@/lib/utils";
 import type { Exercise } from "@/types/exam";
 import { renderContent } from "@/lib/renderContent";
 import { useEffect, useRef } from "react";
+import { MathPlot } from "./MathPlot";
+import { Columns, Eye, Edit3, X, Plus, Trash2, Save, LineChart } from "lucide-react";
 
 interface ExerciseEditorProps {
   exercise: Exercise;
@@ -20,9 +22,10 @@ export function ExerciseEditor({ exercise, onSave, onClose }: ExerciseEditorProp
   const [subQuestions, setSubQuestions] = useState(
     exercise.subQuestions ? exercise.subQuestions.map((sq) => ({ ...sq })) : []
   );
+  const [mathPlots, setMathPlots] = useState<string[]>(exercise.mathPlots || []);
   const [finalAnswer, setFinalAnswer] = useState(exercise.solution.finalAnswer);
   const [methodology, setMethodology] = useState(exercise.solution.methodology);
-  const [viewMode, setViewMode] = useState<"edit" | "preview">("edit");
+  const [viewMode, setViewMode] = useState<"edit" | "preview" | "split">("split");
   
   const previewRef = useRef<HTMLDivElement>(null);
 
@@ -33,6 +36,7 @@ export function ExerciseEditor({ exercise, onSave, onClose }: ExerciseEditorProp
       points,
       difficulty,
       subQuestions: subQuestions.length > 0 ? subQuestions : undefined,
+      mathPlots: mathPlots.length > 0 ? mathPlots : undefined,
       solution: {
         ...exercise.solution,
         finalAnswer: finalAnswer.trim() || exercise.solution.finalAnswer,
@@ -57,6 +61,18 @@ export function ExerciseEditor({ exercise, onSave, onClose }: ExerciseEditorProp
     setSubQuestions((prev) => prev.filter((_, idx) => idx !== i));
   }
 
+  function addPlot() {
+    setMathPlots(prev => [...prev, "x"]);
+  }
+
+  function updatePlot(idx: number, val: string) {
+    setMathPlots(prev => prev.map((p, i) => i === idx ? val : p));
+  }
+
+  function removePlot(idx: number) {
+    setMathPlots(prev => prev.filter((_, i) => i !== idx));
+  }
+
   return (
     // Backdrop
     <div
@@ -66,9 +82,12 @@ export function ExerciseEditor({ exercise, onSave, onClose }: ExerciseEditorProp
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
 
       {/* Modal */}
-      <div className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-[var(--surface)] rounded-2xl border border-[var(--border)] shadow-2xl">
+      <div className={cn(
+        "relative w-full max-h-[90vh] overflow-y-auto bg-[var(--surface)] rounded-2xl border border-[var(--border)] shadow-2xl transition-all duration-300",
+        viewMode === "split" ? "max-w-6xl" : "max-w-2xl"
+      )}>
         {/* Header */}
-        <div className="sticky top-0 flex items-center justify-between px-6 py-4 border-b border-[var(--border)] bg-[var(--surface)] z-30">
+        <div className="sticky top-0 flex items-center justify-between px-6 py-4 border-b border-[var(--border)] bg-[var(--surface)] z-40">
           <div className="flex items-center gap-4">
             <h2 className="font-semibold text-[var(--text)]">Edit exercise {exercise.number}</h2>
             <div className="flex p-1 bg-[var(--bg-subtle)] rounded-lg border border-[var(--border)]">
@@ -80,6 +99,15 @@ export function ExerciseEditor({ exercise, onSave, onClose }: ExerciseEditorProp
                 )}
               >
                 <Edit3 size={12} /> Edit
+              </button>
+              <button
+                onClick={() => setViewMode("split")}
+                className={cn(
+                  "flex items-center gap-1.5 px-3 py-1 text-xs rounded-md transition-all",
+                  viewMode === "split" ? "bg-white shadow-sm text-[var(--accent)] font-medium" : "text-[var(--text-tertiary)] hover:text-[var(--text)]"
+                )}
+              >
+                <Columns size={12} /> Split
               </button>
               <button
                 onClick={() => setViewMode("preview")}
@@ -100,9 +128,10 @@ export function ExerciseEditor({ exercise, onSave, onClose }: ExerciseEditorProp
           </button>
         </div>
 
-        <div className="p-6 space-y-6">
-          {viewMode === "edit" ? (
-            <>
+        <div className={cn("p-6", viewMode === "split" && "grid grid-cols-2 gap-8")}>
+          {/* Edit Column */}
+          {(viewMode === "edit" || viewMode === "split") && (
+            <div className="space-y-6">
               {/* Meta row */}
               <div className="grid grid-cols-2 gap-4">
                 {/* Difficulty */}
@@ -144,6 +173,43 @@ export function ExerciseEditor({ exercise, onSave, onClose }: ExerciseEditorProp
                 </div>
               </div>
 
+              {/* Math Plots Management */}
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <label className="text-xs font-medium text-[var(--text-secondary)] text-uppercase tracking-wider">Mathematical Graphs (SVG)</label>
+                  <button
+                    onClick={addPlot}
+                    className="inline-flex items-center gap-1.5 text-xs font-medium text-[var(--accent)] hover:underline px-2 py-1 rounded-md hover:bg-[var(--accent)]/5"
+                  >
+                    <Plus size={14} /> Add Plot
+                  </button>
+                </div>
+                <div className="space-y-3">
+                  {mathPlots.map((plot, i) => (
+                    <div key={i} className="flex gap-2 items-center">
+                      <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-[var(--accent-light)] flex items-center justify-center">
+                        <LineChart size={14} className="text-[var(--accent)]" />
+                      </div>
+                      <input
+                        value={plot}
+                        onChange={(e) => updatePlot(i, e.target.value)}
+                        placeholder="e.g. sin(x) or x^2"
+                        className="flex-1 h-9 px-3 rounded-lg border border-[var(--border)] bg-[var(--bg-subtle)] text-sm text-[var(--text)] focus:outline-none focus:border-[var(--accent)] transition-colors"
+                      />
+                      <button
+                        onClick={() => removePlot(i)}
+                        className="w-9 h-9 flex items-center justify-center rounded-lg text-[var(--text-tertiary)] hover:text-red-500 hover:bg-red-50 transition-all"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  ))}
+                  {mathPlots.length === 0 && (
+                    <p className="text-[10px] text-[var(--text-tertiary)] italic">No graphs attached to this exercise.</p>
+                  )}
+                </div>
+              </div>
+
               {/* Statement */}
               <div>
                 <label className="block text-xs font-medium text-[var(--text-secondary)] mb-2 text-uppercase tracking-wider">
@@ -152,10 +218,11 @@ export function ExerciseEditor({ exercise, onSave, onClose }: ExerciseEditorProp
                 <textarea
                   value={statement}
                   onChange={(e) => setStatement(e.target.value)}
-                  rows={4}
+                  rows={viewMode === "split" ? 10 : 4}
                   placeholder="Enter the main question text here..."
                   className="w-full px-4 py-3 rounded-xl border border-[var(--border)] bg-[var(--bg-subtle)] text-sm text-[var(--text)] leading-relaxed resize-y focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] transition-all"
                 />
+                <p className="mt-2 text-[10px] text-[var(--text-tertiary)] italic">Supports KaTeX ($x^2$), Mermaid charts, and AI image tags ([IMAGE: ...])</p>
               </div>
 
               {/* Sub-questions */}
@@ -169,11 +236,6 @@ export function ExerciseEditor({ exercise, onSave, onClose }: ExerciseEditorProp
                     <Plus size={14} /> Add Sub-question
                   </button>
                 </div>
-                {subQuestions.length === 0 && (
-                  <div className="text-center py-6 border-2 border-dashed border-[var(--border)] rounded-xl">
-                    <p className="text-xs text-[var(--text-tertiary)]">No sub-questions. Add one to break down the exercise.</p>
-                  </div>
-                )}
                 <div className="space-y-4">
                   {subQuestions.map((sq, i) => (
                     <div key={i} className="flex gap-3 items-start p-4 rounded-xl bg-[var(--bg-subtle)] border border-[var(--border)] transition-shadow hover:shadow-sm">
@@ -242,16 +304,31 @@ export function ExerciseEditor({ exercise, onSave, onClose }: ExerciseEditorProp
                   />
                 </div>
               </div>
-            </>
-          ) : (
-            /* PREVIEW MODE */
-            <div className="space-y-8 animate-in fade-in duration-300">
-              <div className="space-y-4">
+            </div>
+          )}
+
+          {/* Preview Column */}
+          {(viewMode === "preview" || viewMode === "split") && (
+            <div className={cn(
+              "space-y-8 animate-in fade-in duration-300",
+              viewMode === "split" && "sticky top-20 max-h-[calc(90vh-120px)] overflow-y-auto pr-2 custom-scrollbar"
+            )}>
+              <div className="space-y-6">
                 <div className="flex items-center justify-between border-b border-[var(--border)] pb-2">
-                   <h3 className="text-xs font-bold text-[var(--text-tertiary)] uppercase tracking-widest">Statement</h3>
-                   <span className="text-[10px] px-2 py-0.5 rounded-full bg-[var(--accent)]/10 text-[var(--accent)] font-bold">{points} PTS</span>
+                   <h3 className="text-xs font-bold text-[var(--text-tertiary)] uppercase tracking-widest">Live Visual Preview</h3>
+                   <span className="text-[10px] px-2 py-0.5 rounded-full bg-[var(--accent)]/10 text-[var(--accent)] font-bold uppercase tracking-wider">{difficulty} · {points} PTS</span>
                 </div>
-                <div className="prose-clean" dangerouslySetInnerHTML={{ __html: renderContent(statement) }} />
+
+                {/* Math Plots in Preview */}
+                {mathPlots.length > 0 && (
+                  <div className="space-y-4">
+                    {mathPlots.map((plot, i) => (
+                      <MathPlot key={i} equation={plot} />
+                    ))}
+                  </div>
+                )}
+
+                <div className="prose-clean overflow-hidden" dangerouslySetInnerHTML={{ __html: renderContent(statement) }} />
                 
                 {subQuestions.length > 0 && (
                   <div className="mt-6 space-y-4 pl-4 border-l-2 border-[var(--border)]">
@@ -269,7 +346,7 @@ export function ExerciseEditor({ exercise, onSave, onClose }: ExerciseEditorProp
               </div>
 
               <div className="space-y-4 pt-6 border-t border-[var(--border)]">
-                 <h3 className="text-xs font-bold text-[var(--text-tertiary)] uppercase tracking-widest">Correction</h3>
+                 <h3 className="text-xs font-bold text-[var(--text-tertiary)] uppercase tracking-widest">Correction Preview</h3>
                  
                  <div className="p-4 rounded-xl bg-[var(--bg-subtle)] border border-[var(--border)]">
                     <p className="text-[10px] font-bold text-[var(--accent)] uppercase mb-2">Final Result</p>
