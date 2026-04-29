@@ -410,6 +410,17 @@ export function ExerciseCard({
           <div
             className="text-[15px] text-[var(--text)] leading-relaxed"
             dangerouslySetInnerHTML={{ __html: renderContent(exercise.statement) }}
+            onClick={(e) => {
+              const target = e.target as HTMLElement;
+              const button = target.closest('button[data-action="remove-visual"]');
+              if (button && onUpdate) {
+                const content = button.getAttribute('data-content');
+                if (content) {
+                  const nextStatement = exercise.statement.replace(content, "").trim();
+                  onUpdate({ ...exercise, statement: nextStatement });
+                }
+              }
+            }}
           />
 
           {/* Sub-questions */}
