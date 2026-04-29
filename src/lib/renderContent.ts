@@ -180,7 +180,8 @@ export function renderContent(raw: string): string {
 
   // 1. Identify all Mermaid blocks (both fenced and naked)
   const mermaidBlocks: string[] = [];
-  const mermaidPatterns = ["graph\\s", "flowchart\\s", "sequenceDiagram", "gantt", "classDiagram", "stateDiagram", "pie\\s", "erDiagram", "journey", "gitGraph", "requirementDiagram", "mindmap", "timeline", "xychart-beta", "block-beta", "chart\\s", "quadrantChart"];
+  // Removed generic "chart" as it causes false positives with plain text descriptions.
+  const mermaidPatterns = ["graph\\s", "flowchart\\s", "sequenceDiagram", "gantt", "classDiagram", "stateDiagram", "pie\\s", "erDiagram", "journey", "gitGraph", "requirementDiagram", "mindmap", "timeline", "block-beta", "quadrantChart"];
   const patternStr = mermaidPatterns.join("|");
   
   // First, handle standard fenced blocks
@@ -190,7 +191,8 @@ export function renderContent(raw: string): string {
     return `%%MERMAID_${idx}%%`;
   });
 
-  // Then, handle naked blocks that start at the beginning of a line
+  // Then, handle naked blocks that start at the beginning of a line.
+  // We require a newline before the keyword to avoid accidental matches in the middle of sentences.
   const nakedMermaidRegex = new RegExp(`(\\n|^)(${patternStr})([\\s\\S]*?)(?=\\n\\n|\\n\\*\\*|\\n[0-9]\\.|$)`, "g");
   text = text.replace(nakedMermaidRegex, (_match, prefix, keyword, content) => {
     const idx = mermaidBlocks.length;
@@ -199,7 +201,6 @@ export function renderContent(raw: string): string {
   });
 
   // 2. Identify and placeholder-ize [IMAGE:] [GRAPH:] [VISUAL:] tags
-  // We do this EARLY to prevent parseNakedMath from wrapping parts of the prompt in math delimiters.
   const visualBlocks: string[] = [];
   text = text.replace(/\[(?:IMAGE|GRAPH|VISUAL):\s*([\s\S]*?)\]/gi, (_match, description) => {
     const idx = visualBlocks.length;
@@ -212,6 +213,7 @@ export function renderContent(raw: string): string {
       + ", professional scientific diagram, minimalist vector, publication quality, white background";
     const src = `/api/image/generate?prompt=${encodeURIComponent(prompt)}&width=800&height=450&seed=${uid}`;
 
+    // We keep the HTML compact (no internal newlines) to prevent the newline-to-br logic from breaking attributes
     const html = `<div class="relative group my-6"><button data-action="remove-visual" data-type="tag" data-content="[${_match.split(':')[0].slice(1).toUpperCase()}: ${desc.replace(/"/g, "&quot;")}]" class="absolute top-2 right-2 z-20 w-6 h-6 rounded-full bg-white/90 backdrop-blur-sm border border-red-100 text-red-500 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center hover:bg-red-50 shadow-sm" title="Remove Visual"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button><div class="relative rounded-xl overflow-hidden border border-[var(--border)] bg-[var(--bg-subtle)] min-h-[140px] flex items-center justify-center"><img id="img-${uid}" src="${src}" alt="${safeDesc}" loading="lazy" class="w-full h-auto object-contain rounded-xl transition-opacity duration-500" style="opacity:0" onload="this.style.opacity='1'; document.getElementById('fb-${uid}').style.display='none'; document.getElementById('spin-${uid}').style.display='none';" onerror="this.style.display='none'; document.getElementById('fb-${uid}').style.display='flex'; document.getElementById('spin-${uid}').style.display='none';"/><div id="spin-${uid}" class="absolute inset-0 flex items-center justify-center bg-[var(--bg-subtle)]"><div class="flex flex-col items-center gap-2"><svg class="animate-spin w-5 h-5 text-[var(--accent)]" viewBox="0 0 24 24" fill="none"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg><span class="text-[9px] font-bold uppercase tracking-widest text-[var(--text-tertiary)] animate-pulse">Generating Visual...</span></div></div><div id="fb-${uid}" class="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-[var(--bg-subtle)] hidden"><span class="text-xl opacity-40">📊</span><p class="text-[10px] font-bold uppercase tracking-tighter text-[var(--text-tertiary)]">Visual Representation</p></div></div><p class="text-[9px] text-center text-[var(--text-tertiary)] italic mt-2 opacity-60">${safeDesc.length > 100 ? safeDesc.slice(0, 100) + "…" : safeDesc}</p></div>`;
     
     visualBlocks.push(html);
@@ -234,18 +236,8 @@ export function renderContent(raw: string): string {
     }).join("");
   }).join("");
 
-  // 3. Put Visual blocks back
-  visualBlocks.forEach((visualHtml, i) => {
-    html = html.replace(`%%VISUAL_${i}%%`, visualHtml);
-  });
-
-  mermaidBlocks.forEach((code, i) => {
-    // Use internal API for robust server-side rendering
-    const src = `/api/visual/mermaid?code=${encodeURIComponent(code)}`;
-    const visualHtml = `<div class="relative group my-6"><button data-action="remove-visual" data-type="mermaid" data-content="\`\`\`mermaid\n${code}\n\`\`\`" class="absolute top-2 right-2 z-20 w-6 h-6 rounded-full bg-white/90 backdrop-blur-sm border border-red-100 text-red-500 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center hover:bg-red-50 shadow-sm" title="Remove Diagram"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button><div class="flex justify-center bg-white p-4 rounded-xl border border-[var(--border)] shadow-sm overflow-x-auto"><img src="${src}" alt="Diagram" class="max-w-full h-auto" onError="this.parentElement.innerHTML='<div class=text-xs>Visual rendering error.</div>'" /></div></div>`;
-    html = html.replace(`%%MERMAID_${i}%%`, visualHtml);
-  });
-
+  // 3. Process newlines safely BEFORE replacing placeholders.
+  // This ensures that the HTML inside visual/mermaid blocks isn't shredded.
   const htmlLines = html.split("\n");
   let finalHtml = "";
   for (let i = 0; i < htmlLines.length; i++) {
@@ -256,9 +248,35 @@ export function renderContent(raw: string): string {
       const currLine = line.trim();
       const isPrevHtml = prevLine.endsWith(">");
       const isCurrHtml = currLine.startsWith("<");
-      if (!isPrevHtml && !isCurrHtml) finalHtml += "<br />";
+      // Don't add <br /> if we are moving between tags or if it's a placeholder line
+      const isPlaceholder = line.includes("%%VISUAL_") || line.includes("%%MERMAID_");
+      const wasPlaceholder = htmlLines[i-1].includes("%%VISUAL_") || htmlLines[i-1].includes("%%MERMAID_");
+
+      if (!isPrevHtml && !isCurrHtml && !isPlaceholder && !wasPlaceholder) {
+        finalHtml += "<br />";
+      }
     }
     finalHtml += line;
   }
-  return `<div dir="auto">${finalHtml.replace(/(<br \/>\s*){3,}/g, "<br /><br />")}</div>`;
+
+  // 4. Put Visual/Mermaid blocks back LAST
+  visualBlocks.forEach((visualHtml, i) => {
+    finalHtml = finalHtml.replace(`%%VISUAL_${i}%%`, visualHtml);
+  });
+
+  mermaidBlocks.forEach((code, i) => {
+    const src = `/api/visual/mermaid?code=${encodeURIComponent(code)}`;
+    // Keep this HTML compact too
+    const visualHtml = `<div class="relative group my-6"><button data-action="remove-visual" data-type="mermaid" data-content="\`\`\`mermaid\n${code.replace(/"/g, "&quot;")}\n\`\`\`" class="absolute top-2 right-2 z-20 w-6 h-6 rounded-full bg-white/90 backdrop-blur-sm border border-red-100 text-red-500 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center hover:bg-red-50 shadow-sm" title="Remove Diagram"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button><div class="flex justify-center bg-white p-4 rounded-xl border border-[var(--border)] shadow-sm overflow-x-auto"><img src="${src}" alt="Diagram" class="max-w-full h-auto" onError="this.parentElement.innerHTML='<div class=text-xs>Visual rendering error.</div>'" /></div></div>`;
+    finalHtml = finalHtml.replace(`%%MERMAID_${i}%%`, visualHtml);
+  });
+
+  // 5. Final cleanup of AI artifacts (like triple quotes or trailing backticks)
+  const cleanedHtml = finalHtml
+    .replace(/"""/g, "")
+    .replace(/```/g, "")
+    .replace(/(<br \/>\s*){3,}/g, "<br /><br />")
+    .trim();
+
+  return `<div dir="auto">${cleanedHtml}</div>`;
 }

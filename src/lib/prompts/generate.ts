@@ -532,10 +532,13 @@ BARÈME (mandatory for every exercise):
 
 LAYOUT & CONTENT QUALITY:
 - **Markdown Tables**: Use standard Markdown table syntax for data comparisons, experimental results, or organized information.
-- **Graphs & Diagrams**: You cannot generate static image files (PNG/JPG). Instead, you MUST use Mermaid code blocks (\`\`\`mermaid ... \`\`\`) to provide interactive visuals.
-    - Use \`xychart-beta\` for mathematical functions, statistics, and trends.
-    - Use \`flowchart\` or \`sequenceDiagram\` for processes, experiments, and structures.
+- **Graphs & Diagrams**: You cannot generate static image files (PNG/JPG). Instead, you MUST use Mermaid code blocks (\`\`\`mermaid ... \`\`\`) for logical diagrams (flowcharts, sequence diagrams).
+    - **MATHEMATICAL PLOTS**: For mathematical functions (e.g. $f(x) = \sin(x)$), DO NOT use Mermaid. Instead:
+        1. Add the equation (e.g. "sin(x)") to the \`mathPlots\` array.
+        2. Or use the tag \`[GRAPH: sin(x)]\` inside the \`statement\` to generate an AI-assisted visual.
+    - Use \`flowchart TD\` for logical flows, processes, and experiments.
     - If a visual is absolutely too complex for Mermaid, use a LaTeX \`picture\` environment or a high-quality Markdown Table.
+    - **NO NAKED DIAGRAMS**: Always wrap Mermaid code in triple backticks. Do not use generic keywords like "chart" without backticks.
 - **Layout Consistency**: If the user provided a reference document (Teacher notes or grounding data), observe its structure (e.g., header style, question numbering) and attempt to mimic it in the text output.
 - **Scientific notation**: Use KaTeX for math and \ce{...} for chemistry.
 

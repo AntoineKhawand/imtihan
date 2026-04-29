@@ -41,7 +41,8 @@ export async function POST(request: NextRequest) {
       - ${visualReq}
       - ACCURACY: Ensure that data points, coordinates, and trends perfectly match the exercise and real-world scientific principles.
       - CONTEXT: Use the specific data, values, or functions from the text.
-      - Use Mermaid \`xychart-beta\` for precise plotting and \`flowchart TD\` for logical flows.
+      - Use Mermaid \`flowchart TD\` for logical flows, experiments, and processes.
+      - **DO NOT** use \`xychart-beta\` as it is unsupported. For mathematical graphs, use the 'plot' type instead which adds to 'mathPlots'.
       - MANDATORY: Wrap code in triple backticks. Return within 'statement'.`;
     } else if (type === "image") {
       const imageReq = prompt ? `The user wants: "${prompt}"` : `Add a suitable scientific illustration.`;
