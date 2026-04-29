@@ -321,25 +321,6 @@ export function ExerciseCard({
                     Edit
                   </button>
                 )}
-                {onTransform && (
-                  <>
-                    <div className="my-1 border-t border-[var(--border)]" />
-                    <button
-                      onClick={() => { onTransform(exercise.id, "table"); setShowActions(false); }}
-                      className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-[var(--text-secondary)] hover:text-[var(--text)] hover:bg-[var(--bg-subtle)] rounded-lg transition-colors"
-                    >
-                      <Table size={13} />
-                      Format as Table
-                    </button>
-                    <button
-                      onClick={() => { setShowVisualPrompt(true); setShowActions(false); }}
-                      className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-[var(--text-secondary)] hover:text-[var(--text)] hover:bg-[var(--bg-subtle)] rounded-lg transition-colors"
-                    >
-                      <ImageIcon size={13} />
-                      Add Visual / Graph
-                    </button>
-                  </>
-                )}
                 {onSaveToBank && (
                   <button
                     onClick={() => { onSaveToBank(exercise); setShowActions(false); }}
