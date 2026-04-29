@@ -19,7 +19,7 @@ type GenerationStatus = "idle" | "generating" | "done" | "error";
 
 export default function GeneratePage() {
   const router = useRouter();
-  const { incrementUsage } = useAuth();
+  const { user } = useAuth();
   const [context, setContext] = useState<ExamContext | null>(null);
   const [templateId, setTemplateId] = useState("classic");
   const [exercises, setExercises] = useState<Exercise[]>([]);
@@ -143,7 +143,6 @@ export default function GeneratePage() {
                 setExercises(withIds);
                 persistExercises(withIds);
                 setStatus("done");
-                incrementUsage().catch(e => console.error("Quota update failed:", e));
               }
             }
           } catch { /* skip malformed SSE lines */ }
