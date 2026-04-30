@@ -15,6 +15,8 @@ import {
   CreditCard
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/contexts/AuthContext";
+import { isProActive, isInGracePeriod } from "@/lib/subscription";
 
 const NAV_ITEMS = [
   { label: "Overview", icon: LayoutDashboard, href: "/dashboard" },
@@ -28,6 +30,8 @@ const NAV_ITEMS = [
 
 export function DashboardSidebar() {
   const pathname = usePathname();
+  const { profile } = useAuth();
+  const isPro = isProActive(profile) || isInGracePeriod(profile);
 
   return (
     <aside className="hidden lg:flex flex-col w-64 border-r border-[var(--border)] bg-[var(--surface)] h-[calc(100vh-64px)] sticky top-16 z-30">
@@ -56,7 +60,7 @@ export function DashboardSidebar() {
                 )} />
                 {item.label}
               </div>
-              {item.pro && !isActive && (
+              {item.pro && !isActive && !isPro && (
                 <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-amber-100 text-amber-700 uppercase tracking-wider">
                   Pro
                 </span>
@@ -69,16 +73,18 @@ export function DashboardSidebar() {
         })}
       </div>
 
-      <div className="p-4 border-t border-[var(--border)]">
-        <Link 
-          href="/upgrade"
-          className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-bold bg-gradient-to-br from-emerald-600 to-teal-800 text-white shadow-lg shadow-emerald-200 hover:scale-[1.02] transition-transform group overflow-hidden relative"
-        >
-          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:animate-shine" />
-          <CreditCard size={18} />
-          Upgrade to Pro
-        </Link>
-      </div>
+      {!isPro && (
+        <div className="p-4 border-t border-[var(--border)]">
+          <Link 
+            href="/upgrade"
+            className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-bold bg-gradient-to-br from-emerald-600 to-teal-800 text-white shadow-lg shadow-emerald-200 hover:scale-[1.02] transition-transform group overflow-hidden relative"
+          >
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:animate-shine" />
+            <CreditCard size={18} />
+            Upgrade to Pro
+          </Link>
+        </div>
+      )}
     </aside>
   );
 }
