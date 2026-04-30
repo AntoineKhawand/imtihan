@@ -4,8 +4,16 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
 import { FREE_EXAM_LIMIT } from "@/lib/utils";
-import { RefreshCw, Search, Calendar, Clock, Info, ShieldCheck, Mail, User, Zap, Sparkles, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
+
+const subjectMap: Record<string, string> = {
+  mathematics: "Mathématiques", physics: "Physique", chemistry: "Chimie",
+  biology: "Biologie", history: "Histoire", geography: "Géographie",
+  philosophy: "Philosophie", arabic: "Arabe", french: "Français",
+  english: "Anglais", economics: "Économie", accounting: "Comptabilité",
+  informatics: "Informatique", "visual-arts": "Arts Plastiques",
+  svt: "SVT", nsi: "NSI",
+};
 
 interface AdminUser {
   uid: string;
@@ -43,30 +51,49 @@ export default function AdminPage() {
   const { user } = useAuth();
   const router = useRouter();
   const [users, setUsers] = useState<AdminUser[]>([]);
+  const [statsData, setStatsData] = useState<{ subjects: Record<string, number>; lastUpdated: number }>({ subjects: {}, lastUpdated: Date.now() });
   const [loading, setLoading] = useState(true);
+  const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
   const [extending, setExtending] = useState<string | null>(null);
   const [search, setSearch] = useState("");
+  const [filterType, setFilterType] = useState<"all" | "requests">("all");
 
-  async function fetchUsers() {
+  async function fetchData() {
     if (!user) return;
     setLoading(true);
     try {
       const token = await user.getIdToken();
-      const res = await fetch("/api/admin/users", {
+      
+      // Fetch users
+      const userRes = await fetch("/api/admin/users", {
         headers: { Authorization: `Bearer ${token}` },
       });
-      if (res.status === 401) { router.replace("/dashboard"); return; }
-      if (!res.ok) throw new Error("Failed to load users");
-      const data = await res.json();
-      setUsers(data.users);
+      if (userRes.status === 401 || userRes.status === 403) {
+        setIsAuthorized(false);
+        setTimeout(() => router.replace("/dashboard"), 2000);
+        return;
+      }
+      
+      // Fetch stats
+      const statsRes = await fetch("/api/admin/stats", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      const usersData = await userRes.json();
+      const sData = await statsRes.json();
+
+      setUsers(usersData.users);
+      setStatsData(sData);
+      setIsAuthorized(true);
     } catch (e) {
       console.error(e);
+      setIsAuthorized(false);
     } finally {
       setLoading(false);
     }
   }
 
-  useEffect(() => { fetchUsers(); }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { fetchData(); }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function handleExtend(targetUid: string, days: number) {
     if (!user) return;
@@ -116,10 +143,12 @@ export default function AdminPage() {
     }
   }
 
-  const filtered = users.filter((u) => 
-    u.email.toLowerCase().includes(search.toLowerCase()) ||
-    (u.displayName && u.displayName.toLowerCase().includes(search.toLowerCase()))
-  );
+  const filtered = users.filter((u) => {
+    const matchesSearch = u.email.toLowerCase().includes(search.toLowerCase()) ||
+      (u.displayName && u.displayName.toLowerCase().includes(search.toLowerCase()));
+    const matchesFilter = filterType === "requests" ? u.renewalRequested : true;
+    return matchesSearch && matchesFilter;
+  });
 
   const pendingRequests = users.filter(u => u.renewalRequested).length;
 
@@ -130,6 +159,34 @@ export default function AdminPage() {
     free: users.filter(u => !u.proExpiresAt || u.proExpiresAt <= now).length,
     active: users.filter(u => u.lastLoginAt && u.lastLoginAt > now - 7 * 24 * 60 * 60 * 1000).length,
   };
+
+  if (loading && isAuthorized === null) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#FBFBFE]">
+        <div className="flex flex-col items-center gap-4">
+          <RefreshCw className="animate-spin text-emerald-600" size={32} />
+          <p className="text-sm font-medium text-gray-500">Verifying administrator access...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (isAuthorized === false) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#FBFBFE]">
+        <div className="max-w-md w-full px-6 text-center">
+          <div className="w-16 h-16 rounded-2xl bg-red-50 text-red-600 flex items-center justify-center mx-auto mb-6 border border-red-100">
+            <ShieldCheck size={32} />
+          </div>
+          <h1 className="text-xl font-bold text-gray-900 mb-2">Access Restricted</h1>
+          <p className="text-sm text-gray-500 mb-8">
+            You do not have permission to view the admin dashboard. 
+            Redirecting you back to your dashboard...
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#FBFBFE] pb-20">
@@ -165,7 +222,7 @@ export default function AdminPage() {
               />
             </div>
             <button 
-              onClick={fetchUsers} 
+              onClick={fetchData} 
               className="p-2.5 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors shadow-sm"
               title="Refresh Data"
             >
@@ -189,7 +246,7 @@ export default function AdminPage() {
               </div>
             </div>
             <button 
-              onClick={() => setSearch("")} 
+              onClick={() => setFilterType("requests")} 
               className="px-6 py-2.5 bg-amber-600 text-white rounded-xl text-sm font-bold shadow-lg shadow-amber-600/20 hover:bg-amber-700 transition-all"
             >
               Show Requests
@@ -198,8 +255,11 @@ export default function AdminPage() {
         )}
 
         {/* KPI Cards Section */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
           <div className="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm">
+            <div className="w-8 h-8 rounded-xl bg-gray-50 flex items-center justify-center text-gray-400 mb-3">
+              <User size={16} />
+            </div>
             <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Total Community</p>
             <p className="text-2xl font-black text-gray-900">{stats.total}</p>
             <div className="flex items-center gap-1.5 mt-2">
@@ -207,7 +267,11 @@ export default function AdminPage() {
               <span className="text-[10px] font-medium text-gray-400">Lifetime Teachers</span>
             </div>
           </div>
+
           <div className="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm border-b-emerald-500 border-b-2">
+            <div className="w-8 h-8 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600 mb-3">
+              <Plus size={16} />
+            </div>
             <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest mb-1">Pro Active</p>
             <p className="text-2xl font-black text-gray-900">{stats.pro}</p>
             <div className="flex items-center gap-1.5 mt-2">
@@ -215,61 +279,155 @@ export default function AdminPage() {
               <span className="text-[10px] font-medium text-emerald-600">{Math.round((stats.pro / stats.total) * 100) || 0}% Conversion</span>
             </div>
           </div>
-          <div className="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm">
-            <p className="text-[10px] font-bold text-blue-600 uppercase tracking-widest mb-1">Free Tier</p>
-            <p className="text-2xl font-black text-gray-900">{stats.free}</p>
+
+          <div className="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm border-b-blue-500 border-b-2">
+            <div className="w-8 h-8 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 mb-3">
+              <Sparkles size={16} />
+            </div>
+            <p className="text-[10px] font-bold text-blue-600 uppercase tracking-widest mb-1">Revenue Est.</p>
+            <p className="text-2xl font-black text-gray-900">${(stats.pro * 5.99).toFixed(0)}</p>
             <div className="flex items-center gap-1.5 mt-2">
               <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
-              <span className="text-[10px] font-medium text-blue-600">{stats.free} Potential Pro</span>
+              <span className="text-[10px] font-medium text-blue-600">Monthly Run Rate</span>
             </div>
           </div>
+
           <div className="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm border-b-purple-500 border-b-2">
-            <p className="text-[10px] font-bold text-purple-600 uppercase tracking-widest mb-1">Weekly Active</p>
-            <p className="text-2xl font-black text-gray-900">{stats.active}</p>
+            <div className="w-8 h-8 rounded-xl bg-purple-50 flex items-center justify-center text-purple-600 mb-3">
+              <Zap size={16} />
+            </div>
+            <p className="text-[10px] font-bold text-purple-600 uppercase tracking-widest mb-1">Engagement</p>
+            <p className="text-2xl font-black text-gray-900">{(users.reduce((s, u) => s + u.examsGenerated, 0) / stats.total || 0).toFixed(1)}</p>
             <div className="flex items-center gap-1.5 mt-2">
               <div className="w-1.5 h-1.5 rounded-full bg-purple-500" />
-              <span className="text-[10px] font-medium text-purple-600">{Math.round((stats.active / stats.total) * 100) || 0}% Retention</span>
+              <span className="text-[10px] font-medium text-purple-600">Avg Exams/Teacher</span>
+            </div>
+          </div>
+
+          <div className="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm border-b-amber-500 border-b-2">
+            <div className="w-8 h-8 rounded-xl bg-amber-50 flex items-center justify-center text-amber-600 mb-3">
+              <Clock size={16} />
+            </div>
+            <p className="text-[10px] font-bold text-amber-600 uppercase tracking-widest mb-1">Weekly Active</p>
+            <p className="text-2xl font-black text-gray-900">{stats.active}</p>
+            <div className="flex items-center gap-1.5 mt-2">
+              <div className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+              <span className="text-[10px] font-medium text-amber-600">{Math.round((stats.active / stats.total) * 100) || 0}% Retention</span>
             </div>
           </div>
         </div>
-        {/* Legend Panel */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-          <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex items-start gap-4 hover:border-emerald-200 transition-colors group">
-            <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600 group-hover:scale-110 transition-transform">
-              <Clock size={18} />
+
+        {/* Analytics Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+          <div className="lg:col-span-2 bg-white p-8 rounded-[2.5rem] border border-gray-100 shadow-sm relative overflow-hidden group">
+            <div className="absolute top-0 right-0 p-8 opacity-[0.03] group-hover:opacity-[0.05] transition-opacity">
+              <BarChart3 size={120} />
             </div>
-            <div>
-              <h3 className="text-xs font-bold text-gray-900 uppercase tracking-widest mb-1">Extend</h3>
-              <p className="text-[11px] text-gray-500 leading-relaxed">Gives **30 Days Pro** and resets monthly generator.</p>
+            <div className="flex items-center justify-between mb-8">
+              <div>
+                <h3 className="text-lg font-black text-gray-900 tracking-tight">Top Disciplines</h3>
+                <p className="text-xs text-gray-400 font-medium mt-1">Global generation volume by subject</p>
+              </div>
+              <div className="text-right">
+                <p className="text-[10px] font-bold text-gray-300 uppercase tracking-widest mb-1">Last Update</p>
+                <p className="text-xs font-bold text-gray-500">{new Date(statsData.lastUpdated).toLocaleTimeString()}</p>
+              </div>
+            </div>
+
+            <div className="space-y-5">
+              {Object.keys(statsData.subjects).length > 0 ? (
+                Object.entries(statsData.subjects)
+                  .sort((a, b) => b[1] - a[1])
+                  .slice(0, 6)
+                  .map(([subject, count]) => (
+                    <div key={subject} className="group/item">
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-sm font-bold text-gray-700 capitalize">
+                          {subjectMap[subject] || subject}
+                        </span>
+                        <span className="text-xs font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-lg border border-emerald-100">
+                          {count}
+                        </span>
+                      </div>
+                      <div className="h-2 w-full bg-gray-50 rounded-full overflow-hidden border border-gray-100">
+                        <div 
+                          className="h-full bg-emerald-500 transition-all duration-1000 ease-out shadow-sm"
+                          style={{ width: `${(count / Math.max(...Object.values(statsData.subjects))) * 100}%` }}
+                        />
+                      </div>
+                    </div>
+                  ))
+              ) : (
+                <div className="py-12 flex flex-col items-center justify-center border-2 border-dashed border-gray-100 rounded-[2rem] bg-gray-50/50">
+                   <div className="w-12 h-12 rounded-2xl bg-white flex items-center justify-center text-gray-300 shadow-sm mb-4">
+                     <TrendingUp size={24} />
+                   </div>
+                   <p className="text-sm font-bold text-gray-400">Tracking started! Generate exams to see data.</p>
+                   <p className="text-[10px] text-gray-300 mt-1 uppercase font-bold tracking-widest">Real-time Analytics Engine</p>
+                </div>
+              )}
             </div>
           </div>
-          <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex items-start gap-4 hover:border-blue-200 transition-colors group">
-            <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 group-hover:scale-110 transition-transform">
-              <Zap size={18} />
-            </div>
-            <div>
-              <h3 className="text-xs font-bold text-gray-900 uppercase tracking-widest mb-1">+10 Q / +30 Q</h3>
-              <p className="text-[11px] text-gray-500 leading-relaxed">Adds **Bonus Quota** (Permanent exams beyond limit).</p>
-            </div>
+
+          <div className="bg-white p-8 rounded-[2.5rem] border border-gray-100 shadow-sm">
+             <h3 className="text-lg font-black text-gray-900 tracking-tight mb-2">Admin Legend</h3>
+             <p className="text-xs text-gray-400 font-medium mb-8">Reference for management actions</p>
+             <div className="space-y-6">
+                <div className="flex items-start gap-4">
+                   <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600 flex-shrink-0">
+                      <Clock size={18} />
+                   </div>
+                   <div>
+                      <h4 className="text-xs font-bold text-gray-900 uppercase tracking-widest mb-1">Extend</h4>
+                      <p className="text-[11px] text-gray-500 leading-relaxed font-medium">Gives 30 Days Pro and resets monthly generator count.</p>
+                   </div>
+                </div>
+                <div className="flex items-start gap-4">
+                   <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 flex-shrink-0">
+                      <Zap size={18} />
+                   </div>
+                   <div>
+                      <h4 className="text-xs font-bold text-gray-900 uppercase tracking-widest mb-1">Quota</h4>
+                      <p className="text-[11px] text-gray-500 leading-relaxed font-medium">Adds permanent bonus exams beyond the monthly limit.</p>
+                   </div>
+                </div>
+                <div className="flex items-start gap-4">
+                   <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center text-amber-600 flex-shrink-0">
+                      <Sparkles size={18} />
+                   </div>
+                   <div>
+                      <h4 className="text-xs font-bold text-gray-900 uppercase tracking-widest mb-1">Renewal</h4>
+                      <p className="text-[11px] text-gray-500 leading-relaxed font-medium">Flag for users who requested a plan extension via UI.</p>
+                   </div>
+                </div>
+             </div>
           </div>
-          <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex items-start gap-4 hover:border-amber-200 transition-colors group">
-            <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center text-amber-600 group-hover:scale-110 transition-transform">
-              <Sparkles size={18} />
-            </div>
-            <div>
-              <h3 className="text-xs font-bold text-gray-900 uppercase tracking-widest mb-1">Renewal Req</h3>
-              <p className="text-[11px] text-gray-500 leading-relaxed">Users who clicked **"Request Renewal"** on pricing page.</p>
-            </div>
-          </div>
-          <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex items-start gap-4 hover:border-purple-200 transition-colors group">
-            <div className="w-10 h-10 rounded-xl bg-purple-50 flex items-center justify-center text-purple-600 group-hover:scale-110 transition-transform">
-              <Info size={18} />
-            </div>
-            <div>
-              <h3 className="text-xs font-bold text-gray-900 uppercase tracking-widest mb-1">Pro Usage</h3>
-              <p className="text-[11px] text-gray-500 leading-relaxed">Pro users get **10 exams/mo**. Free users get **2 lifetime**.</p>
-            </div>
-          </div>
+        </div>
+
+        <div className="flex items-center gap-2 mb-4">
+          <button
+            onClick={() => setFilterType("all")}
+            className={cn(
+              "px-4 py-2 rounded-xl text-xs font-bold transition-all border",
+              filterType === "all"
+                ? "bg-emerald-600 text-white border-emerald-600 shadow-md shadow-emerald-600/20"
+                : "bg-white text-gray-500 border-gray-200 hover:border-emerald-200 hover:text-emerald-600"
+            )}
+          >
+            All Users ({stats.total})
+          </button>
+          <button
+            onClick={() => setFilterType("requests")}
+            className={cn(
+              "px-4 py-2 rounded-xl text-xs font-bold transition-all border flex items-center gap-2",
+              filterType === "requests"
+                ? "bg-amber-500 text-white border-amber-500 shadow-md shadow-amber-500/20"
+                : "bg-white text-gray-500 border-gray-200 hover:border-amber-200 hover:text-amber-600"
+            )}
+          >
+            Renewal Requests ({pendingRequests})
+            {pendingRequests > 0 && <span className="w-2 h-2 rounded-full bg-white animate-pulse" />}
+          </button>
         </div>
 
         {loading ? (

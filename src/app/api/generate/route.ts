@@ -402,11 +402,24 @@ export async function POST(request: NextRequest) {
           // Increment both monthly and lifetime counters (fire-and-forget)
           // ONLY if this is a fresh generation, not an adjustment/regeneration of a single exercise.
           if (!parsed.data.isAdjustment) {
-            userRef.update({ 
+            const batch = adminDb.batch();
+            
+            // Increment user counters
+            batch.update(userRef, { 
               monthlyExamsGenerated: admin.firestore.FieldValue.increment(1),
               examsGenerated: admin.firestore.FieldValue.increment(1)
-            })
-              .catch((e) => console.error("[/api/generate] Failed to increment usage counters:", e));
+            });
+
+            // Increment global subject counter
+            const statsRef = adminDb.collection("system").doc("stats");
+            batch.set(statsRef, {
+              subjects: {
+                [context.subject]: admin.firestore.FieldValue.increment(1)
+              },
+              lastGenerationAt: admin.firestore.FieldValue.serverTimestamp()
+            }, { merge: true });
+
+            batch.commit().catch((e) => console.error("[/api/generate] Failed to update stats:", e));
           }
         } catch (err) {
           console.error(`[/api/generate] ${providerName} JSON parse failed. Provider: ${providerName}. Length:`, accumulated.length);
