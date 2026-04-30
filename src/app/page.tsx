@@ -158,6 +158,7 @@ export default async function LandingPage() {
     "name": "Imtihan",
     "url": "https://www.imtihan.live",
     "logo": "https://www.imtihan.live/Imtihan-logo.png",
+    "description": "Premium AI Exam Generator for Lebanese teachers, parents, and coordinators. Supporting Bac Libanais, Bac Français, and IB.",
     "sameAs": [
       "https://www.facebook.com/imtihan.live",
       "https://www.linkedin.com/company/imtihan-lebanon"
@@ -179,6 +180,7 @@ export default async function LandingPage() {
       { "@type": "State", "name": "Mount Lebanon" },
       { "@type": "City", "name": "Tripoli" },
       { "@type": "City", "name": "Sidon" },
+      { "@type": "City", "name": "Zahlé" },
       { "@type": "State", "name": "Bekaa" },
       { "@type": "Country", "name": "Lebanon" }
     ],
@@ -200,18 +202,21 @@ export default async function LandingPage() {
       { "@type": "AlignmentObject", "alignmentType": "educationalFramework", "educationalFramework": "Bac Libanais" },
       { "@type": "AlignmentObject", "alignmentType": "educationalFramework", "educationalFramework": "Brevet Libanais" },
       { "@type": "AlignmentObject", "alignmentType": "educationalFramework", "educationalFramework": "Bac Français" },
-      { "@type": "AlignmentObject", "alignmentType": "educationalFramework", "educationalFramework": "IB Diploma" }
+      { "@type": "AlignmentObject", "alignmentType": "educationalFramework", "educationalFramework": "IB Diploma" },
+      { "@type": "AlignmentObject", "alignmentType": "educationalLevel", "educationalFramework": "University" }
     ],
     "aggregateRating": {
       "@type": "AggregateRating",
       "ratingValue": "4.9",
-      "ratingCount": "128"
+      "ratingCount": "154",
+      "bestRating": "5",
+      "worstRating": "1"
     },
     "offers": {
       "@type": "Offer",
       "price": "0",
       "priceCurrency": "USD",
-      "description": "2 free exams"
+      "description": "2 free exams for every user"
     }
   };
 

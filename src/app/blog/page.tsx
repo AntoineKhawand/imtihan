@@ -1,14 +1,10 @@
-import type { Metadata } from "next";
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
-import { ArrowRight, BookOpen, Clock } from "lucide-react";
+import { ArrowRight, Clock, Filter } from "lucide-react";
 import { Logo } from "@/components/ui/Logo";
 import { UserNav } from "@/components/layout/UserNav";
-import { cookies } from "next/headers";
-
-export const metadata: Metadata = {
-  title: "Blog — Imtihan",
-  description: "Insights, tips, and strategies for modern educators and parents in Lebanon.",
-};
 
 const ARTICLES = [
   {
@@ -53,10 +49,14 @@ const ARTICLES = [
   }
 ];
 
-export default async function BlogIndexPage() {
-  const cookieStore = await cookies();
-  const session = cookieStore.get("__session");
-  const isAuthenticated = !!session;
+const CATEGORIES = ["All", "Teaching Strategies", "Productivity", "Parental Guides", "Leadership", "Higher Ed"];
+
+export default function BlogIndexPage() {
+  const [activeCategory, setActiveCategory] = useState("All");
+
+  const filteredArticles = activeCategory === "All" 
+    ? ARTICLES 
+    : ARTICLES.filter(a => a.category === activeCategory);
 
   return (
     <div className="min-h-screen bg-[var(--bg)] flex flex-col">
@@ -67,24 +67,9 @@ export default async function BlogIndexPage() {
           <Link href="/pricing" className="hover:text-[var(--text)] transition-colors">Pricing</Link>
         </div>
         <div className="flex items-center gap-3">
-          {isAuthenticated ? (
-            <UserNav />
-          ) : (
-            <>
-              <Link
-                href="/auth/login"
-                className="hidden md:inline-flex items-center text-sm text-[var(--text-secondary)] hover:text-[var(--text)] transition-colors"
-              >
-                Sign in
-              </Link>
-              <Link
-                href="/auth/login"
-                className="inline-flex items-center gap-1.5 h-9 px-4 rounded-xl bg-[var(--accent)] text-white text-sm font-medium hover:opacity-90 transition-opacity shadow-sm"
-              >
-                Try free <ArrowRight size={14} />
-              </Link>
-            </>
-          )}
+          <Link href="/auth/login" className="inline-flex items-center gap-1.5 h-9 px-4 rounded-xl bg-[var(--accent)] text-white text-sm font-medium hover:opacity-90 transition-opacity shadow-sm">
+            Try free <ArrowRight size={14} />
+          </Link>
         </div>
       </nav>
 
@@ -95,15 +80,31 @@ export default async function BlogIndexPage() {
           <h1 className="serif text-display-xl text-[var(--text)] leading-tight mb-4">
             Insights for the entire educational community
           </h1>
-          <p className="text-lg text-[var(--text-secondary)] max-w-2xl mx-auto leading-relaxed">
+          <p className="text-lg text-[var(--text-secondary)] max-w-2xl mx-auto leading-relaxed mb-12">
             Resources for teachers, parents, coordinators, and professors.
           </p>
+
+          <div className="flex flex-wrap items-center justify-center gap-2 max-w-3xl mx-auto">
+            {CATEGORIES.map((cat) => (
+              <button
+                key={cat}
+                onClick={() => setActiveCategory(cat)}
+                className={`h-9 px-4 rounded-full text-xs font-semibold transition-all duration-300 ${
+                  activeCategory === cat 
+                    ? "bg-[var(--accent)] text-white shadow-lg shadow-[var(--accent)]/20" 
+                    : "bg-[var(--surface)] text-[var(--text-secondary)] border border-[var(--border)] hover:border-[var(--accent)]/30"
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
         </div>
       </header>
 
-      <main className="flex-1 max-w-5xl mx-auto w-full px-6 md:px-10 py-16 md:py-24">
+      <main className="flex-1 max-w-6xl mx-auto w-full px-6 md:px-10 py-16 md:py-24">
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {ARTICLES.map((article) => (
+          {filteredArticles.map((article) => (
             <Link 
               key={article.slug} 
               href={`/blog/${article.slug}`}
