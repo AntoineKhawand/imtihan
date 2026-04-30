@@ -12,7 +12,7 @@ import {
  */
 async function processContentBlocks(
   text: string, 
-  baseOptions: { size: number; color?: string; font?: string; indent?: number; bidirectional?: boolean }
+  baseOptions: { size: number; color?: string; font?: string; indent?: number; bidirectional?: boolean; lang?: string }
 ): Promise<(Paragraph | Table)[]> {
   const blocks: (Paragraph | Table)[] = [];
   
@@ -84,7 +84,7 @@ async function processContentBlocks(
     if (graphMatch) {
       flushParagraph();
       const description = graphMatch[1].trim();
-      const descriptionLabel = lang === "fr" ? "📊 Description de la figure" : lang === "ar" ? "📊 وصف الشكل" : "📊 Figure description";
+      const descriptionLabel = baseOptions.lang === "fr" ? "📊 Description de la figure" : baseOptions.lang === "ar" ? "📊 وصف الشكل" : "📊 Figure description";
       if (description) {
         blocks.push(new Paragraph({
           children: [new TextRun({ text: descriptionLabel, bold: true, size: 18, color: "1a5e3f" })],
@@ -511,12 +511,12 @@ export async function generateWordDocument(
       alignment: isArabic ? AlignmentType.RIGHT : undefined,
     }));
 
-    children.push(...(await processContentBlocks(ex.statement, { size: 22, font: fontBody, color: textColor, bidirectional: isArabic })));
+    children.push(...(await processContentBlocks(ex.statement, { size: 22, font: fontBody, color: textColor, bidirectional: isArabic, lang })));
 
     if (ex.subQuestions && Array.isArray(ex.subQuestions) && ex.subQuestions.length > 0) {
       for (const sq of ex.subQuestions) {
         // Handle sub-questions by merging label, statement, and points on one line if possible
-        const statementBlocks = await processContentBlocks(sq.statement, { size: 22, font: fontBody, color: textColor, indent: 720, bidirectional: isArabic });
+        const statementBlocks = await processContentBlocks(sq.statement, { size: 22, font: fontBody, color: textColor, indent: 720, bidirectional: isArabic, lang });
         
         if (statementBlocks.length > 0 && statementBlocks[0] instanceof Paragraph) {
           // Take the children of the first paragraph and prepend the label + append points
@@ -541,7 +541,7 @@ export async function generateWordDocument(
 
           // If there were other blocks (tables, more lines), add them
           if (remainingLines.trim()) {
-            children.push(...(await processContentBlocks(remainingLines, { size: 22, font: fontBody, color: textColor, indent: 720, bidirectional: isArabic })));
+            children.push(...(await processContentBlocks(remainingLines, { size: 22, font: fontBody, color: textColor, indent: 720, bidirectional: isArabic, lang })));
           }
           // If there were other non-paragraph blocks from the original statement, add them
           const nonParaBlocks = statementBlocks.slice(1).filter(b => !(b instanceof Paragraph));
@@ -627,9 +627,9 @@ export async function generateWordDocument(
       children.push(new Paragraph({ text: "" }));
     }
 
-    children.push(...(await processContentBlocks(ex.solution.finalAnswer, { size: 22, font: fontBody, color: textColor, bidirectional: isArabic })));
+    children.push(...(await processContentBlocks(ex.solution.finalAnswer, { size: 22, font: fontBody, color: textColor, bidirectional: isArabic, lang })));
     const formattedMethodology = (ex.solution.methodology || "").replace(/(?<!^|[\n\r])(\*\*?(?:Étape|Step|خطوة)\s*\d+(?:\s*[:：])?)/gi, "\n\n$1");
-    children.push(...(await processContentBlocks(formattedMethodology, { size: 20, color: metaColor, font: fontBody, bidirectional: isArabic })));
+    children.push(...(await processContentBlocks(formattedMethodology, { size: 20, color: metaColor, font: fontBody, bidirectional: isArabic, lang })));
 
     // Micro-barème table
     if (ex.solution.microBareme && ex.solution.microBareme.length > 0) {

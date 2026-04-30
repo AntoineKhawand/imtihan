@@ -273,7 +273,7 @@ NOTICE in this example:
 - No point values per sub-question — only the exercise total is given.
 - The whole exercise tells a coherent mathematical story (g leads to f).`,
 
-  // Source: Bac S Liban 2018 (real structure, numbered sub-questions with letters)
+  // Source: Bac S Liban 2018 (real structure, numbered sub-questions avec letters)
   "bac-libanais-french-alt": `ALTERNATIVE FORMAT — Bac Liban 2018 (shorter exercises, explicit sub-point values):
 
 Exercice 2 (3 points)
@@ -424,14 +424,14 @@ export function buildGenerateSystemPrompt(context: ExamContext, hasDocument = fa
   const structural = structuralRules[currKey] ?? "";
 
   const chapterBlock = isUniversity
-    ? `<course_context>
-University mode: use the teacher's description to determine topics exactly.
-Match the rigor and notation expected at the described university level.
-</course_context>`
-    : `<selected_chapters>
-${chaptersSummary}
-Only generate exercises on these chapters. Do not introduce any concept outside this list.
-</selected_chapters>`;
+    ? `<course_context>\nUniversity mode: use the teacher's description to determine topics exactly.\nMatch the rigor and notation expected at the described university level.\n</course_context>`
+    : `<selected_chapters>\n${chaptersSummary}\nOnly generate exercises on these chapters. Do not introduce any concept outside this list.\n</selected_chapters>`;
+
+  const fewShotText = fewShotExample ? `FORMAT REFERENCE — study this real exam example before generating:\n${fewShotExample}\n` : "";
+
+  const translationText = hasDocument ? `
+- Vocabulary, notation, and level of rigor must match the document, but **EVERY WORD must be in the target language (${context.language})**.
+- TRANSLATION: If the uploaded document is in a different language than ${context.language}, you MUST translate all contexts, scenarios, and scientific terminology into ${context.language}. DO NOT leave any part of the source text in its original language.` : "";
 
   return `You are an expert examiner who writes authentic, high-quality exam questions for ${
     context.curriculumId === "bac-libanais" ? "the Lebanese Baccalaureate (CRDP)"
@@ -450,14 +450,9 @@ ${structural}
 
 ${DIFFICULTY_GUIDE}
 
-${fewShotExample ? `FORMAT REFERENCE — study this real exam example before generating:
-${fewShotExample}
-` : ""}
+${fewShotText}
 ${chapterBlock}
-
-${hasDocument ? `
-- Vocabulary, notation, and level of rigor must match the document, but **EVERY WORD must be in the target language (${context.language})**.
-- TRANSLATION: If the uploaded document is in a different language than ${context.language}, you MUST translate all contexts, scenarios, and scientific terminology into ${context.language}. DO NOT leave any part of the source text in its original language.` : ""}
+${translationText}
 ACADEMIC RESEARCH & VERIFICATION (MANDATORY):
 - Before generating any exercise involving physics, chemistry, or mathematics, you must simulate a "check the web" verification phase.
 - Cross-reference all formulas, constants, and notations against authoritative academic sources (e.g., NIST, IUPAC, CERN, or standard official textbooks for the specified curriculum like Bac Français or IB).
@@ -484,7 +479,7 @@ CRITICAL RULES:
    - SYSTEMS OF EQUATIONS: Use KaTeX \\begin{cases} ... \\end{cases} for all parametric equations or systems.
    - COORDINATES: Use standard notation $(x; y; z)$ or $A(x; y; z)$.
    - ZERO CODE POLICY: Every single variable, equation, and unit must be wrapped in $...$. If it is a mathematical object, it must be LaTeX.
-   - **NEVER use backticks (\\\`)** for mathematical expressions or LaTeX commands. Backticks are for code only.
+   - **NEVER use backticks (\`)** for mathematical expressions or LaTeX commands. Backticks are for code only.
    - **NO NESTED \\\\ce**: Never write \\\\ce{\\\\ce{...}}. Use a single \\\\ce{...} for the entire formula or equation.
 
 7. VISUALS — Use the following for visual elements:
@@ -492,7 +487,7 @@ CRITICAL RULES:
        | x | f(x) |
        |---|------|
        | 0 |  1   |
-   b) GRAPHS/DIAGRAMS: You MUST wrap all Mermaid code in triple backticks (\\\`\\\`\\\`mermaid ... \\\`\\\`\\\`).
+   b) GRAPHS/DIAGRAMS: You MUST wrap all Mermaid code in triple backticks (\`\`\`mermaid ... \`\`\`).
        NEVER output raw Mermaid code without backticks. 
        NEVER output plain text diagrams.
        If the diagram is too complex, use a clear Markdown table.
@@ -536,7 +531,7 @@ BARÈME (mandatory for every exercise):
 
 LAYOUT & CONTENT QUALITY:
 - **Markdown Tables**: Use standard Markdown table syntax for data comparisons, experimental results, or organized information.
-- **Graphs & Diagrams**: You cannot generate static image files (PNG/JPG). Instead, you MUST use Mermaid code blocks (\\\`\\\`\\\`mermaid ... \\\`\\\`\\\`) for logical diagrams (flowcharts, sequence diagrams).
+- **Graphs & Diagrams**: You cannot generate static image files (PNG/JPG). Instead, you MUST use Mermaid code blocks (\`\`\`mermaid ... \`\`\`) for logical diagrams (flowcharts, sequence diagrams).
     - **MATHEMATICAL PLOTS**: For mathematical functions (e.g. $f(x) = \\sin(x)$), DO NOT use Mermaid. Instead:
         1. Add the equation (e.g. "sin(x)") to the \`mathPlots\` array.
         2. Or use the tag \`[GRAPH: sin(x)]\` inside the \`statement\` to generate an AI-assisted visual.
@@ -570,7 +565,7 @@ JSON schema for each exercise:
   },
   "chapterIds": string[],
   "estimatedMinutes": number
-}\`;
+}`;
 }
 
 // ---------------------------------------------------------------------------
@@ -578,29 +573,34 @@ JSON schema for each exercise:
 // ---------------------------------------------------------------------------
 
 export function buildGenerateUserPrompt(context: ExamContext, extraContext?: string): string {
-  const difficultyBreakdown = \`
-- Easy:   \${Math.round(context.difficultyMix.easy   * context.exerciseCount)} exercise(s) (\${Math.round(context.difficultyMix.easy   * 100)}%)
-- Medium: \${Math.round(context.difficultyMix.medium * context.exerciseCount)} exercise(s) (\${Math.round(context.difficultyMix.medium * 100)}%)
-- Hard:   \${Math.round(context.difficultyMix.hard   * context.exerciseCount)} exercise(s) (\${Math.round(context.difficultyMix.hard   * 100)}%)\`;
+  const difficultyBreakdown = `
+- Easy:   ${Math.round(context.difficultyMix.easy   * context.exerciseCount)} exercise(s) (${Math.round(context.difficultyMix.easy   * 100)}%)
+- Medium: ${Math.round(context.difficultyMix.medium * context.exerciseCount)} exercise(s) (${Math.round(context.difficultyMix.medium * 100)}%)
+- Hard:   ${Math.round(context.difficultyMix.hard   * context.exerciseCount)} exercise(s) (${Math.round(context.difficultyMix.hard   * 100)}%)`;
 
-  return \`Generate \${context.exerciseCount} exercises. Reply with ONLY a JSON array starting with [ and ending with ] — no markdown, no prose, no explanation. Output must be valid parseable JSON.
+  const teacherNotesStr = context.teacherNotes ? `\nTeacher notes:\n${context.teacherNotes}` : "";
+  const templateStr = context.templateType === "modern" 
+    ? "\\nTEMPLATE: Use the standard Modern (Standard) layout. Ignore the visual layout of any uploaded documents — use them for content only." 
+    : `\nTEMPLATE: Extract and replicate the visual layout, header, and formatting from the uploaded document. Instructions: ${context.layoutPreferences || "Mimic the general header and question structure."}`;
+  const visualStr = context.visualPreference ? `\nVisual & Graph Requirements:\n${context.visualPreference}` : "";
+  const extraContextStr = extraContext ? `\nDOMAIN DATA CONTEXT:\n${extraContext}` : "";
 
-Curriculum : \${context.curriculumId}
-Level      : \${context.levelId}
-Subject    : \${context.subject}
-Language   : \${context.language}
-Exam type  : \${context.examType}
-Duration   : \${context.duration} minutes
-Total points: \${context.totalPoints} (points must sum to exactly \${context.totalPoints})
-Difficulty : \${difficultyBreakdown}
-\${context.teacherNotes ? \`\\nTeacher notes:\\n\${context.teacherNotes}\` : ""}
-\${context.templateType === "modern" 
-  ? "\\nTEMPLATE: Use the standard Modern (Standard) layout. Ignore the visual layout of any uploaded documents — use them for content only." 
-  : \`\\nTEMPLATE: Extract and replicate the visual layout, header, and formatting from the uploaded document. Instructions: \${context.layoutPreferences || "Mimic the general header and question structure."}\`}
-\${context.visualPreference ? \`\\nVisual & Graph Requirements:\\n\${context.visualPreference}\` : ""}
-\${extraContext ? \`\\nDOMAIN DATA CONTEXT:\\n\${extraContext}\` : ""}
+  return `Generate ${context.exerciseCount} exercises. Reply with ONLY a JSON array starting with [ and ending with ] — no markdown, no prose, no explanation. Output must be valid parseable JSON.
 
-Return the JSON array now.\`;
+Curriculum : ${context.curriculumId}
+Level      : ${context.levelId}
+Subject    : ${context.subject}
+Language   : ${context.language}
+Exam type  : ${context.examType}
+Duration   : ${context.duration} minutes
+Total points: ${context.totalPoints} (points must sum to exactly ${context.totalPoints})
+Difficulty : ${difficultyBreakdown}
+${teacherNotesStr}
+${templateStr}
+${visualStr}
+${extraContextStr}
+
+Return the JSON array now.`;
 }
 
 // ---------------------------------------------------------------------------
@@ -616,22 +616,22 @@ export function buildRegenerateExercisePrompt(
   const isUniversity = context.curriculumId === "university";
 
   const chapterBlock = isUniversity
-    ? \`<course_context>University mode — use the teacher's course description for topic scope.</course_context>\`
-    : \`<selected_chapters>
-\${buildChaptersSummary(context.curriculumId, context.levelId, context.subject, context.chapterIds)}
-</selected_chapters>\`;
+    ? `<course_context>\nUniversity mode — use the teacher's course description for topic scope.\n</course_context>`
+    : `<selected_chapters>\n${buildChaptersSummary(context.curriculumId, context.levelId, context.subject, context.chapterIds)}\n</selected_chapters>`;
 
-  return \`Generate a NEW, DIFFERENT replacement for exercise #\${exerciseNumber}.
-Current difficulty: \${currentDifficulty}.\${targetDifficulty ? \`\\nTarget difficulty: \${targetDifficulty}.\` : " Keep the same difficulty but use fresh numbers and a different approach."}
+  const targetDiffStr = targetDifficulty ? `\nTarget difficulty: ${targetDifficulty}.` : " Keep the same difficulty but use fresh numbers and a different approach.";
 
-Curriculum: \${context.curriculumId} | Level: \${context.levelId} | Subject: \${context.subject} | Language: \${context.language}
+  return `Generate a NEW, DIFFERENT replacement for exercise #${exerciseNumber}.
+Current difficulty: ${currentDifficulty}.${targetDiffStr}
 
-\${chapterBlock}
+Curriculum: ${context.curriculumId} | Level: ${context.levelId} | Subject: ${context.subject} | Language: ${context.language}
+
+${chapterBlock}
 
 STRICT MONOLINGUALISM:
-- You MUST write the entire exercise in \${context.language} ONLY. 
+- You MUST write the entire exercise in ${context.language} ONLY. 
 - If the original exercise or subject data is in a different language, translate it fully.
 - NO mixed languages (e.g., no English terms in a French exam).
 
-Return ONLY a single JSON exercise object (not an array). No markdown, no prose, no explanation. Output must be valid parseable JSON.\`;
+Return ONLY a single JSON exercise object (not an array). No markdown, no prose, no explanation. Output must be valid parseable JSON.`;
 }
