@@ -403,9 +403,13 @@ export async function generateWordDocument(
     try {
       const base64Data = header.schoolLogo.split(",")[1] || header.schoolLogo;
       const logoBuffer = Buffer.from(base64Data, "base64");
+      // Detect image type from data URI prefix (default to png)
+      const mimeMatch = header.schoolLogo.match(/^data:image\/(\w+);/);
+      const imgType = (mimeMatch?.[1] === "jpeg" || mimeMatch?.[1] === "jpg") ? "jpg" : "png";
       children.push(new Paragraph({
         children: [
           new ImageRun({
+            type: imgType,
             data: logoBuffer,
             transformation: { width: 80, height: 80 },
           }),
