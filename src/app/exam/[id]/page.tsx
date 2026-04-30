@@ -8,6 +8,7 @@ import { Logo } from "@/components/ui/Logo";
 import { Button } from "@/components/ui/Button";
 import { AlertCircle, Clock, Shield, CheckCircle2, Lock } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { renderContent } from "@/lib/renderContent";
 
 export default function StudentExamPage() {
   const { id } = useParams();
@@ -213,14 +214,28 @@ export default function StudentExamPage() {
 
       <main className="flex-1 max-w-3xl mx-auto w-full px-6 py-12 space-y-12">
         {exam.exercises.map((ex: any, idx: number) => (
-          <div key={idx} className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500" style={{ animationDelay: `${idx * 100}ms` }}>
+          <div key={ex.id || idx} className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500" style={{ animationDelay: `${idx * 100}ms` }}>
             <div className="flex items-center justify-between">
               <h2 className="serif text-2xl text-[var(--text)]">Exercise {idx + 1}</h2>
               <span className="text-xs font-bold text-[var(--text-tertiary)] uppercase tracking-widest">{ex.points} Points</span>
             </div>
             <div className="prose prose-imtihan max-w-none text-[var(--text)] bg-white p-8 rounded-3xl border border-[var(--border)] shadow-sm">
-              <div dangerouslySetInnerHTML={{ __html: ex.statement }} />
+              <div dangerouslySetInnerHTML={{ __html: renderContent(ex.statement) }} />
               
+              {ex.subQuestions && ex.subQuestions.length > 0 && (
+                <div className="mt-6 space-y-6 pl-4 border-l-2 border-[var(--bg-subtle)]">
+                  {ex.subQuestions.map((sq: any, sIdx: number) => (
+                    <div key={sIdx} className="space-y-3">
+                      <div className="flex gap-2">
+                        <span className="font-bold text-[var(--accent)]">{sq.label}</span>
+                        <div className="flex-1" dangerouslySetInnerHTML={{ __html: renderContent(sq.statement) }} />
+                        <span className="text-[10px] font-bold text-[var(--text-tertiary)] whitespace-nowrap">({sq.points} pts)</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
               <div className="mt-8 space-y-4">
                 <p className="text-xs font-bold text-[var(--text-tertiary)] uppercase tracking-widest">Your Answer:</p>
                 <textarea 

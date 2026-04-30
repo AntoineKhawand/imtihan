@@ -14,8 +14,9 @@ export async function POST(req: Request) {
     const examRef = await addDoc(collection(db, "live_exams"), {
       title: exam.title,
       context: exam.context,
-      exercises: exam.exercises.map((ex: any) => ({
+      exercises: exam.exercises.map((ex: any, idx: number) => ({
         ...ex,
+        id: ex.id || `ex-${idx}`,
         // Remove corrigé for student view
         solution: undefined,
         methodology: undefined
