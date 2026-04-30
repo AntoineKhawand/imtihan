@@ -123,6 +123,14 @@ export default function AdminPage() {
 
   const pendingRequests = users.filter(u => u.renewalRequested).length;
 
+  const now = Date.now();
+  const stats = {
+    total: users.length,
+    pro: users.filter(u => u.proExpiresAt && u.proExpiresAt > now).length,
+    free: users.filter(u => !u.proExpiresAt || u.proExpiresAt <= now).length,
+    active: users.filter(u => u.lastLoginAt && u.lastLoginAt > now - 7 * 24 * 60 * 60 * 1000).length,
+  };
+
   return (
     <div className="min-h-screen bg-[#FBFBFE] pb-20">
       {/* Header Section */}
@@ -135,7 +143,7 @@ export default function AdminPage() {
             <div>
               <h1 className="text-xl font-bold text-gray-900 tracking-tight">Admin Dashboard</h1>
               <div className="flex items-center gap-3 mt-1">
-                <span className="text-xs text-gray-400 font-medium">{users.length} Total Users</span>
+                <span className="text-xs text-gray-400 font-medium">{stats.total} Total Users</span>
                 {pendingRequests > 0 && (
                   <span className="text-[10px] font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-100 animate-pulse">
                     {pendingRequests} Renewal Requests
@@ -168,6 +176,41 @@ export default function AdminPage() {
       </div>
 
       <div className="max-w-7xl mx-auto px-6 md:px-10">
+        {/* KPI Cards Section */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          <div className="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm">
+            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Total Community</p>
+            <p className="text-2xl font-black text-gray-900">{stats.total}</p>
+            <div className="flex items-center gap-1.5 mt-2">
+              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+              <span className="text-[10px] font-medium text-gray-400">Lifetime Teachers</span>
+            </div>
+          </div>
+          <div className="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm border-b-emerald-500 border-b-2">
+            <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest mb-1">Pro Active</p>
+            <p className="text-2xl font-black text-gray-900">{stats.pro}</p>
+            <div className="flex items-center gap-1.5 mt-2">
+              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="text-[10px] font-medium text-emerald-600">{Math.round((stats.pro / stats.total) * 100) || 0}% Conversion</span>
+            </div>
+          </div>
+          <div className="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm">
+            <p className="text-[10px] font-bold text-blue-600 uppercase tracking-widest mb-1">Free Tier</p>
+            <p className="text-2xl font-black text-gray-900">{stats.free}</p>
+            <div className="flex items-center gap-1.5 mt-2">
+              <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+              <span className="text-[10px] font-medium text-blue-600">{stats.free} Potential Pro</span>
+            </div>
+          </div>
+          <div className="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm border-b-purple-500 border-b-2">
+            <p className="text-[10px] font-bold text-purple-600 uppercase tracking-widest mb-1">Weekly Active</p>
+            <p className="text-2xl font-black text-gray-900">{stats.active}</p>
+            <div className="flex items-center gap-1.5 mt-2">
+              <div className="w-1.5 h-1.5 rounded-full bg-purple-500" />
+              <span className="text-[10px] font-medium text-purple-600">{Math.round((stats.active / stats.total) * 100) || 0}% Retention</span>
+            </div>
+          </div>
+        </div>
         {/* Legend Panel */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
           <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex items-start gap-4 hover:border-emerald-200 transition-colors group">
