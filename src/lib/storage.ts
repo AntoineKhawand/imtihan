@@ -46,6 +46,7 @@ export interface ClassProfile {
 export interface SchoolSettings {
   schoolName: string;
   teacherName: string;
+  schoolLogo?: string; // Base64 string
 }
 
 // ─── Storage keys ───────────────────────────────────────────────────────────

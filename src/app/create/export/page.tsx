@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, FileText, FileDown, Mail, BookOpen, CheckCircle2, Plus, Sparkles, Eye, EyeOff, Save, Shuffle, Globe } from "lucide-react";
+import { ArrowLeft, FileText, FileDown, Mail, BookOpen, CheckCircle2, Plus, Sparkles, Eye, EyeOff, Save, Shuffle, Globe, Shield, Image as ImageIcon } from "lucide-react";
+import { toast } from "sonner";
 import { UserNav } from "@/components/layout/UserNav";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/FormElements";
@@ -32,6 +33,7 @@ export default function ExportPage() {
   const [className, setClassName] = useState("");
   const [teacherName, setTeacherName] = useState("");
   const [examDate, setExamDate] = useState("");
+  const [schoolLogo, setSchoolLogo] = useState<string | undefined>(undefined);
 
   const [includeAnswerKey, setIncludeAnswerKey] = useState(true);
   const [downloading, setDownloading] = useState<"word" | "pdf" | null>(null);
@@ -45,6 +47,10 @@ export default function ExportPage() {
   const [variant, setVariant] = useState<"A" | "B">("A");
   const [exportLanguage, setExportLanguage] = useState<"french" | "english" | "arabic">("french");
   const [examSeed] = useState(() => shortId());
+
+  // Live Exam states
+  const [publishing, setPublishing] = useState(false);
+  const [liveLink, setLiveLink] = useState<string | null>(null);
 
   // Track whether we've saved to the library
   const [savedToLibrary, setSavedToLibrary] = useState(false);
@@ -67,15 +73,28 @@ export default function ExportPage() {
     if (settings) {
       setSchoolName(settings.schoolName ?? "");
       setTeacherName(settings.teacherName ?? "");
+      setSchoolLogo(settings.schoolLogo);
     }
   }, [router]);
 
   // Auto-save school settings whenever they change
   useEffect(() => {
-    if (schoolName || teacherName) {
-      saveSchoolSettings({ schoolName, teacherName });
+    if (schoolName || teacherName || schoolLogo) {
+      saveSchoolSettings({ schoolName, teacherName, schoolLogo });
     }
-  }, [schoolName, teacherName]);
+  }, [schoolName, teacherName, schoolLogo]);
+
+  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 1024 * 1024) {
+      alert("Logo is too large. Please use a file under 1MB.");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => setSchoolLogo(reader.result as string);
+    reader.readAsDataURL(file);
+  };
 
   async function handleDownload(format: "word" | "pdf") {
     if (!context || !exercises.length) return;
@@ -93,7 +112,7 @@ export default function ExportPage() {
           exercises: exportExercises,
           format,
           includeAnswerKey,
-          header: { schoolName, className, teacherName, date: examDate },
+          header: { schoolName, className, teacherName, date: examDate, schoolLogo },
         }),
       });
 
@@ -121,6 +140,38 @@ export default function ExportPage() {
       alert(err instanceof Error ? err.message : "Failed to download. Please try again.");
     } finally {
       setDownloading(null);
+    }
+  }
+
+  async function handlePublishLive() {
+    if (!context || !exercises.length) return;
+    setPublishing(true);
+    try {
+      const res = await fetch("/api/exam/publish", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          exam: {
+            title: buildExamTitle(context),
+            context,
+            exercises,
+            teacherId: profile?.uid
+          },
+          settings: {
+            timeLimit: context.duration || 60,
+            shuffleQuestions: true,
+            antiCheating: true
+          }
+        })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to publish");
+      setLiveLink(data.link);
+      if (!savedToLibrary) saveExamToLibrary();
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "Failed to create live link");
+    } finally {
+      setPublishing(false);
     }
   }
 
@@ -254,12 +305,84 @@ export default function ExportPage() {
               <Input label="Teacher name" placeholder="M. Teacher Name" value={teacherName} onChange={(e) => setTeacherName(e.target.value)} />
               <Input label="Date" type="date" value={examDate} onChange={(e) => setExamDate(e.target.value)} />
             </div>
+
+            {/* Logo Upload — Premium */}
+            <div className={cn("pt-2", isFreeTier && "opacity-60")}>
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-semibold text-[var(--text)]">School Logo (Pro)</span>
+                {isFreeTier && <span className="text-[10px] font-bold text-[var(--accent)]">UPGRADE TO ADD LOGO</span>}
+              </div>
+              <div className="flex items-center gap-4">
+                <div className="w-16 h-16 rounded-xl border-2 border-dashed border-[var(--border)] flex items-center justify-center overflow-hidden bg-[var(--surface)]">
+                  {schoolLogo ? (
+                    <img src={schoolLogo} alt="School Logo" className="w-full h-full object-contain p-1" />
+                  ) : (
+                    <ImageIcon size={24} className="text-[var(--text-tertiary)]" />
+                  )}
+                </div>
+                <div className="flex-1">
+                  <input
+                    type="file"
+                    id="logo-upload"
+                    accept="image/*"
+                    onChange={handleLogoUpload}
+                    disabled={isFreeTier}
+                    className="hidden"
+                  />
+                  <label
+                    htmlFor="logo-upload"
+                    className={cn(
+                      "inline-flex items-center gap-2 h-9 px-4 rounded-lg border text-xs font-bold transition-all cursor-pointer",
+                      isFreeTier 
+                        ? "bg-[var(--surface)] text-[var(--text-tertiary)] border-[var(--border)] cursor-not-allowed" 
+                        : "bg-white border-[var(--border)] text-[var(--text)] hover:border-[var(--accent)] hover:text-[var(--accent)]"
+                    )}
+                  >
+                    <Plus size={14} />
+                    {schoolLogo ? "Change Logo" : "Upload Logo"}
+                  </label>
+                  {schoolLogo && !isFreeTier && (
+                    <button 
+                      onClick={() => setSchoolLogo(undefined)}
+                      className="ml-3 text-[10px] font-bold text-red-500 hover:underline"
+                    >
+                      Remove
+                    </button>
+                  )}
+                  <p className="text-[10px] text-[var(--text-tertiary)] mt-2">Recommended: Square PNG with transparent background.</p>
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Download options */}
           <div className="card p-6 space-y-4">
             <div className="flex items-center justify-between gap-4 flex-wrap">
-              <h3 className="font-semibold text-[var(--text)]">Download</h3>
+              <h3 className="font-semibold text-[var(--text)]">Layout &amp; Download</h3>
+              <div className="flex gap-2">
+                {(["classic", "modern"] as const).map((t) => (
+                  <button
+                    key={t}
+                    onClick={() => {
+                      if (t === "modern" && isFreeTier) return;
+                      setTemplateId(t);
+                    }}
+                    className={cn(
+                      "text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-lg border transition-all",
+                      templateId === t
+                        ? "bg-[var(--accent)] text-white border-[var(--accent)] shadow-md"
+                        : "bg-white border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)]/30",
+                      t === "modern" && isFreeTier && "opacity-50 grayscale cursor-not-allowed"
+                    )}
+                  >
+                    {t} {t === "modern" && isFreeTier && "🔒"}
+                  </button>
+                ))}
+              </div>
+            </div>
+            
+            <div className="flex items-center justify-between gap-4 flex-wrap pt-2">
+              <span className="text-xs font-medium text-[var(--text-secondary)]">Export Options</span>
               {/* Corrigé toggle */}
               <button
                 onClick={() => setIncludeAnswerKey(!includeAnswerKey)}
@@ -386,6 +509,60 @@ export default function ExportPage() {
                 <CheckCircle2 size={14} />
                 Saved to your library
               </div>
+            )}
+          </div>
+
+          {/* Live Exam Share — Pro */}
+          <div className={cn("card p-6", isFreeTier && "opacity-60 relative")}>
+            {isFreeTier && (
+              <div className="absolute inset-0 z-10 flex items-center justify-center bg-[var(--surface)]/40 backdrop-blur-[1px] rounded-2xl">
+                <div className="bg-[var(--bg)] px-4 py-2 rounded-full border border-[var(--border)] shadow-sm flex items-center gap-2">
+                  <span className="text-xs font-semibold text-[var(--text)]">Pro Feature</span>
+                  <Link href="/community" className="text-xs text-[var(--accent)] hover:underline">Upgrade</Link>
+                </div>
+              </div>
+            )}
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <Globe size={16} className="text-[var(--text-secondary)]" />
+                <span className="text-sm font-semibold text-[var(--text)]">Live Student Link</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Shield size={12} className="text-emerald-500" />
+                <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest">Anti-Cheating Active</span>
+              </div>
+            </div>
+
+            {liveLink ? (
+              <div className="space-y-3 animate-in fade-in slide-in-from-top-2 duration-300">
+                <div className="flex gap-2">
+                  <Input readOnly value={liveLink} className="flex-1 bg-[var(--surface)] font-mono text-[10px]" />
+                  <Button 
+                    variant="secondary" 
+                    size="md" 
+                    onClick={() => {
+                      navigator.clipboard.writeText(liveLink);
+                      toast.success("Link copied to clipboard");
+                    }}
+                  >
+                    Copy
+                  </Button>
+                </div>
+                <p className="text-[10px] text-[var(--text-tertiary)] leading-relaxed">
+                  Students can take this exam online. Their results and any cheating warnings will appear in your dashboard.
+                </p>
+              </div>
+            ) : (
+              <Button 
+                variant="secondary" 
+                className="w-full h-11 rounded-xl border-emerald-100 bg-emerald-50/50 text-emerald-700 hover:bg-emerald-50"
+                onClick={handlePublishLive}
+                loading={publishing}
+                disabled={isFreeTier}
+                icon={<Sparkles size={14} />}
+              >
+                Create Live Link
+              </Button>
             )}
           </div>
 
