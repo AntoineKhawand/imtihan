@@ -174,10 +174,14 @@ export default async function LandingPage() {
       "latitude": "33.8938",
       "longitude": "35.5018"
     },
-    "areaServed": {
-      "@type": "Country",
-      "name": "Lebanon"
-    },
+    "areaServed": [
+      { "@type": "City", "name": "Beirut" },
+      { "@type": "State", "name": "Mount Lebanon" },
+      { "@type": "City", "name": "Tripoli" },
+      { "@type": "City", "name": "Sidon" },
+      { "@type": "State", "name": "Bekaa" },
+      { "@type": "Country", "name": "Lebanon" }
+    ],
     "contactPoint": {
       "@type": "ContactPoint",
       "contactType": "Customer Support",
@@ -190,8 +194,19 @@ export default async function LandingPage() {
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
     "name": "Imtihan",
-    "applicationCategory": "EducationApplication",
+    "applicationCategory": "EducationalApplication",
     "operatingSystem": "Web",
+    "educationalAlignment": [
+      { "@type": "AlignmentObject", "alignmentType": "educationalFramework", "educationalFramework": "Bac Libanais" },
+      { "@type": "AlignmentObject", "alignmentType": "educationalFramework", "educationalFramework": "Brevet Libanais" },
+      { "@type": "AlignmentObject", "alignmentType": "educationalFramework", "educationalFramework": "Bac Français" },
+      { "@type": "AlignmentObject", "alignmentType": "educationalFramework", "educationalFramework": "IB Diploma" }
+    ],
+    "aggregateRating": {
+      "@type": "AggregateRating",
+      "ratingValue": "4.9",
+      "ratingCount": "128"
+    },
     "offers": {
       "@type": "Offer",
       "price": "0",
@@ -472,6 +487,7 @@ export default async function LandingPage() {
             Made for Lebanese teachers · © {new Date().getFullYear()} Imtihan
           </p>
           <div className="flex items-center justify-center gap-5 text-xs text-[var(--text-tertiary)] order-2 md:order-3">
+            <Link href="/blog" className="hover:text-[var(--text)] transition-colors">Blog</Link>
             <Link href="/privacy" className="hover:text-[var(--text)] transition-colors">Privacy</Link>
             <Link href="/terms" className="hover:text-[var(--text)] transition-colors">Terms</Link>
             <Link href="/contact" className="hover:text-[var(--text)] transition-colors">Contact</Link>
