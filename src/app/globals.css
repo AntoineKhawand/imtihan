@@ -99,7 +99,13 @@
   .dark input:-webkit-autofill:focus, 
   .dark input:-webkit-autofill:active {
     -webkit-box-shadow: 0 0 0 1000px #161616 inset !important;
-    -webkit-text-fill-color: #fafaf7 !important;
+    -text-fill-color: #fafaf7 !important;
+  }
+
+  /* Prevent "black flash" on dropdown options in some browsers */
+  select option {
+    background-color: var(--surface);
+    color: var(--text);
   }
 }
 

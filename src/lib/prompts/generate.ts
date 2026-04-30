@@ -506,7 +506,9 @@ CRITICAL RULES:
 
 9. CHEMISTRY NOTATION: For all organic molecules, you MUST use \\\\ce{...}. Example: \\\\ce{CH3-CH2-OH}.
 
-10. OUTPUT: Start your response with [ and end with ]. Output ONLY the raw JSON array — no prose, no markdown fences, no explanation.
+10. GENERIC CONTENT: Avoid using specific school names (e.g., "Lycée français de Beyrouth") or teacher names unless explicitly provided in teacher notes. Keep the context generic (e.g., "Dans un laboratoire de chimie...", "Un professeur souhaite...").
+
+11. OUTPUT: Start your response with [ and end with ]. Output ONLY the raw JSON array — no prose, no markdown fences, no explanation.
 
 SOLUTION QUALITY — The corrigé must be readable at a glance:
 - Use "Step 1:", "Step 2:" or "Étape 1:", "Étape 2:" headers. DO NOT use markdown bold stars (**).

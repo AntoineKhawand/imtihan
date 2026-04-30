@@ -46,12 +46,10 @@ export async function POST(request: NextRequest) {
       - MANDATORY: Wrap code in triple backticks. Return within 'statement'.`;
     } else if (type === "image") {
       const imageReq = prompt ? `The user wants: "${prompt}"` : `Add a suitable scientific illustration.`;
-      instruction = `- Task: Generate a SCIENTIFICALLY ACCURATE and highly descriptive image prompt.
+      instruction = `- Task: Add an academic illustration to the 'statement'.
       - ${imageReq}
-      - REALISM: The prompt must describe a visual that is factually correct according to scientific standards (e.g., correct lab equipment, accurate biological structures).
-      - YOUR GOAL: Expand the request into a detailed, professional prompt for FLUX. Describe exactly what should be visible to ensure relevance.
-      - STYLE: Academic, clean vector illustration, minimalist, high-fidelity, white background.
-      - Keep JSON EXACTLY the same, only modify 'statement'.`;
+      - FORMAT: You MUST insert a tag like [IMAGE: Your Detailed Descriptive Prompt] into the 'statement'.
+      - Do NOT delete the original text, just insert the [IMAGE: ...] tag.`;
     } else if (type === "plot") {
       const plotReq = prompt ? `The user wants: "${prompt}"` : `Plot the main function described in the problem.`;
       instruction = `- Task: Identify the mathematical function or coordinate grid requested.

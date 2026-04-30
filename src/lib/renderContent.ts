@@ -172,8 +172,16 @@ function applyMarkdown(text: string): string {
   // 1. Detect and style "Step X:" or "Étape X:" headers
   // We match optional markdown bold stars, the step keyword, number, and colon
   let processed = text.replace(/(?:\*\*|__)?(Step|Étape|خطوة)\s*(\d+)\s*(?::|：)?(?:\*\*|__)?/gi, (_match, keyword, num) => {
-    // Return a styled badge for the step
-    return `<span class="inline-flex items-center px-2 py-0.5 rounded-md bg-[var(--accent)] text-white text-[10px] font-bold uppercase tracking-wider mr-2 mb-1 shadow-sm transition-transform hover:scale-105 select-none">${keyword} ${num}</span>`;
+    const n = parseInt(num);
+    const colors = [
+      'bg-emerald-600 shadow-emerald-500/20', 
+      'bg-sky-600 shadow-sky-500/20', 
+      'bg-indigo-600 shadow-indigo-500/20', 
+      'bg-violet-600 shadow-violet-500/20'
+    ];
+    const colorClass = colors[(n - 1) % colors.length] || colors[0];
+    
+    return `<span class="inline-flex items-center px-2 py-0.5 rounded-md ${colorClass} text-white text-[10px] font-bold uppercase tracking-wider mr-2 mb-1 shadow-md border border-white/10 transition-transform hover:scale-105 select-none">${keyword} ${num}</span>`;
   });
 
   let md = processed

@@ -67,7 +67,7 @@ async function anonymizeUser(oldEmail, newEmail, newName) {
 }
 
 const OLD_EMAIL = "antoinekhawand04@gmail.com";
-const NEW_EMAIL = "teacher_anon_88@imtihan.app";
-const NEW_NAME = "Anonymous Educator";
+const NEW_EMAIL = "p.dubois@hotmail.com";
+const NEW_NAME = "Pierre Dubois";
 
 anonymizeUser(OLD_EMAIL, NEW_EMAIL, NEW_NAME);
