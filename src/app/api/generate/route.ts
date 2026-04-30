@@ -52,11 +52,11 @@ const ExamContextSchema = z.object({
   layoutPreferences: z.string().optional(),
 });
 
-const RequestSchema = z.object({
   context: ExamContextSchema,
   templateId: z.string().default("default"),
   documentBase64: z.string().optional(),
   documentMimeType: z.string().optional(),
+  isAdjustment: z.boolean().optional().default(false),
 });
 
 /**
@@ -399,11 +399,14 @@ export async function POST(request: NextRequest) {
             encoder.encode(`data: ${JSON.stringify({ done: true, exercises })}\n\n`)
           );
           // Increment both monthly and lifetime counters (fire-and-forget)
-          userRef.update({ 
-            monthlyExamsGenerated: admin.firestore.FieldValue.increment(1),
-            examsGenerated: admin.firestore.FieldValue.increment(1)
-          })
-            .catch((e) => console.error("[/api/generate] Failed to increment usage counters:", e));
+          // ONLY if this is a fresh generation, not an adjustment/regeneration of a single exercise.
+          if (!parsed.data.isAdjustment) {
+            userRef.update({ 
+              monthlyExamsGenerated: admin.firestore.FieldValue.increment(1),
+              examsGenerated: admin.firestore.FieldValue.increment(1)
+            })
+              .catch((e) => console.error("[/api/generate] Failed to increment usage counters:", e));
+          }
         } catch (err) {
           console.error(`[/api/generate] ${providerName} JSON parse failed. Provider: ${providerName}. Length:`, accumulated.length);
           console.error("[/api/generate] Parse error:", err);

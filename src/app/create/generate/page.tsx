@@ -98,6 +98,7 @@ export default function GeneratePage() {
         body: JSON.stringify({
           context,
           templateId,
+          isAdjustment: exercises.length > 0,
           ...(uploadedDoc ? { documentBase64: uploadedDoc.base64, documentMimeType: uploadedDoc.type } : {}),
         }),
         signal: abortRef.current.signal,
@@ -176,6 +177,7 @@ export default function GeneratePage() {
             } : {}),
           },
           templateId,
+          isAdjustment: true,
           ...(uploadedDoc ? { documentBase64: uploadedDoc.base64, documentMimeType: uploadedDoc.type } : {}),
         }),
       });
