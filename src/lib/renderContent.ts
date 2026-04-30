@@ -288,7 +288,7 @@ export function renderContent(raw: string): string {
     const lines = content.trim().split("\n");
     const data: Record<string, string[]> = {};
     
-    lines.forEach(line => {
+    lines.forEach((line: string) => {
       const parts = line.split(":");
       if (parts.length === 2) {
         data[parts[0].trim()] = parts[1].split(",").map(p => p.trim());
@@ -300,12 +300,12 @@ export function renderContent(raw: string): string {
 
     let tableHtml = `<div class="my-8 overflow-hidden rounded-2xl border border-[var(--border)] bg-white shadow-xl max-w-full"><div class="bg-[var(--bg-subtle)] px-6 py-3 border-b border-[var(--border)] flex items-center justify-between"><span class="text-[10px] font-bold uppercase tracking-widest text-[var(--text-tertiary)]">Python Visualization Example</span><div class="flex gap-1.5"><div class="w-2 h-2 rounded-full bg-red-400/50"></div><div class="w-2 h-2 rounded-full bg-amber-400/50"></div><div class="w-2 h-2 rounded-full bg-emerald-400/50"></div></div></div><div class="p-8 overflow-x-auto"><table class="w-full border-collapse font-serif text-[var(--text)]">`;
     
-    labels.forEach((label, lIdx) => {
+    labels.forEach((label: string, lIdx: number) => {
       const values = data[label];
       tableHtml += `<tr class="${lIdx < labels.length - 1 ? 'border-b-2 border-[var(--text)]/20' : ''}">`;
       tableHtml += `<td class="py-6 pr-8 font-bold italic text-lg border-r-2 border-[var(--text)]/20 w-20 text-center">${label}</td>`;
       
-      values.forEach(val => {
+      values.forEach((val: string) => {
         let displayVal = val;
         let extraClasses = "text-center px-4 py-6 text-base";
         
