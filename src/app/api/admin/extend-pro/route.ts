@@ -32,9 +32,11 @@ export async function POST(request: NextRequest) {
 
     const current = snap.data()?.proExpiresAt ?? undefined;
     const newExpiry = extendProByDays(current, days);
+    const planType = days >= 365 ? "yearly" : "monthly";
 
     await ref.update({
       proExpiresAt: newExpiry,
+      planType,
       monthlyExamsGenerated: 0,
       monthlyPeriodStart: Date.now(),
       renewalRequested: false,

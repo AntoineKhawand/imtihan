@@ -135,7 +135,7 @@ export default function UpgradePage() {
             <span className="italic text-[var(--accent)]">In seconds.</span>
           </h1>
           <p className="text-[var(--text-secondary)] max-w-lg mx-auto leading-relaxed text-sm">
-            10 exams per month. Pay via WHISH Money, get instant access. No auto-renewals.
+            10 exams/mo (Monthly plan) or 20 exams/mo (Yearly plan). Pay via WHISH Money, get instant access. No auto-renewals.
           </p>
         </div>
 

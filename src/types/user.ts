@@ -20,6 +20,8 @@ export interface UserProfile {
   extraExamsQuota?: number;
   /** Unix timestamp (ms) when the Pro plan expires. Set by admin after Whish payment. */
   proExpiresAt?: number;
+  /** Type of Pro plan. Determines monthly generation limit (10 for monthly, 20 for yearly). */
+  planType?: "monthly" | "yearly";
   /** Unix ms of the last renewal reminder email sent — prevents duplicate sends. */
   lastReminderSentAt?: number;
   /** Unix ms of the last login. */

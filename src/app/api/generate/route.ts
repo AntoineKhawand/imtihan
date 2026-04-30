@@ -213,7 +213,8 @@ export async function POST(request: NextRequest) {
     // 1. Determine which counter and limit to check
     const quotaUsed = isPro ? (userData.monthlyExamsGenerated ?? 0) : (userData.examsGenerated ?? 0);
     const extraQuota = userData.extraExamsQuota ?? 0;
-    const baseLimit = isPro ? MONTHLY_LIMITS.pro : MONTHLY_LIMITS.free;
+    const proLimit = userData.planType === "yearly" ? 20 : MONTHLY_LIMITS.pro;
+    const baseLimit = isPro ? proLimit : MONTHLY_LIMITS.free;
     const limit = baseLimit + extraQuota;
     const periodStart: number = userData.monthlyPeriodStart ?? now;
 

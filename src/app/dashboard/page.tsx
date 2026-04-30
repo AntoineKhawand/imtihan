@@ -57,7 +57,8 @@ export default function DashboardPage() {
   const isPro = isProActive(profile) || isInGracePeriod(profile);
   const quotaUsed = isPro ? (profile?.monthlyExamsGenerated ?? 0) : (profile?.examsGenerated ?? 0);
   const extraQuota = profile?.extraExamsQuota ?? 0;
-  const baseLimit = isPro ? 10 : FREE_EXAM_LIMIT;
+  const proLimit = profile?.planType === "yearly" ? 20 : 10;
+  const baseLimit = isPro ? proLimit : FREE_EXAM_LIMIT;
   const totalLimit = baseLimit + extraQuota;
   const quotaRemaining = Math.max(0, totalLimit - quotaUsed);
   const examsGenerated = exams.length;
