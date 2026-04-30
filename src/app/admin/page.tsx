@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
 import { FREE_EXAM_LIMIT } from "@/lib/utils";
+import { RefreshCw, Search, Calendar, Clock, Info, ShieldCheck, Mail, User, Zap, Sparkles, Plus, BarChart3, TrendingUp } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const subjectMap: Record<string, string> = {
