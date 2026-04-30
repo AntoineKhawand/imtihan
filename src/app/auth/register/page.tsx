@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/FormElements";
 import { Logo as BrandLogo } from "@/components/ui/Logo";
 import type { UserRole } from "@/types/user";
+import fpPromise from "@fingerprintjs/fingerprintjs";
 
 function getExplicitRedirect(): string | null {
   if (typeof document === "undefined") return null;
@@ -58,6 +59,22 @@ function RegisterForm() {
     setLoading(true);
     setError(null);
     try {
+      const fp = await fpPromise.load();
+      const fpResult = await fp.get();
+      const fingerprint = fpResult.visitorId;
+
+      const checkRes = await fetch("/api/auth/check-device", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ fingerprint }),
+      });
+      const checkData = await checkRes.json();
+      
+      if (!checkRes.ok || !checkData.allowed) {
+        setError(checkData.error || "Registration blocked for this device.");
+        return;
+      }
+
       const credential = await createUserWithEmailAndPassword(auth, email, password);
       if (displayName.trim()) {
         await updateProfile(credential.user, { displayName: displayName.trim() });
@@ -71,6 +88,7 @@ function RegisterForm() {
         country: "LB",
         examsGenerated: 0,
         subscription: { status: "none", tier: "free" },
+        fingerprint,
       });
       await setSessionCookie(await credential.user.getIdToken());
       window.location.assign(explicitRedirect ?? "/dashboard");
@@ -99,6 +117,23 @@ function RegisterForm() {
       const credential = await signInWithPopup(auth, provider);
       const additionalInfo = getAdditionalUserInfo(credential);
       if (additionalInfo?.isNewUser) {
+        const fp = await fpPromise.load();
+        const fpResult = await fp.get();
+        const fingerprint = fpResult.visitorId;
+
+        const checkRes = await fetch("/api/auth/check-device", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ fingerprint }),
+        });
+        const checkData = await checkRes.json();
+        
+        if (!checkRes.ok || !checkData.allowed) {
+          await credential.user.delete();
+          setError(checkData.error || "Registration blocked for this device.");
+          return;
+        }
+
         await setDoc(doc(db, "users", credential.user.uid), {
           uid: credential.user.uid,
           email: credential.user.email ?? "",
@@ -108,6 +143,7 @@ function RegisterForm() {
           country: "LB",
           examsGenerated: 0,
           subscription: { status: "none", tier: "free" },
+          fingerprint,
         });
       }
       await setSessionCookie(await credential.user.getIdToken());
