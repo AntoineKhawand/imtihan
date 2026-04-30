@@ -765,7 +765,7 @@ export function ExerciseCard({
                   className="text-sm text-[var(--text-secondary)] leading-relaxed space-y-1"
                   dangerouslySetInnerHTML={{ 
                     __html: renderContent(
-                      (exercise.solution.methodology || "").replace(/(?<!^|[\n\r])(\*\*?(?:Étape|Step|خطوة)\s*\d+(?:\s*[:：])?)/gi, "\n\n$1")
+                      (exercise.solution.methodology || "").replace(/(?<!^|[\n\r])((?:Étape|Step|خطوة)\s*\d+(?:\s*[:：])?)/gi, "\n\n$1")
                     ) 
                   }}
                 />

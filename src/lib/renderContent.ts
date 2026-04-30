@@ -169,7 +169,14 @@ function parseTables(text: string): string {
 }
 
 function applyMarkdown(text: string): string {
-  let md = text
+  // 1. Detect and style "Step X:" or "Étape X:" headers
+  // We match optional markdown bold stars, the step keyword, number, and colon
+  let processed = text.replace(/(?:\*\*|__)?(Step|Étape|خطوة)\s*(\d+)\s*(?::|：)?(?:\*\*|__)?/gi, (_match, keyword, num) => {
+    // Return a styled badge for the step
+    return `<span class="inline-flex items-center px-2 py-0.5 rounded-md bg-[var(--accent)] text-white text-[10px] font-bold uppercase tracking-wider mr-2 mb-1 shadow-sm transition-transform hover:scale-105 select-none">${keyword} ${num}</span>`;
+  });
+
+  let md = processed
     .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
     .replace(/(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)/g, "<em>$1</em>")
     .replace(/`([^`]+)`/g, '<code class="font-mono text-xs bg-[var(--bg-subtle)] px-1 py-0.5 rounded">$1</code>');

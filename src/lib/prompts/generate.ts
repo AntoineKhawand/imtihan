@@ -509,7 +509,7 @@ CRITICAL RULES:
 10. OUTPUT: Start your response with [ and end with ]. Output ONLY the raw JSON array — no prose, no markdown fences, no explanation.
 
 SOLUTION QUALITY — The corrigé must be readable at a glance:
-- Use "**Step 1:**", "**Step 2:**" headers.
+- Use "Step 1:", "Step 2:" or "Étape 1:", "Étape 2:" headers. DO NOT use markdown bold stars (**).
 - Show the literal formula BEFORE putting numbers in.
 - End with a boxed final answer: "$\\\\\\\\boxed{result}$".
 
