@@ -206,12 +206,12 @@ export default function UpgradePage() {
               <div className="border border-[var(--border)] rounded-2xl p-6 bg-[var(--surface)] space-y-4">
                 <h3 className="font-semibold text-[var(--text)] flex items-center gap-2"><User size={15} className="text-[var(--text-tertiary)]" /> Customer Information</h3>
                 <Field label="Full Name" required>
-                  <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="Teacher Name" className={inp} required />
+                  <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="e.g. Jean-Paul Mansour" className={inp} required />
                 </Field>
                 <Field label="Email Address" required>
                   <div className="relative">
                     <Mail size={13} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)]" />
-                    <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="you@school.edu.lb" className={`${inp} pl-9`} required />
+                    <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="jp.mansour@imtihan.live" className={`${inp} pl-9`} required />
                   </div>
                 </Field>
                 <Field label="Phone Number (optional)">
@@ -272,11 +272,11 @@ export default function UpgradePage() {
                   <div className="p-5 space-y-4 text-[12px]">
                     <div className="space-y-1.5 pb-4 border-b border-[var(--border)]">
                       <div className="flex gap-2"><span className="text-[var(--text-tertiary)] w-14 flex-shrink-0">From</span><span className="font-medium text-[var(--text)]">Imtihan &lt;hello@imtihan.live&gt;</span></div>
-                      <div className="flex gap-2"><span className="text-[var(--text-tertiary)] w-14 flex-shrink-0">To</span><span className="text-[var(--text)]">{email || "your@email.com"}</span></div>
+                      <div className="flex gap-2"><span className="text-[var(--text-tertiary)] w-14 flex-shrink-0">To</span><span className="text-[var(--text)]">{email || "jp.mansour@imtihan.live"}</span></div>
                       <div className="flex gap-2"><span className="text-[var(--text-tertiary)] w-14 flex-shrink-0">Subject</span><span className="font-semibold text-[var(--text)]">Your Imtihan Pro upgrade — payment instructions</span></div>
                     </div>
                     <div className="space-y-3 text-[var(--text-secondary)] leading-relaxed">
-                      <p>Hi <span className="font-semibold text-[var(--text)]">{name || "there"}</span>,</p>
+                      <p>Hi <span className="font-semibold text-[var(--text)]">{name || "Jean-Paul"}</span>,</p>
                       <p>Thank you for choosing <strong className="text-[var(--text)]">Imtihan Pro ({plan === "yearly" ? `Yearly — $${YEARLY_TOTAL}/year` : `Monthly — $${MONTHLY_PRICE}/month`})</strong>.</p>
                       <div className="bg-[var(--bg-subtle)] rounded-xl p-4 border border-[var(--border)] space-y-2">
                         <p className="font-semibold text-[var(--text)] text-[11px] uppercase tracking-wider">Payment Instructions</p>
@@ -305,11 +305,11 @@ export default function UpgradePage() {
                       <div className="flex justify-end">
                         <div className="bg-[#dcf8c6] p-3 rounded-2xl rounded-tr-none max-w-[85%] shadow-sm text-[11px] leading-relaxed">
                           Hello! I'd like to upgrade to Imtihan Pro ({plan === "yearly" ? `Yearly — $${YEARLY_TOTAL}/year` : `Monthly — $${MONTHLY_PRICE}/month`}).<br />
-                          Email: <span className="font-medium">{email || "your@email.com"}</span>
+                          Email: <span className="font-medium">{email || "jp.mansour@imtihan.live"}</span>
                         </div>
                       </div>
                       <div className="flex flex-col items-start gap-2">
-                        <div className="bg-white p-3 rounded-2xl rounded-tl-none max-w-[85%] shadow-sm text-[11px]">Hi {name || "there"}! Welcome 👋</div>
+                        <div className="bg-white p-3 rounded-2xl rounded-tl-none max-w-[85%] shadow-sm text-[11px]">Hi {name || "Jean-Paul"}! Welcome 👋</div>
                         <div className="bg-white p-3 rounded-2xl rounded-tl-none max-w-[85%] shadow-sm text-[11px] leading-relaxed">
                           {payment === "whish"
                             ? <>Send <strong>${total.toFixed(2)}</strong> via WHISH to +{WHISH_NUMBER} and you&apos;re all set!</>

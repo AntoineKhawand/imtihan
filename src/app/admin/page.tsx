@@ -480,7 +480,7 @@ export default function AdminPage() {
                                 <span className="text-[8px] font-black bg-amber-500 text-white px-1.5 py-0.5 rounded uppercase tracking-tighter">REQ</span>
                               )}
                             </div>
-                            <p className="text-xs text-gray-400 font-medium">{u.displayName || "Unknown Teacher"}</p>
+                            <p className="text-xs text-gray-400 font-medium">{u.displayName || "Anonymized Educator"}</p>
                           </div>
                         </div>
                       </td>

@@ -70,7 +70,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const newProfile: UserProfile = {
           uid: currentUser.uid,
           email: currentUser.email ?? "",
-          displayName: currentUser.displayName ?? "",
+          displayName: currentUser.displayName ?? "Educator",
           createdAt: Date.now(),
           role: "teacher",
           country: "LB",
