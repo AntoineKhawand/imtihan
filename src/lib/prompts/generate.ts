@@ -522,6 +522,16 @@ LATEX IN METHODOLOGY (CRITICAL — violations produce unreadable corrigés):
 - Period/constants: $T_0 = 2\\\\\\\\pi\\\\\\\\sqrt{\\\\\\\\frac{m}{k}}$ NOT "T0 = 2π√(m/k)"
 - Units inline: $k = 12{,}5 \\\\\\\\text{ N/m}$ NOT "k = 12,5 N/m" after a calculation
 - Never write subscripts as plain digits after a variable: always $x_m$, $T_0$, $E_c$ — never "xm", "T0", "Ec".
+- TABLEAU DE VARIATIONS (CRITICAL): Use a single Markdown table.
+  - Arrows: Use $\\\\\\\\nearrow$ (up) and $\\\\\\\\searrow$ (down). NEVER write "earrow" or "nearrow" without backslashes.
+  - Alignment: Put $x$, $f'(x)$, and $f(x)$ in the first column.
+  - Horizontal lines: Do NOT break the table into multiple markdown blocks. One single block for the whole table.
+  - Example:
+    | $x$ | $-\\\\\\\\infty$ | $1$ | $2$ | $+\\\\\\\\infty$ |
+    |---|---|---|---|---|
+    | $f'(x)$ | $+$ | $0$ | $-$ | $0$ | $+$ |
+    | $f(x)$ | $-\\\\\\\\infty$ | $\\\\\\\\nearrow f(1)$ | $\\\\\\\\searrow f(2)$ | $\\\\\\\\nearrow +\\\\\\\\infty$ |
+- BOXED ANSWERS: Every final result MUST be in $\\\\\\\\boxed{...}$ and wrapped in $...$. Example: "$\\\\\\\\boxed{y = 12x - 5}$".
 
 BARÈME (mandatory for every exercise):
 - bareme: one entry per sub-question (or per main question if no sub-questions). label = the question label ("1.a", "Q2", "Partie B - 3", etc.), points = integer, criterion = one short sentence stating what earns those points (e.g. "Expression correcte de la force de Coulomb" or "Balanced equation with state symbols").

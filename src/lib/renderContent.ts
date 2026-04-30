@@ -114,6 +114,12 @@ function parseNakedMath(text: string): string {
     }
     return match;
   });
+
+  // 4. Arrow Hallucinations: Fix "nearrow", "searrow", "earrow" without backslashes
+  return processed.replace(/\b(nearrow|searrow|earrow)\b/gi, (match) => {
+    const arrow = match.toLowerCase().includes("se") ? "\\searrow" : "\\nearrow";
+    return `$${arrow}$`;
+  });
 }
 
 function parseTables(text: string): string {
