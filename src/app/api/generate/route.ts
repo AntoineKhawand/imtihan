@@ -52,6 +52,7 @@ const ExamContextSchema = z.object({
   layoutPreferences: z.string().optional(),
 });
 
+const RequestSchema = z.object({
   context: ExamContextSchema,
   templateId: z.string().default("default"),
   documentBase64: z.string().optional(),
