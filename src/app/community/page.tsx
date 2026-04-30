@@ -103,7 +103,7 @@ export default function CommunityPage() {
           exercises: exam.exercises,
           format: "word",
           includeAnswerKey: true,
-          header: { schoolName: exam.school || "Imtihan Community" },
+          header: { schoolName: "Imtihan Community" },
         }),
       });
       if (!res.ok) throw new Error("Download failed");
