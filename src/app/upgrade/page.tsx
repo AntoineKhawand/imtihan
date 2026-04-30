@@ -17,7 +17,7 @@ const SAVINGS       = (MONTHLY_PRICE * 12 - YEARLY_TOTAL).toFixed(2);
 const WHISH_NUMBER  = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? "96170542238";
 
 const PRO_FEATURES = [
-  "100 exams per month",
+  "10 exams per month",
   "All curricula & subjects",
   "Corrigé included per exam",
   "Word + PDF export",
@@ -131,11 +131,11 @@ export default function UpgradePage() {
             <Zap size={12} className="fill-current" /> Upgrade to Pro
           </div>
           <h1 className="serif text-display-xl text-[var(--text)] tracking-tight max-w-2xl mx-auto leading-[1.1]">
-            Generate unlimited exams.<br />
+            Generate high-quality exams.<br />
             <span className="italic text-[var(--accent)]">In seconds.</span>
           </h1>
           <p className="text-[var(--text-secondary)] max-w-lg mx-auto leading-relaxed text-sm">
-            100 exams per month. Pay via WHISH Money, get instant access. No auto-renewals.
+            10 exams per month. Pay via WHISH Money, get instant access. No auto-renewals.
           </p>
         </div>
 

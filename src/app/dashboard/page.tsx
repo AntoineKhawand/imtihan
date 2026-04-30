@@ -187,7 +187,7 @@ export default function DashboardPage() {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold text-[var(--text)] mb-1">Pro plan</p>
-                <p className="text-xs text-[var(--text-tertiary)]">{profile?.monthlyExamsGenerated ?? 0}/100 exams this month</p>
+                <p className="text-xs text-[var(--text-tertiary)]">{profile?.monthlyExamsGenerated ?? 0}/10 exams this month</p>
               </div>
               <div className="flex items-center gap-2">
                 {renewalRequested ? (
@@ -229,7 +229,7 @@ export default function DashboardPage() {
                   </div>
                 </div>
                 <p className="text-xs text-[var(--text-secondary)] mt-1.5">
-                  Upgrade to Pro for 100 exams/month and advanced AI tools.
+                  Upgrade to Pro for 10 exams/month and advanced AI tools.
                 </p>
               </div>
               <div className="flex flex-col items-end gap-2">

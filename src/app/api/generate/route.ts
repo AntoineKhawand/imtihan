@@ -11,7 +11,7 @@ import { getHumanitiesContext } from "@/lib/humanities";
 import { GEOGRAPHIC_SUBJECTS } from "@/data/curricula";
 
 const MONTHLY_PERIOD_MS = 30 * 24 * 60 * 60 * 1000;
-const MONTHLY_LIMITS = { free: 2, pro: 100 } as const;
+const MONTHLY_LIMITS = { free: 2, pro: 10 } as const;
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

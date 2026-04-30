@@ -265,7 +265,7 @@ function CreatePageContent() {
                 
                 <h2 className="serif text-2xl text-[var(--text)] mb-3">You&apos;ve reached the free limit</h2>
                 <p className="text-sm text-[var(--text-secondary)] mb-8 max-w-sm mx-auto leading-relaxed">
-                  You&apos;ve generated <span className="font-bold text-[var(--text)]">{FREE_EXAM_LIMIT} free exams</span>. Upgrade to Pro for 100 exams per month, saved history, and priority support.
+                  You&apos;ve generated <span className="font-bold text-[var(--text)]">{FREE_EXAM_LIMIT} free exams</span>. Upgrade to Pro for 10 exams per month, saved history, and priority support.
                 </p>
                 
                 <div className="flex flex-col sm:flex-row items-center gap-3 justify-center">

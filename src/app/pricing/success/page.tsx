@@ -36,7 +36,7 @@ export default function PricingSuccessPage() {
           
           <h1 className="serif text-display-md text-[var(--text)] mb-4">Welcome to Pro!</h1>
           <p className="text-[var(--text-secondary)] mb-8 leading-relaxed">
-            Your subscription is active. You now have unlimited access to all Imtihan features. Start creating exams!
+            Your subscription is active. You now have Pro access to all Imtihan features. Start creating exams!
           </p>
 
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
