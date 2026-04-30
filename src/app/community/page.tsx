@@ -299,7 +299,6 @@ export default function CommunityPage() {
                       {/* Author */}
                       <p className="text-xs text-[var(--text-tertiary)]">
                         By <span className="font-medium text-[var(--text-secondary)]">{exam.author}</span>
-                        {exam.school && <span> · {exam.school}</span>}
                       </p>
                     </div>
 
@@ -391,12 +390,6 @@ export default function CommunityPage() {
                   <span className="text-[var(--text-tertiary)] block mb-0.5">Author</span>
                   <span className="font-medium text-[var(--text)]">{previewExam.author}</span>
                 </div>
-                {previewExam.school && (
-                  <div>
-                    <span className="text-[var(--text-tertiary)] block mb-0.5">School</span>
-                    <span className="font-medium text-[var(--text)]">{previewExam.school}</span>
-                  </div>
-                )}
                 <div>
                   <span className="text-[var(--text-tertiary)] block mb-0.5">Exercises</span>
                   <span className="font-medium text-[var(--text)]">{previewExam.exercises.length}</span>
