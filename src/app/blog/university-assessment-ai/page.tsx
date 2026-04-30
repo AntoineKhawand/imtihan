@@ -50,7 +50,7 @@ export default function UniversityBlogPage() {
 
             <BlogCallout 
               title="Professor's Tip" 
-              content="I upload my LaTeX lecture notes directly to Imtihan. It generates exam questions that use my exact notation and nomenclature, which prevents student confusion during finals." 
+              content="I upload my lecture notes directly to Imtihan. It generates exam questions that use my exact notation and nomenclature, which prevents student confusion during finals." 
             />
 
             <h2 id="streamlining" className="text-2xl font-bold text-[var(--text)] mt-12 mb-4 serif">Streamlining Higher Ed</h2>
@@ -67,6 +67,12 @@ export default function UniversityBlogPage() {
             bio="Dr. Zein has been teaching Engineering and Physics at Lebanon's top universities for over a decade. He advocates for AI as a tool to enhance academic rigor."
           />
           <BlogRelated currentSlug="university-assessment-ai" />
+
+          {/* MOBILE WIDGETS */}
+          <div className="lg:hidden mt-12 space-y-10 border-t border-[var(--border)] pt-12">
+            <BlogCalculator />
+            <BlogShare title={title} url={url} />
+          </div>
         </main>
 
         <aside className="hidden lg:flex flex-col gap-10 sticky top-24 self-start">

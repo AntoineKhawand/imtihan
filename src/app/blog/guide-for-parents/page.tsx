@@ -67,6 +67,12 @@ export default function ParentsBlogPage() {
             bio="Rima is a former school principal and a mother of three. she helps parents navigate the complexities of the Lebanese educational system with modern tools."
           />
           <BlogRelated currentSlug="guide-for-parents" />
+
+          {/* MOBILE WIDGETS */}
+          <div className="lg:hidden mt-12 space-y-10 border-t border-[var(--border)] pt-12">
+            <BlogCalculator />
+            <BlogShare title={title} url={url} />
+          </div>
         </main>
 
         <aside className="hidden lg:flex flex-col gap-10 sticky top-24 self-start">

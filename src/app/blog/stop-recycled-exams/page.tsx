@@ -82,6 +82,12 @@ export default function BlogPostPage() {
           />
 
           <BlogRelated currentSlug="stop-recycled-exams" />
+
+          {/* MOBILE WIDGETS */}
+          <div className="lg:hidden mt-12 space-y-10 border-t border-[var(--border)] pt-12">
+            <BlogCalculator />
+            <BlogShare title={title} url={url} />
+          </div>
         </main>
 
         {/* ── SIDEBAR ────────────────────────────────────────────────── */}

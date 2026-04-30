@@ -67,6 +67,12 @@ export default function CoordinatorsBlogPage() {
             bio="Jean-Pierre has led academic departments in prestigious Beirut schools for over 20 years. He focuses on institutional quality and teacher empowerment through technology."
           />
           <BlogRelated currentSlug="exam-standardization" />
+
+          {/* MOBILE WIDGETS */}
+          <div className="lg:hidden mt-12 space-y-10 border-t border-[var(--border)] pt-12">
+            <BlogCalculator />
+            <BlogShare title={title} url={url} />
+          </div>
         </main>
 
         <aside className="hidden lg:flex flex-col gap-10 sticky top-24 self-start">

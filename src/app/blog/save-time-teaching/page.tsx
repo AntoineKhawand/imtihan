@@ -76,6 +76,12 @@ export default function ProductivityBlogPage() {
             bio="Samer is a dedicated math teacher with 10 years of experience in the Lebanese secondary curriculum. He specializes in integrating technology to improve student outcomes."
           />
           <BlogRelated currentSlug="save-time-teaching" />
+
+          {/* MOBILE WIDGETS */}
+          <div className="lg:hidden mt-12 space-y-10 border-t border-[var(--border)] pt-12">
+            <BlogCalculator />
+            <BlogShare title={title} url={url} />
+          </div>
         </main>
 
         <aside className="hidden lg:flex flex-col gap-10 sticky top-24 self-start">

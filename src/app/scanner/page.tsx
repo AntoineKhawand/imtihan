@@ -244,7 +244,7 @@ export default function ScannerPage() {
                       
                       <h2 className="serif text-3xl text-[var(--text)] mb-2">Processing with AI</h2>
                       <p className="text-[var(--text-secondary)] mb-8 max-w-sm">
-                        Imtihan AI is currently reading your handwriting and converting it to professional LaTeX notation.
+                        Imtihan AI is currently reading your handwriting and converting it to professional mathematical notation.
                       </p>
 
                       <div className="w-full max-w-xs space-y-4">
@@ -301,7 +301,7 @@ export default function ScannerPage() {
                         <div>
                           <p className="text-sm font-bold text-amber-900 mb-1">Double-Check Scientific Notation</p>
                           <p className="text-xs text-amber-800/80 leading-relaxed">
-                            The AI has extracted LaTeX formulas. If the handwriting was unclear, you can edit the text after saving it to your bank.
+                            The AI has extracted mathematical formulas. If the handwriting was unclear, you can edit the text after saving it to your bank.
                           </p>
                         </div>
                       </div>
