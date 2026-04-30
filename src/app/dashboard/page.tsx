@@ -237,7 +237,7 @@ export default function DashboardPage() {
                 </a>
                 <button
                   onClick={() => setIsBundleModalOpen(true)}
-                  className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors ml-2"
+                  className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg bg-[var(--accent-light)] text-[var(--accent)] hover:opacity-90 transition-opacity ml-2"
                 >
                   <Plus size={12} /> Buy Extra Bundle
                 </button>
@@ -360,26 +360,26 @@ export default function DashboardPage() {
       {isBundleModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setIsBundleModalOpen(false)} />
-          <div className="relative bg-white rounded-2xl shadow-xl border border-gray-100 w-full max-w-md p-6 animate-in fade-in zoom-in-95 duration-200">
+          <div className="relative bg-[var(--surface)] rounded-2xl shadow-2xl border border-[var(--border)] w-full max-w-md p-6 animate-in fade-in zoom-in-95 duration-200">
             <button
               onClick={() => setIsBundleModalOpen(false)}
-              className="absolute top-4 right-4 p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+              className="absolute top-4 right-4 p-1.5 text-[var(--text-tertiary)] hover:text-[var(--text)] hover:bg-[var(--bg-subtle)] rounded-lg transition-colors"
             >
               <X size={18} />
             </button>
             
             <div className="text-center mb-6">
-              <div className="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center mx-auto mb-3">
+              <div className="w-12 h-12 rounded-xl bg-[var(--accent-light)] text-[var(--accent)] flex items-center justify-center mx-auto mb-3">
                 <Plus size={24} />
               </div>
-              <h3 className="text-xl font-bold text-gray-900">Buy Extra Exams</h3>
-              <p className="text-sm text-gray-500 mt-1">Select how many exams you want to add to your account.</p>
+              <h3 className="serif text-2xl font-bold text-[var(--text)]">Buy Extra Exams</h3>
+              <p className="text-sm text-[var(--text-secondary)] mt-1">Select how many exams you want to add to your account.</p>
             </div>
 
             <div className="mb-8">
               <div className="flex justify-between items-end mb-4">
-                <span className="text-3xl font-black text-gray-900 tabular-nums">+{bundleSize} <span className="text-sm font-medium text-gray-500">exams</span></span>
-                <span className="text-2xl font-bold text-blue-600 tabular-nums">${BUNDLE_PRICES[bundleSize]}</span>
+                <span className="serif text-3xl font-black text-[var(--text)] tabular-nums">+{bundleSize} <span className="text-sm font-medium text-[var(--text-secondary)]">exams</span></span>
+                <span className="serif text-2xl font-bold text-[var(--accent)] tabular-nums">${BUNDLE_PRICES[bundleSize]}</span>
               </div>
               
               <input
@@ -389,9 +389,9 @@ export default function DashboardPage() {
                 step="10"
                 value={bundleSize}
                 onChange={(e) => setBundleSize(Number(e.target.value))}
-                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                className="w-full h-2 bg-[var(--border)] rounded-lg appearance-none cursor-pointer accent-[var(--accent)]"
               />
-              <div className="flex justify-between text-[10px] text-gray-400 font-medium mt-2 px-1">
+              <div className="flex justify-between text-[10px] text-[var(--text-tertiary)] font-medium mt-2 px-1">
                 <span>10</span>
                 <span>20</span>
                 <span>30</span>
@@ -400,10 +400,10 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            <Button onClick={handleBuyBundle} className="w-full h-12 text-base font-semibold bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-600/20">
+            <Button onClick={handleBuyBundle} className="w-full h-12 text-base font-semibold shadow-lg shadow-[var(--accent)]/20">
               Purchase via WHISH
             </Button>
-            <p className="text-[10px] text-gray-400 text-center mt-3 font-medium uppercase tracking-wider">No auto-renewals</p>
+            <p className="text-[10px] text-[var(--text-tertiary)] text-center mt-3 font-medium uppercase tracking-wider">No auto-renewals</p>
           </div>
         </div>
       )}
