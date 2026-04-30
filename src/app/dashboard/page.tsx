@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Plus, BookOpen, Clock, Award, Search, Sparkles, FileText, Copy, Trash2, ChevronRight, Bookmark, Users, Zap, CreditCard, CheckCircle2, TrendingUp } from "lucide-react";
+import { Plus, BookOpen, Clock, Award, Search, Sparkles, FileText, Copy, Trash2, ChevronRight, Bookmark, Users, Zap, CreditCard, CheckCircle2, TrendingUp, X } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { DashboardSidebar } from "@/components/layout/DashboardSidebar";
 import { RenewalBanner } from "@/components/ui/RenewalBanner";
@@ -101,6 +101,24 @@ export default function DashboardPage() {
 
   const [requestingRenewal, setRequestingRenewal] = useState(false);
   const [renewalRequested, setRenewalRequested] = useState(profile?.renewalRequested ?? false);
+  const [isBundleModalOpen, setIsBundleModalOpen] = useState(false);
+  const [bundleSize, setBundleSize] = useState<number>(10);
+
+  const BUNDLE_PRICES: Record<number, number> = {
+    10: 4.99,
+    20: 8.99,
+    30: 11.99,
+    40: 14.99,
+    50: 16.99
+  };
+
+  const handleBuyBundle = () => {
+    const price = BUNDLE_PRICES[bundleSize];
+    const msg = `Hello! I need to buy the Extra Exams Bundle for my Imtihan Pro account. I would like +${bundleSize} extra exams for $${price}.`;
+    const url = `https://wa.me/${process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? "96170542238"}?text=${encodeURIComponent(msg)}`;
+    window.open(url, "_blank", "noopener,noreferrer");
+    setIsBundleModalOpen(false);
+  };
 
   async function handleRequestRenewal() {
     setRequestingRenewal(true);
@@ -217,14 +235,12 @@ export default function DashboardPage() {
                   <CreditCard size={12} />
                   WhatsApp
                 </a>
-                <a
-                  href={`https://wa.me/${process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? "96170542238"}?text=${encodeURIComponent("Hello! I need to buy an Extra Exams Bundle for my Imtihan Pro account. What are the options?")}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                <button
+                  onClick={() => setIsBundleModalOpen(true)}
                   className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors ml-2"
                 >
                   <Plus size={12} /> Buy Extra Bundle
-                </a>
+                </button>
               </div>
             </>
           ) : quotaUsed >= totalLimit ? (
@@ -339,6 +355,58 @@ export default function DashboardPage() {
 
         </main>
       </div>
+
+      {/* Bundle Modal */}
+      {isBundleModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setIsBundleModalOpen(false)} />
+          <div className="relative bg-white rounded-2xl shadow-xl border border-gray-100 w-full max-w-md p-6 animate-in fade-in zoom-in-95 duration-200">
+            <button
+              onClick={() => setIsBundleModalOpen(false)}
+              className="absolute top-4 right-4 p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+            >
+              <X size={18} />
+            </button>
+            
+            <div className="text-center mb-6">
+              <div className="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center mx-auto mb-3">
+                <Plus size={24} />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900">Buy Extra Exams</h3>
+              <p className="text-sm text-gray-500 mt-1">Select how many exams you want to add to your account.</p>
+            </div>
+
+            <div className="mb-8">
+              <div className="flex justify-between items-end mb-4">
+                <span className="text-3xl font-black text-gray-900 tabular-nums">+{bundleSize} <span className="text-sm font-medium text-gray-500">exams</span></span>
+                <span className="text-2xl font-bold text-blue-600 tabular-nums">${BUNDLE_PRICES[bundleSize]}</span>
+              </div>
+              
+              <input
+                type="range"
+                min="10"
+                max="50"
+                step="10"
+                value={bundleSize}
+                onChange={(e) => setBundleSize(Number(e.target.value))}
+                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+              />
+              <div className="flex justify-between text-[10px] text-gray-400 font-medium mt-2 px-1">
+                <span>10</span>
+                <span>20</span>
+                <span>30</span>
+                <span>40</span>
+                <span>50</span>
+              </div>
+            </div>
+
+            <Button onClick={handleBuyBundle} className="w-full h-12 text-base font-semibold bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-600/20">
+              Purchase via WHISH
+            </Button>
+            <p className="text-[10px] text-gray-400 text-center mt-3 font-medium uppercase tracking-wider">No auto-renewals</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
