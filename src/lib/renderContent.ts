@@ -282,6 +282,57 @@ export function renderContent(raw: string): string {
     return `%%VISUAL_${idx}%%`;
   });
 
+  // NEW: Variation Table Logic (Python-style visualization)
+  text = text.replace(/\[(?:VARIATION|TABLE_VAR):\s*([\s\S]*?)\]/gi, (_match, content) => {
+    const idx = visualBlocks.length;
+    const lines = content.trim().split("\n");
+    const data: Record<string, string[]> = {};
+    
+    lines.forEach(line => {
+      const parts = line.split(":");
+      if (parts.length === 2) {
+        data[parts[0].trim()] = parts[1].split(",").map(p => p.trim());
+      }
+    });
+
+    const labels = Object.keys(data);
+    if (labels.length < 2) return _match;
+
+    let tableHtml = `<div class="my-8 overflow-hidden rounded-2xl border border-[var(--border)] bg-white shadow-xl max-w-full"><div class="bg-[var(--bg-subtle)] px-6 py-3 border-b border-[var(--border)] flex items-center justify-between"><span class="text-[10px] font-bold uppercase tracking-widest text-[var(--text-tertiary)]">Python Visualization Example</span><div class="flex gap-1.5"><div class="w-2 h-2 rounded-full bg-red-400/50"></div><div class="w-2 h-2 rounded-full bg-amber-400/50"></div><div class="w-2 h-2 rounded-full bg-emerald-400/50"></div></div></div><div class="p-8 overflow-x-auto"><table class="w-full border-collapse font-serif text-[var(--text)]">`;
+    
+    labels.forEach((label, lIdx) => {
+      const values = data[label];
+      tableHtml += `<tr class="${lIdx < labels.length - 1 ? 'border-b-2 border-[var(--text)]/20' : ''}">`;
+      tableHtml += `<td class="py-6 pr-8 font-bold italic text-lg border-r-2 border-[var(--text)]/20 w-20 text-center">${label}</td>`;
+      
+      values.forEach(val => {
+        let displayVal = val;
+        let extraClasses = "text-center px-4 py-6 text-base";
+        
+        // Handle special symbols
+        if (val === "/" || val === "nearrow") {
+          displayVal = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="mx-auto text-[var(--text)]"><path d="m7 17 10-10"/><path d="M7 7h10v10"/></svg>`;
+        } else if (val === "\\" || val === "searrow") {
+          displayVal = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="mx-auto text-[var(--text)]"><path d="m7 7 10 10"/><path d="M17 7v10H7"/></svg>`;
+        } else if (val === "||") {
+          displayVal = `<div class="flex justify-center gap-1 h-12 items-center"><div class="w-0.5 h-full bg-red-400/60"></div><div class="w-0.5 h-full bg-red-400/60"></div></div>`;
+        } else if (val === "+" || val === "-") {
+          displayVal = `<span class="font-bold text-xl opacity-80">${val}</span>`;
+        } else if (val === "0") {
+          displayVal = `<div class="flex flex-col items-center gap-1"><span class="w-2 h-2 rounded-full border-2 border-[var(--text)]/40"></span></div>`;
+        }
+
+        tableHtml += `<td class="${extraClasses}">${displayVal}</td>`;
+      });
+      tableHtml += `</tr>`;
+    });
+
+    tableHtml += `</table></div><div class="bg-[var(--bg-subtle)] px-6 py-2 text-center"><p class="text-[9px] font-medium text-[var(--text-tertiary)] italic tracking-tight">Variation table generated from mathematical model</p></div></div>`;
+    
+    visualBlocks.push(tableHtml);
+    return `%%VISUAL_${idx}%%`;
+  });
+
   text = parseNakedMath(text);
 
   let displayParts = splitMath(text, "$$", "$$");
