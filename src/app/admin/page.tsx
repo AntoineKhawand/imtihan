@@ -16,6 +16,7 @@ interface AdminUser {
   proExpiresAt: number | null;
   examsGenerated: number;
   monthlyExamsGenerated?: number;
+  extraExamsQuota?: number;
 }
 
 function formatDate(ts: number | null): string {
@@ -82,6 +83,30 @@ export default function AdminPage() {
       setUsers((prev) =>
         prev.map((u) => u.uid === targetUid
           ? { ...u, proExpiresAt: data.proExpiresAt, monthlyExamsGenerated: 0, renewalRequested: false }
+          : u)
+      );
+    } catch (e) {
+      alert(`Error: ${(e as Error).message}`);
+    } finally {
+      setExtending(null);
+    }
+  }
+
+  async function handleAddQuota(targetUid: string, amount: number) {
+    if (!user) return;
+    setExtending(`${targetUid}-q${amount}`);
+    try {
+      const token = await user.getIdToken();
+      const res = await fetch("/api/admin/add-quota", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ targetUid, amount }),
+      });
+      if (!res.ok) throw new Error("Failed");
+      const data = await res.json();
+      setUsers((prev) =>
+        prev.map((u) => u.uid === targetUid
+          ? { ...u, extraExamsQuota: data.extraExamsQuota }
           : u)
       );
     } catch (e) {
@@ -168,7 +193,8 @@ export default function AdminPage() {
                   <th className="text-left px-4 py-3 font-medium">Registered / Login</th>
                   <th className="text-left px-4 py-3 font-medium">Status</th>
                   <th className="text-left px-4 py-3 font-medium">Expires</th>
-                  <th className="text-right px-4 py-3 font-medium">Quota</th>
+                  <th className="text-right px-4 py-3 font-medium">Used/Limit</th>
+                  <th className="text-right px-4 py-3 font-medium">Extra Quota</th>
                   <th className="text-right px-4 py-3 font-medium">Actions</th>
                 </tr>
               </thead>
@@ -188,14 +214,20 @@ export default function AdminPage() {
                       <td className="px-4 py-3"><ProBadge expiresAt={u.proExpiresAt} /></td>
                       <td className="px-4 py-3 text-gray-500 text-xs">{formatDate(u.proExpiresAt)}</td>
                       <td className="px-4 py-3 text-right text-xs">
-                        {u.monthlyExamsGenerated ?? 0}/{isPro ? 100 : FREE_EXAM_LIMIT}
+                        {u.monthlyExamsGenerated ?? 0}/{isPro ? 10 : FREE_EXAM_LIMIT}
                       </td>
-                      <td className="px-4 py-3 text-right flex justify-end gap-2">
-                        <button onClick={() => handleExtend(u.uid, 30)} className="bg-emerald-600 text-white text-xs px-2.5 py-1.5 rounded-lg hover:bg-emerald-700 transition-colors">
-                          {extending === `${u.uid}-30` ? "..." : "+ 30d"}
+                      <td className="px-4 py-3 text-right text-xs font-medium text-blue-600">
+                        {u.extraExamsQuota ?? 0}
+                      </td>
+                      <td className="px-4 py-3 text-right flex justify-end gap-1 flex-wrap">
+                        <button onClick={() => handleExtend(u.uid, 30)} className="bg-emerald-600 text-white text-[10px] px-2 py-1 rounded-md hover:bg-emerald-700 transition-colors">
+                          {extending === `${u.uid}-30` ? "..." : "Pro+30d"}
                         </button>
-                        <button onClick={() => handleExtend(u.uid, 365)} className="bg-violet-600 text-white text-xs px-2.5 py-1.5 rounded-lg hover:bg-violet-700 transition-colors">
-                          {extending === `${u.uid}-365` ? "..." : "+ 1y"}
+                        <button onClick={() => handleAddQuota(u.uid, 10)} className="bg-blue-600 text-white text-[10px] px-2 py-1 rounded-md hover:bg-blue-700 transition-colors">
+                          {extending === `${u.uid}-q10` ? "..." : "+10 Exams"}
+                        </button>
+                        <button onClick={() => handleAddQuota(u.uid, 30)} className="bg-blue-600 text-white text-[10px] px-2 py-1 rounded-md hover:bg-blue-700 transition-colors">
+                          {extending === `${u.uid}-q30` ? "..." : "+30 Exams"}
                         </button>
                       </td>
                     </tr>

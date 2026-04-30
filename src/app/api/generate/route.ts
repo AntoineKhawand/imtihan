@@ -212,7 +212,9 @@ export async function POST(request: NextRequest) {
 
     // 1. Determine which counter and limit to check
     const quotaUsed = isPro ? (userData.monthlyExamsGenerated ?? 0) : (userData.examsGenerated ?? 0);
-    const limit = isPro ? MONTHLY_LIMITS.pro : MONTHLY_LIMITS.free;
+    const extraQuota = userData.extraExamsQuota ?? 0;
+    const baseLimit = isPro ? MONTHLY_LIMITS.pro : MONTHLY_LIMITS.free;
+    const limit = baseLimit + extraQuota;
     const periodStart: number = userData.monthlyPeriodStart ?? now;
 
     // 2. Handle monthly reset for Pro users
@@ -225,7 +227,7 @@ export async function POST(request: NextRequest) {
     if (quotaUsed >= limit) {
       const msg = isPro
         ? `You have reached your monthly limit of ${limit} exams. Contact support if you need more.`
-        : `You have reached your total limit of ${limit} free exams. Upgrade to Pro for 100 exams per month.`;
+        : `You have reached your total limit of ${baseLimit} free exams. Upgrade to Pro for 10 exams per month.`;
       return NextResponse.json(
         { success: false, errors: [msg] },
         { status: 429, headers: createSecurityHeaders() }

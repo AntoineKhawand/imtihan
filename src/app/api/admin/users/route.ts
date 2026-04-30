@@ -22,6 +22,7 @@ export async function GET(request: NextRequest) {
         proExpiresAt: d.proExpiresAt ?? null,
         examsGenerated: d.examsGenerated ?? 0,
         monthlyExamsGenerated: d.monthlyExamsGenerated ?? 0,
+        extraExamsQuota: d.extraExamsQuota ?? 0,
       };
     });
     return NextResponse.json({ users });

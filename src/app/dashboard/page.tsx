@@ -55,8 +55,11 @@ export default function DashboardPage() {
   const router = useRouter();
 
   const isPro = isProActive(profile) || isInGracePeriod(profile);
-  const quotaUsed = profile?.examsGenerated ?? 0;
-  const quotaRemaining = Math.max(0, FREE_EXAM_LIMIT - quotaUsed);
+  const quotaUsed = isPro ? (profile?.monthlyExamsGenerated ?? 0) : (profile?.examsGenerated ?? 0);
+  const extraQuota = profile?.extraExamsQuota ?? 0;
+  const baseLimit = isPro ? 10 : FREE_EXAM_LIMIT;
+  const totalLimit = baseLimit + extraQuota;
+  const quotaRemaining = Math.max(0, totalLimit - quotaUsed);
   const examsGenerated = exams.length;
   const totalExercises = exams.reduce((acc, exam) => acc + exam.exercises.length, 0);
 
@@ -187,7 +190,8 @@ export default function DashboardPage() {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold text-[var(--text)] mb-1">Pro plan</p>
-                <p className="text-xs text-[var(--text-tertiary)]">{profile?.monthlyExamsGenerated ?? 0}/10 exams this month</p>
+                <p className="text-xs text-[var(--text-tertiary)]">{quotaUsed}/{totalLimit} exams this month</p>
+                {extraQuota > 0 && <p className="text-[10px] text-blue-500 font-medium mt-0.5">Includes +{extraQuota} extra exams</p>}
               </div>
               <div className="flex items-center gap-2">
                 {renewalRequested ? (
@@ -212,15 +216,23 @@ export default function DashboardPage() {
                   <CreditCard size={12} />
                   WhatsApp
                 </a>
+                <a
+                  href={`https://wa.me/${process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? "96170542238"}?text=${encodeURIComponent("Hello! I need to buy an Extra Exams Bundle for my Imtihan Pro account. What are the options?")}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors ml-2"
+                >
+                  <Plus size={12} /> Buy Extra Bundle
+                </a>
               </div>
             </>
-          ) : quotaUsed >= FREE_EXAM_LIMIT ? (
+          ) : quotaUsed >= totalLimit ? (
             /* Limit reached */
             <div className="flex-1 flex flex-col sm:flex-row items-start sm:items-center gap-4">
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
                   <p className="text-sm font-semibold text-[var(--text)]">
-                    Free limit reached — {quotaUsed}/{FREE_EXAM_LIMIT} exams used
+                    Free limit reached — {quotaUsed}/{totalLimit} exams used
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
@@ -264,10 +276,10 @@ export default function DashboardPage() {
                   <div className="flex-1 h-1.5 rounded-full bg-[var(--border)]">
                     <div
                       className="h-full rounded-full bg-[var(--accent)] transition-all"
-                      style={{ width: `${Math.min(100, (quotaUsed / FREE_EXAM_LIMIT) * 100)}%` }}
+                      style={{ width: `${Math.min(100, (quotaUsed / totalLimit) * 100)}%` }}
                     />
                   </div>
-                  <span className="text-xs text-[var(--text-tertiary)] tabular-nums flex-shrink-0">{quotaUsed}/{FREE_EXAM_LIMIT}</span>
+                  <span className="text-xs text-[var(--text-tertiary)] tabular-nums flex-shrink-0">{quotaUsed}/{totalLimit}</span>
                 </div>
               </div>
               <Link href="/upgrade">

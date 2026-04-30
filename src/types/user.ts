@@ -16,6 +16,8 @@ export interface UserProfile {
   monthlyExamsGenerated?: number;
   /** Unix ms when the current monthly period started. */
   monthlyPeriodStart?: number;
+  /** Extra exams granted to the user manually. */
+  extraExamsQuota?: number;
   /** Unix timestamp (ms) when the Pro plan expires. Set by admin after Whish payment. */
   proExpiresAt?: number;
   /** Unix ms of the last renewal reminder email sent — prevents duplicate sends. */
