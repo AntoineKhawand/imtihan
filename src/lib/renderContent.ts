@@ -175,7 +175,7 @@ function applyMarkdown(text: string): string {
     ];
     const colorClass = colors[(n - 1) % colors.length] || colors[0];
     
-    return `<span class="inline-flex items-center px-2 py-0.5 rounded-md ${colorClass} text-white text-[10px] font-bold uppercase tracking-wider mr-2 mb-1 shadow-md border border-white/10 transition-transform hover:scale-105 select-none">${keyword} ${num}</span>`;
+    return `<div class="block w-full mb-3 mt-6 select-none"><span class="inline-flex items-center px-2 py-0.5 rounded-md ${colorClass} text-white text-[10px] font-bold uppercase tracking-wider shadow-md border border-white/10 transition-transform hover:scale-105">${keyword} ${num}</span></div>`;
   });
 
   let md = processed
