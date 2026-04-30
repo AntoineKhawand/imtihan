@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
 import { FREE_EXAM_LIMIT } from "@/lib/utils";
-import { RefreshCw, Search, Calendar, Clock, Info, ShieldAlert } from "lucide-react";
+import { RefreshCw, Search, Calendar, Clock, Info, ShieldCheck, Mail, User, Zap, Sparkles, Plus } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface AdminUser {
   uid: string;
@@ -25,13 +26,15 @@ function formatDate(ts: number | null): string {
 }
 
 function ProBadge({ expiresAt }: { expiresAt: number | null }) {
-  if (!expiresAt) return <span className="text-xs text-gray-400">Free</span>;
+  if (!expiresAt) return <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-gray-100 text-gray-500 uppercase tracking-wider">Free User</span>;
   const active = expiresAt > Date.now();
   return (
-    <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${
-      active ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"
-    }`}>
-      {active ? "PRO" : "EXPIRED"}
+    <span className={cn(
+      "text-[10px] font-bold px-2.5 py-1 rounded-full border shadow-sm flex items-center gap-1.5 w-fit uppercase tracking-wider",
+      active ? "bg-emerald-50 text-emerald-700 border-emerald-100" : "bg-red-50 text-red-700 border-red-100"
+    )}>
+      <div className={cn("w-1.5 h-1.5 rounded-full", active ? "bg-emerald-500 animate-pulse" : "bg-red-500")} />
+      {active ? "Pro Active" : "Pro Expired"}
     </span>
   );
 }
@@ -41,7 +44,6 @@ export default function AdminPage() {
   const router = useRouter();
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [extending, setExtending] = useState<string | null>(null);
   const [search, setSearch] = useState("");
 
@@ -58,7 +60,7 @@ export default function AdminPage() {
       const data = await res.json();
       setUsers(data.users);
     } catch (e) {
-      setError((e as Error).message);
+      console.error(e);
     } finally {
       setLoading(false);
     }
@@ -119,120 +121,273 @@ export default function AdminPage() {
     (u.displayName && u.displayName.toLowerCase().includes(search.toLowerCase()))
   );
 
+  const pendingRequests = users.filter(u => u.renewalRequested).length;
+
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-7xl mx-auto">
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
-            <p className="text-sm text-gray-500">Manage users and subscriptions</p>
-          </div>
-          <button onClick={fetchUsers} className="flex items-center gap-2 px-4 py-2 bg-white border rounded-lg text-sm font-medium hover:bg-gray-50">
-            <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
-            Refresh
-          </button>
-        </div>
-
-        {/* LEGEND / GUIDE */}
-        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-8 flex gap-4 items-start">
-          <Info className="text-amber-600 shrink-0 mt-0.5" size={18} />
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full">
-            <div>
-              <p className="text-xs font-bold text-amber-900 uppercase tracking-widest mb-1">Extend</p>
-              <p className="text-xs text-amber-800 leading-relaxed">Adds **30 days** of Pro status to the user. Resets their monthly usage counter to 0.</p>
+    <div className="min-h-screen bg-[#FBFBFE] pb-20">
+      {/* Header Section */}
+      <div className="bg-white border-b border-gray-100 px-6 py-8 md:px-10 mb-8 sticky top-0 z-30 shadow-sm backdrop-blur-xl bg-white/80">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-2xl bg-emerald-600 flex items-center justify-center text-white shadow-lg shadow-emerald-600/20">
+              <ShieldCheck size={24} />
             </div>
             <div>
-              <p className="text-xs font-bold text-amber-900 uppercase tracking-widest mb-1">+10 Q / +30 Q</p>
-              <p className="text-xs text-amber-800 leading-relaxed">Adds **Bonus Quota**. If a user has 10 bonus exams, they can generate 10 more regardless of their monthly limit.</p>
-            </div>
-            <div>
-              <p className="text-xs font-bold text-amber-900 uppercase tracking-widest mb-1">Renewal Req.</p>
-              <p className="text-xs text-amber-800 leading-relaxed">Highlighted users have clicked "Request Renewal" from their dashboard, signaling they want to pay.</p>
+              <h1 className="text-xl font-bold text-gray-900 tracking-tight">Admin Dashboard</h1>
+              <div className="flex items-center gap-3 mt-1">
+                <span className="text-xs text-gray-400 font-medium">{users.length} Total Users</span>
+                {pendingRequests > 0 && (
+                  <span className="text-[10px] font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-100 animate-pulse">
+                    {pendingRequests} Renewal Requests
+                  </span>
+                )}
+              </div>
             </div>
           </div>
+          
+          <div className="flex items-center gap-3">
+            <div className="relative flex-1 md:w-80">
+              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              <input 
+                type="text" 
+                placeholder="Search users..." 
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="w-full pl-10 pr-4 py-2.5 text-sm border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all border"
+              />
+            </div>
+            <button 
+              onClick={fetchUsers} 
+              className="p-2.5 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors shadow-sm"
+              title="Refresh Data"
+            >
+              <RefreshCw size={18} className={cn("text-gray-600", loading && "animate-spin")} />
+            </button>
+          </div>
         </div>
+      </div>
 
-        <div className="mb-6 relative">
-          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-          <input 
-            type="text" 
-            placeholder="Search by email or name..." 
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border rounded-xl bg-white focus:ring-2 focus:ring-emerald-500 outline-none"
-          />
+      <div className="max-w-7xl mx-auto px-6 md:px-10">
+        {/* Legend Panel */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+          <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex items-start gap-4 hover:border-emerald-200 transition-colors group">
+            <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600 group-hover:scale-110 transition-transform">
+              <Clock size={18} />
+            </div>
+            <div>
+              <h3 className="text-xs font-bold text-gray-900 uppercase tracking-widest mb-1">Extend</h3>
+              <p className="text-[11px] text-gray-500 leading-relaxed">Gives **30 Days Pro** and resets monthly generator.</p>
+            </div>
+          </div>
+          <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex items-start gap-4 hover:border-blue-200 transition-colors group">
+            <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 group-hover:scale-110 transition-transform">
+              <Zap size={18} />
+            </div>
+            <div>
+              <h3 className="text-xs font-bold text-gray-900 uppercase tracking-widest mb-1">+10 Q / +30 Q</h3>
+              <p className="text-[11px] text-gray-500 leading-relaxed">Adds **Bonus Quota** (Permanent exams beyond limit).</p>
+            </div>
+          </div>
+          <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex items-start gap-4 hover:border-amber-200 transition-colors group">
+            <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center text-amber-600 group-hover:scale-110 transition-transform">
+              <Sparkles size={18} />
+            </div>
+            <div>
+              <h3 className="text-xs font-bold text-gray-900 uppercase tracking-widest mb-1">Renewal Req</h3>
+              <p className="text-[11px] text-gray-500 leading-relaxed">Users who clicked **"Request Renewal"** on pricing page.</p>
+            </div>
+          </div>
+          <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex items-start gap-4 hover:border-purple-200 transition-colors group">
+            <div className="w-10 h-10 rounded-xl bg-purple-50 flex items-center justify-center text-purple-600 group-hover:scale-110 transition-transform">
+              <Info size={18} />
+            </div>
+            <div>
+              <h3 className="text-xs font-bold text-gray-900 uppercase tracking-widest mb-1">Pro Usage</h3>
+              <p className="text-[11px] text-gray-500 leading-relaxed">Pro users get **10 exams/mo**. Free users get **2 lifetime**.</p>
+            </div>
+          </div>
         </div>
 
         {loading ? (
-          <div className="py-20 text-center text-gray-400">Loading users...</div>
+          <div className="py-32 flex flex-col items-center justify-center text-gray-400 gap-4">
+            <RefreshCw size={32} className="animate-spin opacity-20" />
+            <span className="text-sm font-medium tracking-wide">Fetching users...</span>
+          </div>
         ) : (
-          <div className="bg-white border rounded-2xl overflow-x-auto">
-            <table className="w-full text-left border-collapse min-w-[1000px]">
-              <thead>
-                <tr className="bg-gray-50 border-b text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-                  <th className="px-6 py-4">User</th>
-                  <th className="px-6 py-4">Status</th>
-                  <th className="px-6 py-4">Created / Last Login</th>
-                  <th className="px-6 py-4 text-center">Usage (Monthly)</th>
-                  <th className="px-6 py-4 text-center">Bonus Quota</th>
-                  <th className="px-6 py-4 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y text-sm">
-                {filtered.map((u) => (
-                  <tr key={u.uid} className={`hover:bg-gray-50 ${u.renewalRequested ? "bg-amber-50/50" : ""}`}>
-                    <td className="px-6 py-4">
-                      <p className="font-semibold text-gray-900">{u.email}</p>
-                      <p className="text-xs text-gray-500">{u.displayName || "No Name"}</p>
-                      {u.renewalRequested && <span className="text-[9px] font-bold text-amber-600 bg-amber-100 px-1.5 py-0.5 rounded-full mt-1 inline-block uppercase">Pending Request</span>}
-                    </td>
-                    <td className="px-6 py-4"><ProBadge expiresAt={u.proExpiresAt} /></td>
-                    <td className="px-6 py-4">
-                      <div className="text-xs text-gray-500 flex flex-col gap-0.5">
-                        <span className="flex items-center gap-1"><Calendar size={10} /> {formatDate(u.createdAt)}</span>
-                        <span className="flex items-center gap-1 opacity-60"><Clock size={10} /> {formatDate(u.lastLoginAt)}</span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-center">
-                      <span className="font-mono font-bold">{u.monthlyExamsGenerated || 0}</span>
-                      <span className="text-gray-300 mx-1">/</span>
-                      <span className="text-gray-400">{u.proExpiresAt ? "10" : FREE_EXAM_LIMIT}</span>
-                    </td>
-                    <td className="px-6 py-4 text-center">
-                      <span className="px-2 py-1 bg-blue-50 text-blue-700 rounded-lg font-bold text-xs">+{u.extraExamsQuota || 0}</span>
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <div className="flex justify-end gap-2">
-                        <button 
-                          onClick={() => handleExtend(u.uid, 30)}
-                          disabled={!!extending}
-                          className="px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-xs font-bold hover:bg-emerald-700 disabled:opacity-50"
-                        >
-                          {extending === `${u.uid}-30` ? "..." : "Extend"}
-                        </button>
-                        <button 
-                          onClick={() => handleAddQuota(u.uid, 10)}
-                          disabled={!!extending}
-                          className="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-xs font-bold hover:bg-blue-700 disabled:opacity-50"
-                        >
-                          {extending === `${u.uid}-q10` ? "..." : "+10 Q"}
-                        </button>
-                        <button 
-                          onClick={() => handleAddQuota(u.uid, 30)}
-                          disabled={!!extending}
-                          className="px-3 py-1.5 bg-indigo-600 text-white rounded-lg text-xs font-bold hover:bg-indigo-700 disabled:opacity-50"
-                        >
-                          {extending === `${u.uid}-q30` ? "..." : "+30 Q"}
-                        </button>
-                      </div>
-                    </td>
+          <div className="bg-white border border-gray-100 rounded-3xl overflow-hidden shadow-sm">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse min-w-[1000px]">
+                <thead>
+                  <tr className="bg-gray-50/50 border-b border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-[0.1em]">
+                    <th className="px-8 py-5">Identities</th>
+                    <th className="px-6 py-5">Subscription</th>
+                    <th className="px-6 py-5">Engagement</th>
+                    <th className="px-6 py-5 text-center">Usage</th>
+                    <th className="px-6 py-5 text-center">Quota</th>
+                    <th className="px-8 py-5 text-right">Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-gray-50 text-sm">
+                  {filtered.map((u) => (
+                    <tr key={u.uid} className={cn(
+                      "hover:bg-gray-50/80 transition-colors group",
+                      u.renewalRequested && "bg-amber-50/30"
+                    )}>
+                      <td className="px-8 py-6">
+                        <div className="flex items-center gap-3">
+                          <div className={cn(
+                            "w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold shadow-sm border",
+                            u.renewalRequested ? "bg-amber-100 text-amber-700 border-amber-200 animate-pulse" : "bg-gray-50 text-gray-400 border-gray-100"
+                          )}>
+                            {u.displayName?.[0] || u.email[0].toUpperCase()}
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <p className="font-bold text-gray-900">{u.email}</p>
+                              {u.renewalRequested && (
+                                <span className="text-[8px] font-black bg-amber-500 text-white px-1.5 py-0.5 rounded uppercase tracking-tighter">REQ</span>
+                              )}
+                            </div>
+                            <p className="text-xs text-gray-400 font-medium">{u.displayName || "Unknown Teacher"}</p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-6"><ProBadge expiresAt={u.proExpiresAt} /></td>
+                      <td className="px-6 py-6">
+                        <div className="text-[11px] text-gray-400 flex flex-col gap-1 font-medium">
+                          <span className="flex items-center gap-1.5"><Calendar size={12} className="text-gray-300" /> Joined {formatDate(u.createdAt)}</span>
+                          <span className="flex items-center gap-1.5"><Clock size={12} className="text-gray-300" /> Seen {formatDate(u.lastLoginAt)}</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-6 text-center">
+                        <div className="inline-flex flex-col items-center">
+                          <span className="text-sm font-bold text-gray-900">{u.monthlyExamsGenerated || 0}</span>
+                          <div className="h-1 w-8 bg-gray-100 rounded-full mt-1 overflow-hidden">
+                            <div 
+                              className="h-full bg-emerald-500" 
+                              style={{ width: `${Math.min(100, ((u.monthlyExamsGenerated || 0) / (u.proExpiresAt ? 10 : FREE_EXAM_LIMIT)) * 100)}%` }} 
+                            />
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-6 text-center">
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-blue-50 text-blue-700 rounded-xl font-bold text-[11px] border border-blue-100">
+                          <Plus size={10} />
+                          {u.extraExamsQuota || 0}
+                        </span>
+                      </td>
+                      <td className="px-8 py-6 text-right">
+                        <div className="flex justify-end items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button 
+                            onClick={() => handleExtend(u.uid, 30)}
+                            disabled={!!extending}
+                            className={cn(
+                              "h-9 px-4 rounded-xl text-xs font-bold transition-all flex items-center gap-2",
+                              u.renewalRequested ? "bg-amber-500 text-white shadow-lg shadow-amber-500/20 hover:bg-amber-600" : "bg-emerald-600 text-white shadow-lg shadow-emerald-600/20 hover:bg-emerald-700",
+                              "disabled:opacity-50"
+                            )}
+                          >
+                            {extending === `${u.uid}-30` ? <RefreshCw size={12} className="animate-spin" /> : "Extend"}
+                          </button>
+                          <div className="w-px h-4 bg-gray-200 mx-1" />
+                          <button 
+                            onClick={() => handleAddQuota(u.uid, 10)}
+                            disabled={!!extending}
+                            className="h-9 px-3 bg-white border border-gray-200 text-blue-600 rounded-xl text-xs font-bold hover:bg-blue-50 transition-colors"
+                          >
+                            {extending === `${u.uid}-q10` ? "..." : "+10Q"}
+                          </button>
+                          <button 
+                            onClick={() => handleAddQuota(u.uid, 30)}
+                            disabled={!!extending}
+                            className="h-9 px-3 bg-white border border-gray-200 text-indigo-600 rounded-xl text-xs font-bold hover:bg-indigo-50 transition-colors"
+                          >
+                            {extending === `${u.uid}-q30` ? "..." : "+30Q"}
+                          </button>
+                        </div>
+                        {/* Mobile Fallback for Actions */}
+                        <div className="flex md:hidden justify-end mt-2 opacity-100">
+                           <button onClick={() => handleExtend(u.uid, 30)} className="text-xs text-emerald-600 font-bold underline">Quick Extend</button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            
+            {filtered.length === 0 && (
+              <div className="py-20 text-center">
+                <p className="text-gray-400 text-sm">No users match your search.</p>
+              </div>
+            )}
           </div>
         )}
       </div>
+
+      {/* Mobile Card Layout (Hidden on Desktop) */}
+      <style jsx>{`
+        @media (max-width: 768px) {
+          table { display: none; }
+          .mobile-cards { display: grid; grid-template-columns: 1fr; gap: 1rem; }
+        }
+        @media (min-width: 769px) {
+          .mobile-cards { display: none; }
+        }
+      `}</style>
+      
+      {!loading && (
+        <div className="mobile-cards px-6 mt-4 md:hidden">
+          {filtered.map(u => (
+            <div key={u.uid} className={cn(
+              "bg-white p-5 rounded-3xl border border-gray-100 shadow-sm",
+              u.renewalRequested && "border-amber-200 bg-amber-50/20"
+            )}>
+              <div className="flex justify-between items-start mb-4">
+                <div className="flex gap-3">
+                  <div className={cn(
+                    "w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold border",
+                    u.renewalRequested ? "bg-amber-100 text-amber-700 border-amber-200" : "bg-gray-50 text-gray-400 border-gray-100"
+                  )}>
+                    {u.displayName?.[0] || u.email[0].toUpperCase()}
+                  </div>
+                  <div>
+                    <p className="font-bold text-sm text-gray-900 truncate max-w-[150px]">{u.email}</p>
+                    <ProBadge expiresAt={u.proExpiresAt} />
+                  </div>
+                </div>
+                {u.renewalRequested && <span className="text-[8px] font-black bg-amber-500 text-white px-1.5 py-0.5 rounded">REQ</span>}
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4 mb-5">
+                <div className="bg-gray-50 p-3 rounded-2xl">
+                  <p className="text-[10px] text-gray-400 uppercase font-bold mb-1">Monthly Usage</p>
+                  <p className="text-sm font-bold text-gray-900">{u.monthlyExamsGenerated || 0} / {u.proExpiresAt ? "10" : "2"}</p>
+                </div>
+                <div className="bg-blue-50 p-3 rounded-2xl">
+                  <p className="text-[10px] text-blue-400 uppercase font-bold mb-1">Bonus Quota</p>
+                  <p className="text-sm font-bold text-blue-700">+{u.extraExamsQuota || 0}</p>
+                </div>
+              </div>
+
+              <div className="flex gap-2">
+                <button 
+                  onClick={() => handleExtend(u.uid, 30)}
+                  className="flex-1 h-10 bg-emerald-600 text-white rounded-xl text-xs font-bold"
+                >
+                  Extend 30D
+                </button>
+                <button 
+                  onClick={() => handleAddQuota(u.uid, 10)}
+                  className="h-10 px-4 bg-gray-100 text-gray-600 rounded-xl text-xs font-bold"
+                >
+                  +10Q
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
