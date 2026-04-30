@@ -38,8 +38,6 @@ export const metadata: Metadata = {
     "شهادة البريفيه",
     "البكالوريا اللبنانية",
     "دليل المعلم لبنان",
-    "Lebanese official exams generator",
-    "Lycée Franco-Libanais examens",
     "prevent student cheating AI",
     "Beirut",
     "Tripoli",

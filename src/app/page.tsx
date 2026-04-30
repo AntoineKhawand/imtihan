@@ -97,17 +97,17 @@ const TESTIMONIALS = [
   {
     quote: "J'ai généré un contrôle complet de physique Terminale en 4 minutes. Le corrigé était aussi bon que ce que j'aurais écrit moi-même.",
     name: "Professeur de Physique",
-    school: "Lycée français de Beyrouth",
+    school: "Enseignement Secondaire",
   },
   {
     quote: "The Version A/B feature is exactly what I needed. My students can't share answers between sections anymore.",
     name: "Math Teacher",
-    school: "International College, Beirut",
+    school: "High School Coordinator",
   },
   {
     quote: "أخيراً أداة تفهم المنهج اللبناني بشكل صحيح. الأسئلة دقيقة ومطابقة للمستوى.",
     name: "أستاذ رياضيات",
-    school: "المدرسة الإنجيلية اللبنانية",
+    school: "مدرسة ثانوية - لبنان",
   },
 ];
 

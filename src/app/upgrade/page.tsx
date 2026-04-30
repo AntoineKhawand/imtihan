@@ -195,7 +195,7 @@ export default function UpgradePage() {
               <div className="bg-[var(--bg-subtle)] rounded-xl p-4 border border-[var(--border)]">
                 <div className="flex gap-0.5 mb-2">{[0,1,2,3,4].map(i => <Star key={i} size={10} className="text-amber-400 fill-amber-400" />)}</div>
                 <p className="text-[11px] text-[var(--text-secondary)] italic leading-relaxed">"Generated a full Terminale Physics exam in under 3 minutes. Worth every cent."</p>
-                <p className="text-[10px] text-[var(--text-tertiary)] mt-1.5 font-medium">— Prof. Khalil · Lycée Français de Beyrouth</p>
+                <p className="text-[10px] text-[var(--text-tertiary)] mt-1.5 font-medium">— Prof. Khalil · Coordinateur pédagogique</p>
               </div>
             </div>
 
