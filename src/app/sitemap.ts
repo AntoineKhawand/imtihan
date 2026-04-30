@@ -36,6 +36,30 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.7,
     },
     {
+      url: `${APP_URL}/blog/save-time-teaching`,
+      lastModified: now,
+      changeFrequency: "monthly",
+      priority: 0.7,
+    },
+    {
+      url: `${APP_URL}/blog/guide-for-parents`,
+      lastModified: now,
+      changeFrequency: "monthly",
+      priority: 0.7,
+    },
+    {
+      url: `${APP_URL}/blog/exam-standardization`,
+      lastModified: now,
+      changeFrequency: "monthly",
+      priority: 0.7,
+    },
+    {
+      url: `${APP_URL}/blog/university-assessment-ai`,
+      lastModified: now,
+      changeFrequency: "monthly",
+      priority: 0.7,
+    },
+    {
       url: `${APP_URL}/contact`,
       lastModified: now,
       changeFrequency: "monthly",
