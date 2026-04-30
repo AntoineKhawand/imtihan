@@ -28,6 +28,8 @@ export interface UserProfile {
   lastLoginAt?: number;
   /** True if the user has manually requested a renewal in-app. */
   renewalRequested?: boolean;
+  /** True if the user has requested a monthly reset in-app. */
+  resetRequested?: boolean;
   subscription: {
     status: SubscriptionStatus;
     tier: SubscriptionTier;

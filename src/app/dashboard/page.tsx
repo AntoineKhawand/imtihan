@@ -101,6 +101,7 @@ export default function DashboardPage() {
 
   const [requestingRenewal, setRequestingRenewal] = useState(false);
   const [renewalRequested, setRenewalRequested] = useState(profile?.renewalRequested ?? false);
+  const [resetRequested, setResetRequested] = useState(profile?.resetRequested ?? false);
   const [isBundleModalOpen, setIsBundleModalOpen] = useState(false);
   const [bundleSize, setBundleSize] = useState<number>(10);
 
@@ -120,16 +121,16 @@ export default function DashboardPage() {
     setIsBundleModalOpen(false);
   };
 
-  async function handleRequestRenewal() {
+  async function handleRequestReset() {
     setRequestingRenewal(true);
     try {
       const token = await currentUser?.getIdToken();
-      const res = await fetch("/api/user/request-renewal", {
+      const res = await fetch("/api/user/reset-request", {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
       });
-      if (!res.ok) throw new Error("Failed to request renewal");
-      setRenewalRequested(true);
+      if (!res.ok) throw new Error("Failed to request reset");
+      setResetRequested(true);
     } catch (err) {
       console.error(err);
       alert("Something went wrong. Please try again.");
@@ -208,38 +209,57 @@ export default function DashboardPage() {
                 <Zap size={18} className="text-white" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-[var(--text)] mb-1">Pro plan</p>
+                <div className="flex items-center gap-2 mb-1">
+                  <p className="text-sm font-semibold text-[var(--text)]">Pro plan</p>
+                  {quotaRemaining <= 5 && quotaRemaining > 0 && (
+                    <span className="text-[10px] font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-lg border border-amber-100 animate-pulse">
+                      {quotaRemaining} EXAMS LEFT
+                    </span>
+                  )}
+                  {quotaRemaining === 0 && (
+                    <span className="text-[10px] font-bold text-red-600 bg-red-50 px-2 py-0.5 rounded-lg border border-red-100">
+                      LIMIT REACHED
+                    </span>
+                  )}
+                </div>
                 <p className="text-xs text-[var(--text-tertiary)]">{quotaUsed}/{totalLimit} exams this month</p>
                 {extraQuota > 0 && <p className="text-[10px] text-blue-500 font-medium mt-0.5">Includes +{extraQuota} extra exams</p>}
               </div>
               <div className="flex items-center gap-2">
-                {renewalRequested ? (
+                {quotaRemaining === 0 ? (
+                  resetRequested ? (
+                    <span className="text-[10px] font-bold text-blue-600 bg-blue-50 px-3 py-2 rounded-lg border border-blue-100 uppercase">
+                      Reset Pending
+                    </span>
+                  ) : (
+                    <button
+                      onClick={handleRequestReset}
+                      disabled={requestingRenewal}
+                      className="inline-flex items-center gap-1.5 text-xs font-bold px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors shadow-sm shadow-blue-600/20"
+                    >
+                      {requestingRenewal ? "..." : "Reset Month"}
+                    </button>
+                  )
+                ) : renewalRequested ? (
                   <span className="text-[10px] font-bold text-amber-600 bg-amber-50 px-2 py-1 rounded-lg border border-amber-100">
                     RENEWAL PENDING
                   </span>
                 ) : (
                   <button
-                    onClick={handleRequestRenewal}
-                    disabled={requestingRenewal}
+                    onClick={() => {
+                      const msg = `Hello! I would like to request a renewal for my Imtihan account (${profile?.email}).`;
+                      window.open(`https://wa.me/${process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "96170542238"}?text=${encodeURIComponent(msg)}`, "_blank");
+                    }}
                     className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg bg-[var(--accent)] text-white hover:opacity-90 transition-opacity disabled:opacity-50"
                   >
-                    {requestingRenewal ? "..." : "Request Renewal"}
+                    Request Renewal
                   </button>
                 )}
-                <a
-                  href={getWhatsAppUpgradeLink(profile?.email ?? "")}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg border border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--border-strong)] hover:text-[var(--text)] transition-colors"
-                >
-                  <CreditCard size={12} />
-                  WhatsApp
-                </a>
                 <button
                   onClick={() => setIsBundleModalOpen(true)}
                   className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg bg-[var(--accent-light)] text-[var(--accent)] hover:opacity-90 transition-opacity ml-2"
                 >
-                  <Plus size={12} /> Buy Extra Bundle
+                  <Plus size={12} /> Buy Extra
                 </button>
               </div>
             </>

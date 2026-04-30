@@ -23,7 +23,9 @@ interface AdminUser {
   createdAt: number;
   lastLoginAt: number | null;
   renewalRequested?: boolean;
+  resetRequested?: boolean;
   proExpiresAt: number | null;
+  planType: "monthly" | "yearly";
   examsGenerated: number;
   monthlyExamsGenerated?: number;
   extraExamsQuota?: number;
@@ -58,6 +60,7 @@ export default function AdminPage() {
   const [extending, setExtending] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [filterType, setFilterType] = useState<"all" | "requests">("all");
+  const [showYearly, setShowYearly] = useState(false);
 
   async function fetchData() {
     if (!user) return;
@@ -110,7 +113,7 @@ export default function AdminPage() {
       const data = await res.json();
       setUsers((prev) =>
         prev.map((u) => u.uid === targetUid
-          ? { ...u, proExpiresAt: data.proExpiresAt, monthlyExamsGenerated: 0, renewalRequested: false }
+          ? { ...u, proExpiresAt: data.proExpiresAt, planType: data.planType || (days >= 365 ? "yearly" : "monthly"), monthlyExamsGenerated: 0, renewalRequested: false, resetRequested: false }
           : u)
       );
     } catch (e) {
@@ -147,11 +150,12 @@ export default function AdminPage() {
   const filtered = users.filter((u) => {
     const matchesSearch = u.email.toLowerCase().includes(search.toLowerCase()) ||
       (u.displayName && u.displayName.toLowerCase().includes(search.toLowerCase()));
-    const matchesFilter = filterType === "requests" ? u.renewalRequested : true;
-    return matchesSearch && matchesFilter;
+    const matchesFilter = filterType === "requests" ? (u.renewalRequested || u.resetRequested) : true;
+    const matchesYearly = showYearly ? true : (u.planType !== "yearly" || !!search);
+    return matchesSearch && matchesFilter && matchesYearly;
   });
 
-  const pendingRequests = users.filter(u => u.renewalRequested).length;
+  const pendingRequests = users.filter(u => u.renewalRequested || u.resetRequested).length;
 
   const now = Date.now();
   const stats = {
@@ -204,7 +208,7 @@ export default function AdminPage() {
                 <span className="text-xs text-gray-400 font-medium">{stats.total} Total Users</span>
                 {pendingRequests > 0 && (
                   <span className="text-[10px] font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-100 animate-pulse">
-                    {pendingRequests} Renewal Requests
+                    {pendingRequests} Actions Needed
                   </span>
                 )}
               </div>
@@ -242,15 +246,15 @@ export default function AdminPage() {
                 <Sparkles size={24} />
               </div>
               <div>
-                <h2 className="text-lg font-bold text-amber-900">Pending Renewal Requests</h2>
-                <p className="text-sm text-amber-700/80 font-medium">There are {pendingRequests} teachers waiting for their Pro plan to be extended.</p>
+                <h2 className="text-lg font-bold text-amber-900">Pending Actions</h2>
+                <p className="text-sm text-amber-700/80 font-medium">There are {pendingRequests} teachers waiting for plan extension or usage reset.</p>
               </div>
             </div>
             <button 
               onClick={() => setFilterType("requests")} 
               className="px-6 py-2.5 bg-amber-600 text-white rounded-xl text-sm font-bold shadow-lg shadow-amber-600/20 hover:bg-amber-700 transition-all"
             >
-              Show Requests
+              Show Actions
             </button>
           </div>
         )}
@@ -435,8 +439,20 @@ export default function AdminPage() {
                 : "bg-white text-gray-500 border-gray-200 hover:border-amber-200 hover:text-amber-600"
             )}
           >
-            Renewal Requests ({pendingRequests})
+            Actions Needed ({pendingRequests})
             {pendingRequests > 0 && <span className="w-2 h-2 rounded-full bg-white animate-pulse" />}
+          </button>
+          <div className="flex-1" />
+          <button
+            onClick={() => setShowYearly(!showYearly)}
+            className={cn(
+              "px-4 py-2 rounded-xl text-xs font-bold transition-all border flex items-center gap-2",
+              showYearly
+                ? "bg-purple-600 text-white border-purple-600 shadow-md shadow-purple-600/20"
+                : "bg-white text-gray-500 border-gray-200 hover:border-purple-200 hover:text-purple-600"
+            )}
+          >
+            {showYearly ? "Hide Yearly Plans" : "Show Yearly Plans"}
           </button>
         </div>
 
@@ -453,6 +469,7 @@ export default function AdminPage() {
                   <tr className="bg-gray-50/50 border-b border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-[0.1em]">
                     <th className="px-8 py-5">Identities</th>
                     <th className="px-6 py-5">Subscription</th>
+                    <th className="px-6 py-5">Plan</th>
                     <th className="px-6 py-5">Engagement</th>
                     <th className="px-6 py-5 text-center">Usage</th>
                     <th className="px-6 py-5 text-center">Quota</th>
@@ -469,7 +486,7 @@ export default function AdminPage() {
                         <div className="flex items-center gap-3">
                           <div className={cn(
                             "w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold shadow-sm border",
-                            u.renewalRequested ? "bg-amber-100 text-amber-700 border-amber-200 animate-pulse" : "bg-gray-50 text-gray-400 border-gray-100"
+                            (u.renewalRequested || u.resetRequested) ? "bg-amber-100 text-amber-700 border-amber-200 animate-pulse" : "bg-gray-50 text-gray-400 border-gray-100"
                           )}>
                             {u.displayName?.[0] || u.email[0].toUpperCase()}
                           </div>
@@ -477,7 +494,10 @@ export default function AdminPage() {
                             <div className="flex items-center gap-2">
                               <p className="font-bold text-gray-900">{u.email}</p>
                               {u.renewalRequested && (
-                                <span className="text-[8px] font-black bg-amber-500 text-white px-1.5 py-0.5 rounded uppercase tracking-tighter">REQ</span>
+                                <span className="text-[8px] font-black bg-amber-500 text-white px-1.5 py-0.5 rounded uppercase tracking-tighter">RENEW</span>
+                              )}
+                              {u.resetRequested && (
+                                <span className="text-[8px] font-black bg-blue-500 text-white px-1.5 py-0.5 rounded uppercase tracking-tighter ml-1">RESET</span>
                               )}
                             </div>
                             <p className="text-xs text-gray-400 font-medium">{u.displayName || "Anonymized Educator"}</p>
@@ -485,6 +505,14 @@ export default function AdminPage() {
                         </div>
                       </td>
                       <td className="px-6 py-6"><ProBadge expiresAt={u.proExpiresAt} /></td>
+                      <td className="px-6 py-6">
+                        <span className={cn(
+                          "text-[10px] font-bold px-2 py-1 rounded-lg border uppercase tracking-wider",
+                          u.planType === "yearly" ? "bg-purple-50 text-purple-700 border-purple-100" : "bg-blue-50 text-blue-700 border-blue-100"
+                        )}>
+                          {u.planType}
+                        </span>
+                      </td>
                       <td className="px-6 py-6">
                         <div className="text-[11px] text-gray-400 flex flex-col gap-1 font-medium">
                           <span className="flex items-center gap-1.5"><Calendar size={12} className="text-gray-300" /> Joined {formatDate(u.createdAt)}</span>
@@ -514,27 +542,32 @@ export default function AdminPage() {
                             onClick={() => handleExtend(u.uid, 30)}
                             disabled={!!extending}
                             className={cn(
-                              "h-9 px-4 rounded-xl text-xs font-bold transition-all flex items-center gap-2",
-                              u.renewalRequested ? "bg-amber-500 text-white shadow-lg shadow-amber-500/20 hover:bg-amber-600" : "bg-emerald-600 text-white shadow-lg shadow-emerald-600/20 hover:bg-emerald-700",
+                              "h-9 px-3 rounded-xl text-[10px] font-bold transition-all flex items-center gap-1.5",
+                              u.renewalRequested || u.resetRequested ? "bg-amber-500 text-white shadow-lg shadow-amber-500/20 hover:bg-amber-600" : "bg-emerald-600 text-white shadow-lg shadow-emerald-600/20 hover:bg-emerald-700",
                               "disabled:opacity-50"
                             )}
+                            title="Monthly Extension (+30 Days)"
                           >
-                            {extending === `${u.uid}-30` ? <RefreshCw size={12} className="animate-spin" /> : "Extend"}
+                            {extending === `${u.uid}-30` ? <RefreshCw size={12} className="animate-spin" /> : "+30D"}
                           </button>
-                          <div className="w-px h-4 bg-gray-200 mx-1" />
+                          <button 
+                            onClick={() => handleExtend(u.uid, 365)}
+                            disabled={!!extending}
+                            className={cn(
+                              "h-9 px-3 rounded-xl text-[10px] font-bold transition-all flex items-center gap-1.5 bg-purple-600 text-white shadow-lg shadow-purple-600/20 hover:bg-purple-700",
+                              "disabled:opacity-50"
+                            )}
+                            title="Yearly Extension (+365 Days)"
+                          >
+                            {extending === `${u.uid}-365` ? <RefreshCw size={12} className="animate-spin" /> : "+1Y"}
+                          </button>
+                          <div className="w-px h-4 bg-gray-200 mx-0.5" />
                           <button 
                             onClick={() => handleAddQuota(u.uid, 10)}
                             disabled={!!extending}
-                            className="h-9 px-3 bg-white border border-gray-200 text-blue-600 rounded-xl text-xs font-bold hover:bg-blue-50 transition-colors"
+                            className="h-9 px-2.5 bg-white border border-gray-200 text-blue-600 rounded-xl text-[10px] font-bold hover:bg-blue-50 transition-colors"
                           >
                             {extending === `${u.uid}-q10` ? "..." : "+10Q"}
-                          </button>
-                          <button 
-                            onClick={() => handleAddQuota(u.uid, 30)}
-                            disabled={!!extending}
-                            className="h-9 px-3 bg-white border border-gray-200 text-indigo-600 rounded-xl text-xs font-bold hover:bg-indigo-50 transition-colors"
-                          >
-                            {extending === `${u.uid}-q30` ? "..." : "+30Q"}
                           </button>
                         </div>
                         {/* Mobile Fallback for Actions */}
