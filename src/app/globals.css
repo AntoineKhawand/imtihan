@@ -64,7 +64,13 @@
     font-family: var(--font-geist), system-ui, sans-serif;
     font-size: 16px;
     line-height: 1.6;
-    transition: background-color 0.2s ease;
+    /* Only transition background to avoid "flash" glitches on interactive elements */
+    transition: background-color 0.15s linear;
+  }
+
+  /* Prevent transition glitches on dropdowns and surfaces */
+  [class*="absolute"], [class*="fixed"] {
+    transition-property: opacity, visibility, transform, border-color, box-shadow;
   }
 
   ::selection {

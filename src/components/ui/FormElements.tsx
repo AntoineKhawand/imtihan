@@ -95,7 +95,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
             id={selectId}
             className={cn(
               "w-full h-10 pl-3.5 pr-9 rounded-xl border bg-[var(--surface)] text-[var(--text)] text-sm",
-              "appearance-none cursor-pointer transition-all duration-150 focus:outline-none",
+              "appearance-none cursor-pointer transition-[border-color,box-shadow,ring] duration-150 focus:outline-none",
               error
                 ? "border-[var(--danger)] focus:ring-2 focus:ring-[var(--danger)]/20"
                 : "border-[var(--border)] focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent)]/10",

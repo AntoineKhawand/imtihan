@@ -70,7 +70,7 @@ export function UserNav() {
         </button>
         
         {/* Dropdown */}
-        <div className="absolute right-0 top-full mt-2 w-48 bg-[var(--surface)] border border-[var(--border)] rounded-xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 py-1">
+        <div className="absolute right-0 top-full mt-2 w-48 bg-[var(--surface)] border border-[var(--border)] rounded-xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-[opacity,visibility,transform] duration-200 z-50 py-1">
           <div className="px-3 py-2 border-b border-[var(--border)] mb-1">
             <p className="text-xs font-medium text-[var(--text-tertiary)] truncate">{user.email}</p>
           </div>

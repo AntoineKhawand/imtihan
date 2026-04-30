@@ -9,39 +9,38 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    // We use mermaid.ink as the reliable backend for rendering.
-    // By doing this on the server, we avoid client-side base64 issues and 
-    // can easily swap the provider (e.g., to Kroki) later if needed.
-    const config = {
-      code: code.trim(),
-      mermaid: { 
-        theme: "neutral",
-        fontFamily: "var(--font-geist), system-ui, sans-serif"
+    // 1. Try Mermaid.ink (Fastest)
+    try {
+      const config = {
+        code: code.trim(),
+        mermaid: { theme: "neutral" }
+      };
+      const b64 = Buffer.from(JSON.stringify(config)).toString("base64");
+      const res = await fetch(`https://mermaid.ink/img/${b64}`, { next: { revalidate: 3600 } });
+      if (res.ok) {
+        const blob = await res.blob();
+        return new NextResponse(blob, { headers: { "Content-Type": "image/png", "Cache-Control": "public, max-age=3600" } });
       }
-    };
-
-    const json = JSON.stringify(config);
-    const b64 = Buffer.from(json).toString("base64");
-    
-    // Fetch the image from the rendering service and return it directly
-    // This avoids issues with redirects and CSP in some browsers
-    const response = await fetch(`https://mermaid.ink/img/${b64}`, {
-      next: { revalidate: 3600 } // Cache for 1 hour
-    });
-
-    if (!response.ok) {
-      throw new Error(`Rendering service returned ${response.status}`);
+    } catch (e) {
+      console.warn("Mermaid.ink failed, falling back to Kroki:", e);
     }
 
-    const blob = await response.blob();
-    return new NextResponse(blob, {
-      headers: {
-        "Content-Type": "image/png",
-        "Cache-Control": "public, max-age=3600, s-maxage=3600",
+    // 2. Fallback to Kroki (Most Reliable for complex diagrams)
+    try {
+      // Kroki expects pako compressed or just plain text for some formats, 
+      // but simple GET with base64 works for most.
+      const kb64 = Buffer.from(code.trim()).toString("base64").replace(/\+/g, "-").replace(/\//g, "_");
+      const res = await fetch(`https://kroki.io/mermaid/png/${kb64}`);
+      if (res.ok) {
+        const blob = await res.blob();
+        return new NextResponse(blob, { headers: { "Content-Type": "image/png", "Cache-Control": "public, max-age=3600" } });
       }
-    });
+    } catch (e) {
+      console.error("Kroki failed:", e);
+    }
+
+    return new NextResponse("Failed to render diagram", { status: 500 });
   } catch (error) {
-    console.error("Mermaid rendering error:", error);
-    return new NextResponse("Failed to process diagram", { status: 500 });
+    return new NextResponse("Server error", { status: 500 });
   }
 }
