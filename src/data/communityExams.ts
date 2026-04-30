@@ -4,7 +4,6 @@ export interface CommunityExam {
   id: string;
   title: string;
   author: string;
-  school?: string;
   likes: number;
   downloads: number;
   tags: string[];
@@ -19,7 +18,6 @@ export const FEATURED_EXAMS: CommunityExam[] = [
     id: "f1",
     title: "Physique — Mécanique et Électromagnétisme",
     author: "M. Sami Khoury",
-    school: "Lycée Verdun International",
     likes: 47,
     downloads: 124,
     tags: ["mécanique", "électromagnétisme", "loi d'Ohm"],
@@ -98,7 +96,6 @@ export const FEATURED_EXAMS: CommunityExam[] = [
     id: "f2",
     title: "IB Chemistry HL — Organic & Equilibria",
     author: "Ms. Lara Abi Nader",
-    school: "International College Beirut",
     likes: 82,
     downloads: 203,
     tags: ["organic chemistry", "equilibria", "SN2", "Le Chatelier"],

@@ -498,7 +498,7 @@ function HowToShare() {
           <div className="space-y-3">
             {[
               { icon: <FileText size={14} />, step: "1", title: "Generate & export your exam", desc: 'Create an exam in Imtihan, then export it as a Word file using the "Export" button.' },
-              { icon: <Send size={14} />, step: "2", title: "Send it to us by email", desc: "Attach the .docx file and include your name, school (optional), and subject." },
+              { icon: <Send size={14} />, step: "2", title: "Send it to us by email", desc: "Attach the .docx file and include your name and subject." },
               { icon: <Star size={14} />, step: "3", title: "We review and publish", desc: "We check the quality and curriculum alignment, then publish it with your name credited." },
             ].map(({ icon, step, title, desc }) => (
               <div key={step} className="flex gap-3">
