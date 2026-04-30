@@ -40,6 +40,9 @@ export async function POST(request: NextRequest) {
       monthlyExamsGenerated: 0,
       monthlyPeriodStart: Date.now(),
       renewalRequested: false,
+      resetRequested: false,
+      "subscription.tier": "individual",
+      "subscription.status": "active"
     });
 
     return NextResponse.json({

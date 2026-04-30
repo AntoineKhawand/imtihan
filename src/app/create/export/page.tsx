@@ -10,6 +10,10 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/FormElements";
 import { cn, SUBJECT_LABELS, LANGUAGE_LABELS, shortId } from "@/lib/utils";
 import {
+  isProActive,
+  isInGracePeriod,
+} from "@/lib/subscription";
+import {
   getSchoolSettings, saveSchoolSettings,
   saveExam, buildExamTitle,
   type SavedExam,
@@ -26,7 +30,7 @@ export default function ExportPage() {
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [templateId, setTemplateId] = useState("classic");
   const { profile } = useAuth();
-  const isFreeTier = profile?.subscription?.tier === "free";
+  const isFreeTier = !isProActive(profile);
 
   // Header fields — pre-filled from saved school settings
   const [schoolName, setSchoolName] = useState("");
