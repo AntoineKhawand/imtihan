@@ -19,6 +19,9 @@ const RequestSchema = z.object({
   header: z.object({
     schoolName: z.string().optional(),
     teacherName: z.string().optional(),
+    className: z.string().optional(),
+    date: z.string().optional(),
+    schoolLogo: z.string().optional(),
   }).optional(),
   to: z.string().email(),
 });

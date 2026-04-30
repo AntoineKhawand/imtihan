@@ -114,6 +114,7 @@ export default function ExportPage() {
         body: JSON.stringify({
           context: exportContext,
           exercises: exportExercises,
+          templateId,
           format,
           includeAnswerKey,
           header: { schoolName, className, teacherName, date: examDate, schoolLogo },
@@ -186,7 +187,7 @@ export default function ExportPage() {
     try {
       const exportExercises = variant === "B" ? buildVersionB(exercises, examSeed) : exercises;
       const exportContext = { ...context, language: exportLanguage };
-      const header = { schoolName, className, teacherName, date: examDate };
+      const header = { schoolName, className, teacherName, date: examDate, schoolLogo };
 
       // Unified generate-and-send API
       const mailRes = await fetch("/api/export/send", {

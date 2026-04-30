@@ -201,6 +201,7 @@ const RequestSchema = z.object({
     className: z.string().optional(),
     teacherName: z.string().optional(),
     date: z.string().optional(),
+    schoolLogo: z.string().optional(),
   }).optional(),
 });
 
@@ -398,6 +399,25 @@ export async function generateWordDocument(
   const children: (Paragraph | Table)[] = [];
 
   // ─── Header ────────────────────────────────────────────────
+  if (header?.schoolLogo) {
+    try {
+      const base64Data = header.schoolLogo.split(",")[1] || header.schoolLogo;
+      const logoBuffer = Buffer.from(base64Data, "base64");
+      children.push(new Paragraph({
+        children: [
+          new ImageRun({
+            data: logoBuffer,
+            transformation: { width: 80, height: 80 },
+          }),
+        ],
+        alignment: AlignmentType.CENTER,
+        spacing: { after: 200 },
+      }));
+    } catch (e) {
+      console.error("Failed to render school logo in docx:", e);
+    }
+  }
+
   if (header?.schoolName) {
     children.push(new Paragraph({
       children: [new TextRun({ text: header.schoolName, bold: true, size: 26, font: fontHeader, color: primaryColor, rightToLeft: isArabic })],

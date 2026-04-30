@@ -139,6 +139,24 @@ export default function DashboardPage() {
     }
   }
 
+  async function handleRequestRenewal() {
+    setRequestingRenewal(true);
+    try {
+      const token = await currentUser?.getIdToken();
+      const res = await fetch("/api/user/request-renewal", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error("Failed to request renewal");
+      setRenewalRequested(true);
+    } catch (err) {
+      console.error(err);
+      alert("Something went wrong. Please try again.");
+    } finally {
+      setRequestingRenewal(false);
+    }
+  }
+
   function handleUpgrade() {
     const link = getWhatsAppUpgradeLink(profile?.email ?? "");
     window.open(link, "_blank", "noopener,noreferrer");
