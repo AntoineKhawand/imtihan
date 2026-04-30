@@ -114,12 +114,6 @@ function parseNakedMath(text: string): string {
     }
     return match;
   });
-
-  // 4. Arrow Hallucinations: Fix "nearrow", "searrow", "earrow" without backslashes
-  return processed.replace(/\b(nearrow|searrow|earrow)\b/gi, (match) => {
-    const arrow = match.toLowerCase().includes("se") ? "\\searrow" : "\\nearrow";
-    return `$${arrow}$`;
-  });
 }
 
 function parseTables(text: string): string {
@@ -170,8 +164,8 @@ function parseTables(text: string): string {
 
 function applyMarkdown(text: string): string {
   // 1. Detect and style "Step X:" or "Étape X:" headers
-  // We match optional markdown bold stars, the step keyword, number, and colon
-  let processed = text.replace(/(?:\*\*|__)?(Step|Étape|خطوة)\s*(\d+)\s*(?::|：)?(?:\*\*|__)?/gi, (_match, keyword, num) => {
+  // We strip any surrounding stars/markdown and the colon
+  let processed = text.replace(/[\s*_]*(Step|Étape|خطوة)\s*(\d+)\s*[:：]?[\s*_]*/gi, (_match, keyword, num) => {
     const n = parseInt(num);
     const colors = [
       'bg-emerald-600 shadow-emerald-500/20', 
@@ -199,7 +193,14 @@ export function renderContent(raw: string): string {
   if (!raw) return "";
   let text = raw.replace(/\\n/g, "\n").replace(/\r\n/g, "\n").replace(/\n{3,}/g, "\n\n");
 
-  // 0. Pre-process "Code Leaks" and AI errors
+  // 0. Pre-process "hallucinations" and common AI artifacts
+  // Fix arrows (nearrow, searrow, earrow) that AI often writes without backslashes or inside stars
+  text = text.replace(/[\s*_]*(nearrow|searrow|earrow|nearr|searr)[\s*_]*/gi, (match) => {
+    const low = match.toLowerCase();
+    const arrow = low.includes("se") ? "\\searrow" : "\\nearrow";
+    return ` $${arrow}$ `;
+  });
+
   // Convert backticks containing LaTeX triggers (\, ^, _, {) to math blocks
   text = text.replace(/`([^`]*[\\^_{][^`]*)`/g, "$$$1$$");
   // Fix nested \ce{\ce{...}} hallucinations
@@ -257,7 +258,7 @@ export function renderContent(raw: string): string {
     return (prefix || "") + `%%VISUAL_${idx}%%`;
   });
 
-  text = text.replace(/\[(?:IMAGE|GRAPH|VISUAL):\s*([\s\S]*?)\]/gi, (_match, description) => {
+  text = text.replace(/\[(?:IMAGE|GRAPH|VISUAL|IMAGE_PROMPT|PROMPT):\s*([\s\S]*?)\]/gi, (_match, description) => {
     const idx = visualBlocks.length;
     const desc = description.trim();
     if (!desc) return "";
@@ -269,7 +270,10 @@ export function renderContent(raw: string): string {
       + ", professional scientific diagram, minimalist vector, publication quality, white background";
     const src = `/api/image/generate?prompt=${encodeURIComponent(prompt)}&width=800&height=450&seed=${uid}`;
 
-    const html = `<div class="relative group my-6"><button data-action="remove-visual" data-type="tag" data-content="${rawToReplace}" class="absolute top-2 right-2 z-20 w-6 h-6 rounded-full bg-white/90 backdrop-blur-sm border border-red-100 text-red-500 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center hover:bg-red-50 shadow-sm" title="Remove Visual"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button><div class="relative rounded-xl overflow-hidden border border-[var(--border)] bg-[var(--bg-subtle)] min-h-[140px] flex items-center justify-center"><img id="img-${uid}" src="${src}" alt="${safeDesc}" loading="lazy" class="w-full h-auto object-contain rounded-xl transition-opacity duration-500" style="opacity:0" onload="this.style.opacity='1'; document.getElementById('fb-${uid}').style.display='none'; document.getElementById('spin-${uid}').style.display='none';" onerror="this.style.display='none'; document.getElementById('fb-${uid}').style.display='flex'; document.getElementById('spin-${uid}').style.display='none';"/><div id="spin-${uid}" class="absolute inset-0 flex items-center justify-center bg-[var(--bg-subtle)]"><div class="flex flex-col items-center gap-2"><svg class="animate-spin w-5 h-5 text-[var(--accent)]" viewBox="0 0 24 24" fill="none"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg><span class="text-[9px] font-bold uppercase tracking-widest text-[var(--text-tertiary)] animate-pulse">Generating Visual...</span></div></div><div id="fb-${uid}" class="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-[var(--bg-subtle)] hidden"><span class="text-xl opacity-40">📊</span><p class="text-[10px] font-bold uppercase tracking-tighter text-[var(--text-tertiary)]">Visual Representation</p></div></div><p class="text-[9px] text-center text-[var(--text-tertiary)] italic mt-2 opacity-60">${safeDesc.length > 100 ? safeDesc.slice(0, 100) + "…" : safeDesc}</p></div>`;
+    // We hide the prompt text entirely if it's an IMAGE_PROMPT or if the user requested it.
+    const isImagePrompt = _match.toUpperCase().includes("PROMPT");
+
+    const html = `<div class="relative group my-6"><button data-action="remove-visual" data-type="tag" data-content="${rawToReplace}" class="absolute top-2 right-2 z-20 w-6 h-6 rounded-full bg-white/90 backdrop-blur-sm border border-red-100 text-red-500 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center hover:bg-red-50 shadow-sm" title="Remove Visual"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button><div class="relative rounded-xl overflow-hidden border border-[var(--border)] bg-[var(--bg-subtle)] min-h-[140px] flex items-center justify-center"><img id="img-${uid}" src="${src}" alt="Scientific Visual" loading="lazy" class="w-full h-auto object-contain rounded-xl transition-opacity duration-500" style="opacity:0" onload="this.style.opacity='1'; document.getElementById('fb-${uid}').style.display='none'; document.getElementById('spin-${uid}').style.display='none';" onerror="this.style.display='none'; document.getElementById('fb-${uid}').style.display='flex'; document.getElementById('spin-${uid}').style.display='none';"/><div id="spin-${uid}" class="absolute inset-0 flex items-center justify-center bg-[var(--bg-subtle)]"><div class="flex flex-col items-center gap-2"><svg class="animate-spin w-5 h-5 text-[var(--accent)]" viewBox="0 0 24 24" fill="none"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg><span class="text-[9px] font-bold uppercase tracking-widest text-[var(--text-tertiary)] animate-pulse">Generating Visual...</span></div></div><div id="fb-${uid}" class="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-[var(--bg-subtle)] hidden"><span class="text-xl opacity-40">📊</span><p class="text-[10px] font-bold uppercase tracking-tighter text-[var(--text-tertiary)]">Visual Representation</p></div></div>${!isImagePrompt ? `<p class="text-[9px] text-center text-[var(--text-tertiary)] italic mt-2 opacity-60">${safeDesc.length > 100 ? safeDesc.slice(0, 100) + "…" : safeDesc}</p>` : ''}</div>`;
     
     visualBlocks.push(html);
     return `%%VISUAL_${idx}%%`;
@@ -304,10 +308,12 @@ export function renderContent(raw: string): string {
       const isPrevHtml = prevLine.endsWith(">");
       const isCurrHtml = currLine.startsWith("<");
       // Don't add <br /> if we are moving between tags or if it's a placeholder line
+      // OR if the current line is a standalone math symbol (like an arrow)
       const isPlaceholder = line.includes("%%VISUAL_") || line.includes("%%MERMAID_");
       const wasPlaceholder = htmlLines[i-1].includes("%%VISUAL_") || htmlLines[i-1].includes("%%MERMAID_");
+      const isShortMath = line.trim().startsWith("<span class=\"katex") && line.trim().length < 200;
 
-      if (!isPrevHtml && !isCurrHtml && !isPlaceholder && !wasPlaceholder) {
+      if (!isPrevHtml && !isCurrHtml && !isPlaceholder && !wasPlaceholder && !isShortMath) {
         finalHtml += "<br />";
       }
     }
