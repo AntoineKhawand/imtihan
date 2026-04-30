@@ -221,13 +221,16 @@ export function renderContent(raw: string): string {
     return `%%MERMAID_${idx}%%`;
   });
 
-  // Then, handle naked blocks that start at the beginning of a line.
-  // We require a newline before the keyword to avoid accidental matches in the middle of sentences.
-  const nakedMermaidRegex = new RegExp(`(\\n|^)(${patternStr})([\\s\\S]*?)(?=\\n\\n|\\n\\*\\*|\\n[0-9]\\.|$)`, "g");
+  // Then, handle naked blocks that start with a Mermaid keyword.
+  // We are now more aggressive: if a line starts with a Mermaid keyword, we take everything 
+  // until the next blank line or the next structural marker.
+  const nakedMermaidRegex = new RegExp(`(\\n|^)(${patternStr})([\\s\\S]*?)(?=\\n\\n|\\n\\*\\*|\\n[0-9]\\.|\\n\\[(?:IMAGE|GRAPH|VISUAL)|$)`, "g");
   text = text.replace(nakedMermaidRegex, (_match, prefix, keyword, content) => {
     const idx = mermaidBlocks.length;
-    const rawContent = keyword + content;
-    mermaidBlocks.push({ code: rawContent.trim(), raw: rawContent });
+    const rawContent = (keyword + content).trim();
+    if (!rawContent || rawContent.length < 10) return _match; // Avoid tiny accidental matches
+    
+    mermaidBlocks.push({ code: rawContent, raw: _match.trim() });
     return (prefix || "") + `%%MERMAID_${idx}%%`;
   });
 
@@ -326,10 +329,13 @@ export function renderContent(raw: string): string {
   });
 
   mermaidBlocks.forEach((block, i) => {
+    const idx = i;
+    const uid = Math.random().toString(36).slice(2, 8);
     const src = `/api/visual/mermaid?code=${encodeURIComponent(block.code)}`;
     const rawToReplace = block.raw.replace(/"/g, "&quot;");
-    const visualHtml = `<div class="relative group my-6"><button data-action="remove-visual" data-type="mermaid" data-content="${rawToReplace}" class="absolute top-2 right-2 z-20 w-6 h-6 rounded-full bg-white/90 backdrop-blur-sm border border-red-100 text-red-500 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center hover:bg-red-50 shadow-sm" title="Remove Diagram"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button><div class="flex justify-center bg-white p-4 rounded-xl border border-[var(--border)] shadow-sm overflow-x-auto"><img src="${src}" alt="Diagram" class="max-w-full h-auto" onError="this.parentElement.innerHTML='<div class=text-xs>Visual rendering error.</div>'" /></div></div>`;
-    finalHtml = finalHtml.replace(`%%MERMAID_${i}%%`, visualHtml);
+    
+    const visualHtml = `<div class="relative group my-6"><button data-action="remove-visual" data-type="mermaid" data-content="${rawToReplace}" class="absolute top-2 right-2 z-20 w-6 h-6 rounded-full bg-white/90 backdrop-blur-sm border border-red-100 text-red-500 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center hover:bg-red-50 shadow-sm" title="Remove Diagram"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button><div class="relative flex justify-center bg-white p-4 rounded-xl border border-[var(--border)] shadow-sm overflow-x-auto min-h-[100px] items-center"><img id="m-img-${uid}" src="${src}" alt="Diagram" class="max-w-full h-auto transition-opacity duration-500" style="opacity:0" onload="this.style.opacity='1'; document.getElementById('m-spin-${uid}').style.display='none';" onError="this.style.display='none'; this.parentElement.innerHTML='<div class=text-xs>Visual rendering error.</div>'" /><div id="m-spin-${uid}" class="absolute inset-0 flex items-center justify-center bg-white/50"><div class="flex flex-col items-center gap-2"><svg class="animate-spin w-4 h-4 text-[var(--accent)]" viewBox="0 0 24 24" fill="none"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg><span class="text-[8px] font-bold uppercase tracking-widest text-[var(--text-tertiary)] animate-pulse">Rendering Diagram...</span></div></div></div></div>`;
+    finalHtml = finalHtml.replace(`%%MERMAID_${idx}%%`, visualHtml);
   });
 
   // 5. Final cleanup of AI artifacts (like triple quotes or trailing backticks)
