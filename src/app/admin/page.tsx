@@ -269,7 +269,7 @@ export default function AdminPage() {
             </div>
           </div>
 
-          <div className="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm border-b-emerald-500 border-b-2">
+          <div className="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm">
             <div className="w-8 h-8 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600 mb-3">
               <Plus size={16} />
             </div>
@@ -281,7 +281,7 @@ export default function AdminPage() {
             </div>
           </div>
 
-          <div className="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm border-b-blue-500 border-b-2">
+          <div className="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm">
             <div className="w-8 h-8 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 mb-3">
               <Sparkles size={16} />
             </div>
@@ -293,7 +293,7 @@ export default function AdminPage() {
             </div>
           </div>
 
-          <div className="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm border-b-purple-500 border-b-2">
+          <div className="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm">
             <div className="w-8 h-8 rounded-xl bg-purple-50 flex items-center justify-center text-purple-600 mb-3">
               <Zap size={16} />
             </div>
@@ -305,7 +305,7 @@ export default function AdminPage() {
             </div>
           </div>
 
-          <div className="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm border-b-amber-500 border-b-2">
+          <div className="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm">
             <div className="w-8 h-8 rounded-xl bg-amber-50 flex items-center justify-center text-amber-600 mb-3">
               <Clock size={16} />
             </div>
@@ -320,22 +320,22 @@ export default function AdminPage() {
 
         {/* Analytics Section */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
-          <div className="lg:col-span-2 bg-white p-8 rounded-[2.5rem] border border-gray-100 shadow-sm relative overflow-hidden group">
-            <div className="absolute top-0 right-0 p-8 opacity-[0.03] group-hover:opacity-[0.05] transition-opacity">
-              <BarChart3 size={120} />
+          <div className="lg:col-span-2 bg-white p-8 rounded-[2.5rem] border border-gray-100 shadow-sm relative overflow-hidden group min-h-[440px] flex flex-col">
+            <div className="absolute -top-6 -right-6 p-8 opacity-[0.03] group-hover:opacity-[0.05] transition-all duration-500 group-hover:-rotate-12">
+              <BarChart3 size={240} />
             </div>
-            <div className="flex items-center justify-between mb-8">
+            <div className="flex items-start justify-between mb-10 relative z-10">
               <div>
-                <h3 className="text-lg font-black text-gray-900 tracking-tight">Top Disciplines</h3>
-                <p className="text-xs text-gray-400 font-medium mt-1">Global generation volume by subject</p>
+                <h3 className="text-xl font-black text-gray-900 tracking-tight">Top Disciplines</h3>
+                <p className="text-sm text-gray-400 font-medium mt-1">Global generation volume by subject</p>
               </div>
-              <div className="text-right">
-                <p className="text-[10px] font-bold text-gray-300 uppercase tracking-widest mb-1">Last Update</p>
-                <p className="text-xs font-bold text-gray-500">{new Date(statsData.lastUpdated).toLocaleTimeString()}</p>
+              <div className="bg-gray-50 px-4 py-2 rounded-2xl border border-gray-100 text-right">
+                <p className="text-[10px] font-black text-gray-300 uppercase tracking-[0.2em] mb-0.5">Last Sync</p>
+                <p className="text-xs font-black text-gray-500 tabular-nums">{new Date(statsData.lastUpdated).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</p>
               </div>
             </div>
 
-            <div className="space-y-5">
+            <div className="space-y-6 flex-1">
               {Object.keys(statsData.subjects).length > 0 ? (
                 Object.entries(statsData.subjects)
                   .sort((a, b) => b[1] - a[1])
@@ -350,21 +350,30 @@ export default function AdminPage() {
                           {count}
                         </span>
                       </div>
-                      <div className="h-2 w-full bg-gray-50 rounded-full overflow-hidden border border-gray-100">
+                      <div className="h-2.5 w-full bg-gray-50 rounded-full overflow-hidden border border-gray-100 p-0.5">
                         <div 
-                          className="h-full bg-emerald-500 transition-all duration-1000 ease-out shadow-sm"
+                          className="h-full bg-gradient-to-r from-emerald-400 to-emerald-600 rounded-full transition-all duration-1000 ease-out shadow-sm"
                           style={{ width: `${(count / Math.max(...Object.values(statsData.subjects))) * 100}%` }}
                         />
                       </div>
                     </div>
                   ))
               ) : (
-                <div className="py-12 flex flex-col items-center justify-center border-2 border-dashed border-gray-100 rounded-[2rem] bg-gray-50/50">
-                   <div className="w-12 h-12 rounded-2xl bg-white flex items-center justify-center text-gray-300 shadow-sm mb-4">
-                     <TrendingUp size={24} />
-                   </div>
-                   <p className="text-sm font-bold text-gray-400">Tracking started! Generate exams to see data.</p>
-                   <p className="text-[10px] text-gray-300 mt-1 uppercase font-bold tracking-widest">Real-time Analytics Engine</p>
+                <div className="py-20 flex flex-col items-center justify-center relative">
+                  <div className="absolute inset-0 flex items-center justify-center opacity-[0.03]">
+                    <div className="w-64 h-64 rounded-full border-4 border-emerald-500 animate-ping" />
+                  </div>
+                  <div className="w-20 h-20 rounded-3xl bg-emerald-50 flex items-center justify-center text-emerald-600 shadow-inner mb-6 relative z-10">
+                    <TrendingUp size={32} className="animate-pulse" />
+                  </div>
+                  <h4 className="text-base font-black text-gray-900 mb-1 relative z-10">Waiting for first generation</h4>
+                  <p className="text-sm text-gray-400 font-medium max-w-[240px] text-center leading-relaxed relative z-10">
+                    The analytics engine is live and ready. Data will appear here as soon as teachers start creating exams.
+                  </p>
+                  <div className="mt-8 px-4 py-1.5 bg-gray-50 rounded-full border border-gray-100 flex items-center gap-2 relative z-10">
+                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Real-time stats active</span>
+                  </div>
                 </div>
               )}
             </div>
