@@ -21,7 +21,7 @@ interface PaginationInfo {
   totalPages: number;
 }
 
-const CATEGORIES = ["All", "Teaching Strategies", "Productivity", "Parental Guides", "Leadership", "Higher Ed"];
+const CATEGORIES = ["All", "Teaching Strategies", "Exam Techniques", "Productivity", "Resources", "Parental Guides"];
 
 export default function BlogIndexPage() {
   const [activeCategory, setActiveCategory] = useState("All");

@@ -67,7 +67,7 @@ export async function GET(request: NextRequest) {
         {
           "title": "...",
           "description": "...",
-          "category": "...", (Pick from: Teaching Strategies, Productivity, Parental Guides, Leadership, Higher Ed)
+          "category": "...", (Pick from: Teaching Strategies, Exam Techniques, Productivity, Resources, Parental Guides)
           "readTime": "... min read",
           "content": "Full markdown content with h2, h3 tags. Mention Imtihan's specific features like AI diagrams, instant corrigé, and curriculum alignment."
         }
@@ -76,9 +76,16 @@ export async function GET(request: NextRequest) {
     const result = await model.generateContent(prompt);
     const text = result.response.text();
     
-    // Clean up JSON response
-    const jsonStr = text.replace(/```json\n?|\n?```/g, "").trim();
-    const postData = JSON.parse(jsonStr);
+    // Clean up JSON response - more robust extraction
+    let postData;
+    try {
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      const jsonStr = jsonMatch ? jsonMatch[0] : text;
+      postData = JSON.parse(jsonStr);
+    } catch (e) {
+      console.error("Failed to parse AI response:", text);
+      throw new Error("AI returned malformed data. Try again.");
+    }
 
     // 3. Generate Slug & Save
     const slug = postData.title
