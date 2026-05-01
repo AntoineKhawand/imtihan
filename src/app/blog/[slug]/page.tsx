@@ -14,7 +14,21 @@ interface BlogPostProps {
   params: Promise<{ slug: string }>;
 }
 
-async function getPost(slug: string) {
+interface BlogPost {
+  id: string;
+  slug: string;
+  title: string;
+  description: string;
+  category: string;
+  readTime: string;
+  content: string;
+  author: string;
+  date: string;
+  published: boolean;
+  createdAt: any;
+}
+
+async function getPost(slug: string): Promise<BlogPost | null> {
   const snapshot = await adminDb.collection("blog_posts")
     .where("slug", "==", slug)
     .limit(1)
@@ -26,13 +40,19 @@ async function getPost(slug: string) {
   
   return {
     id: doc.id,
-    ...data,
+    slug: data.slug,
+    title: data.title,
+    description: data.description,
+    category: data.category,
+    readTime: data.readTime,
+    content: data.content,
+    author: data.author,
+    published: data.published,
+    createdAt: data.createdAt,
     date: data.createdAt?.toDate?.()?.toLocaleDateString("en-US", {
-      month: "long",
-      day: "numeric",
-      year: "numeric"
+      month: "long", day: "numeric", year: "numeric"
     }) || "Recently"
-  };
+  } as BlogPost;
 }
 
 export async function generateMetadata({ params }: BlogPostProps): Promise<Metadata> {
