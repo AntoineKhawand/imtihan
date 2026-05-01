@@ -113,8 +113,11 @@ export async function GET(request: NextRequest) {
       title: postData.title
     });
 
-  } catch (error) {
+  } catch (error: any) {
     console.error("[/api/cron/blog-auto-publish] Error:", error);
-    return NextResponse.json({ error: "Failed to auto-publish blog" }, { status: 500 });
+    return NextResponse.json({ 
+      success: false,
+      error: error.message || "Failed to auto-publish blog" 
+    }, { status: 500 });
   }
 }

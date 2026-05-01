@@ -51,9 +51,40 @@ export async function GET(request: NextRequest) {
       snapshot = await query.get();
     }
 
-    // Apply category filter if needed (on the snapshot results or re-query)
-    // For simplicity and to avoid multiple reads, we can filter the snapshot if category is set
+    // Fallback articles if DB is empty and seeding hasn't finished
+    const FALLBACK_ARTICLES = [
+      {
+        id: "seed-1",
+        slug: "stop-recycled-exams",
+        title: "Are Your Students Bored of the Same Recycled Exams?",
+        description: "Why using past papers (Dawrat) is hurting your students' engagement, and how AI can instantly solve the problem.",
+        category: "Teaching Strategies",
+        readTime: "4 min read",
+        author: "Jean-Paul Mansour",
+        date: "May 1, 2026"
+      },
+      {
+        id: "seed-2",
+        slug: "save-time-teaching",
+        title: "Reclaiming Your Sundays: How Imtihan Automates Teacher Tasks",
+        description: "Learn how generative AI can save Lebanese teachers 10+ hours a week by automating exam creation.",
+        category: "Productivity",
+        readTime: "4 min read",
+        author: "Jean-Paul Mansour",
+        date: "April 30, 2026"
+      }
+    ];
+
     let docs = snapshot.docs;
+    
+    // If absolutely empty, use fallback
+    if (docs.length === 0 && (!category || category === "All")) {
+      return NextResponse.json({
+        articles: FALLBACK_ARTICLES,
+        pagination: { total: 2, page: 1, limit: 6, totalPages: 1 }
+      });
+    }
+
     if (category && category !== "All") {
       docs = docs.filter((doc: any) => doc.data().category === category);
     }
