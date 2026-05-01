@@ -152,30 +152,29 @@ export default function AdminPage() {
   const handleAutoGenerateBlog = async () => {
     if (!user) return;
     setIsGeneratingBlog(true);
-    toast.info("AI is researching and writing your daily blog...");
-    try {
+    
+    const publishPromise = (async () => {
       const token = await user.getIdToken();
       const res = await fetch("/api/cron/blog-auto-publish", {
-        headers: {
-          "Authorization": `Bearer ${token}` 
-        }
+        headers: { "Authorization": `Bearer ${token}` }
       });
       const data = await res.json();
-      if (data.success) {
-        toast.success(`Published: ${data.title}`, {
-          action: {
-            label: "View Post",
-            onClick: () => window.open(`/blog/${data.slug}`, "_blank")
-          }
-        });
-      } else {
-        toast.error(data.error || "Failed to auto-publish");
-      }
-    } catch (err) {
-      toast.error("Error connecting to blog engine");
-    } finally {
-      setIsGeneratingBlog(false);
-    }
+      if (!data.success) throw new Error(data.error || "Failed to publish");
+      return data;
+    })();
+
+    toast.promise(publishPromise, {
+      loading: "AI is researching and writing your blog article...",
+      success: (data) => ({
+        description: `Published: ${data.title}`,
+        action: {
+          label: "View Post",
+          onClick: () => window.open(`/blog/${data.slug}`, "_blank")
+        }
+      }),
+      error: (err) => `Error: ${err.message}`,
+      finally: () => setIsGeneratingBlog(false)
+    });
   };
 
   if (isAuthorized === false) {

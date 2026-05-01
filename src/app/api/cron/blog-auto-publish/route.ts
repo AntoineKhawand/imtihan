@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { adminDb } from "@/lib/firebase-admin";
+import { adminDb, adminAuth } from "@/lib/firebase-admin";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { shortId } from "@/lib/utils";
 
@@ -24,12 +24,10 @@ export async function GET(request: NextRequest) {
   if (!isAuthorized && authHeader?.startsWith("Bearer ")) {
     const token = authHeader.split(" ")[1];
     try {
-      const { auth } = require("@/lib/firebase-admin");
-      const decodedToken = await auth.verifyIdToken(token);
-      // You can add more strict admin check here if needed (e.g. check uid or custom claim)
+      const decodedToken = await adminAuth.verifyIdToken(token);
       if (decodedToken) isAuthorized = true;
     } catch (e) {
-      // Not a valid admin token, continue
+      console.error("Auth verify error:", e);
     }
   }
 
