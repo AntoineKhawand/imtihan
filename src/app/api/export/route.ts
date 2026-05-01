@@ -391,9 +391,14 @@ export async function generateWordDocument(
 
   const fontBody = isModern ? "Arial" : isFormal ? "Times New Roman" : "Georgia";
   const fontHeader = isModern ? "Arial" : isFormal ? "Times New Roman" : "Georgia";
-  const primaryColor = isModern ? "2563eb" : isFormal ? "000000" : "1a5e3f"; // Blue for modern, Black for formal, Green for classic
-  const textColor = isModern ? "1f2937" : isFormal ? "000000" : "333333";
-  const metaColor = isModern ? "6b7280" : isFormal ? "000000" : "666666";
+  
+  // Match the UI CSS variables exactly
+  const primaryColor = isFormal ? "000000" : "1a5e3f"; // var(--accent)
+  const textColor = isFormal ? "000000" : "0a0a0a";    // var(--text)
+  const metaColor = isFormal ? "000000" : "5c5c5c";    // var(--text-secondary)
+  const subtleBg = "f3f0e8";                           // var(--bg-subtle)
+  const accentLight = "effaf4";                        // var(--accent-light)
+
 
   const children: (Paragraph | Table)[] = [];
 
@@ -472,7 +477,7 @@ export async function generateWordDocument(
         children: [
           new TableCell({ 
             children: [new Paragraph({ children: [new TextRun({ text: exerciseWord, bold: true, size: 20 })], alignment: AlignmentType.CENTER, spacing: { before: 80, after: 80 } })], 
-            shading: { fill: "F3F4F6" },
+            shading: { fill: accentLight },
             verticalAlign: AlignmentType.CENTER
           }),
           ...exercises.map(ex => new TableCell({ 
@@ -481,7 +486,7 @@ export async function generateWordDocument(
           })),
           new TableCell({ 
             children: [new Paragraph({ children: [new TextRun({ text: lang === "fr" ? "Total" : lang === "ar" ? "المجموع" : "Total", bold: true, size: 20 })], alignment: AlignmentType.CENTER, spacing: { before: 80, after: 80 } })], 
-            shading: { fill: "F3F4F6" },
+            shading: { fill: accentLight },
             verticalAlign: AlignmentType.CENTER
           }),
         ]
@@ -490,14 +495,14 @@ export async function generateWordDocument(
         children: [
           new TableCell({ 
             children: [new Paragraph({ children: [new TextRun({ text: lang === "fr" ? "Max" : lang === "ar" ? "الأقصى" : "Max", bold: true, size: 18 })], alignment: AlignmentType.CENTER, spacing: { before: 80, after: 80 } })],
-            shading: { fill: "F9FAFB" }
+            shading: { fill: subtleBg }
           }),
           ...exercises.map(ex => new TableCell({ 
             children: [new Paragraph({ children: [new TextRun({ text: String(ex.points), size: 18 })], alignment: AlignmentType.CENTER, spacing: { before: 80, after: 80 } })] 
           })),
           new TableCell({ 
             children: [new Paragraph({ children: [new TextRun({ text: String(context.totalPoints), bold: true, size: 18 })], alignment: AlignmentType.CENTER, spacing: { before: 80, after: 80 } })],
-            shading: { fill: "F9FAFB" }
+            shading: { fill: subtleBg }
           }),
         ]
       }),
@@ -505,14 +510,14 @@ export async function generateWordDocument(
         children: [
           new TableCell({ 
             children: [new Paragraph({ children: [new TextRun({ text: lang === "fr" ? "Note" : lang === "ar" ? "العلامة" : "Score", bold: true, size: 18 })], alignment: AlignmentType.CENTER, spacing: { before: 200, after: 200 } })],
-            shading: { fill: "F9FAFB" }
+            shading: { fill: subtleBg }
           }),
           ...exercises.map(() => new TableCell({ 
             children: [new Paragraph({ text: "" })] 
           })),
           new TableCell({ 
             children: [new Paragraph({ text: "", spacing: { before: 200, after: 200 } })],
-            shading: { fill: "F9FAFB" }
+            shading: { fill: subtleBg }
           }),
         ]
       })
@@ -593,9 +598,10 @@ export async function generateWordDocument(
   const corrigWord = lang === "fr" ? "CORRIGÉ" : lang === "ar" ? "الإجابة النموذجية" : "ANSWER KEY";
   children.push(new Paragraph({
     pageBreakBefore: true,
-    children: [new TextRun({ text: corrigWord, bold: true, size: 28, font: fontHeader, color: textColor, rightToLeft: isArabic })],
+    children: [new TextRun({ text: corrigWord, bold: true, size: 28, font: fontHeader, color: primaryColor, rightToLeft: isArabic })],
     heading: HeadingLevel.HEADING_1,
     alignment: AlignmentType.CENTER,
+    spacing: { after: 400 },
     bidirectional: isArabic,
   }));
   children.push(new Paragraph({ text: "" }));
@@ -624,9 +630,9 @@ export async function generateWordDocument(
           new TableRow({
             tableHeader: true,
             children: [
-              new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: lang === "fr" ? "Question" : lang === "ar" ? "السؤال" : "Question", bold: true, size: 18, color: primaryColor })] })], width: { size: 15, type: WidthType.PERCENTAGE } }),
-              new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: lang === "fr" ? "Points" : lang === "ar" ? "النقاط" : "Points", bold: true, size: 18, color: primaryColor })] })], width: { size: 12, type: WidthType.PERCENTAGE } }),
-              new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: lang === "fr" ? "Critère d'attribution" : lang === "ar" ? "معيار التصحيح" : "Criterion", bold: true, size: 18, color: primaryColor })] })], width: { size: 73, type: WidthType.PERCENTAGE } }),
+              new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: lang === "fr" ? "Question" : lang === "ar" ? "السؤال" : "Question", bold: true, size: 18, color: primaryColor })] })], width: { size: 15, type: WidthType.PERCENTAGE }, shading: { fill: subtleBg } }),
+              new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: lang === "fr" ? "Points" : lang === "ar" ? "النقاط" : "Points", bold: true, size: 18, color: primaryColor })] })], width: { size: 12, type: WidthType.PERCENTAGE }, shading: { fill: subtleBg } }),
+              new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: lang === "fr" ? "Critère d'attribution" : lang === "ar" ? "معيار التصحيح" : "Criterion", bold: true, size: 18, color: primaryColor })] })], width: { size: 73, type: WidthType.PERCENTAGE }, shading: { fill: subtleBg } }),
             ],
           }),
           ...ex.solution.bareme.map((b) => new TableRow({
