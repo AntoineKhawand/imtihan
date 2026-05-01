@@ -165,13 +165,7 @@ export default function AdminPage() {
 
     toast.promise(publishPromise, {
       loading: "AI is researching and writing your blog article...",
-      success: (data) => ({
-        description: `Published: ${data.title}`,
-        action: {
-          label: "View Post",
-          onClick: () => window.open(`/blog/${data.slug}`, "_blank")
-        }
-      }),
+      success: (data) => `Published: ${data.title}`,
       error: (err) => `Error: ${err.message}`,
       finally: () => setIsGeneratingBlog(false)
     });
