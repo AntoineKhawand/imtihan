@@ -151,7 +151,7 @@ export default function AdminPage() {
     const matchesSearch = u.email.toLowerCase().includes(search.toLowerCase()) ||
       (u.displayName && u.displayName.toLowerCase().includes(search.toLowerCase()));
     const matchesFilter = filterType === "requests" ? (u.renewalRequested || u.resetRequested) : true;
-    const matchesYearly = showYearly ? true : (u.planType !== "yearly" || !!search);
+    const matchesYearly = !showYearly || u.planType === "yearly";
     return matchesSearch && matchesFilter && matchesYearly;
   });
 
