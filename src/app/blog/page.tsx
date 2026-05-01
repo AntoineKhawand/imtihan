@@ -34,7 +34,9 @@ export default function BlogIndexPage() {
     async function fetchArticles() {
       setLoading(true);
       try {
-        const res = await fetch(`/api/blog?category=${activeCategory}&page=${currentPage}&limit=6`);
+        const res = await fetch(`/api/blog?category=${activeCategory}&page=${currentPage}&limit=6`, {
+          cache: "no-store"
+        });
         const data = await res.json();
         if (data.articles) {
           setArticles(data.articles);

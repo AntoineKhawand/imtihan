@@ -162,9 +162,14 @@ export default function AdminPage() {
       });
       const data = await res.json();
       if (data.success) {
-        toast.success(`Published: ${data.title}`);
+        toast.success(`Published: ${data.title}`, {
+          action: {
+            label: "View Post",
+            onClick: () => window.open(`/blog/${data.slug}`, "_blank")
+          }
+        });
       } else {
-        toast.error("Failed to auto-publish");
+        toast.error(data.error || "Failed to auto-publish");
       }
     } catch (err) {
       toast.error("Error connecting to blog engine");
