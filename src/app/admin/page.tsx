@@ -447,68 +447,33 @@ export default function AdminPage() {
             {/* Blog Control Center */}
             <div className="bg-emerald-950 text-white p-8 rounded-[40px] relative overflow-hidden shadow-2xl shadow-emerald-900/20">
               <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-emerald-500/10 blur-[100px] rounded-full -translate-y-1/2 translate-x-1/2" />
-              <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
-                <div>
-                  <div className="flex items-center gap-2 mb-4">
-                    <Sparkles size={18} className="text-emerald-400" />
-                    <span className="text-xs font-bold text-emerald-400 uppercase tracking-widest">Autonomous Blog Engine</span>
-                  </div>
-                  <h2 className="text-4xl font-black leading-tight mb-4 tracking-tight">Zero-Touch Publishing</h2>
-                  <p className="text-emerald-100/70 max-w-lg leading-relaxed">
-                    Our AI researches trending educational topics in Lebanon and writes professional articles every day. You don't have to lift a finger.
-                  </p>
+              <div className="relative z-10">
+                <div className="flex items-center gap-2 mb-4">
+                  <Sparkles size={18} className="text-emerald-400" />
+                  <span className="text-xs font-bold text-emerald-400 uppercase tracking-widest">Autonomous Blog Engine</span>
                 </div>
-                <div className="flex flex-col gap-4 w-full md:w-auto">
-                  <button 
-                    onClick={handleAutoGenerateBlog}
-                    disabled={isGeneratingBlog}
-                    className="h-16 px-8 rounded-3xl bg-white text-emerald-950 font-black flex items-center justify-center gap-3 shadow-xl hover:-translate-y-1 transition-all disabled:opacity-50 disabled:translate-y-0 active:scale-95"
-                  >
-                    {isGeneratingBlog ? (
-                      <>
-                        <RefreshCw size={20} className="animate-spin" />
-                        Generating Draft...
-                      </>
-                    ) : (
-                      <>
-                        <Wand2 size={20} />
-                        ✨ Auto-Generate & Publish Now
-                      </>
-                    )}
-                  </button>
-                  <p className="text-[10px] text-emerald-400/60 text-center font-bold uppercase tracking-widest">
-                    Next automatic post scheduled for tomorrow
-                  </p>
+                <h2 className="text-4xl font-black leading-tight mb-4 tracking-tight">Fully Autonomous Content</h2>
+                <p className="text-emerald-100/70 max-w-2xl leading-relaxed">
+                  Your blog is now operating in 100% Zero-Touch mode. Our AI agent researches Lebanese educational trends and publishes curriculum-aligned articles daily at 9:00 AM.
+                </p>
+                <div className="mt-8 flex items-center gap-4 text-[10px] text-emerald-400 font-black uppercase tracking-widest">
+                  <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                  Next Publish: Tomorrow 9:00 AM
                 </div>
               </div>
             </div>
 
-            <div className="grid md:grid-cols-2 gap-6">
-              <div className="bg-white p-8 rounded-[32px] border border-gray-100 shadow-sm">
-                <h3 className="text-lg font-black text-gray-900 mb-6 flex items-center gap-2">
-                  <TrendingUp size={18} className="text-emerald-600" />
-                  Trending Topics AI is Watching
-                </h3>
-                <div className="space-y-4">
-                  {["Brevet Mathematics Tips", "AI Ethics in Schools", "Physics Lab Simulations", "Teacher Burnout Prevention"].map((topic, i) => (
-                    <div key={i} className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl">
-                      <span className="text-sm font-bold text-gray-700">{topic}</span>
-                      <span className="text-[10px] font-black text-emerald-600 bg-emerald-50 px-2 py-1 rounded">HOT</span>
-                    </div>
-                  ))}
-                </div>
+            <div className="bg-white p-8 rounded-[32px] border border-gray-100 shadow-sm flex flex-col items-center text-center">
+              <div className="w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center text-gray-400 mb-4">
+                <FileText size={32} />
               </div>
-              <div className="bg-white p-8 rounded-[32px] border border-gray-100 shadow-sm flex flex-col justify-between">
-                <div>
-                  <h3 className="text-lg font-black text-gray-900 mb-2">Manual Control</h3>
-                  <p className="text-sm text-gray-400 mb-6 font-medium leading-relaxed">
-                    Need to write something yourself? Access our full-featured editor (Optimized for Mobile).
-                  </p>
-                </div>
-                <button className="h-14 w-full rounded-2xl border-2 border-dashed border-gray-200 text-gray-400 font-bold flex items-center justify-center gap-2 hover:border-emerald-600 hover:text-emerald-600 transition-all">
-                  <Plus size={20} /> Write Manual Article
-                </button>
-              </div>
+              <h3 className="text-xl font-black text-gray-900 mb-2">Content Management</h3>
+              <p className="text-sm text-gray-400 max-w-md mb-6 font-medium leading-relaxed">
+                Articles are automatically synced to Firestore. You can manage existing articles directly via the main blog index.
+              </p>
+              <Link href="/blog" className="h-12 px-8 bg-emerald-600 text-white rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-600/20">
+                Go to Blog Index <ArrowRight size={18} />
+              </Link>
             </div>
             
             <Link href="/blog" className="flex items-center justify-center gap-2 py-4 text-sm font-bold text-gray-400 hover:text-emerald-600 transition-colors">
