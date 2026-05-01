@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { withRetryAndFallback, geminiErrorMessage } from "@/lib/gemini";
 import { getAnthropicClient, isAnthropicConfigured, CLAUDE_MODEL, MAX_TOKENS } from "@/lib/anthropic";
-import { buildAnalyzeSystemPrompt, buildAnalyzeUserPrompt } from "@/lib/prompts/analyze";
+import { buildAnalyzeSystemPrompt, buildAnalyzeUserPrompt, buildCurriculaReference } from "@/lib/prompts/analyze";
 import { sanitizeError, createSecurityHeaders } from "@/lib/security";
 import { verifySession } from "@/lib/firebase-admin";
 
@@ -131,12 +131,12 @@ export async function POST(request: NextRequest) {
 
     const { description, documentBase64, documentMimeType } = parsed.data;
 
-    // 2. Build prompts — no curricula dump, AI infers chapter IDs from description
+    // 2. Build prompts — include curricula reference so the AI returns valid level IDs
     const systemPrompt = buildAnalyzeSystemPrompt();
     const userText = buildAnalyzeUserPrompt({
       teacherDescription: description,
       hasUploadedDocument: !!documentBase64,
-      availableCurricula: "",
+      availableCurricula: buildCurriculaReference(),
     });
 
     // ── AI Analysis (Primary: Claude, Fallback: Gemini) ─────────────────────

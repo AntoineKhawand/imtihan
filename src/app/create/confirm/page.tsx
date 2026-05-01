@@ -183,7 +183,12 @@ export default function ConfirmPage() {
           <div className="card p-6 space-y-5">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Select label="Curriculum" value={context.curriculumId} options={curriculumOptions}
-                onChange={(e) => update("curriculumId", e.target.value as CurriculumId)} />
+                onChange={(e) => {
+                  const newCurrId = e.target.value as CurriculumId;
+                  const newCurr = CURRICULA[newCurrId];
+                  const firstLevel = newCurr?.levels?.[0]?.id ?? "";
+                  setContext((prev) => prev ? { ...prev, curriculumId: newCurrId, levelId: firstLevel, chapterIds: [] } : prev);
+                }} />
               <Select label="Level" value={context.levelId} options={levelOptions}
                 onChange={(e) => update("levelId", e.target.value)} />
               <Select label="Subject" value={context.subject} options={subjectOptions}
