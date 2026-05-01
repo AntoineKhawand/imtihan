@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { db } from "@/lib/firebase";
-import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import * as admin from "firebase-admin";
+import { adminDb } from "@/lib/firebase-admin";
 
 export async function POST(req: Request) {
   try {
@@ -10,8 +10,8 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Invalid exam data" }, { status: 400 });
     }
 
-    // Publish to Firestore
-    const examRef = await addDoc(collection(db, "live_exams"), {
+    // Publish to Firestore using Admin SDK
+    const examRef = await adminDb.collection("live_exams").add({
       title: exam.title,
       context: exam.context,
       exercises: exam.exercises.map((ex: any, idx: number) => ({
@@ -28,7 +28,7 @@ export async function POST(req: Request) {
         showResults: settings.showResults || false
       },
       teacherId: exam.teacherId || "anonymous",
-      createdAt: serverTimestamp(),
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
       isActive: true
     });
 
