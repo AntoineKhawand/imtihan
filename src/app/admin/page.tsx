@@ -150,12 +150,14 @@ export default function AdminPage() {
   };
 
   const handleAutoGenerateBlog = async () => {
+    if (!user) return;
     setIsGeneratingBlog(true);
     toast.info("AI is researching and writing your daily blog...");
     try {
+      const token = await user.getIdToken();
       const res = await fetch("/api/cron/blog-auto-publish", {
         headers: {
-          "Authorization": "Bearer imtihan-internal-secret" 
+          "Authorization": `Bearer ${token}` 
         }
       });
       const data = await res.json();

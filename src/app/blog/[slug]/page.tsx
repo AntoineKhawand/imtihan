@@ -84,6 +84,30 @@ export default async function DynamicBlogPostPage({ params }: BlogPostProps) {
   return (
     <div className="min-h-screen bg-[var(--bg)] flex flex-col">
       <BlogProgressBar />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Article",
+            "headline": post.title,
+            "description": post.description,
+            "author": {
+              "@type": "Person",
+              "name": post.author || "Imtihan AI Assistant"
+            },
+            "datePublished": post.createdAt?.toDate?.()?.toISOString() || new Date().toISOString(),
+            "publisher": {
+              "@type": "Organization",
+              "name": "Imtihan",
+              "logo": {
+                "@type": "ImageObject",
+                "url": "https://imtihan.live/logo.png"
+              }
+            }
+          })
+        }}
+      />
       <nav className="sticky top-0 left-0 right-0 z-50 flex items-center justify-between px-6 md:px-10 h-16 bg-[var(--bg)]/75 backdrop-blur-xl border-b border-[var(--border)]/60 transition-colors">
         <Logo size={26} />
         <div className="flex items-center gap-3">

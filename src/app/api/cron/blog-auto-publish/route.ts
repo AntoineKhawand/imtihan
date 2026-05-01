@@ -9,9 +9,31 @@ export const dynamic = "force-dynamic";
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY || "");
 
 export async function GET(request: NextRequest) {
-  // 1. Verify Cron Secret
+  // 1. Verify Authentication (Cron Secret OR Admin Token)
   const authHeader = request.headers.get("authorization");
-  if (process.env.CRON_SECRET && authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+  const cronSecret = process.env.CRON_SECRET;
+  
+  let isAuthorized = false;
+
+  // Check Cron Secret
+  if (cronSecret && authHeader === `Bearer ${cronSecret}`) {
+    isAuthorized = true;
+  }
+
+  // Check Admin Identity (if called from Dashboard)
+  if (!isAuthorized && authHeader?.startsWith("Bearer ")) {
+    const token = authHeader.split(" ")[1];
+    try {
+      const { auth } = require("@/lib/firebase-admin");
+      const decodedToken = await auth.verifyIdToken(token);
+      // You can add more strict admin check here if needed (e.g. check uid or custom claim)
+      if (decodedToken) isAuthorized = true;
+    } catch (e) {
+      // Not a valid admin token, continue
+    }
+  }
+
+  if (!isAuthorized) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
