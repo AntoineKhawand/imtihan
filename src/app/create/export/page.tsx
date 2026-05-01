@@ -494,7 +494,7 @@ export default function ExportPage() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold text-[var(--text)]">PDF</p>
-                  <p className="text-xs text-[var(--text-secondary)]">Print-ready, fixed layout</p>
+                  <p className="text-xs text-[var(--text-secondary)]">Print-ready with rendered equations</p>
                 </div>
               </button>
             </div>

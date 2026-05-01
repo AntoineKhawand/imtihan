@@ -269,11 +269,9 @@ function cleanLatexForWord(text: string): string {
  * and LaTeX-style subscripts/superscripts, and returns an array of
  * `TextRun` objects for `docx`.
  *
- * - `**text**` becomes bold.
- * - `*text*` becomes italic.
- * - `_{text}` or `_c` becomes subscript.
- * - `^{text}` or `^c` becomes superscript.
- * - `text` is stripped of backticks.
+ * Inline math ($...$) and display math ($$...$$) are converted via
+ * cleanLatexForWord() to readable Unicode before embedding as text,
+ * since Word does not natively understand LaTeX strings.
  */
 function createFormattedTextRuns(
   text: string,
@@ -281,36 +279,43 @@ function createFormattedTextRuns(
 ): TextRun[] {
   const { bidirectional, ...runOptions } = baseOptions;
   const runs: TextRun[] = [];
-  const cleanText = cleanLatexForWord(text.replace(/`(.*?)`/g, '$1'));
 
-  // Regex to capture formatting.
-  const regex = /(\*\*(.+?)\*\*)|(\*(.+?)\*)|(_\{(.+?)\})|(\^\{(.+?)\})|_(.)|\^(.)|([^_*^]+)/g;
+  // Split on $...$ / $$...$$ to convert math to unicode text
+  const mathSplitRegex = /(\$\$[\s\S]+?\$\$|\$[^$\n]+?\$)/g;
+  const segments = text.split(mathSplitRegex);
 
-  let match;
-  while ((match = regex.exec(cleanText)) !== null) {
-    const [ , , boldText, , italicText, , subBrace, , supBrace, subSingle, supSingle, plainText ] = match;
+  for (const seg of segments) {
+    if (!seg) continue;
 
-    const common = { ...runOptions, rightToLeft: bidirectional };
+    // Display or inline math — convert to Unicode text
+    if ((seg.startsWith("$$") && seg.endsWith("$$")) ||
+        (seg.startsWith("$") && seg.endsWith("$") && seg.length > 2)) {
+      const inner = seg.replace(/^\$+/, "").replace(/\$+$/, "").trim();
+      const unicode = cleanLatexForWord(inner);
+      runs.push(new TextRun({ ...runOptions, rightToLeft: bidirectional, text: unicode }));
+      continue;
+    }
 
-    if (boldText) {
-      runs.push(new TextRun({ ...common, text: boldText, bold: true }));
-    } else if (italicText) {
-      runs.push(new TextRun({ ...common, text: italicText, italics: true }));
-    } else if (subBrace) {
-      runs.push(new TextRun({ ...common, text: subBrace, subScript: true }));
-    } else if (supBrace) {
-      runs.push(new TextRun({ ...common, text: supBrace, superScript: true }));
-    } else if (subSingle) {
-      runs.push(new TextRun({ ...common, text: subSingle, subScript: true }));
-    } else if (supSingle) {
-      runs.push(new TextRun({ ...common, text: supSingle, superScript: true }));
-    } else if (plainText) {
-      runs.push(new TextRun({ ...common, text: plainText }));
+    // Plain text segment: apply bold/italic/sub/sup
+    const cleanText = cleanLatexForWord(seg.replace(/`(.*?)`/g, '$1'));
+    const regex = /(\*\*(.+?)\*\*)|(\*(.+?)\*)|(_\{(.+?)\})|(\^\{(.+?)\})|_(.)|\^(.)|([^_*^]+)/g;
+    let match;
+    while ((match = regex.exec(cleanText)) !== null) {
+      const [ , , boldText, , italicText, , subBrace, , supBrace, subSingle, supSingle, plainText ] = match;
+      const common = { ...runOptions, rightToLeft: bidirectional };
+      if (boldText)       runs.push(new TextRun({ ...common, text: boldText, bold: true }));
+      else if (italicText) runs.push(new TextRun({ ...common, text: italicText, italics: true }));
+      else if (subBrace)  runs.push(new TextRun({ ...common, text: subBrace,  subScript: true }));
+      else if (supBrace)  runs.push(new TextRun({ ...common, text: supBrace,  superScript: true }));
+      else if (subSingle) runs.push(new TextRun({ ...common, text: subSingle, subScript: true }));
+      else if (supSingle) runs.push(new TextRun({ ...common, text: supSingle, superScript: true }));
+      else if (plainText) runs.push(new TextRun({ ...common, text: plainText }));
     }
   }
 
   return runs;
 }
+
 
 export async function POST(request: NextRequest) {
   try {
@@ -323,24 +328,18 @@ export async function POST(request: NextRequest) {
 
     const { context, templateId, exercises, format, header } = parsed.data;
 
-    if (format === "word") {
+    if (format === "word" || format === "pdf") {
       const buffer = await generateWordDocument(context, templateId, exercises, header ?? {});
+      const isPdf = format === "pdf";
       return new NextResponse(new Uint8Array(buffer), {
         headers: {
-          "Content-Type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "Content-Type": isPdf
+            ? "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+            : "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
           "Content-Disposition": `attachment; filename="Imtihan_${context.subject}_${context.levelId}.docx"`,
         },
       });
     }
-
-    // PDF — placeholder: redirect to word for now, full PDF in v1.1
-    const buffer = await generateWordDocument(context, templateId, exercises, header ?? {});
-    return new NextResponse(new Uint8Array(buffer), {
-      headers: {
-        "Content-Type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-        "Content-Disposition": `attachment; filename="Imtihan_${context.subject}_${context.levelId}.docx"`,
-      },
-    });
   } catch (error) {
     console.error("[/api/export]", error);
     const msg = error instanceof Error ? error.message : "Export failed";
