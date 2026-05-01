@@ -93,16 +93,31 @@ export async function GET(request: NextRequest) {
     
     const articles = docs
       .slice(skip, skip + limit)
-      .map((doc: any) => ({
-        id: doc.id,
-        ...doc.data(),
-        // Format timestamp for JSON
-        date: doc.data().createdAt?.toDate?.()?.toLocaleDateString("en-US", {
-          month: "long",
-          day: "numeric",
-          year: "numeric"
-        }) || "Recently"
-      }));
+      .map((doc: any) => {
+        const data = doc.data();
+        let displayDate = "Recently";
+        
+        if (data.createdAt) {
+          // Handle Firestore Timestamp
+          if (typeof data.createdAt.toDate === "function") {
+            displayDate = data.createdAt.toDate().toLocaleDateString("en-US", {
+              month: "long", day: "numeric", year: "numeric"
+            });
+          } 
+          // Handle ISO string or other date string
+          else {
+            displayDate = new Date(data.createdAt).toLocaleDateString("en-US", {
+              month: "long", day: "numeric", year: "numeric"
+            });
+          }
+        }
+
+        return {
+          id: doc.id,
+          ...data,
+          date: displayDate
+        };
+      });
 
     return NextResponse.json({
       articles,

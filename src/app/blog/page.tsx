@@ -102,38 +102,50 @@ export default function BlogIndexPage() {
           </div>
         ) : (
           <>
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">
-              {articles.map((article) => (
-                <Link 
-                  key={article.slug} 
-                  href={`/blog/${article.slug}`}
-                  className="group card p-6 flex flex-col justify-between hover:-translate-y-1 transition-all duration-300"
-                >
-                  <div>
-                    <div className="flex items-center justify-between mb-4">
-                      <span className="text-[10px] uppercase tracking-wider font-bold text-[var(--accent)] bg-[var(--accent-light)] px-2.5 py-1 rounded-md">
-                        {article.category}
-                      </span>
-                      <div className="flex items-center gap-1 text-[11px] font-medium text-[var(--text-tertiary)]">
-                        <Clock size={12} /> {article.readTime}
+            {articles.length > 0 ? (
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">
+                {articles.map((article) => (
+                  <Link 
+                    key={article.slug} 
+                    href={`/blog/${article.slug}`}
+                    className="group card p-6 flex flex-col justify-between hover:-translate-y-1 transition-all duration-300"
+                  >
+                    <div>
+                      <div className="flex items-center justify-between mb-4">
+                        <span className="text-[10px] uppercase tracking-wider font-bold text-[var(--accent)] bg-[var(--accent-light)] px-2.5 py-1 rounded-md">
+                          {article.category}
+                        </span>
+                        <div className="flex items-center gap-1 text-[11px] font-medium text-[var(--text-tertiary)]">
+                          <Clock size={12} /> {article.readTime}
+                        </div>
                       </div>
+                      <h2 className="text-lg font-semibold text-[var(--text)] mb-3 leading-snug group-hover:text-[var(--accent)] transition-colors line-clamp-2 h-[3.5rem]">
+                        {article.title}
+                      </h2>
+                      <p className="text-sm text-[var(--text-secondary)] leading-relaxed line-clamp-3">
+                        {article.description}
+                      </p>
                     </div>
-                    <h2 className="text-lg font-semibold text-[var(--text)] mb-3 leading-snug group-hover:text-[var(--accent)] transition-colors line-clamp-2 h-[3.5rem]">
-                      {article.title}
-                    </h2>
-                    <p className="text-sm text-[var(--text-secondary)] leading-relaxed line-clamp-3">
-                      {article.description}
-                    </p>
-                  </div>
-                  <div className="mt-6 flex items-center justify-between border-t border-[var(--border)] pt-4">
-                    <span className="text-xs font-medium text-[var(--text-tertiary)]">{article.date}</span>
-                    <span className="inline-flex items-center gap-1 text-xs font-semibold text-[var(--accent)]">
-                      Read article <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
-                    </span>
-                  </div>
-                </Link>
-              ))}
-            </div>
+                    <div className="mt-6 flex items-center justify-between border-t border-[var(--border)] pt-4">
+                      <span className="text-xs font-medium text-[var(--text-tertiary)]">{article.date}</span>
+                      <span className="inline-flex items-center gap-1 text-xs font-semibold text-[var(--accent)]">
+                        Read article <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
+                      </span>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-20 bg-[var(--surface)] rounded-[32px] border border-dashed border-[var(--border)] mb-16">
+                <p className="text-[var(--text-secondary)] font-medium">No articles found in this category.</p>
+                <button 
+                  onClick={() => setActiveCategory("All")}
+                  className="mt-4 text-sm font-bold text-[var(--accent)] hover:underline"
+                >
+                  View all articles
+                </button>
+              </div>
+            )}
 
             {/* Pagination UI */}
             {pagination && pagination.totalPages > 1 && (
