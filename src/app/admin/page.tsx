@@ -531,15 +531,24 @@ export default function AdminPage() {
               <div className="flex gap-2">
                 <button 
                   onClick={() => handleExtend(u.uid, 30)}
-                  className="flex-1 h-10 bg-emerald-600 text-white rounded-xl text-xs font-bold"
+                  disabled={!!extending}
+                  className="flex-1 h-10 bg-emerald-600 text-white rounded-xl text-xs font-bold disabled:opacity-50 flex items-center justify-center gap-1"
                 >
-                  Extend 30D
+                  {extending === `${u.uid}-30` ? <RefreshCw size={12} className="animate-spin" /> : "Extend 30D"}
+                </button>
+                <button 
+                  onClick={() => handleExtend(u.uid, 365)}
+                  disabled={!!extending}
+                  className="flex-1 h-10 bg-purple-600 text-white rounded-xl text-xs font-bold disabled:opacity-50 flex items-center justify-center gap-1"
+                >
+                  {extending === `${u.uid}-365` ? <RefreshCw size={12} className="animate-spin" /> : "+1 Year"}
                 </button>
                 <button 
                   onClick={() => handleAddQuota(u.uid, 10)}
-                  className="h-10 px-4 bg-gray-100 text-gray-600 rounded-xl text-xs font-bold"
+                  disabled={!!extending}
+                  className="h-10 px-4 bg-gray-100 text-gray-600 rounded-xl text-xs font-bold disabled:opacity-50"
                 >
-                  +10Q
+                  {extending === `${u.uid}-q10` ? "..." : "+10Q"}
                 </button>
               </div>
             </div>
