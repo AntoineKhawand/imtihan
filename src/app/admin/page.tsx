@@ -112,7 +112,7 @@ export default function AdminPage() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`
         },
-        body: JSON.stringify({ uid, days })
+        body: JSON.stringify({ targetUid: uid, days })
       });
       if (res.ok) {
         toast.success(`Extended by ${days} days`);
@@ -136,7 +136,7 @@ export default function AdminPage() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`
         },
-        body: JSON.stringify({ uid, amount })
+        body: JSON.stringify({ targetUid: uid, amount })
       });
       if (res.ok) {
         toast.success(`Added ${amount} exams`);
