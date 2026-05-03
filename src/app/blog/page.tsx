@@ -19,36 +19,10 @@ interface BlogPost {
 
 const CATEGORIES = ["All", "Teaching Strategies", "Exam Techniques", "Productivity", "Resources", "Parental Guides"];
 
-const FALLBACK_ARTICLES: BlogPost[] = [
+// Static articles that always appear in the index (hardcoded pages under /blog/*)
+const STATIC_ARTICLES: BlogPost[] = [
   {
-    id: "seed-1",
-    slug: "bac-libanais-official-alignment",
-    title: "Official Alignment: How Imtihan Matches the Lebanese Decree",
-    description: "Learn how our AI engine is calibrated to follow the specific verbs and cognitive levels required by the CERD and the Ministry of Education.",
-    category: "Exam Techniques",
-    readTime: "5 min read",
-    date: "May 1, 2026"
-  },
-  {
-    id: "seed-2",
-    slug: "parental-guide-brevet-success",
-    title: "The Parent's Guide to Brevet Success: No Expertise Required",
-    description: "How parents can use Imtihan to generate mock sessions for their children and monitor progress without needing to know the subject matter.",
-    category: "Parental Guides",
-    readTime: "4 min read",
-    date: "May 1, 2026"
-  },
-  {
-    id: "seed-3",
-    slug: "the-art-of-the-corrige",
-    title: "Beyond the Question: The Art of the Automated Corrigé",
-    description: "A deep dive into how Imtihan generates marking schemes that save hours of manual drafting for teachers.",
-    category: "Productivity",
-    readTime: "6 min read",
-    date: "May 1, 2026"
-  },
-  {
-    id: "seed-4",
+    id: "static-1",
     slug: "stop-recycled-exams",
     title: "Are Your Students Bored of the Same Recycled Exams?",
     description: "Why using past papers (Dawrat) is hurting your students' engagement, and how AI can instantly solve the problem.",
@@ -57,68 +31,93 @@ const FALLBACK_ARTICLES: BlogPost[] = [
     date: "May 1, 2026"
   },
   {
-    id: "seed-5",
+    id: "static-2",
     slug: "save-time-teaching",
     title: "Reclaiming Your Sundays: How Imtihan Automates Teacher Tasks",
     description: "Learn how generative AI can save Lebanese teachers 10+ hours a week by automating exam creation.",
     category: "Productivity",
     readTime: "4 min read",
     date: "April 30, 2026"
-  }
+  },
+  {
+    id: "static-3",
+    slug: "guide-for-parents",
+    title: "Is Your Child Ready for the Brevet? Mock Exams at Home",
+    description: "How parents can use Imtihan to generate mock sessions for their children and monitor progress without needing to know the subject matter.",
+    category: "Parental Guides",
+    readTime: "4 min read",
+    date: "April 29, 2026"
+  },
+  {
+    id: "static-4",
+    slug: "exam-standardization",
+    title: "The Coordinator's Secret: Standardizing Exam Quality",
+    description: "How school coordinators can use AI to enforce consistent question quality and cognitive level distribution across all teachers.",
+    category: "Exam Techniques",
+    readTime: "5 min read",
+    date: "April 28, 2026"
+  },
+  {
+    id: "static-5",
+    slug: "university-assessment-ai",
+    title: "Complex Assessments Simplified: AI for University Exams",
+    description: "How university professors can leverage AI to generate multi-part, high-difficulty assessments aligned with academic standards.",
+    category: "Exam Techniques",
+    readTime: "6 min read",
+    date: "April 27, 2026"
+  },
 ];
+
+const FALLBACK_ARTICLES: BlogPost[] = STATIC_ARTICLES;
 
 async function getArticles(category: string, page: number) {
   const limit = 6;
   const skip = (page - 1) * limit;
+
+  let firestoreDocs: BlogPost[] = [];
 
   try {
     const snapshot = await adminDb.collection("blog_posts")
       .orderBy("createdAt", "desc")
       .get();
 
-    let docs = snapshot.docs;
-
-    if (docs.length > 0) {
-      if (category && category !== "All") {
-        docs = docs.filter((doc: any) => doc.data().category === category);
+    firestoreDocs = snapshot.docs.map((doc: any) => {
+      const data = doc.data();
+      let displayDate = "Recently";
+      if (data.createdAt) {
+        displayDate = typeof data.createdAt.toDate === "function"
+          ? data.createdAt.toDate().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })
+          : new Date(data.createdAt).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
       }
-
-      const total = docs.length;
-      const totalPages = Math.ceil(total / limit);
-
-      const articles = docs
-        .slice(skip, skip + limit)
-        .map((doc: any) => {
-          const data = doc.data();
-          let displayDate = "Recently";
-          if (data.createdAt) {
-            displayDate = typeof data.createdAt.toDate === "function" 
-              ? data.createdAt.toDate().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })
-              : new Date(data.createdAt).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
-          }
-          return {
-            id: doc.id,
-            slug: data.slug,
-            title: data.title,
-            description: data.description,
-            category: data.category,
-            readTime: data.readTime,
-            date: displayDate
-          };
-        });
-
-      return { articles, totalPages };
-    }
+      return {
+        id: doc.id,
+        slug: data.slug,
+        title: data.title,
+        description: data.description,
+        category: data.category,
+        readTime: data.readTime,
+        date: displayDate
+      };
+    });
   } catch (e) {
-    console.error("Firestore error, using fallbacks:", e);
+    console.error("Firestore error, using static articles only:", e);
   }
 
-  let filteredFallbacks = FALLBACK_ARTICLES;
+  // Merge: Firestore first, then static articles not already present
+  const firestoreSlugs = new Set(firestoreDocs.map(a => a.slug));
+  const merged = [
+    ...firestoreDocs,
+    ...STATIC_ARTICLES.filter(a => !firestoreSlugs.has(a.slug)),
+  ];
+
+  let filtered = merged;
   if (category && category !== "All") {
-    filteredFallbacks = FALLBACK_ARTICLES.filter(a => a.category === category);
+    filtered = merged.filter(a => a.category === category);
   }
-  const totalPages = Math.ceil(filteredFallbacks.length / limit);
-  const articles = filteredFallbacks.slice(skip, skip + limit);
+
+  const total = filtered.length;
+  const totalPages = Math.ceil(total / limit);
+  const articles = filtered.slice(skip, skip + limit);
 
   return { articles, totalPages };
 }
