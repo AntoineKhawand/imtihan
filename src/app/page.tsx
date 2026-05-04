@@ -96,19 +96,19 @@ const FEATURES = [
 
 const TESTIMONIALS = [
   {
-    quote: "J'ai généré un contrôle complet de physique Terminale en 4 minutes. Le corrigé était aussi bon que ce que j'aurais écrit moi-même.",
-    name: "Professeur de Physique",
-    school: "Enseignement Secondaire",
+    quote: "J'ai généré un contrôle complet de Physique-Chimie Terminale en 4 minutes. Le corrigé était aussi rigoureux que ce que j'aurais écrit moi-même — les étapes, les formules, les erreurs courantes.",
+    name: "Professeur de Physique-Chimie",
+    school: "Terminale S · Bac Libanais · 14 ans d'expérience",
   },
   {
-    quote: "The Version A/B feature is exactly what I needed. My students can't share answers between sections anymore.",
-    name: "Math Teacher",
-    school: "High School Coordinator",
+    quote: "The Version A/B anti-cheating feature alone is worth it. I generate two parallel versions in one click — students in adjacent seats get completely different numbers. No more copying.",
+    name: "Mathematics Teacher",
+    school: "IB HL & SL · 9 years in international schools",
   },
   {
-    quote: "أخيراً أداة تفهم المنهج اللبناني بشكل صحيح. الأسئلة دقيقة ومطابقة للمستوى.",
-    name: "أستاذ رياضيات",
-    school: "مدرسة ثانوية - لبنان",
+    quote: "أخيراً أداة تفهم المنهج اللبناني بشكل صحيح. الأسئلة دقيقة ومطابقة للمستوى، والمصطلحات العلمية بالعربية الفصحى المعتمدة في الكتاب المدرسي.",
+    name: "أستاذة رياضيات",
+    school: "الصف الثالث ثانوي · الباك اللبناني · 11 سنة خبرة",
   },
 ];
 

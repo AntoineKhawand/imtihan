@@ -161,10 +161,13 @@ export function LandingPricing({ isAuthenticated }: { isAuthenticated?: boolean 
           <div className="group relative flex flex-col p-8 md:p-10 rounded-[2rem] bg-[var(--surface)] border border-[var(--border)] hover:border-[var(--border-strong)] transition-all duration-500 hover:shadow-[0_20px_50px_-20px_rgba(0,0,0,0.08)]">
             <div className="mb-8">
               <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--text-tertiary)] mb-4 block">Institutions</span>
-              <div className="flex items-baseline gap-1">
-                <span className="serif text-5xl font-normal text-[var(--text)]">Custom</span>
+              <div className="flex items-baseline gap-2">
+                <span className="text-sm font-medium text-[var(--text-tertiary)]">From</span>
+                <span className="serif text-5xl font-normal text-[var(--text)]">$3.99</span>
+                <span className="text-sm text-[var(--text-secondary)]">/teacher/mo</span>
               </div>
-              <p className="text-sm text-[var(--text-secondary)] mt-3">Tailored for entire schools</p>
+              <p className="text-xs text-[var(--text-tertiary)] mt-1">Typically $40–$120/mo for 10–30 teachers</p>
+              <p className="text-sm text-[var(--text-secondary)] mt-2">Tailored for entire schools</p>
             </div>
 
             <ul className="space-y-4 mb-10 flex-1">
