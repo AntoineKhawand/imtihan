@@ -15,9 +15,12 @@ function buildReminderEmail(
   name: string,
   email: string,
   daysLeft: number,
-  expiryDate: string
+  expiryDate: string,
+  planType?: "monthly" | "yearly"
 ): { subject: string; html: string } {
-  const urgency = daysLeft === 1 ? "tomorrow" : `in ${daysLeft} days`;
+  const isExpired = daysLeft <= 0;
+  const urgency = daysLeft === 1 ? "tomorrow" : isExpired ? "recently" : `in ${daysLeft} days`;
+  const limit = planType === "yearly" ? 20 : 10;
 
   // ── Customize the pre-filled WhatsApp message below ──────────────────────
   const whatsappMsg = encodeURIComponent(
@@ -30,9 +33,11 @@ function buildReminderEmail(
   const whatsappLink = `https://wa.me/${WHATSAPP_NUMBER}?text=${whatsappMsg}`;
   const upgradeLink  = `${APP_URL}/upgrade`;
 
-  const subject = daysLeft === 1
-    ? `🚨 Last day — Your Imtihan Pro expires tomorrow`
-    : `⏰ Your Imtihan Pro expires ${urgency}`;
+  const subject = isExpired
+    ? `🚨 Your Imtihan Pro has expired — 3-day grace period active`
+    : daysLeft === 1
+      ? `🚨 Last day — Your Imtihan Pro expires tomorrow`
+      : `⏰ Your Imtihan Pro expires ${urgency}`;
 
   const html = `<!doctype html>
 <html>
@@ -48,14 +53,16 @@ function buildReminderEmail(
     <!-- Card -->
     <div style="background:#fff;border-radius:16px;border:1px solid #e5e7eb;padding:32px;margin-bottom:24px">
       <p style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111">
-        ${daysLeft === 1 ? "🚨 Last day to renew!" : `⏰ Your Pro plan expires ${urgency}`}
+        ${isExpired ? "🚨 Your plan has expired" : daysLeft === 1 ? "🚨 Last day to renew!" : `⏰ Your Pro plan expires ${urgency}`}
       </p>
       <p style="margin:0 0 24px;color:#6b7280;font-size:15px;line-height:1.6">
         Hi <strong style="color:#111">${name || "there"}</strong>,<br/><br/>
-        Your Imtihan Pro subscription expires on
-        <strong style="color:#dc2626">${expiryDate}</strong>.<br/>
-        Renew in 2 minutes to keep your
-        <strong style="color:#1a5e3f">100 exams/month</strong> without interruption.
+        ${isExpired 
+          ? `Your Imtihan Pro subscription expired on <strong style="color:#dc2626">${expiryDate}</strong>. You are currently in a **3-day grace period** — renew now to keep your access.`
+          : `Your Imtihan Pro subscription expires on <strong style="color:#dc2626">${expiryDate}</strong>. Renew in 2 minutes to keep your access.`
+        }
+        <br/><br/>
+        Keep your <strong style="color:#1a5e3f">${limit} exams/month</strong> and professional features without interruption.
       </p>
 
       <!-- How to renew box -->
@@ -85,7 +92,7 @@ function buildReminderEmail(
     <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:20px;margin-bottom:24px">
       <p style="margin:0 0 10px;font-weight:600;color:#166534;font-size:14px">What your Pro plan includes</p>
       <ul style="margin:0;padding-left:20px;color:#166534;font-size:13px;line-height:1.8">
-        <li>100 exams per month — all curricula & subjects</li>
+        <li>${limit} exams per month — all curricula & subjects</li>
         <li>Corrigé included with every exam</li>
         <li>Word + PDF export</li>
         <li>Saved exam library & community access</li>
@@ -114,6 +121,8 @@ export async function GET(request: NextRequest) {
   }
 
   const now = Date.now();
+  const GRACE_PERIOD_MS = 3 * MS_PER_DAY;
+  const windowStart = now - GRACE_PERIOD_MS;
   const windowEnd = now + REMINDER_WINDOW_DAYS * MS_PER_DAY;
 
   let sent = 0;
@@ -125,13 +134,13 @@ export async function GET(request: NextRequest) {
 
     for (const docSnap of snapshot.docs) {
       const data = docSnap.data();
-      const { proExpiresAt, email, displayName, lastReminderSentAt } = data;
+      const { proExpiresAt, email, displayName, lastReminderSentAt, planType } = data;
 
-      // Only active Pro users expiring within the window
-      if (!proExpiresAt || proExpiresAt <= now || proExpiresAt > windowEnd) continue;
+      // Only Pro users within the reminder window (including 3-day grace period)
+      if (!proExpiresAt || proExpiresAt < windowStart || proExpiresAt > windowEnd) continue;
       if (!email) continue;
 
-      // Don't re-send within 23 hours (prevents duplicates on re-runs)
+      // Don't re-send within 23 hours
       if (lastReminderSentAt && now - lastReminderSentAt < 23 * 60 * 60 * 1000) {
         skipped++;
         continue;
@@ -146,7 +155,8 @@ export async function GET(request: NextRequest) {
         displayName ?? "",
         email,
         daysLeft,
-        expiryDate
+        expiryDate,
+        planType
       );
 
       const result = await sendEmail({
