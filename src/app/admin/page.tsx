@@ -195,8 +195,8 @@ export default function AdminPage() {
   return (
     <div className="min-h-screen bg-[#FDFDFC] text-gray-900 pb-20">
       {/* Header */}
-      <div className="bg-white border-b border-gray-100 sticky top-0 z-30 px-6 py-4 flex flex-col gap-4">
-        <div className="flex items-center justify-between max-w-7xl mx-auto w-full">
+      <div className="bg-white border-b border-gray-100 sticky top-0 z-30 px-6 py-4">
+        <div className="max-w-7xl mx-auto w-full flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-2xl bg-emerald-600 text-white flex items-center justify-center shadow-lg shadow-emerald-600/20">
               <ShieldCheck size={20} />
@@ -207,11 +207,11 @@ export default function AdminPage() {
             </div>
           </div>
           
-          <div className="flex items-center gap-2 bg-gray-50 p-1 rounded-2xl border border-gray-100">
+          <div className="flex items-center gap-2 bg-gray-50 p-1 rounded-2xl border border-gray-100 w-full sm:w-auto">
             <button 
               onClick={() => setActiveTab("users")}
               className={cn(
-                "h-9 px-4 rounded-xl text-xs font-bold transition-all flex items-center gap-2",
+                "h-9 px-4 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 flex-1 sm:flex-none",
                 activeTab === "users" ? "bg-white text-emerald-600 shadow-sm border border-gray-100" : "text-gray-400 hover:text-gray-600"
               )}
             >
@@ -220,7 +220,7 @@ export default function AdminPage() {
             <button 
               onClick={() => setActiveTab("blog")}
               className={cn(
-                "h-9 px-4 rounded-xl text-xs font-bold transition-all flex items-center gap-2",
+                "h-9 px-4 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 flex-1 sm:flex-none",
                 activeTab === "blog" ? "bg-white text-emerald-600 shadow-sm border border-gray-100" : "text-gray-400 hover:text-gray-600"
               )}
             >
@@ -400,12 +400,12 @@ export default function AdminPage() {
                           </span>
                         </td>
                         <td className="px-8 py-6 text-right">
-                          <div className="flex justify-end items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <div className="flex justify-end items-center gap-2">
                             <button 
                               onClick={() => handleExtend(u.uid, 30)}
                               disabled={!!extending}
                               className={cn(
-                                "h-9 px-3 rounded-xl text-[10px] font-bold transition-all flex items-center gap-1.5",
+                                "h-9 px-3 rounded-xl text-[10px] font-bold transition-all flex items-center gap-1.5 whitespace-nowrap",
                                 u.renewalRequested || u.resetRequested ? "bg-amber-500 text-white shadow-lg shadow-amber-500/20 hover:bg-amber-600" : "bg-emerald-600 text-white shadow-lg shadow-emerald-600/20 hover:bg-emerald-700",
                                 "disabled:opacity-50"
                               )}
@@ -417,7 +417,7 @@ export default function AdminPage() {
                               onClick={() => handleExtend(u.uid, 365)}
                               disabled={!!extending}
                               className={cn(
-                                "h-9 px-3 rounded-xl text-[10px] font-bold transition-all flex items-center gap-1.5 bg-purple-600 text-white shadow-lg shadow-purple-600/20 hover:bg-purple-700",
+                                "h-9 px-3 rounded-xl text-[10px] font-bold transition-all flex items-center gap-1.5 bg-purple-600 text-white shadow-lg shadow-purple-600/20 hover:bg-purple-700 whitespace-nowrap",
                                 "disabled:opacity-50"
                               )}
                               title="Yearly Extension (+365 Days)"
@@ -428,7 +428,7 @@ export default function AdminPage() {
                             <button 
                               onClick={() => handleAddQuota(u.uid, 10)}
                               disabled={!!extending}
-                              className="h-9 px-2.5 bg-white border border-gray-200 text-blue-600 rounded-xl text-[10px] font-bold hover:bg-blue-50 transition-colors"
+                              className="h-9 px-2.5 bg-white border border-gray-200 text-blue-600 rounded-xl text-[10px] font-bold hover:bg-blue-50 transition-colors whitespace-nowrap"
                             >
                               {extending === `${u.uid}-q10` ? "..." : "+10Q"}
                             </button>
@@ -528,25 +528,25 @@ export default function AdminPage() {
                 </div>
               </div>
 
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 <button 
                   onClick={() => handleExtend(u.uid, 30)}
                   disabled={!!extending}
-                  className="flex-1 h-10 bg-emerald-600 text-white rounded-xl text-xs font-bold disabled:opacity-50 flex items-center justify-center gap-1"
+                  className="flex-1 min-w-[80px] h-10 bg-emerald-600 text-white rounded-xl text-[10px] font-bold disabled:opacity-50 flex items-center justify-center gap-1"
                 >
                   {extending === `${u.uid}-30` ? <RefreshCw size={12} className="animate-spin" /> : "Extend 30D"}
                 </button>
                 <button 
                   onClick={() => handleExtend(u.uid, 365)}
                   disabled={!!extending}
-                  className="flex-1 h-10 bg-purple-600 text-white rounded-xl text-xs font-bold disabled:opacity-50 flex items-center justify-center gap-1"
+                  className="flex-1 min-w-[80px] h-10 bg-purple-600 text-white rounded-xl text-[10px] font-bold disabled:opacity-50 flex items-center justify-center gap-1"
                 >
                   {extending === `${u.uid}-365` ? <RefreshCw size={12} className="animate-spin" /> : "+1 Year"}
                 </button>
                 <button 
                   onClick={() => handleAddQuota(u.uid, 10)}
                   disabled={!!extending}
-                  className="h-10 px-4 bg-gray-100 text-gray-600 rounded-xl text-xs font-bold disabled:opacity-50"
+                  className="h-10 px-4 bg-gray-100 text-gray-600 rounded-xl text-[10px] font-bold disabled:opacity-50"
                 >
                   {extending === `${u.uid}-q10` ? "..." : "+10Q"}
                 </button>
