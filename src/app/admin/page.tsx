@@ -456,9 +456,19 @@ export default function AdminPage() {
                 <p className="text-emerald-100/70 max-w-2xl leading-relaxed">
                   Your blog is now operating in 100% Zero-Touch mode. Our AI agent researches Lebanese educational trends and publishes curriculum-aligned articles daily at 9:00 AM.
                 </p>
-                <div className="mt-8 flex items-center gap-4 text-[10px] text-emerald-400 font-black uppercase tracking-widest">
-                  <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                  Next Publish: Tomorrow 9:00 AM
+                <div className="mt-8 flex items-center gap-6">
+                  <div className="flex items-center gap-2 text-[10px] text-emerald-400 font-black uppercase tracking-widest">
+                    <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                    Next Publish: Tomorrow 9:00 AM
+                  </div>
+                  <button 
+                    onClick={handleAutoGenerateBlog}
+                    disabled={isGeneratingBlog}
+                    className="h-10 px-6 bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl text-xs font-bold text-white transition-all flex items-center gap-2 disabled:opacity-50"
+                  >
+                    {isGeneratingBlog ? <RefreshCw size={14} className="animate-spin" /> : <Sparkles size={14} />}
+                    Generate Article Now
+                  </button>
                 </div>
               </div>
             </div>

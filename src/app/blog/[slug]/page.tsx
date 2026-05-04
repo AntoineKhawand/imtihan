@@ -104,6 +104,7 @@ export default async function DynamicBlogPostPage({ params }: BlogPostProps) {
   return (
     <div className="min-h-screen bg-[var(--bg)] flex flex-col">
       <BlogProgressBar />
+      
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
@@ -128,53 +129,55 @@ export default async function DynamicBlogPostPage({ params }: BlogPostProps) {
           })
         }}
       />
-      <nav className="sticky top-0 left-0 right-0 z-50 flex items-center justify-between px-6 md:px-10 h-16 bg-[var(--bg)]/75 backdrop-blur-xl border-b border-[var(--border)]/60 transition-colors">
+
+      <nav className="sticky top-0 left-0 right-0 z-50 flex items-center justify-between px-6 md:px-10 h-16 bg-[var(--bg)]/80 backdrop-blur-xl border-b border-[var(--border)]/60 transition-colors">
         <Logo size={26} />
         <div className="flex items-center gap-3">
-          <Link href="/auth/login" className="inline-flex items-center gap-1.5 h-9 px-4 rounded-xl bg-[var(--accent)] text-white text-sm font-medium hover:opacity-90 transition-opacity shadow-sm">
+          <Link href="/create" className="inline-flex items-center gap-1.5 h-9 px-4 rounded-xl bg-[var(--accent)] text-white text-sm font-bold hover:opacity-90 transition-opacity shadow-sm">
             Try Imtihan <ArrowRight size={14} />
           </Link>
         </div>
       </nav>
 
-      <div className="max-w-7xl mx-auto w-full grid lg:grid-cols-[1fr_320px] gap-12 px-6 md:px-10 py-16 md:py-24">
+      <div className="max-w-7xl mx-auto w-full grid lg:grid-cols-[1fr_320px] gap-12 px-6 md:px-10 py-16 md:py-20">
         <main>
-          <Link href="/blog" className="inline-flex items-center gap-2 text-xs font-semibold text-[var(--text-tertiary)] hover:text-[var(--accent)] transition-colors mb-8">
-            <ArrowLeft size={14} /> Back to Blog
+          <Link href="/blog" className="inline-flex items-center gap-2 text-xs font-bold text-[var(--text-tertiary)] hover:text-[var(--accent)] transition-colors mb-10 uppercase tracking-widest">
+            <ArrowLeft size={14} /> Back to Journal
           </Link>
           
           <div className="flex items-center gap-3 mb-6">
-            <span className="text-[10px] uppercase tracking-wider font-bold text-[var(--accent)] bg-[var(--accent-light)] px-2.5 py-1 rounded-md">
+            <span className="text-[10px] uppercase tracking-widest font-black text-[var(--accent)] bg-[var(--accent-light)] px-2.5 py-1 rounded-md border border-[var(--accent)]/10">
               {post.category}
             </span>
-            <div className="flex items-center gap-1.5 text-xs font-medium text-[var(--text-tertiary)]">
+            <div className="flex items-center gap-1.5 text-xs font-bold text-[var(--text-tertiary)]">
               <Clock size={14} /> {post.readTime}
             </div>
           </div>
 
-          <h1 className="serif text-display-lg text-[var(--text)] leading-[1.1] mb-8 text-balance">
+          <h1 className="serif text-display-lg text-[var(--text)] leading-[1.1] mb-10 text-balance">
             {post.title}
           </h1>
 
-          <div className="flex items-center gap-6 mb-12 py-6 border-y border-[var(--border)]/60">
-            <div className="flex items-center gap-2 text-sm text-[var(--text-secondary)]">
+          <div className="flex items-center gap-8 mb-12 py-6 border-y border-[var(--border)]/60">
+            <div className="flex items-center gap-2.5 text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wide">
               <Calendar size={16} className="text-[var(--accent)]" />
               {post.date}
             </div>
-            <div className="flex items-center gap-2 text-sm text-[var(--text-secondary)]">
+            <div className="flex items-center gap-2.5 text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wide">
               <User size={16} className="text-[var(--accent)]" />
               By {post.author || "Imtihan Editor"}
             </div>
           </div>
 
-          <article className="prose prose-imtihan max-w-none text-[var(--text)] text-[1.1rem] leading-relaxed mb-16">
+          <article className="prose prose-imtihan max-w-none text-[var(--text)] text-[1.15rem] leading-relaxed mb-20 font-medium">
             <ReactMarkdown
               components={{
-                h2: ({node, ...props}) => <h2 className="text-2xl font-bold text-[var(--text)] mt-12 mb-4 serif" {...props} />,
-                h3: ({node, ...props}) => <h3 className="text-xl font-bold text-[var(--text)] mt-8 mb-3 serif" {...props} />,
-                p: ({node, ...props}) => <p className="mb-6" {...props} />,
-                ul: ({node, ...props}) => <ul className="list-disc pl-6 mb-6 space-y-2" {...props} />,
+                h2: ({node, ...props}) => <h2 className="text-2xl font-bold text-[var(--text)] mt-12 mb-6 serif tracking-tight" {...props} />,
+                h3: ({node, ...props}) => <h3 className="text-xl font-bold text-[var(--text)] mt-8 mb-4 serif tracking-tight" {...props} />,
+                p: ({node, ...props}) => <p className="mb-6 opacity-90" {...props} />,
+                ul: ({node, ...props}) => <ul className="list-disc pl-6 mb-8 space-y-3 opacity-90" {...props} />,
                 li: ({node, ...props}) => <li {...props} />,
+                strong: ({node, ...props}) => <strong className="font-bold text-[var(--text)]" {...props} />,
               }}
             >
               {post.content}
@@ -188,33 +191,41 @@ export default async function DynamicBlogPostPage({ params }: BlogPostProps) {
             bio="Our autonomous AI editor researches current trends in the Lebanese curriculum to provide teachers and parents with the most relevant insights and productivity tips."
           />
           
-          <BlogRelated currentSlug={post.slug} />
+          <div className="mt-16 pt-16 border-t border-[var(--border)]/60">
+            <BlogRelated currentSlug={post.slug} />
+          </div>
         </main>
 
         <aside className="hidden lg:flex flex-col gap-10 sticky top-24 self-start">
-          <div className="card p-6 bg-[var(--surface)]">
-            <h4 className="text-sm font-bold text-[var(--text)] mb-4 uppercase tracking-wider">Share Article</h4>
+          <div className="card p-7 bg-[var(--surface)] ring-1 ring-black/[0.02]">
+            <h4 className="text-[10px] font-black text-[var(--text-tertiary)] mb-6 uppercase tracking-widest">Share Article</h4>
             <BlogShare title={post.title} url={url} />
           </div>
           
-          <div className="card p-6 bg-[var(--accent-light)] border-[var(--accent)]/10">
-            <h4 className="text-base font-bold text-[var(--accent)] mb-2 serif">Level Up Your Exams</h4>
-            <p className="text-sm text-[var(--text-secondary)] mb-6">
+          <div className="card p-8 bg-[var(--accent)] text-white relative overflow-hidden group shadow-xl shadow-[var(--accent)]/20">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 blur-2xl rounded-full -translate-y-1/2 translate-x-1/2 group-hover:scale-150 transition-transform duration-700" />
+            <h4 className="text-xl font-bold text-white mb-3 serif leading-tight relative z-10">Level Up Your Exams</h4>
+            <p className="text-sm text-emerald-100/80 mb-8 leading-relaxed relative z-10">
               Join 1,000+ Lebanese teachers using AI to create professional assessments in minutes.
             </p>
-            <Link href="/create" className="flex items-center justify-center gap-2 h-11 w-full rounded-xl bg-[var(--accent)] text-white font-bold hover:shadow-lg hover:shadow-[var(--accent)]/20 transition-all">
-              Get Started <ArrowRight size={16} />
+            <Link href="/create" className="flex items-center justify-center gap-2 h-12 w-full rounded-xl bg-white text-[var(--accent)] font-bold hover:bg-emerald-50 transition-all shadow-lg relative z-10">
+              Get Started Free <ArrowRight size={18} />
             </Link>
           </div>
         </aside>
       </div>
 
-      <footer className="px-6 md:px-10 py-12 border-t border-[var(--border)] bg-[var(--surface)]">
-        <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
-          <Logo size={24} />
-          <p className="text-xs text-[var(--text-tertiary)] text-center order-3 md:order-2">
-            Made for Lebanese teachers · © {new Date().getFullYear()} Imtihan
+      <footer className="px-10 py-16 bg-[var(--bg-subtle)] border-t border-[var(--border)] mt-20">
+        <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-8">
+          <Logo size={26} />
+          <p className="text-xs text-[var(--text-tertiary)] font-bold uppercase tracking-widest">
+            Made for Lebanese Educators · © {new Date().getFullYear()} Imtihan
           </p>
+          <div className="flex items-center gap-6 text-xs font-bold text-[var(--text-tertiary)] uppercase tracking-widest">
+            <Link href="/privacy" className="hover:text-[var(--text)] transition-colors">Privacy</Link>
+            <Link href="/terms" className="hover:text-[var(--text)] transition-colors">Terms</Link>
+            <Link href="/contact" className="hover:text-[var(--text)] transition-colors">Contact</Link>
+          </div>
         </div>
       </footer>
     </div>

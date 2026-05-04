@@ -1,12 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminDb, adminAuth } from "@/lib/firebase-admin";
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { getGeminiModel, withRetryAndFallback } from "@/lib/gemini";
 import { shortId } from "@/lib/utils";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-
-const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY || "");
 
 export async function GET(request: NextRequest) {
   // 1. Verify Authentication (Cron Secret OR Admin Token)
@@ -36,8 +34,6 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-
     // 2. Determine Topic & Content
     const today = new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
     
@@ -63,7 +59,7 @@ export async function GET(request: NextRequest) {
       Requirements:
       - Topic: Must be relevant to current Lebanese education milestones.
       - Tone: Professional, authoritative, yet encouraging and premium.
-      - Format: Return a JSON object with:
+      - Format: Return ONLY a raw JSON object (no markdown code blocks) with:
         {
           "title": "...",
           "description": "...",
@@ -73,17 +69,19 @@ export async function GET(request: NextRequest) {
         }
     `;
 
-    const result = await model.generateContent(prompt);
-    const text = result.response.text();
+    const result = await withRetryAndFallback(async (model) => {
+      const res = await model.generateContent(prompt);
+      return res.response.text();
+    });
     
     // Clean up JSON response - more robust extraction
     let postData;
     try {
-      const jsonMatch = text.match(/\{[\s\S]*\}/);
-      const jsonStr = jsonMatch ? jsonMatch[0] : text;
+      const jsonMatch = result.match(/\{[\s\S]*\}/);
+      const jsonStr = jsonMatch ? jsonMatch[0] : result;
       postData = JSON.parse(jsonStr);
     } catch (e) {
-      console.error("Failed to parse AI response:", text);
+      console.error("Failed to parse AI response:", result);
       throw new Error("AI returned malformed data. Try again.");
     }
 
@@ -96,14 +94,14 @@ export async function GET(request: NextRequest) {
     const post = {
       ...postData,
       slug,
-      createdAt: new Date(), // adminDb uses FieldValue.serverTimestamp() usually, but native Date works too if mapped
+      createdAt: new Date(),
       published: true,
       author: "Imtihan AI Assistant"
     };
 
     const docRef = await adminDb.collection("blog_posts").add({
       ...post,
-      createdAt: new Date() // Store as Date for easier querying in the API
+      createdAt: new Date()
     });
 
     return NextResponse.json({ 

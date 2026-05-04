@@ -5,7 +5,7 @@ import { Logo } from "@/components/ui/Logo";
 import { cn } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
-export const revalidate = 3600;
+export const revalidate = 300;
 
 interface BlogPost {
   id: string;
@@ -134,34 +134,40 @@ export default async function BlogPage({
   const { articles, totalPages } = await getArticles(activeCategory, currentPage);
 
   return (
-    <div className="min-h-screen bg-[var(--bg)] flex flex-col font-sans">
-      <nav className="sticky top-0 left-0 right-0 z-50 flex items-center justify-between px-6 md:px-10 h-20 bg-[var(--bg)]/80 backdrop-blur-xl border-b border-[var(--border)]/60">
-        <Logo size={28} />
+    <div className="min-h-screen bg-[var(--bg)] flex flex-col">
+      <nav className="sticky top-0 left-0 right-0 z-50 flex items-center justify-between px-6 md:px-10 h-16 bg-[var(--bg)]/80 backdrop-blur-xl border-b border-[var(--border)]/60">
+        <Logo size={26} />
         <Link 
-          href="/dashboard"
+          href="/"
           className="text-xs font-bold text-[var(--text-secondary)] hover:text-[var(--accent)] transition-colors uppercase tracking-widest"
         >
-          Back to App
+          Back Home
         </Link>
       </nav>
 
-      <main className="flex-grow max-w-6xl mx-auto w-full px-6 py-16 md:py-24">
-        {/* Original Hero Style */}
-        <div className="mb-16 md:mb-24 text-center">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[var(--accent-light)] text-[var(--accent)] text-[10px] font-bold uppercase tracking-widest mb-6">
+      {/* Hero Section */}
+      <section className="relative pt-24 pb-20 md:pt-32 md:pb-24 px-6 md:px-10 overflow-hidden border-b border-[var(--border)]/60 mesh-gradient">
+        <div className="absolute top-0 right-0 w-[600px] h-[600px] rounded-full bg-[var(--accent)] opacity-[0.035] blur-3xl -translate-y-1/3 translate-x-1/3 pointer-events-none" />
+        
+        <div className="relative max-w-5xl mx-auto text-center">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-[var(--border)] bg-[var(--surface)] text-[10px] text-[var(--accent)] font-bold uppercase tracking-widest mb-8 shadow-sm">
             <div className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] animate-pulse" />
             Educational Intelligence
           </div>
-          <h1 className="text-4xl md:text-6xl font-black text-[var(--text)] mb-6 tracking-tight leading-[1.1]">
-            The <span className="text-[var(--accent)]">Imtihan</span> Journal
+          
+          <h1 className="serif text-display-xl text-[var(--text)] mb-6 tracking-tight leading-[1.1]">
+            The <span className="italic text-transparent bg-clip-text bg-gradient-to-r from-[var(--accent)] to-emerald-400">Imtihan</span> Journal
           </h1>
-          <p className="text-lg text-[var(--text-secondary)] max-w-2xl mx-auto leading-relaxed font-medium">
-            Strategic insights for the Lebanese educational landscape. Empowering teachers, students, and parents with AI.
+          
+          <p className="text-lg text-[var(--text-secondary)] max-w-2xl mx-auto leading-relaxed font-medium text-pretty">
+            Strategic insights for the Lebanese educational landscape. Empowering teachers, students, and parents with AI-driven pedagogy.
           </p>
         </div>
+      </section>
 
-        {/* Original Category Buttons Style */}
-        <div className="flex items-center justify-center gap-2 mb-12 overflow-x-auto pb-4 scrollbar-hide no-scrollbar">
+      <main className="flex-grow max-w-6xl mx-auto w-full px-6 py-12">
+        {/* Category Filters */}
+        <div className="flex items-center justify-center gap-2 mb-16 overflow-x-auto pb-4 scrollbar-hide no-scrollbar">
           {CATEGORIES.map((cat) => (
             <Link
               key={cat}
@@ -178,34 +184,34 @@ export default async function BlogPage({
           ))}
         </div>
 
-        {/* Original Articles Grid Style */}
+        {/* Articles Grid */}
         {articles.length > 0 ? (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">
             {articles.map((article) => (
               <Link 
                 key={article.slug} 
                 href={`/blog/${article.slug}`}
-                className="group card p-6 flex flex-col justify-between hover:-translate-y-1 transition-all duration-300"
+                className="group card p-7 flex flex-col justify-between hover:-translate-y-1 transition-all duration-300 ring-1 ring-black/[0.02]"
               >
                 <div>
-                  <div className="flex items-center justify-between mb-4">
-                    <span className="text-[10px] uppercase tracking-wider font-bold text-[var(--accent)] bg-[var(--accent-light)] px-2.5 py-1 rounded-md">
+                  <div className="flex items-center justify-between mb-5">
+                    <span className="text-[9px] uppercase tracking-widest font-black text-[var(--accent)] bg-[var(--accent-light)] px-2.5 py-1 rounded-md border border-[var(--accent)]/10">
                       {article.category}
                     </span>
-                    <div className="flex items-center gap-1 text-[11px] font-medium text-[var(--text-tertiary)]">
-                      <Clock size={12} /> {article.readTime}
+                    <div className="flex items-center gap-1.5 text-[11px] font-bold text-[var(--text-tertiary)]">
+                      <Clock size={14} /> {article.readTime}
                     </div>
                   </div>
-                  <h2 className="text-lg font-semibold text-[var(--text)] mb-3 leading-snug group-hover:text-[var(--accent)] transition-colors line-clamp-2 h-[3.5rem]">
+                  <h2 className="serif text-xl font-bold text-[var(--text)] mb-4 leading-snug group-hover:text-[var(--accent)] transition-colors line-clamp-2 h-[3.5rem]">
                     {article.title}
                   </h2>
-                  <p className="text-sm text-[var(--text-secondary)] leading-relaxed line-clamp-3">
+                  <p className="text-sm text-[var(--text-secondary)] leading-relaxed line-clamp-3 mb-6">
                     {article.description}
                   </p>
                 </div>
-                <div className="mt-6 flex items-center justify-between border-t border-[var(--border)] pt-4">
-                  <span className="text-xs font-medium text-[var(--text-tertiary)]">{article.date}</span>
-                  <span className="inline-flex items-center gap-1 text-xs font-semibold text-[var(--accent)]">
+                <div className="mt-auto flex items-center justify-between border-t border-[var(--border)] pt-5">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-tertiary)]">{article.date}</span>
+                  <span className="inline-flex items-center gap-1 text-xs font-bold text-[var(--accent)]">
                     Read article <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
                   </span>
                 </div>
@@ -213,7 +219,7 @@ export default async function BlogPage({
             ))}
           </div>
         ) : (
-          <div className="text-center py-20 bg-[var(--surface)] rounded-[32px] border border-dashed border-[var(--border)] mb-16">
+          <div className="text-center py-24 bg-[var(--bg-subtle)] rounded-[40px] border border-dashed border-[var(--border)] mb-16">
             <p className="text-[var(--text-secondary)] font-medium">No articles found in this category.</p>
             <Link 
               href="/blog"
@@ -224,29 +230,29 @@ export default async function BlogPage({
           </div>
         )}
 
-        {/* Original Pagination UI */}
+        {/* Pagination */}
         {totalPages > 1 && (
-          <div className="flex items-center justify-center gap-2">
+          <div className="flex items-center justify-center gap-2 pt-8">
             <Link
               href={`/blog?category=${activeCategory}&page=${Math.max(1, currentPage - 1)}`}
               className={cn(
-                "w-10 h-10 rounded-xl border border-[var(--border)] flex items-center justify-center text-[var(--text-secondary)] transition-all",
-                currentPage === 1 ? "opacity-30 pointer-events-none" : "hover:border-[var(--accent)] hover:text-[var(--accent)]"
+                "w-11 h-11 rounded-2xl border border-[var(--border)] flex items-center justify-center text-[var(--text-secondary)] transition-all bg-white",
+                currentPage === 1 ? "opacity-30 pointer-events-none" : "hover:border-[var(--accent)] hover:text-[var(--accent)] shadow-sm"
               )}
             >
-              <ChevronLeft size={18} />
+              <ChevronLeft size={20} />
             </Link>
             
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1.5">
               {Array.from({ length: totalPages }, (_, i) => i + 1).map(pageNum => (
                 <Link
                   key={pageNum}
                   href={`/blog?category=${activeCategory}&page=${pageNum}`}
                   className={cn(
-                    "w-10 h-10 rounded-xl border text-sm font-medium transition-all flex items-center justify-center",
+                    "w-11 h-11 rounded-2xl border text-sm font-bold transition-all flex items-center justify-center",
                     currentPage === pageNum
-                      ? "bg-[var(--text)] text-white border-[var(--text)]"
-                      : "border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)] hover:text-[var(--accent)]"
+                      ? "bg-[var(--text)] text-white border-[var(--text)] shadow-lg shadow-black/10"
+                      : "bg-white border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)] hover:text-[var(--accent)] shadow-sm"
                   )}
                 >
                   {pageNum}
@@ -257,22 +263,26 @@ export default async function BlogPage({
             <Link
               href={`/blog?category=${activeCategory}&page=${Math.min(totalPages, currentPage + 1)}`}
               className={cn(
-                "w-10 h-10 rounded-xl border border-[var(--border)] flex items-center justify-center text-[var(--text-secondary)] transition-all",
-                currentPage === totalPages ? "opacity-30 pointer-events-none" : "hover:border-[var(--accent)] hover:text-[var(--accent)]"
+                "w-11 h-11 rounded-2xl border border-[var(--border)] flex items-center justify-center text-[var(--text-secondary)] transition-all bg-white",
+                currentPage === totalPages ? "opacity-30 pointer-events-none" : "hover:border-[var(--accent)] hover:text-[var(--accent)] shadow-sm"
               )}
             >
-              <ChevronRight size={18} />
+              <ChevronRight size={20} />
             </Link>
           </div>
         )}
       </main>
 
-      <footer className="px-10 py-10 bg-[var(--surface)] border-t border-[var(--border)] mt-20">
-        <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
-          <Logo size={24} />
-          <p className="text-xs text-[var(--text-tertiary)] font-medium">
+      <footer className="px-10 py-16 bg-[var(--bg-subtle)] border-t border-[var(--border)] mt-20">
+        <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-8">
+          <Logo size={26} />
+          <p className="text-xs text-[var(--text-tertiary)] font-bold uppercase tracking-widest">
             Made for Lebanese Educators · © {new Date().getFullYear()} Imtihan
           </p>
+          <div className="flex items-center gap-6 text-xs font-bold text-[var(--text-tertiary)] uppercase tracking-widest">
+            <Link href="/privacy" className="hover:text-[var(--text)] transition-colors">Privacy</Link>
+            <Link href="/terms" className="hover:text-[var(--text)] transition-colors">Terms</Link>
+          </div>
         </div>
       </footer>
     </div>
