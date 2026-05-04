@@ -9,6 +9,7 @@ import { BlogProgressBar } from "@/components/blog/BlogProgressBar";
 import { BlogAuthor } from "@/components/blog/BlogAuthor";
 import { BlogRelated } from "@/components/blog/BlogRelated";
 import { BlogShare } from "@/components/blog/BlogShare";
+import { PublicFooter } from "@/components/layout/PublicFooter";
 
 interface BlogPostProps {
   params: Promise<{ slug: string }>;
@@ -215,19 +216,7 @@ export default async function DynamicBlogPostPage({ params }: BlogPostProps) {
         </aside>
       </div>
 
-      <footer className="px-10 py-16 bg-[var(--bg-subtle)] border-t border-[var(--border)] mt-20">
-        <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-8">
-          <Logo size={26} />
-          <p className="text-xs text-[var(--text-tertiary)] font-bold uppercase tracking-widest">
-            Made for Lebanese Educators · © {new Date().getFullYear()} Imtihan
-          </p>
-          <div className="flex items-center gap-6 text-xs font-bold text-[var(--text-tertiary)] uppercase tracking-widest">
-            <Link href="/privacy" className="hover:text-[var(--text)] transition-colors">Privacy</Link>
-            <Link href="/terms" className="hover:text-[var(--text)] transition-colors">Terms</Link>
-            <Link href="/contact" className="hover:text-[var(--text)] transition-colors">Contact</Link>
-          </div>
-        </div>
-      </footer>
+      <PublicFooter />
     </div>
   );
 }

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ArrowRight, Clock, ChevronLeft, ChevronRight, FileText } from "lucide-react";
 import { Logo } from "@/components/ui/Logo";
 import { cn } from "@/lib/utils";
+import { PublicFooter } from "@/components/layout/PublicFooter";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 300;
@@ -273,18 +274,7 @@ export default async function BlogPage({
         )}
       </main>
 
-      <footer className="px-10 py-16 bg-[var(--bg-subtle)] border-t border-[var(--border)] mt-20">
-        <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-8">
-          <Logo size={26} />
-          <p className="text-xs text-[var(--text-tertiary)] font-bold uppercase tracking-widest">
-            Made for Lebanese Educators · © {new Date().getFullYear()} Imtihan
-          </p>
-          <div className="flex items-center gap-6 text-xs font-bold text-[var(--text-tertiary)] uppercase tracking-widest">
-            <Link href="/privacy" className="hover:text-[var(--text)] transition-colors">Privacy</Link>
-            <Link href="/terms" className="hover:text-[var(--text)] transition-colors">Terms</Link>
-          </div>
-        </div>
-      </footer>
+      <PublicFooter />
     </div>
   );
 }

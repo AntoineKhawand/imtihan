@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowLeft, Mail, MessageSquare, BookOpen, AlertCircle } from "lucide-react";
 import { Logo } from "@/components/ui/Logo";
+import { PublicFooter } from "@/components/layout/PublicFooter";
 
 export const metadata = {
   title: "Contact — Imtihan Support Lebanon",
@@ -102,15 +103,9 @@ export default function ContactPage() {
             <ContactForm />
           </div>
 
-          {/* Footer links */}
-          <div className="mt-12 pt-8 border-t border-[var(--border)] flex flex-wrap gap-6 text-xs text-[var(--text-tertiary)]">
-            <Link href="/privacy" className="hover:text-[var(--text)] transition-colors">Privacy Policy</Link>
-            <Link href="/terms" className="hover:text-[var(--text)] transition-colors">Terms of Service</Link>
-            <Link href="/" className="hover:text-[var(--text)] transition-colors">← Back to Imtihan</Link>
-          </div>
-
         </div>
       </main>
+      <PublicFooter />
     </div>
   );
 }

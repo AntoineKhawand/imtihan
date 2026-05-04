@@ -35,6 +35,7 @@ import { MotionHero, MotionStats, MotionHowItWorks, MotionStreamingPreview } fro
 import { LandingPricing } from "@/components/landing/LandingPricing";
 import { UserNav } from "@/components/layout/UserNav";
 import { Logo } from "@/components/ui/Logo";
+import { PublicFooter } from "@/components/layout/PublicFooter";
 
 const STATS = [
   { value: "4",   label: "Curricula",  sub: "Bac Libanais · Bac Français · IB · Université" },
@@ -484,22 +485,7 @@ export default async function LandingPage() {
         </div>
       </section>
 
-      {/* ── FOOTER ───────────────────────────────────────────────────── */}
-      <footer className="px-6 md:px-10 py-16 border-t border-[var(--border)]">
-        <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-8 md:gap-6">
-          <Logo size={28} />
-          <p className="text-xs text-[var(--text-tertiary)] text-center order-3 md:order-2">
-            Made for Lebanese teachers · © {new Date().getFullYear()} Imtihan
-          </p>
-          <div className="flex items-center justify-center gap-5 text-xs text-[var(--text-tertiary)] order-2 md:order-3">
-            <Link href="/blog" className="hover:text-[var(--text)] transition-colors">Blog</Link>
-            <Link href="/privacy" className="hover:text-[var(--text)] transition-colors">Privacy</Link>
-            <Link href="/terms" className="hover:text-[var(--text)] transition-colors">Terms</Link>
-            <Link href="/contact" className="hover:text-[var(--text)] transition-colors">Contact</Link>
-          </div>
-        </div>
-      </footer>
-
+      <PublicFooter />
     </div>
   );
 }

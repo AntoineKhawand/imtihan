@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
+import { PublicFooter } from "@/components/layout/PublicFooter";
 
 export const metadata = {
   title: "Terms of Service — Imtihan",
@@ -167,13 +168,10 @@ export default function TermsPage() {
 
             </div>
 
-            <div className="mt-16 pt-8 border-t border-[var(--border)] flex flex-wrap gap-6 text-xs text-[var(--text-tertiary)]">
-              <Link href="/privacy" className="hover:text-[var(--text)] transition-colors">Privacy Policy</Link>
-              <Link href="/" className="hover:text-[var(--text)] transition-colors">← Back to Imtihan</Link>
-            </div>
           </div>
         </div>
       </main>
+      <PublicFooter />
     </div>
   );
 }
