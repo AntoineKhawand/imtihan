@@ -31,6 +31,8 @@ import { renderContent } from "@/lib/renderContent";
 import { cn, SUBJECT_LABELS, formatDate } from "@/lib/utils";
 import { getBankExercises, removeFromBank, type BankExercise } from "@/lib/storage";
 import { UserNav } from "@/components/layout/UserNav";
+import { useAuth } from "@/contexts/AuthContext";
+import { getSchoolBankExercises, shareToSchoolBank } from "@/lib/schoolBank";
 import { Logo } from "@/components/ui/Logo";
 
 const DIFFICULTY_CONFIG = {
@@ -74,20 +76,22 @@ const MOCK_SCHOOL_BANK: any[] = [
         methodology: "Appliquer la formule $W = \\frac{1}{2}CE^2$."
       }
     },
-    tags: ["Électricité", "Énergie", "Condensateur"],
+    tags: ["Électricité", "Énergie"],
     savedAt: Date.now() - 86400000 * 5
   }
 ];
 
 export default function BankPage() {
+  const { profile } = useAuth();
   const [entries, setEntries] = useState<BankExercise[]>([]);
+  const [schoolEntries, setSchoolEntries] = useState<any[]>([]);
   const [tab, setTab] = useState<"personal" | "school">("personal");
   const [query, setQuery] = useState("");
   const [mounted, setMounted] = useState(false);
   const [isInviteOpen, setIsInviteOpen] = useState(false);
+  const [loadingSchool, setLoadingSchool] = useState(false);
   
-  // In a real app, this would come from the user's profile
-  const userSchool = "Lycée Franco-Libanais"; 
+  const userSchool = profile?.school || ""; 
   const schoolSlug = userSchool.toLowerCase().replace(/\s+/g, "-");
 
   useEffect(() => {
@@ -95,17 +99,50 @@ export default function BankPage() {
     setMounted(true);
   }, []);
 
+  useEffect(() => {
+    if (tab === "school" && userSchool) {
+      loadSchoolEntries();
+    }
+  }, [tab, userSchool]);
+
+  async function loadSchoolEntries() {
+    setLoadingSchool(true);
+    const data = await getSchoolBankExercises(userSchool);
+    setSchoolEntries(data);
+    setLoadingSchool(false);
+  }
+
+  async function handleShare(entry: BankExercise) {
+    if (!userSchool) {
+      toast.error("Please set your school in settings before sharing.");
+      return;
+    }
+    
+    const promise = shareToSchoolBank(entry, userSchool, profile?.displayName || "Educator");
+    
+    toast.promise(promise, {
+      loading: "Sharing exercise with your colleagues...",
+      success: "Exercise shared successfully!",
+      error: "Failed to share exercise. Please try again."
+    });
+
+    try {
+      await promise;
+      if (tab === "school") loadSchoolEntries();
+    } catch {}
+  }
+
   function handleRemove(id: string) {
     removeFromBank(id);
     setEntries((prev) => prev.filter((b) => b.id !== id));
   }
 
-  const currentList = tab === "personal" ? entries : MOCK_SCHOOL_BANK;
+  const currentList = tab === "personal" ? entries : (schoolEntries.length > 0 ? schoolEntries : MOCK_SCHOOL_BANK);
 
   const filtered = currentList.filter((b) => {
     if (!query.trim()) return true;
     const q = query.toLowerCase();
-    const ex = b.exercise || b; // Handle slightly different mock structure
+    const ex = b.exercise || b;
     return (
       (SUBJECT_LABELS[b.subject]?.fr ?? b.subject).toLowerCase().includes(q) ||
       (ex.statement || "").toLowerCase().includes(q) ||
@@ -150,7 +187,7 @@ export default function BankPage() {
             <p className="text-[var(--text-secondary)] text-sm">
               {tab === "personal" 
                 ? `${entries.length} personal questions saved.` 
-                : `${MOCK_SCHOOL_BANK.length} exercises shared by your colleagues.`}
+                : `${currentList.length} shared exercises.`}
             </p>
           </div>
 
@@ -183,8 +220,8 @@ export default function BankPage() {
                 <Globe size={18} className="text-emerald-600" />
               </div>
               <div>
-                <p className="text-xs font-bold text-emerald-900 uppercase tracking-wider">{userSchool} Shared Bank</p>
-                <p className="text-[11px] text-emerald-700">Collaborating with 14 other teachers.</p>
+                <p className="text-xs font-bold text-emerald-900 uppercase tracking-wider">{userSchool || "Your School"} Shared Bank</p>
+                <p className="text-[11px] text-emerald-700">Collaborate with colleagues by sharing exercises.</p>
               </div>
             </div>
             <Button 
@@ -199,7 +236,43 @@ export default function BankPage() {
           </div>
         )}
 
-        {/* Invite Modal */}
+        <div className="relative mb-6">
+          <Search size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)]" />
+          <input
+            type="text"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder={tab === "personal" ? "Search your private questions..." : `Search ${userSchool}'s repository...`}
+            className="w-full h-10 pl-10 pr-4 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-sm text-[var(--text)] focus:outline-none focus:border-[var(--accent)]"
+          />
+        </div>
+
+        {loadingSchool ? (
+          <div className="py-20 flex flex-col items-center justify-center gap-4 opacity-40">
+            <div className="w-6 h-6 rounded-full border-2 border-emerald-600 border-t-transparent animate-spin" />
+            <p className="text-xs font-medium">Fetching shared questions...</p>
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="card p-14 flex flex-col items-center justify-center text-center opacity-60">
+            <Search size={32} className="text-[var(--text-tertiary)] mb-4" />
+            <p className="text-[var(--text-secondary)]">No results found in {tab === "personal" ? "your bank" : "the school bank"}.</p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {filtered.map((entry) => (
+              <BankCard 
+                key={entry.id} 
+                entry={entry} 
+                onRemove={tab === "personal" ? handleRemove : undefined}
+                onShare={tab === "personal" ? () => handleShare(entry) : undefined}
+                isSchool={tab === "school"}
+              />
+            ))}
+          </div>
+        )}
+      </main>
+
+      {/* Invite Modal */}
         {isInviteOpen && (
           <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
             <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setIsInviteOpen(false)} />
@@ -216,7 +289,7 @@ export default function BankPage() {
 
                 <h3 className="serif text-3xl text-[var(--text)] mb-2">Invite Colleagues</h3>
                 <p className="text-sm text-[var(--text-secondary)] leading-relaxed mb-8">
-                  Collaborate with other teachers at <span className="font-bold text-emerald-600">{userSchool}</span> to build a shared repository of high-quality exercises.
+                  Collaborate with other teachers at <span className="font-bold text-emerald-600">{userSchool || "your school"}</span> to build a shared repository of high-quality exercises.
                 </p>
 
                 <div className="space-y-6">
@@ -224,11 +297,11 @@ export default function BankPage() {
                     <label className="block text-[10px] font-bold text-[var(--text-tertiary)] uppercase tracking-widest mb-3">Invitation Link</label>
                     <div className="flex gap-2">
                       <div className="flex-1 h-12 px-4 bg-[var(--bg-subtle)] border border-[var(--border)] rounded-xl flex items-center text-xs text-[var(--text-secondary)] truncate">
-                        imtihan.live/join/{schoolSlug}-2024
+                        imtihan.live/join/{schoolSlug || "school"}-2024
                       </div>
                       <button 
                         onClick={() => {
-                          navigator.clipboard.writeText("imtihan.live/join/verdun-2024");
+                          navigator.clipboard.writeText(`imtihan.live/join/${schoolSlug}-2024`);
                           toast.success("Invitation link copied!");
                         }}
                         className="h-12 w-12 rounded-xl border border-[var(--border)] flex items-center justify-center text-[var(--text-secondary)] hover:border-emerald-500 hover:text-emerald-600 transition-all active:scale-95"
@@ -271,41 +344,11 @@ export default function BankPage() {
             </div>
           </div>
         )}
-
-        <div className="relative mb-6">
-          <Search size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)]" />
-          <input
-            type="text"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder={tab === "personal" ? "Search your private questions..." : "Search Verdun's shared repository..."}
-            className="w-full h-10 pl-10 pr-4 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-sm text-[var(--text)] focus:outline-none focus:border-[var(--accent)]"
-          />
-        </div>
-
-        {filtered.length === 0 ? (
-          <div className="card p-14 flex flex-col items-center justify-center text-center opacity-60">
-            <Search size={32} className="text-[var(--text-tertiary)] mb-4" />
-            <p className="text-[var(--text-secondary)]">No results found in {tab === "personal" ? "your bank" : "the school bank"}.</p>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {filtered.map((entry) => (
-              <BankCard 
-                key={entry.id} 
-                entry={entry} 
-                onRemove={tab === "personal" ? handleRemove : undefined}
-                isSchool={tab === "school"}
-              />
-            ))}
-          </div>
-        )}
-      </main>
     </div>
   );
 }
 
-function BankCard({ entry, onRemove, isSchool }: { entry: any; onRemove?: (id: string) => void; isSchool?: boolean }) {
+function BankCard({ entry, onRemove, onShare, isSchool }: { entry: any; onRemove?: (id: string) => void; onShare?: () => void; isSchool?: boolean }) {
   const [showSolution, setShowSolution] = useState(false);
   const ex = entry.exercise || entry;
   const diff = DIFFICULTY_CONFIG[ex.difficulty as keyof typeof DIFFICULTY_CONFIG] || DIFFICULTY_CONFIG.medium;
@@ -331,6 +374,15 @@ function BankCard({ entry, onRemove, isSchool }: { entry: any; onRemove?: (id: s
           </div>
           
           <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            {!isSchool && (
+              <button 
+                onClick={onShare}
+                className="p-2 rounded-lg text-[var(--text-secondary)] hover:text-emerald-600 hover:bg-emerald-50 transition-colors"
+                title="Share with School"
+              >
+                <Share2 size={14} />
+              </button>
+            )}
             {isSchool ? (
               <button className="p-2 rounded-lg text-[var(--text-secondary)] hover:text-[var(--accent)] hover:bg-[var(--accent-light)] transition-colors">
                 <Download size={14} />

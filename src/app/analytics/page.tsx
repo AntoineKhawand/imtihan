@@ -18,6 +18,7 @@ import {
   Globe,
   Plus
 } from "lucide-react";
+import { motion } from "framer-motion";
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 import { Logo } from "@/components/ui/Logo";
@@ -130,56 +131,133 @@ export default function AnalyticsPage() {
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-12">
               {/* Coverage Hero Card */}
-              <div className="lg:col-span-4 card p-10 bg-gradient-to-br from-emerald-800 to-teal-950 text-white border-none shadow-2xl shadow-emerald-200 rounded-[3rem] flex flex-col items-center text-center overflow-hidden relative">
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, ease: "easeOut" }}
+                className="lg:col-span-4 card p-10 bg-gradient-to-br from-emerald-900 via-emerald-800 to-teal-950 text-white border-none shadow-[0_20px_50px_rgba(16,185,129,0.2)] rounded-[3.5rem] flex flex-col items-center text-center overflow-hidden relative"
+              >
+                {/* Noise Texture Overaly */}
+                <div className="absolute inset-0 opacity-[0.03] pointer-events-none contrast-150 brightness-100" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` }}></div>
+                
                 {/* Background Art - Logo Watermark */}
-                <div className="absolute -top-10 -right-10 opacity-10 pointer-events-none scale-150 rotate-12">
+                <div className="absolute -top-12 -right-12 opacity-[0.07] pointer-events-none scale-[1.8] rotate-12 blur-[1px]">
                   <Logo size={240} showText={false} />
                 </div>
                 
-                <div className="relative w-48 h-48 mb-10 flex items-center justify-center">
-                  <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 36 36">
+                {/* Floating Glow Orbs */}
+                <div className="absolute top-1/4 -left-20 w-40 h-40 bg-emerald-400/20 rounded-full blur-[80px] pointer-events-none" />
+                <div className="absolute bottom-1/4 -right-20 w-40 h-40 bg-teal-400/10 rounded-full blur-[80px] pointer-events-none" />
+
+                <div className="relative w-56 h-56 mb-12 flex items-center justify-center">
+                  {/* Decorative Outer Ring */}
+                  <div className="absolute inset-0 rounded-full border border-white/5 scale-[1.15]" />
+                  <div className="absolute inset-0 rounded-full border border-white/5 scale-[1.25]" />
+                  
+                  <svg className="absolute inset-0 w-full h-full -rotate-90 drop-shadow-[0_0_15px_rgba(52,211,153,0.3)]" viewBox="0 0 36 36">
+                    <defs>
+                      <linearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stopColor="#34d399" />
+                        <stop offset="100%" stopColor="#10b981" />
+                      </linearGradient>
+                      <filter id="glow">
+                        <feGaussianBlur stdDeviation="0.8" result="coloredBlur"/>
+                        <feMerge>
+                          <feMergeNode in="coloredBlur"/>
+                          <feMergeNode in="SourceGraphic"/>
+                        </feMerge>
+                      </filter>
+                    </defs>
+                    
+                    {/* Background Track */}
                     <path
-                      className="text-white/10"
+                      className="text-white/5"
                       strokeDasharray="100, 100"
-                      strokeWidth="1.5"
+                      strokeWidth="1.2"
                       stroke="currentColor"
                       fill="none"
                       d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
                     />
-                    <path
-                      className="text-white transition-all duration-1000 ease-out"
-                      strokeDasharray={`${coveragePercent}, 100`}
-                      strokeWidth="1.5"
+                    
+                    {/* Secondary Ghost Track */}
+                    <motion.path
+                      initial={{ strokeDasharray: "0, 100" }}
+                      animate={{ strokeDasharray: `${coveragePercent}, 100` }}
+                      transition={{ duration: 2, ease: "easeInOut", delay: 0.2 }}
+                      className="text-emerald-400/20"
+                      strokeWidth="2.5"
                       strokeLinecap="round"
                       stroke="currentColor"
                       fill="none"
                       d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
                     />
+
+                    {/* Main Progress Track */}
+                    <motion.path
+                      initial={{ strokeDasharray: "0, 100" }}
+                      animate={{ strokeDasharray: `${coveragePercent}, 100` }}
+                      transition={{ duration: 1.5, ease: "circOut", delay: 0.5 }}
+                      stroke="url(#progressGradient)"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                      filter="url(#glow)"
+                      fill="none"
+                      d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                    />
                   </svg>
-                  {/* Center dot in circle */}
-                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-white shadow-xl shadow-white/50 z-10" />
                   
-                  <div className="flex flex-col items-center justify-center z-10">
-                    <span className="serif text-6xl font-light tracking-tighter leading-none mb-1">{coveragePercent}%</span>
-                    <span className="text-[10px] font-bold uppercase tracking-[0.3em] opacity-70">Complete</span>
+                  {/* Center Content */}
+                  <div className="flex flex-col items-center justify-center z-10 bg-white/5 backdrop-blur-xl w-36 h-36 rounded-full border border-white/10 shadow-inner">
+                    <motion.span 
+                      initial={{ scale: 0.5, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      transition={{ delay: 0.8, type: "spring", stiffness: 100 }}
+                      className="serif text-6xl font-light tracking-tighter leading-none mb-1 drop-shadow-lg"
+                    >
+                      {coveragePercent}<span className="text-2xl opacity-50 ml-0.5">%</span>
+                    </motion.span>
+                    <span className="text-[9px] font-black uppercase tracking-[0.4em] text-emerald-300/80">Mastery</span>
                   </div>
                 </div>
                 
-                <h3 className="serif text-3xl mb-4 tracking-tight">Teaching Mastery</h3>
-                <p className="text-emerald-100/70 text-sm font-light leading-relaxed mb-10 max-w-[240px]">
-                  You have covered <strong>{coveredChapterIds.size}</strong> out of <strong>{allChapters.length || 0}</strong> core chapters for this level.
+                <h3 className="serif text-3xl mb-3 tracking-tight relative">
+                  Teaching Mastery
+                  <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-emerald-400/30 rounded-full" />
+                </h3>
+                
+                <p className="text-emerald-100/60 text-sm font-light leading-relaxed mb-10 max-w-[260px] mt-4">
+                  You have covered <strong className="text-white font-bold">{coveredChapterIds.size}</strong> out of <strong className="text-white font-bold">{allChapters.length || 0}</strong> core chapters for this level.
                 </p>
                 
-                <div className="w-full bg-white/10 backdrop-blur-md rounded-3xl p-5 border border-white/10 mt-auto shadow-inner">
-                  <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-widest mb-3">
-                    <span className="opacity-70">Current Pace</span>
-                    <span className="text-emerald-300">+12% vs last month</span>
+                <div className="w-full bg-black/20 backdrop-blur-2xl rounded-[2.5rem] p-6 border border-white/10 mt-auto shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)] relative group">
+                  <div className="absolute -top-3 left-6 px-3 py-1 bg-emerald-500 rounded-full text-[9px] font-black uppercase tracking-widest shadow-lg shadow-emerald-500/30">
+                    Active Progress
                   </div>
-                  <div className="h-1.5 w-full bg-white/10 rounded-full overflow-hidden">
-                    <div className="h-full bg-emerald-400 shadow-sm shadow-emerald-400/50" style={{ width: '70%' }} />
+                  
+                  <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-widest mb-4 mt-2">
+                    <div className="flex items-center gap-2">
+                      <Zap size={12} className="text-amber-400 fill-amber-400" />
+                      <span className="opacity-70">Current Pace</span>
+                    </div>
+                    <span className="text-emerald-300 flex items-center gap-1 font-black">
+                      <TrendingUp size={12} />
+                      +12.4%
+                    </span>
+                  </div>
+                  
+                  <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden p-0.5 border border-white/5">
+                    <motion.div 
+                      initial={{ width: 0 }}
+                      animate={{ width: '70%' }}
+                      transition={{ duration: 1.5, ease: "circOut", delay: 1 }}
+                      className="h-full bg-gradient-to-r from-emerald-500 to-teal-400 rounded-full shadow-[0_0_10px_rgba(52,211,153,0.5)] relative overflow-hidden"
+                    >
+                      {/* Shimmer Effect */}
+                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full animate-[shimmer_2s_infinite]" />
+                    </motion.div>
                   </div>
                 </div>
-              </div>
+              </motion.div>
 
               {/* Distribution Graph */}
               <div className="lg:col-span-8 card p-10 bg-white border-none shadow-2xl shadow-black/5 rounded-[2.5rem]">
