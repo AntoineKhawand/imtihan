@@ -229,7 +229,7 @@ export async function POST(request: NextRequest) {
     if (quotaUsed >= limit) {
       const msg = isPro
         ? `You have reached your monthly limit of ${limit} exams. You can reset your monthly quota in your dashboard or contact support if you need more.`
-        : `You have reached your total limit of ${baseLimit} free exams. Upgrade to Pro for 10 exams per month.`;
+        : `You have reached your total limit of ${baseLimit} free exams. Upgrade to Pro for 10 exams/month (or 20 with a yearly plan).`;
       return NextResponse.json(
         { success: false, errors: [msg] },
         { status: 429, headers: createSecurityHeaders() }

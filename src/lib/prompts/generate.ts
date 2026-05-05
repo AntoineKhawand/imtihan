@@ -433,6 +433,13 @@ export function buildGenerateSystemPrompt(context: ExamContext, hasDocument = fa
 - Vocabulary, notation, and level of rigor must match the document, but **EVERY WORD must be in the target language (${context.language})**.
 - TRANSLATION: If the uploaded document is in a different language than ${context.language}, you MUST translate all contexts, scenarios, and scientific terminology into ${context.language}. DO NOT leave any part of the source text in its original language.` : "";
 
+  const stepWord = context.language === "french" ? "Étape"
+    : context.language === "arabic" ? "الخطوة"
+    : "Step";
+  const stepExample = context.language === "french" ? `"Étape 1 :", "Étape 2 :"`
+    : context.language === "arabic" ? `"الخطوة ١ :", "الخطوة ٢ :"`
+    : `"Step 1:", "Step 2:"`;
+
   return `You are an expert examiner who writes authentic, high-quality exam questions for ${
     context.curriculumId === "bac-libanais" ? "the Lebanese Baccalaureate (CRDP)"
     : context.curriculumId === "bac-francais" ? "the French Baccalaureate (Éducation nationale)"
@@ -512,7 +519,7 @@ CRITICAL RULES:
 11. OUTPUT: Start your response with [ and end with ]. Output ONLY the raw JSON array — no prose, no markdown fences, no explanation.
 
 SOLUTION QUALITY — The corrigé must be readable at a glance:
-- Use "Step 1:", "Step 2:" or "Étape 1:", "Étape 2:" headers. DO NOT use markdown bold stars (**).
+- Use ${stepExample} headers (match the exam language — NEVER use English "Step" in a French or Arabic exam). DO NOT use markdown bold stars (**).
 - Show the literal formula BEFORE putting numbers in.
 - End with a boxed final answer: "$\\\\\\\\boxed{result}$".
 
@@ -538,7 +545,7 @@ LATEX IN METHODOLOGY (CRITICAL — violations produce unreadable corrigés):
 
 BARÈME (mandatory for every exercise):
 - bareme: one entry per sub-question (or per main question if no sub-questions). label = the question label ("1.a", "Q2", "Partie B - 3", etc.), points = integer, criterion = one short sentence stating what earns those points (e.g. "Expression correcte de la force de Coulomb" or "Balanced equation with state symbols").
-- microBareme: one entry per methodology step. step = "Étape 1" / "Step 1" / "الخطوة ١" etc., points = fractional or integer (e.g. 0.5 or 1), criterion = the EXACT observable action that earns the mark (e.g. "Writes Newton's second law in vector form" or "Substitutes correct values with units"). microBareme entries must sum to the exercise's total points.
+- microBareme: one entry per methodology step. step = "${stepWord} 1", "${stepWord} 2", etc. — always use this word, never mix languages. points = fractional or integer (e.g. 0.5 or 1), criterion = the EXACT observable action that earns the mark (e.g. "Writes Newton's second law in vector form" or "Substitutes correct values with units"). microBareme entries must sum to the exercise's total points.
 - For exercises with no sub-questions: bareme has one entry with the full exercise label and points.
 - Keep criterion short (≤ 12 words) — it is read at a glance during grading.
 

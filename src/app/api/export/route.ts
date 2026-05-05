@@ -334,9 +334,9 @@ export async function POST(request: NextRequest) {
       return new NextResponse(new Uint8Array(buffer), {
         headers: {
           "Content-Type": isPdf
-            ? "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+            ? "application/pdf"
             : "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-          "Content-Disposition": `attachment; filename="Imtihan_${context.subject}_${context.levelId}.docx"`,
+          "Content-Disposition": `attachment; filename="Imtihan_${context.subject}_${context.levelId}.${isPdf ? "pdf" : "docx"}"`,
         },
       });
     }

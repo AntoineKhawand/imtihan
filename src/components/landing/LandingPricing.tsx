@@ -133,7 +133,7 @@ export function LandingPricing({ isAuthenticated }: { isAuthenticated?: boolean 
 
             <ul className="space-y-4 mb-10 flex-1">
               {[
-                "100 exams per month",
+                "10 exams/mo · 20 with yearly plan",
                 "All curricula & subjects",
                 "Corrigé included per exam",
                 "Word + PDF export",

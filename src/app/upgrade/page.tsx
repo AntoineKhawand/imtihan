@@ -17,7 +17,7 @@ const SAVINGS       = (MONTHLY_PRICE * 12 - YEARLY_TOTAL).toFixed(2);
 const WHISH_NUMBER  = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? "96170542238";
 
 const PRO_FEATURES = [
-  "10 exams per month",
+  "10 exams/mo · 20 with yearly plan",
   "All curricula & subjects",
   "Corrigé included per exam",
   "Word + PDF export",
@@ -135,7 +135,7 @@ export default function UpgradePage() {
             <span className="italic text-[var(--accent)]">In seconds.</span>
           </h1>
           <p className="text-[var(--text-secondary)] max-w-lg mx-auto leading-relaxed text-sm">
-            10 exams/mo (Monthly plan) or 20 exams/mo (Yearly plan). Pay via WHISH Money, get instant access. No auto-renewals.
+            10 exams/month (20 with yearly plan). Pay via WHISH Money, get instant access. No auto-renewals.
           </p>
         </div>
 

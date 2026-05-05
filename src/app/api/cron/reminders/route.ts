@@ -16,7 +16,7 @@ function buildReminderEmail(
   email: string,
   daysLeft: number,
   expiryDate: string,
-  planType?: "monthly" | "yearly"
+  planType?: "monthly" | "yearly",
 ): { subject: string; html: string } {
   const isExpired = daysLeft <= 0;
   const urgency = daysLeft === 1 ? "tomorrow" : isExpired ? "recently" : `in ${daysLeft} days`;
@@ -156,7 +156,7 @@ export async function GET(request: NextRequest) {
         email,
         daysLeft,
         expiryDate,
-        planType
+        planType,
       );
 
       const result = await sendEmail({

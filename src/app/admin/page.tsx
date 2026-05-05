@@ -5,7 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { FREE_EXAM_LIMIT } from "@/lib/utils";
-import { RefreshCw, Search, Calendar, Clock, ShieldCheck, User, Zap, Sparkles, Plus, BarChart3, TrendingUp, FileText, Wand2, ArrowRight } from "lucide-react";
+import { RefreshCw, Search, Calendar, Clock, ShieldCheck, User, Zap, Sparkles, Plus, BarChart3, TrendingUp, FileText, ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -388,7 +388,7 @@ export default function AdminPage() {
                             <div className="h-1 w-8 bg-gray-100 rounded-full mt-1 overflow-hidden">
                               <div 
                                 className="h-full bg-emerald-500" 
-                                style={{ width: `${Math.min(100, ((u.monthlyExamsGenerated || 0) / (u.proExpiresAt ? 10 : FREE_EXAM_LIMIT)) * 100)}%` }} 
+                                style={{ width: `${Math.min(100, ((u.monthlyExamsGenerated || 0) / (u.proExpiresAt ? (u.planType === "yearly" ? 20 : 10) : FREE_EXAM_LIMIT)) * 100)}%` }} 
                               />
                             </div>
                           </div>
@@ -530,7 +530,7 @@ export default function AdminPage() {
               <div className="grid grid-cols-2 gap-4 mb-5">
                 <div className="bg-gray-50 p-3 rounded-2xl">
                   <p className="text-[10px] text-gray-400 uppercase font-bold mb-1">Monthly Usage</p>
-                  <p className="text-sm font-bold text-gray-900">{u.monthlyExamsGenerated || 0} / {u.proExpiresAt ? "10" : "2"}</p>
+                  <p className="text-sm font-bold text-gray-900">{u.monthlyExamsGenerated || 0} / {u.proExpiresAt ? (u.planType === "yearly" ? "20" : "10") : "2"}</p>
                 </div>
                 <div className="bg-blue-50 p-3 rounded-2xl">
                   <p className="text-[10px] text-blue-400 uppercase font-bold mb-1">Bonus Quota</p>

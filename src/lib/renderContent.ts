@@ -86,7 +86,6 @@ function parseNakedMath(text: string): string {
   let processed = text.replace(/(d\^?2\s*[a-zA-Z]\/d\s*[a-zA-Z]\^?2|d\s*[a-zA-Z]\s*2\/d\s*[a-zA-Z]\s*2|d\s*t\s*2\s*d\s*2\s*[a-zA-Z]|dt2\s*d2[a-zA-Z])/gi, (match) => {
     const varMatch = match.match(/[a-zA-Z]/g);
     const x = varMatch ? varMatch[varMatch.length - 1] : "x";
-    const t = varMatch ? varMatch[0] : "t";
     return `$\\frac{d^2${x}}{dt^2}$`;
   }).replace(/(d\s*[a-zA-Z]\/d\s*[a-zA-Z]|d\s*t\s*d\s*[a-zA-Z]|dtd[a-zA-Z])/gi, (match) => {
     const varMatch = match.match(/[a-zA-Z]/g);
@@ -116,50 +115,46 @@ function parseNakedMath(text: string): string {
   });
 }
 
-function parseTables(text: string): string {
-  const lines = text.split("\n");
-  const result: string[] = [];
-  let inTable = false;
-  
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i].trim();
-    if (line.startsWith("|") && line.endsWith("|")) {
-      if (!inTable) {
-        result.push('<div class="overflow-x-auto my-4"><table class="w-full text-sm text-left border-collapse border border-[var(--border)] rounded-lg hidden-border-collapse">');
-        inTable = true;
-      }
-      const cells = line.split("|").slice(1, -1).map(c => c.trim());
-      if (cells.every(c => /^[-:]+$/.test(c))) continue;
-      const isHeader = inTable && result[result.length - 1].includes('<table');
-      let row = '<tr class="border-b border-[var(--border)]">';
-      for (const cell of cells) {
-        const tag = isHeader ? 'th' : 'td';
-        const classes = isHeader
-          ? 'px-4 py-2 font-semibold text-[var(--text)] bg-[var(--bg-subtle)] border-r border-[var(--border)] last:border-r-0'
-          : 'px-4 py-2 text-[var(--text-secondary)] border-r border-[var(--border)] last:border-r-0';
-        row += `<${tag} class="${classes}">${cell}</${tag}>`;
-      }
-      row += '</tr>';
-      result.push(row);
-    } else {
-      if (inTable) {
-        result.push('</table></div>');
-        inTable = false;
-      }
-      result.push(lines[i]);
-    }
-  }
-  if (inTable) result.push('</table></div>');
+function renderCellMath(cell: string): string {
+  if (!cell.trim()) return "&nbsp;";
+  const displayParts = splitMath(cell, "$$", "$$");
+  const rendered = displayParts.map(part => {
+    if (part.kind === "math") return renderKaTeX(part.content.trim(), true);
+    const inlineParts = splitMath(part.content, "$", "$");
+    return inlineParts.map(p => {
+      if (p.kind === "math") return renderKaTeX(p.content, false);
+      return p.content
+        .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+        .replace(/(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)/g, "<em>$1</em>");
+    }).join("");
+  }).join("");
+  return rendered || "&nbsp;";
+}
 
-  let output = "";
-  for (let i = 0; i < result.length; i++) {
-    const part = result[i];
-    if (i === 0) { output += part; continue; }
-    const prevEndsHtml  = result[i - 1].trimEnd().endsWith(">");
-    const currStartsHtml = part.trimStart().startsWith("<");
-    output += (prevEndsHtml || currStartsHtml) ? part : "\n" + part;
-  }
-  return output;
+function renderPipeTable(tableText: string): string {
+  const lines = tableText.split("\n").filter(l => l.trim());
+  const dataLines = lines.filter(l => !/^\s*\|[\s:|-]+\|\s*$/.test(l));
+  if (dataLines.length === 0) return "";
+
+  let isFirstRow = true;
+  let html = '<div class="overflow-x-auto my-4"><table class="w-full text-sm border-collapse border border-[var(--border)]">';
+  dataLines.forEach((line, rowIdx) => {
+    const cells = line.split("|").slice(1, -1).map(c => c.trim());
+    const isHeader = isFirstRow;
+    isFirstRow = false;
+    const tag = isHeader ? "th" : "td";
+    const rowClass = rowIdx < dataLines.length - 1 ? ' class="border-b border-[var(--border)]"' : "";
+    const cellClass = isHeader
+      ? "px-3 py-2 font-semibold text-[var(--text)] bg-[var(--bg-subtle)] border-r border-[var(--border)] last:border-r-0 text-center"
+      : "px-3 py-2 text-[var(--text-secondary)] border-r border-[var(--border)] last:border-r-0 text-center";
+    html += `<tr${rowClass}>`;
+    for (const cell of cells) {
+      html += `<${tag} class="${cellClass}">${renderCellMath(cell)}</${tag}>`;
+    }
+    html += "</tr>";
+  });
+  html += "</table></div>";
+  return html;
 }
 
 function applyMarkdown(text: string): string {
@@ -183,9 +178,8 @@ function applyMarkdown(text: string): string {
     .replace(/(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)/g, "<em>$1</em>")
     .replace(/`([^`]+)`/g, '<code class="font-mono text-xs bg-[var(--bg-subtle)] px-1 py-0.5 rounded">$1</code>');
   
-  // Apply math and list parsing
   md = parseLists(md);
-  return parseTables(md);
+  return md;
 }
 
 
@@ -333,6 +327,35 @@ export function renderContent(raw: string): string {
     return `%%VISUAL_${idx}%%`;
   });
 
+  // 2.5. Extract pipe-separated Markdown tables BEFORE math splitting so cells can render KaTeX.
+  const pipeTableBlocks: string[] = [];
+  {
+    const rawLines = text.split("\n");
+    const out: string[] = [];
+    let accum: string[] = [];
+    const flush = () => {
+      const hasSep = accum.some(l => /^\s*\|[\s:|-]+\|\s*$/.test(l));
+      if (hasSep && accum.length >= 2) {
+        const idx = pipeTableBlocks.length;
+        pipeTableBlocks.push(accum.join("\n"));
+        out.push(`%%PTABLE_${idx}%%`);
+      } else {
+        out.push(...accum);
+      }
+      accum = [];
+    };
+    for (const line of rawLines) {
+      if (/^\s*\|.*\|\s*$/.test(line)) {
+        accum.push(line);
+      } else {
+        if (accum.length) flush();
+        out.push(line);
+      }
+    }
+    if (accum.length) flush();
+    text = out.join("\n");
+  }
+
   text = parseNakedMath(text);
 
   let displayParts = splitMath(text, "$$", "$$");
@@ -363,8 +386,8 @@ export function renderContent(raw: string): string {
       const isCurrHtml = currLine.startsWith("<");
       // Don't add <br /> if we are moving between tags or if it's a placeholder line
       // OR if the current line is a standalone math symbol (like an arrow)
-      const isPlaceholder = line.includes("%%VISUAL_") || line.includes("%%MERMAID_");
-      const wasPlaceholder = htmlLines[i-1].includes("%%VISUAL_") || htmlLines[i-1].includes("%%MERMAID_");
+      const isPlaceholder = line.includes("%%VISUAL_") || line.includes("%%MERMAID_") || line.includes("%%PTABLE_");
+      const wasPlaceholder = htmlLines[i-1].includes("%%VISUAL_") || htmlLines[i-1].includes("%%MERMAID_") || htmlLines[i-1].includes("%%PTABLE_");
       const isShortMath = line.trim().startsWith("<span class=\"katex") && line.trim().length < 200;
 
       if (!isPrevHtml && !isCurrHtml && !isPlaceholder && !wasPlaceholder && !isShortMath) {
@@ -389,7 +412,12 @@ export function renderContent(raw: string): string {
     finalHtml = finalHtml.replace(`%%MERMAID_${idx}%%`, visualHtml);
   });
 
-  // 5. Final cleanup of AI artifacts (like triple quotes or trailing backticks)
+  // 5. Restore pipe tables with KaTeX-rendered cells
+  pipeTableBlocks.forEach((tableText, i) => {
+    finalHtml = finalHtml.replace(`%%PTABLE_${i}%%`, renderPipeTable(tableText));
+  });
+
+  // 6. Final cleanup of AI artifacts (like triple quotes or trailing backticks)
   const cleanedHtml = finalHtml
     .replace(/"""/g, "")
     .replace(/```/g, "")

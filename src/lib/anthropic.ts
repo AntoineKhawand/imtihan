@@ -18,5 +18,5 @@ export function isAnthropicConfigured(): boolean {
   return !!process.env.ANTHROPIC_API_KEY?.trim();
 }
 
-export const CLAUDE_MODEL = "claude-3-5-sonnet-latest";
+export const CLAUDE_MODEL = "claude-sonnet-4-6";
 export const MAX_TOKENS = 8192;

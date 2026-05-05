@@ -2,13 +2,12 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { Plus, BookOpen, Clock, Award, Search, Sparkles, FileText, Copy, Trash2, ChevronRight, Bookmark, Users, Zap, CreditCard, CheckCircle2, TrendingUp, X } from "lucide-react";
+import { Plus, Clock, Award, Search, Sparkles, FileText, Copy, Trash2, ChevronRight, Zap, X } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { DashboardSidebar } from "@/components/layout/DashboardSidebar";
 import { RenewalBanner } from "@/components/ui/RenewalBanner";
-import { cn, formatDate, SUBJECT_LABELS, FREE_EXAM_LIMIT, shortId } from "@/lib/utils";
-import { isProActive, isInGracePeriod, getWhatsAppUpgradeLink } from "@/lib/subscription";
+import { cn, formatDate, FREE_EXAM_LIMIT, shortId } from "@/lib/utils";
+import { isProActive, isInGracePeriod } from "@/lib/subscription";
 import { getSavedExams, deleteExam, saveExam, type SavedExam } from "@/lib/storage";
 import { useAuth } from "@/contexts/AuthContext";
 import { UserNav } from "@/components/layout/UserNav";
@@ -51,8 +50,7 @@ export default function DashboardPage() {
   const [exams, setExams] = useState<SavedExam[]>([]);
   const [query, setQuery] = useState("");
   const [mounted, setMounted] = useState(false);
-  const { user: currentUser, profile, loading: authLoading } = useAuth();
-  const router = useRouter();
+  const { user: currentUser, profile } = useAuth();
 
   const isPro = isProActive(profile) || isInGracePeriod(profile);
   const quotaUsed = isPro ? (profile?.monthlyExamsGenerated ?? 0) : (profile?.examsGenerated ?? 0);
@@ -80,23 +78,15 @@ export default function DashboardPage() {
       })
     : exams;
 
-  async function handleDelete(id: string) {
-    try {
-      await deleteExam(id);
-      setExams((prev) => prev.filter((e) => e.id !== id));
-    } catch (error) {
-      console.error("Delete error:", error);
-    }
+  function handleDelete(id: string) {
+    deleteExam(id);
+    setExams((prev) => prev.filter((e) => e.id !== id));
   }
 
-  async function handleDuplicate(exam: SavedExam) {
-    try {
-      const newExam = { ...exam, id: shortId(), title: `${exam.title} (Copy)`, createdAt: Date.now() };
-      await saveExam(newExam);
-      setExams((prev) => [newExam, ...prev]);
-    } catch (error) {
-      console.error("Duplicate error:", error);
-    }
+  function handleDuplicate(exam: SavedExam) {
+    const newExam = { ...exam, id: shortId(), title: `${exam.title} (Copy)`, createdAt: Date.now() };
+    saveExam(newExam);
+    setExams((prev) => [newExam, ...prev]);
   }
 
   const [requestingRenewal, setRequestingRenewal] = useState(false);
@@ -155,11 +145,6 @@ export default function DashboardPage() {
     } finally {
       setRequestingRenewal(false);
     }
-  }
-
-  function handleUpgrade() {
-    const link = getWhatsAppUpgradeLink(profile?.email ?? "");
-    window.open(link, "_blank", "noopener,noreferrer");
   }
 
   if (!mounted) {
@@ -296,7 +281,7 @@ export default function DashboardPage() {
                   </div>
                 </div>
                 <p className="text-xs text-[var(--text-secondary)] mt-1.5">
-                  Upgrade to Pro for 10 exams/month and advanced AI tools.
+                  Upgrade to Pro for 10 exams/month (20 with yearly plan) and advanced AI tools.
                 </p>
               </div>
               <div className="flex flex-col items-end gap-2">
