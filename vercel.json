@@ -7,6 +7,10 @@
     {
       "path": "/api/cron/blog-auto-publish",
       "schedule": "0 9 * * *"
+    },
+    {
+      "path": "/api/cron/followup",
+      "schedule": "0 10 * * *"
     }
   ]
 }

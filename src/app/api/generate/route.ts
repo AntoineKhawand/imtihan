@@ -225,11 +225,13 @@ export async function POST(request: NextRequest) {
       // We don't need to re-read, just assume 0 for this request
     }
 
-    // 3. Enforce limit
-    if (quotaUsed >= limit) {
+    // 3. Enforce limit — adjustments (individual exercise regenerations) bypass the quota
+    //    so a user who has reached their limit can still refine the exam they already generated.
+    const isAdjustment = parsed.data.isAdjustment;
+    if (!isAdjustment && quotaUsed >= limit) {
       const msg = isPro
-        ? `You have reached your monthly limit of ${limit} exams. You can reset your monthly quota in your dashboard or contact support if you need more.`
-        : `You have reached your total limit of ${baseLimit} free exams. Upgrade to Pro for 10 exams/month (or 20 with a yearly plan).`;
+        ? `You have reached your monthly limit of ${limit} exams. Contact support if you need more.`
+        : `You have reached your limit of ${baseLimit} free exams. Upgrade to Pro for 10 exams/month (or 20 with a yearly plan).`;
       return NextResponse.json(
         { success: false, errors: [msg] },
         { status: 429, headers: createSecurityHeaders() }
@@ -401,7 +403,7 @@ export async function POST(request: NextRequest) {
           );
           // Increment both monthly and lifetime counters (fire-and-forget)
           // ONLY if this is a fresh generation, not an adjustment/regeneration of a single exercise.
-          if (!parsed.data.isAdjustment) {
+          if (!isAdjustment) {
             const batch = adminDb.batch();
             
             // Increment user counters

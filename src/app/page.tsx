@@ -33,6 +33,7 @@ import {
 } from "lucide-react";
 import { MotionHero, MotionStats, MotionHowItWorks, MotionStreamingPreview } from "@/components/landing/LandingMotion";
 import { LandingPricing } from "@/components/landing/LandingPricing";
+import { VisitorCounter } from "@/components/landing/VisitorCounter";
 import { UserNav } from "@/components/layout/UserNav";
 import { Logo } from "@/components/ui/Logo";
 import { PublicFooter } from "@/components/layout/PublicFooter";
@@ -131,7 +132,7 @@ const FAQ_ITEMS = [
   },
   {
     q: "Is it free?",
-    a: "You can generate your first 2 complete exams for free (no credit card required). After that, the Pro subscription unlocks 100 exams per month."
+    a: "You can generate your first 2 complete exams for free (no credit card required). After that, the Pro subscription unlocks 10 exams/month (20 with a yearly plan)."
   }
 ];
 
@@ -297,6 +298,10 @@ export default async function LandingPage() {
             >
               See how it works
             </Link>
+          </div>
+
+          <div className="mt-6">
+            <VisitorCounter />
           </div>
 
           {/* Stats */}
