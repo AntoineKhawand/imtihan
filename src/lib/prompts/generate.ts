@@ -532,15 +532,18 @@ LATEX IN METHODOLOGY (CRITICAL — violations produce unreadable corrigés):
 - Period/constants: $T_0 = 2\\\\\\\\pi\\\\\\\\sqrt{\\\\\\\\frac{m}{k}}$ NOT "T0 = 2π√(m/k)"
 - Units inline: $k = 12{,}5 \\\\\\\\text{ N/m}$ NOT "k = 12,5 N/m" after a calculation
 - Never write subscripts as plain digits after a variable: always $x_m$, $T_0$, $E_c$ — never "xm", "T0", "Ec".
-- TABLEAU DE VARIATIONS (CRITICAL): Use a single Markdown table.
-  - Arrows: Use $\\\\\\\\nearrow$ (up) and $\\\\\\\\searrow$ (down). NEVER write "earrow" or "nearrow" without backslashes.
-  - Alignment: Put $x$, $f'(x)$, and $f(x)$ in the first column.
-  - Horizontal lines: Do NOT break the table into multiple markdown blocks. One single block for the whole table.
-  - Example:
+- TABLEAU DE VARIATIONS (CRITICAL): Use a single Markdown pipe table.
+  - EVERY cell value — without exception — must be wrapped in $...$. Plain text like \nearrow or \searrow without dollar signs will break the renderer.
+  - Arrows: $\\\\\\\\nearrow$ (increasing) and $\\\\\\\\searrow$ (decreasing). NEVER write them without $...$  wrappers.
+  - Signs in f'(x) row: $+$ and $-$ (wrapped). Zero: $0$. Undefined/asymptote: $||$.
+  - f(x) boundary values combined with arrow: $\\\\\\\\nearrow value$ or $\\\\\\\\searrow value$ IN ONE CELL (e.g. $\\\\\\\\nearrow 2$, NOT \nearrow 2 or \nearrow2).
+  - First column labels: $x$, $f'(x)$, $f(x)$ — all wrapped in $...$.
+  - ONE single Markdown table block — never split into multiple blocks.
+  - Example (copy this exact format):
     | $x$ | $-\\\\\\\\infty$ | $1$ | $2$ | $+\\\\\\\\infty$ |
     |---|---|---|---|---|
     | $f'(x)$ | $+$ | $0$ | $-$ | $0$ | $+$ |
-    | $f(x)$ | $-\\\\\\\\infty$ | $\\\\\\\\nearrow f(1)$ | $\\\\\\\\searrow f(2)$ | $\\\\\\\\nearrow +\\\\\\\\infty$ |
+    | $f(x)$ | $-\\\\\\\\infty$ | $\\\\\\\\nearrow 2$ | $\\\\\\\\searrow$ | $\\\\\\\\nearrow +\\\\\\\\infty$ |
 - BOXED ANSWERS: Every final result MUST be in $\\\\\\\\boxed{...}$ and wrapped in $...$. Example: "$\\\\\\\\boxed{y = 12x - 5}$".
 
 BARÈME (mandatory for every exercise):

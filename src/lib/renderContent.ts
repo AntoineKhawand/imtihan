@@ -117,7 +117,15 @@ function parseNakedMath(text: string): string {
 
 function renderCellMath(cell: string): string {
   if (!cell.trim()) return "&nbsp;";
-  const displayParts = splitMath(cell, "$$", "$$");
+  let content = cell.trim();
+
+  // Auto-wrap cells that contain naked LaTeX commands (e.g. \nearrow2, \searrow, \infty)
+  // but no $ delimiters — the AI sometimes omits the wrappers.
+  if (!content.includes("$") && /\\[a-zA-Z]/.test(content)) {
+    content = `$${content}$`;
+  }
+
+  const displayParts = splitMath(content, "$$", "$$");
   const rendered = displayParts.map(part => {
     if (part.kind === "math") return renderKaTeX(part.content.trim(), true);
     const inlineParts = splitMath(part.content, "$", "$");
