@@ -80,6 +80,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         try {
           await setDoc(userRef, { ...newProfile, createdAt: serverTimestamp() });
           // onSnapshot will fire again with the new document
+
+          // 🎉 Send welcome newsletter (fire-and-forget — non-blocking)
+          fetch("/api/auth/welcome", { method: "POST" }).catch(() => {
+            // Non-fatal — cron backfill will catch missed sends
+          });
         } catch (err) {
           console.error("[AuthContext] Failed to create profile:", err);
           setProfile(newProfile); // fallback

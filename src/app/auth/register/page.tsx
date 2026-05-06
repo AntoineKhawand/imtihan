@@ -91,6 +91,8 @@ function RegisterForm() {
         fingerprint,
       });
       await setSessionCookie(await credential.user.getIdToken());
+      // 🎉 Send welcome newsletter (fire-and-forget)
+      fetch("/api/auth/welcome", { method: "POST" }).catch(() => {});
       window.location.assign(explicitRedirect ?? "/dashboard");
     } catch (err: unknown) {
       const code = (err as { code?: string }).code ?? "";
@@ -145,6 +147,8 @@ function RegisterForm() {
           subscription: { status: "none", tier: "free" },
           fingerprint,
         });
+        // 🎉 Send welcome newsletter for new Google users (fire-and-forget)
+        fetch("/api/auth/welcome", { method: "POST" }).catch(() => {});
       }
       await setSessionCookie(await credential.user.getIdToken());
       const dest = explicitRedirect ?? (additionalInfo?.isNewUser ? "/dashboard" : "/create");
