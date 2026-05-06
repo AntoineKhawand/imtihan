@@ -17,6 +17,29 @@ function buildWelcomeNewsletter(name: string): { subject: string; html: string }
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Welcome to Imtihan</title>
+  <style>
+    @media screen and (max-width: 600px) {
+      .email-container { width: 100% !important; }
+      .header-section { padding: 32px 24px !important; }
+      .content-section { padding: 28px 24px !important; }
+      .footer-section { padding: 28px 24px !important; }
+      .feature-col { display: block !important; width: 100% !important; padding: 0 0 16px !important; }
+    }
+    @keyframes slideIn { from { opacity: 0; transform: translateX(-16px); } to { opacity: 1; transform: translateX(0); } }
+    @keyframes scaleIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+    @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+    .cta-btn:hover { transform: translateY(-3px) !important; box-shadow: 0 12px 28px rgba(26,94,63,0.4) !important; }
+    .gift-card:hover { transform: translateY(-2px) !important; box-shadow: 0 8px 24px rgba(26,94,63,0.12) !important; }
+    .feature-item:hover { transform: translateY(-2px) !important; box-shadow: 0 6px 18px rgba(0,0,0,0.08) !important; border-color: #bbf7d0 !important; }
+    .whatsapp-btn:hover { transform: scale(1.05) !important; box-shadow: 0 8px 20px rgba(37,211,102,0.4) !important; }
+    .cta-btn { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+    .gift-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+    .feature-item { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+    .whatsapp-btn { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+    .float-icon { animation: float 3s ease-in-out infinite; }
+    .slide-step { animation: slideIn 0.5s ease-out both; }
+    .scale-card { animation: scaleIn 0.5s ease-out both; }
+  </style>
 </head>
 <body style="margin:0;padding:0;background:#f8fafc;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
   <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f8fafc;padding:32px 16px;">
@@ -26,7 +49,8 @@ function buildWelcomeNewsletter(name: string): { subject: string; html: string }
 
           <!-- HEADER -->
           <tr>
-            <td style="background:linear-gradient(135deg,#0d3d27 0%,#1a5e3f 60%,#22854f 100%);padding:48px 48px 40px;">
+            <td class="header-section" style="background:linear-gradient(135deg,#0d3d27 0%,#1a5e3f 60%,#22854f 100%);padding:48px 48px 40px;position:relative;overflow:hidden">
+              <table width="100%" cellpadding="0" cellspacing="0" border="0">
               <table width="100%" cellpadding="0" cellspacing="0" border="0">
                 <tr>
                   <td>
@@ -51,8 +75,8 @@ function buildWelcomeNewsletter(name: string): { subject: string; html: string }
                     </td>
                   </tr>
                 </table>
-                <h1 style="margin:20px 0 12px;font-size:36px;font-weight:800;color:#fff;line-height:1.1;letter-spacing:-1px;">
-                  Hi ${firstName}! <img src="${tw("1f44b")}" width="32" height="32" style="vertical-align:middle;margin-bottom:6px;" />
+                <h1 class="scale-card" style="margin:20px 0 12px;font-size:36px;font-weight:800;color:#fff;line-height:1.1;letter-spacing:-1px;">
+                  Hi ${firstName}! <img src="${tw("1f44b")}" width="32" height="32" style="vertical-align:middle;margin-bottom:6px;" class="float-icon" />
                 </h1>
                 <p style="margin:0;font-size:17px;color:rgba(255,255,255,0.85);line-height:1.6;">Lebanon's most advanced AI exam platform is now at your fingertips. Built by educators, for educators.</p>
               </div>
@@ -62,13 +86,13 @@ function buildWelcomeNewsletter(name: string): { subject: string; html: string }
           <!-- GIFT -->
           <tr>
             <td style="padding:40px 48px 0;">
-              <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f0fdf4;border:2px solid #bbf7d0;border-radius:20px;">
+              <table width="100%" cellpadding="0" cellspacing="0" border="0" class="gift-card scale-card" style="background:#f0fdf4;border:2px solid #bbf7d0;border-radius:20px;">
                 <tr>
                   <td style="padding:32px;">
                     <div style="font-size:13px;font-weight:800;color:#15803d;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">Gift for new teachers</div>
                     <div style="font-size:24px;font-weight:800;color:#064e3b;line-height:1.2;margin-bottom:12px;">You have 2 Free Exams waiting</div>
                     <p style="margin:0 0 24px;font-size:15px;color:#374151;line-height:1.5;">No credit card, no commitment. Just describe your curriculum and generate.</p>
-                    <a href="${APP_URL}/create" style="display:inline-block;background:#1a5e3f;color:#fff;text-decoration:none;padding:16px 36px;border-radius:12px;font-weight:800;font-size:16px;box-shadow:0 8px 20px rgba(26,94,63,0.3);">Start generating now <img src="${tw("26a1")}" width="16" height="16" style="vertical-align:middle;margin-left:4px;" /></a>
+                    <a href="${APP_URL}/create" class="cta-btn" style="display:inline-block;background:#1a5e3f;color:#fff;text-decoration:none;padding:16px 36px;border-radius:12px;font-weight:800;font-size:16px;box-shadow:0 8px 20px rgba(26,94,63,0.3);">Start generating now <img src="${tw("26a1")}" width="16" height="16" style="vertical-align:middle;margin-left:4px;" /></a>
                   </td>
                 </tr>
               </table>
@@ -123,7 +147,7 @@ function buildWelcomeNewsletter(name: string): { subject: string; html: string }
               <h2 style="margin:0 0 24px;font-size:20px;font-weight:800;color:#0f172a;letter-spacing:-0.5px;">Premium features you'll love</h2>
               <table width="100%" cellpadding="0" cellspacing="0" border="0">
                 <tr>
-                  <td width="50%" style="padding-right:12px;padding-bottom:20px;vertical-align:top;">
+                  <td width="50%" class="feature-col feature-item" style="padding-right:12px;padding-bottom:20px;vertical-align:top;">
                     <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:16px;padding:24px;">
                       <tr><td>
                         <img src="${tw("1f500")}" width="32" height="32" style="margin-bottom:12px;" />
@@ -132,7 +156,7 @@ function buildWelcomeNewsletter(name: string): { subject: string; html: string }
                       </td></tr>
                     </table>
                   </td>
-                  <td width="50%" style="padding-left:12px;padding-bottom:20px;vertical-align:top;">
+                  <td width="50%" class="feature-col feature-item" style="padding-left:12px;padding-bottom:20px;vertical-align:top;">
                     <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:16px;padding:24px;">
                       <tr><td>
                         <img src="${tw("1f4cb")}" width="32" height="32" style="margin-bottom:12px;" />
@@ -143,7 +167,7 @@ function buildWelcomeNewsletter(name: string): { subject: string; html: string }
                   </td>
                 </tr>
                 <tr>
-                  <td width="50%" style="padding-right:12px;vertical-align:top;">
+                  <td width="50%" class="feature-col feature-item" style="padding-right:12px;vertical-align:top;">
                     <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:16px;padding:24px;">
                       <tr><td>
                         <img src="${tw("1f516")}" width="32" height="32" style="margin-bottom:12px;" />
@@ -152,7 +176,7 @@ function buildWelcomeNewsletter(name: string): { subject: string; html: string }
                       </td></tr>
                     </table>
                   </td>
-                  <td width="50%" style="padding-left:12px;vertical-align:top;">
+                  <td width="50%" class="feature-col feature-item" style="padding-left:12px;vertical-align:top;">
                     <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:16px;padding:24px;">
                       <tr><td>
                         <img src="${tw("1f4e5")}" width="32" height="32" style="margin-bottom:12px;" />
@@ -175,7 +199,7 @@ function buildWelcomeNewsletter(name: string): { subject: string; html: string }
                     <img src="${tw("1f4ac")}" width="40" height="40" style="margin-bottom:16px;" />
                     <div style="font-weight:800;color:#0f172a;font-size:18px;margin-bottom:8px;">Have a special request?</div>
                     <p style="margin:0 0 24px;color:#475569;font-size:15px;line-height:1.6;">I'm here to help you get started. Message us directly on WhatsApp for any help.</p>
-                    <a href="https://wa.me/${WHATSAPP}?text=${encodeURIComponent("Hi! I just joined Imtihan and I have a question.")}" style="display:inline-block;background:#25D366;color:#fff;text-decoration:none;padding:14px 32px;border-radius:12px;font-weight:800;font-size:15px;">💬 Message on WhatsApp</a>
+                    <a href="https://wa.me/${WHATSAPP}?text=${encodeURIComponent("Hi! I just joined Imtihan and I have a question.")}" class="whatsapp-btn" style="display:inline-block;background:#25D366;color:#fff;text-decoration:none;padding:14px 32px;border-radius:12px;font-weight:800;font-size:15px;">💬 Message on WhatsApp</a>
                   </td>
                 </tr>
               </table>

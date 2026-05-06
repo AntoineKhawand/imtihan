@@ -18,20 +18,35 @@ const newsletterHtml = `<!doctype html>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Imtihan Newsletter — ${MONTH}</title>
+  <style>
+    @media screen and (max-width: 620px) {
+      .container { width: 100% !important; }
+      .hero { padding: 28px 24px !important; }
+      .body-content { padding: 28px 24px !important; }
+      .footer { padding: 24px !important; }
+      .stats td { display: block !important; width: 100% !important; padding: 12px 0 !important; border-right: none !important; border-bottom: 1px solid #e2e8f0; }
+      .stats td:last-child { border-bottom: none !important; }
+    }
+    @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.03); } }
+    @keyframes shimmer { 0% { background-position: -200% center; } 100% { background-position: 200% center; } }
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+    .cta-button:hover { transform: translateY(-2px) !important; box-shadow: 0 8px 28px rgba(26,94,63,0.45) !important; }
+    .feature-card:hover { transform: translateY(-2px) !important; box-shadow: 0 6px 20px rgba(0,0,0,0.08) !important; border-color: #bbf7d0 !important; }
+    .tip-card:hover { transform: translateY(-2px) !important; box-shadow: 0 6px 20px rgba(245,158,11,0.15) !important; }
+    .cta-button { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+    .feature-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+    .tip-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+    .shimmer-bg { background: linear-gradient(90deg, #0f3d28 0%, #1a5e3f 40%, #2d8f5f 60%, #1a5e3f 80%, #0f3d28 100%); background-size: 200% auto; animation: shimmer 8s linear infinite; }
+    .fade-in { animation: fadeInUp 0.6s ease-out both; }
+  </style>
 </head>
 <body style="margin:0;padding:0;background:#f0f4f8;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;color:#0f172a">
 
   <div style="max-width:620px;margin:32px auto;padding:0 16px 48px">
 
     <!-- ══ HEADER ══ -->
-    <div style="background:linear-gradient(160deg,#0f3d28 0%,#1a5e3f 50%,#2d8f5f 100%);
+    <div class="shimmer-bg hero" style="background:linear-gradient(160deg,#0f3d28 0%,#1a5e3f 50%,#2d8f5f 100%);
                 border-radius:20px 20px 0 0;padding:40px 44px 36px;position:relative;overflow:hidden">
-
-      <!-- decorative circle -->
-      <div style="position:absolute;top:-60px;right:-60px;width:200px;height:200px;
-                  border-radius:50%;background:rgba(255,255,255,0.05)"></div>
-      <div style="position:absolute;bottom:-40px;left:-40px;width:160px;height:160px;
-                  border-radius:50%;background:rgba(255,255,255,0.04)"></div>
 
       <!-- Logo row -->
       <table cellpadding="0" cellspacing="0" style="margin-bottom:28px">
@@ -56,7 +71,7 @@ const newsletterHtml = `<!doctype html>
       </table>
 
       <!-- Hero text -->
-      <h1 style="margin:0 0 10px;font-size:28px;font-weight:800;color:#fff;line-height:1.25;letter-spacing:-0.5px">
+      <h1 class="fade-in" style="margin:0 0 10px;font-size:28px;font-weight:800;color:#fff;line-height:1.25;letter-spacing:-0.5px">
         Your monthly update<br/>from the Imtihan team ${TW("1f1f1-1f1e7", "🇱🇧", 22)}
       </h1>
       <p style="margin:0;color:rgba(255,255,255,0.7);font-size:15px;line-height:1.65;max-width:440px">
@@ -93,7 +108,8 @@ const newsletterHtml = `<!doctype html>
 
       <!-- Feature 1 -->
       <table width="100%" cellpadding="0" cellspacing="0"
-             style="border:1px solid #e2e8f0;border-radius:14px;margin-bottom:16px;overflow:hidden">
+             class="feature-card"
+             style="border:1px solid #e2e8f0;border-radius:14px;margin-bottom:16px;overflow:hidden;background:#fff">
         <tr>
           <td style="padding:22px 24px">
             <table cellpadding="0" cellspacing="0">
@@ -121,7 +137,8 @@ const newsletterHtml = `<!doctype html>
 
       <!-- Feature 2 -->
       <table width="100%" cellpadding="0" cellspacing="0"
-             style="border:1px solid #e2e8f0;border-radius:14px;margin-bottom:16px;overflow:hidden">
+             class="feature-card"
+             style="border:1px solid #e2e8f0;border-radius:14px;margin-bottom:16px;overflow:hidden;background:#fff">
         <tr>
           <td style="padding:22px 24px">
             <table cellpadding="0" cellspacing="0">
@@ -149,7 +166,8 @@ const newsletterHtml = `<!doctype html>
 
       <!-- Feature 3 -->
       <table width="100%" cellpadding="0" cellspacing="0"
-             style="border:1px solid #e2e8f0;border-radius:14px;margin-bottom:36px;overflow:hidden">
+             class="feature-card"
+             style="border:1px solid #e2e8f0;border-radius:14px;margin-bottom:36px;overflow:hidden;background:#fff">
         <tr>
           <td style="padding:22px 24px">
             <table cellpadding="0" cellspacing="0">
@@ -194,6 +212,7 @@ const newsletterHtml = `<!doctype html>
 
       <!-- Tip card -->
       <table width="100%" cellpadding="0" cellspacing="0"
+             class="tip-card"
              style="background:#fffbeb;border:1px solid #fde68a;border-radius:14px;margin-bottom:36px">
         <tr>
           <td style="padding:24px 26px">
@@ -248,6 +267,7 @@ const newsletterHtml = `<!doctype html>
       <!-- ── CTA ── -->
       <div style="text-align:center;margin-bottom:10px">
         <a href="${APP_URL}/create"
+           class="cta-button"
            style="display:inline-block;background:linear-gradient(135deg,#1a5e3f,#2d8f5f);
                   color:#fff;text-decoration:none;padding:16px 48px;border-radius:13px;
                   font-weight:700;font-size:16px;letter-spacing:-0.2px;
