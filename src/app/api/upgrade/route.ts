@@ -39,10 +39,17 @@ function buildAdminEmail(data: z.infer<typeof BodySchema>): { subject: string; h
 <body style="font-family:system-ui,sans-serif;font-size:15px;color:#111;padding:24px;max-width:560px;margin:0 auto;background:#f8fafc">
   <div class="email-body fade-in" style="background:#ffffff;border-radius:20px;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,0.06);border:1px solid #eef2f6">
     <!-- Header -->
-    <div style="background:linear-gradient(135deg,#0d3d27 0%,#1a5e3f 100%);padding:32px;display:flex;align-items:center;gap:12px">
-      <img src="https://imtihan.live/Imtihan-logo.png" width="40" height="40" style="border-radius:10px;display:block;box-shadow:0 4px 12px rgba(0,0,0,0.2)" alt="Imtihan" />
-      <strong style="font-size:18px;color:#fff">Imtihan — New Upgrade Request</strong>
-    </div>
+    <div style="background:linear-gradient(135deg,#0d3d27 0%,#1a5e3f 100%);padding:32px">
+      <table cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td style="vertical-align:middle">
+            <img src="https://imtihan.live/Imtihan-logo.png" width="40" height="40" style="border-radius:10px;display:block;box-shadow:0 4px 12px rgba(0,0,0,0.2)" alt="Imtihan" />
+          </td>
+          <td style="vertical-align:middle;padding-left:14px">
+            <strong style="font-size:18px;color:#fff">Imtihan — New Upgrade Request</strong>
+          </td>
+        </tr>
+      </table>
 
     <!-- Content -->
     <div style="padding:32px">
