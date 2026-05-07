@@ -34,7 +34,15 @@ export async function POST(request: NextRequest) {
 
     let instruction = "";
     if (type === "table") {
-      instruction = `Transform the statement of this exercise into a well-formatted Markdown Table if applicable, or restructure its data points into a clear Markdown Table within the statement. Do not change the core academic difficulty or points, just improve the layout by using a markdown table for the data/context.`;
+      const tableReq = prompt
+        ? `The user specified: "${prompt}". Follow these requirements exactly for the number of columns, rows, headers, and data content.`
+        : `Create a well-formatted Markdown Table with appropriate columns and rows based on the exercise data.`;
+      instruction = `- Task: Restructure the exercise data into a Markdown table within the statement.
+      - ${tableReq}
+      - FORMAT: Use standard Markdown table syntax with pipes and dashes. Include a header row.
+      - PRESERVATION: Do NOT delete, rewrite, or summarize any part of the original text. Keep all original text and insert the table where the data/context is presented.
+      - If the exercise already contains data points, lists, or comparative information, format those into the requested table structure.
+      - Ensure the table renders clearly with proper alignment.`;
     } else if (type === "visual") {
       const visualReq = prompt ? `The user wants: "${prompt}"` : `Add a suitable mathematical graph or logical diagram.`;
       instruction = `- Task: Create a MATHEMATICALLY ACCURATE Mermaid.js diagram.
@@ -60,15 +68,16 @@ export async function POST(request: NextRequest) {
       - Keep the rest of the JSON exactly the same.`;
     }
 
+    const isTable = type === "table";
     const systemPrompt = `You are an expert exam designer and editor. 
 You will receive a JSON representing a single academic exercise.
 Your task is to:
 1. ${instruction}
-2. STRICT PRESERVATION: Do NOT delete, rewrite, or summarize any part of the original text. You must preserve every word of the statement. Only insert the new element.
+2. ${isTable ? "RESTRUCTURE: Rewrite the statement so that the data/context is presented in a Markdown table. Keep all information but organize it into the table format." : "STRICT PRESERVATION: Do NOT delete, rewrite, or summarize any part of the original text. You must preserve every word of the statement. Only insert the new element."}
 3. Ensure the language remains STRICTLY in ${language}. If the original text is mixed, you MUST translate it entirely into ${language}.
 4. Return the EXACT SAME JSON structure for the exercise. Do not wrap the JSON in markdown code blocks. Just return the JSON object.
 5. NO MIXED LANGUAGES: Use only ${language} for all new content and any translated original content.
-
+ 
 Original Exercise JSON:
 ${JSON.stringify(exercise, null, 2)}`;
 

@@ -79,6 +79,8 @@ export function ExerciseCard({
   const [transformType, setTransformType] = useState<"visual" | "image" | "plot" | null>(null);
   const [transformPrompt, setTransformPrompt] = useState("");
 
+  const [tableConfig, setTableConfig] = useState<{ columns: number; rows: number; headers: string; data: string } | null>(null);
+
   // Expression checker (symbolic)
   const [mathOp, setMathOp] = useState("simplify");
   const [mathExpr, setMathExpr] = useState("");
@@ -269,7 +271,7 @@ export function ExerciseCard({
           {onTransform && (
             <div className="flex items-center bg-[var(--bg-subtle)]/50 rounded-lg border border-[var(--border)] p-0.5 mr-1">
               <button
-                onClick={() => onTransform(exercise.id, "table")}
+                onClick={() => setTableConfig({ columns: 0, rows: 0, headers: "", data: "" })}
                 className="w-7 h-7 rounded-md flex items-center justify-center text-[var(--text-tertiary)] hover:text-[var(--accent)] hover:bg-white transition-all"
                 title="Format as Table"
               >
@@ -510,6 +512,89 @@ export function ExerciseCard({
                 : "Describe the diagram or flowchart you want to add."
               }
             </p>
+          </div>
+        </div>
+      )}
+
+      {/* Table Config Panel */}
+      {tableConfig && (
+        <div className="px-6 pb-4 animate-in fade-in slide-in-from-top-2 duration-300">
+          <div className="p-3.5 rounded-xl border border-[var(--accent)]/30 bg-[var(--accent-light)]/30 space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Table size={13} className="text-[var(--accent)]" />
+                <p className="text-[11px] font-bold uppercase tracking-wider text-[var(--accent)]">Configure Table</p>
+              </div>
+              <button
+                onClick={() => setTableConfig(null)}
+                className="text-[var(--text-tertiary)] hover:text-[var(--text)] transition-colors"
+              >
+                <X size={14} />
+              </button>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-[10px] font-semibold text-[var(--text-secondary)] block mb-1">Columns</label>
+                <input
+                  type="number" min={1} max={20}
+                  value={tableConfig.columns || ""}
+                  onChange={(e) => setTableConfig({ ...tableConfig, columns: Math.min(20, Math.max(1, parseInt(e.target.value) || 0)) })}
+                  placeholder="e.g. 4"
+                  className="w-full h-8 px-3 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-xs text-[var(--text)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] transition-all"
+                />
+              </div>
+              <div>
+                <label className="text-[10px] font-semibold text-[var(--text-secondary)] block mb-1">Rows (excluding header)</label>
+                <input
+                  type="number" min={1} max={50}
+                  value={tableConfig.rows || ""}
+                  onChange={(e) => setTableConfig({ ...tableConfig, rows: Math.min(50, Math.max(1, parseInt(e.target.value) || 0)) })}
+                  placeholder="e.g. 5"
+                  className="w-full h-8 px-3 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-xs text-[var(--text)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] transition-all"
+                />
+              </div>
+              <div className="col-span-2">
+                <label className="text-[10px] font-semibold text-[var(--text-secondary)] block mb-1">Column headers (comma-separated)</label>
+                <input
+                  type="text"
+                  value={tableConfig.headers}
+                  onChange={(e) => setTableConfig({ ...tableConfig, headers: e.target.value })}
+                  placeholder="e.g. Name, Value, Unit, Description"
+                  className="w-full h-8 px-3 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-xs text-[var(--text)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] transition-all"
+                />
+              </div>
+              <div className="col-span-2">
+                <label className="text-[10px] font-semibold text-[var(--text-secondary)] block mb-1">Data description (what should fill the cells)</label>
+                <input
+                  type="text"
+                  value={tableConfig.data}
+                  onChange={(e) => setTableConfig({ ...tableConfig, data: e.target.value })}
+                  placeholder="e.g. experimental values for voltage and current"
+                  className="w-full h-8 px-3 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-xs text-[var(--text)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] transition-all"
+                />
+              </div>
+            </div>
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => setTableConfig(null)}
+                className="h-8 px-3 rounded-lg border border-[var(--border)] bg-[var(--surface)] text-xs font-medium text-[var(--text-secondary)] hover:text-[var(--text)] transition-all"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  if (onTransform && tableConfig.columns > 0 && tableConfig.rows > 0) {
+                    const promptText = `Create a table with ${tableConfig.columns} columns and ${tableConfig.rows} data rows. Headers: ${tableConfig.headers || "auto-generated"}. Data: ${tableConfig.data || "use relevant data from the exercise"}.`;
+                    onTransform(exercise.id, "table", promptText);
+                    setTableConfig(null);
+                  }
+                }}
+                className="h-8 px-4 rounded-lg bg-[var(--accent)] text-white text-xs font-semibold hover:bg-[var(--accent)]/90 transition-all flex items-center gap-2"
+              >
+                <Zap size={13} />
+                Apply Table
+              </button>
+            </div>
           </div>
         </div>
       )}
