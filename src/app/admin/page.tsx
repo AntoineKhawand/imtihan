@@ -5,7 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { FREE_EXAM_LIMIT } from "@/lib/utils";
-import { RefreshCw, Search, Calendar, Clock, ShieldCheck, User, Zap, Sparkles, Plus, BarChart3, TrendingUp, FileText, ArrowRight } from "lucide-react";
+import { RefreshCw, Search, Calendar, Clock, ShieldCheck, User, Zap, Sparkles, Plus, BarChart3, TrendingUp, FileText, ArrowRight, Mail, Send, CheckCircle2, XCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -55,7 +55,7 @@ function ProBadge({ expiresAt }: { expiresAt: number | null }) {
 export default function AdminPage() {
   const { user } = useAuth();
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<"users" | "blog">("users");
+  const [activeTab, setActiveTab] = useState<"users" | "email" | "blog">("users");
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [statsData, setStatsData] = useState<{ subjects: Record<string, number>; lastUpdated: number }>({ subjects: {}, lastUpdated: Date.now() });
   const [loading, setLoading] = useState(true);
@@ -65,6 +65,12 @@ export default function AdminPage() {
   const [filterType, setFilterType] = useState<"all" | "requests">("all");
   const [showYearly, setShowYearly] = useState(false);
   const [isGeneratingBlog, setIsGeneratingBlog] = useState(false);
+  const [selectedUids, setSelectedUids] = useState<Set<string>>(new Set());
+  const [emailTemplate, setEmailTemplate] = useState<"newsletter" | "activation" | "engagement" | "custom">("newsletter");
+  const [customSubject, setCustomSubject] = useState("");
+  const [customHtml, setCustomHtml] = useState("");
+  const [sendingEmails, setSendingEmails] = useState(false);
+  const [emailResult, setEmailResult] = useState<{ sent: number; failed: number } | null>(null);
 
   async function fetchData() {
     if (!user) return;
@@ -171,6 +177,53 @@ export default function AdminPage() {
     });
   };
 
+  const toggleSelect = (uid: string) => {
+    setSelectedUids(prev => {
+      const next = new Set(prev);
+      if (next.has(uid)) next.delete(uid);
+      else next.add(uid);
+      return next;
+    });
+  };
+
+  const selectAll = () => {
+    if (selectedUids.size === filtered.length) {
+      setSelectedUids(new Set());
+    } else {
+      setSelectedUids(new Set(filtered.map(u => u.uid)));
+    }
+  };
+
+  const handleSendEmails = async () => {
+    if (!user || selectedUids.size === 0) return;
+    setSendingEmails(true);
+    setEmailResult(null);
+    try {
+      const token = await user.getIdToken();
+      const res = await fetch("/api/admin/send-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          template: emailTemplate,
+          targetUids: Array.from(selectedUids),
+          ...(emailTemplate === "custom" ? { subject: customSubject, html: customHtml } : {}),
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setEmailResult({ sent: data.sent, failed: data.failed });
+        toast.success(`Sent ${data.sent} email${data.sent !== 1 ? "s" : ""}${data.failed > 0 ? `, ${data.failed} failed` : ""}`);
+        setSelectedUids(new Set());
+      } else {
+        toast.error(data.error || "Failed to send emails");
+      }
+    } catch (e) {
+      toast.error("Failed to send emails");
+    } finally {
+      setSendingEmails(false);
+    }
+  };
+
   if (isAuthorized === false) {
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-6 text-center">
@@ -216,6 +269,15 @@ export default function AdminPage() {
               )}
             >
               <User size={14} /> Users
+            </button>
+            <button 
+              onClick={() => setActiveTab("email")}
+              className={cn(
+                "h-9 px-4 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 flex-1 sm:flex-none",
+                activeTab === "email" ? "bg-white text-emerald-600 shadow-sm border border-gray-100" : "text-gray-400 hover:text-gray-600"
+              )}
+            >
+              <Mail size={14} /> Emails
             </button>
             <button 
               onClick={() => setActiveTab("blog")}
@@ -342,6 +404,7 @@ export default function AdminPage() {
                       <th className="px-6 py-5 text-[10px] font-black text-gray-400 uppercase tracking-widest">Activity</th>
                       <th className="px-6 py-5 text-center text-[10px] font-black text-gray-400 uppercase tracking-widest">Usage</th>
                       <th className="px-6 py-5 text-center text-[10px] font-black text-gray-400 uppercase tracking-widest">Quota</th>
+                      <th className="px-6 py-5 text-center text-[10px] font-black text-gray-400 uppercase tracking-widest">Select</th>
                       <th className="px-8 py-5 text-right text-[10px] font-black text-gray-400 uppercase tracking-widest">Quick Actions</th>
                     </tr>
                   </thead>
@@ -401,6 +464,14 @@ export default function AdminPage() {
                         </td>
                         <td className="px-8 py-6 text-right">
                           <div className="flex justify-end items-center gap-2">
+                            <div className="flex items-center mr-2">
+                              <input 
+                                type="checkbox" 
+                                checked={selectedUids.has(u.uid)} 
+                                onChange={() => toggleSelect(u.uid)}
+                                className="w-4 h-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-600 cursor-pointer"
+                              />
+                            </div>
                             <button 
                               onClick={() => handleExtend(u.uid, 30)}
                               disabled={!!extending}
@@ -440,7 +511,154 @@ export default function AdminPage() {
                 </table>
               </div>
             </div>
+
+            {/* Email Send Bar */}
+            {selectedUids.size > 0 && (
+              <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 bg-emerald-950 text-white px-8 py-4 rounded-2xl shadow-2xl shadow-emerald-900/30 flex items-center gap-6 animate-in fade-in slide-in-from-bottom-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center"><Mail size={16} className="text-emerald-400" /></div>
+                  <div><p className="text-sm font-bold">{selectedUids.size} user{selectedUids.size > 1 ? "s" : ""} selected</p></div>
+                </div>
+                <div className="w-px h-8 bg-white/10" />
+                <select 
+                  value={emailTemplate} 
+                  onChange={e => setEmailTemplate(e.target.value as typeof emailTemplate)}
+                  className="bg-white/10 border border-white/20 rounded-xl px-4 py-2 text-xs font-bold text-white focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                >
+                  <option value="newsletter" className="bg-emerald-950">📬 Newsletter</option>
+                  <option value="activation" className="bg-emerald-950">⚡ Activation (No Exams)</option>
+                  <option value="engagement" className="bg-emerald-950">💬 Engagement (Has Exams)</option>
+                  <option value="custom" className="bg-emerald-950">✏️ Custom HTML</option>
+                </select>
+                <button 
+                  onClick={handleSendEmails}
+                  disabled={sendingEmails}
+                  className="h-10 px-6 bg-emerald-500 hover:bg-emerald-400 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-2 disabled:opacity-50"
+                >
+                  {sendingEmails ? <RefreshCw size={14} className="animate-spin" /> : <Send size={14} />}
+                  Send
+                </button>
+              </div>
+            )}
+
+            {emailResult && (
+              <div className="mt-6 bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
+                <div className="flex items-center gap-4">
+                  <CheckCircle2 size={24} className="text-emerald-500" />
+                  <div>
+                    <p className="font-bold text-gray-900">{emailResult.sent} email{emailResult.sent !== 1 ? "s" : ""} sent successfully</p>
+                    {emailResult.failed > 0 && <p className="text-sm text-red-500 font-medium">{emailResult.failed} failed</p>}
+                  </div>
+                  <button onClick={() => setEmailResult(null)} className="ml-auto text-gray-400 hover:text-gray-600"><XCircle size={18} /></button>
+                </div>
+              </div>
+            )}
           </>
+        ) : activeTab === "email" ? (
+          /* EMAIL TAB */
+          <div className="space-y-8">
+            {/* Email Control Center */}
+            <div className="bg-emerald-950 text-white p-8 rounded-[40px] relative overflow-hidden shadow-2xl shadow-emerald-900/20">
+              <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-emerald-500/10 blur-[100px] rounded-full -translate-y-1/2 translate-x-1/2" />
+              <div className="relative z-10">
+                <div className="flex items-center gap-2 mb-4">
+                  <Mail size={18} className="text-emerald-400" />
+                  <span className="text-xs font-bold text-emerald-400 uppercase tracking-widest">Email Center</span>
+                </div>
+                <h2 className="text-4xl font-black leading-tight mb-4 tracking-tight">Send Emails to Users</h2>
+                <p className="text-emerald-100/70 max-w-2xl leading-relaxed">
+                  Select users from the Users tab by checking their boxes, then choose a template and send.
+                </p>
+                <div className="mt-8 grid sm:grid-cols-3 gap-4">
+                  <button 
+                    onClick={() => { setActiveTab("users"); setFilterType("all"); }}
+                    className="h-12 px-6 bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl text-xs font-bold text-white transition-all flex items-center justify-center gap-2"
+                  >
+                    <User size={14} /> Select All Users
+                  </button>
+                  <button 
+                    onClick={() => { setActiveTab("users"); setFilterType("all"); }}
+                    className="h-12 px-6 bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl text-xs font-bold text-white transition-all flex items-center justify-center gap-2"
+                  >
+                    <Zap size={14} /> Pro Users Only
+                  </button>
+                  <button 
+                    onClick={() => { setActiveTab("users"); setSearch(""); }}
+                    className="h-12 px-6 bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl text-xs font-bold text-white transition-all flex items-center justify-center gap-2"
+                  >
+                    <Search size={14} /> Search & Select
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Templates */}
+            <div className="grid md:grid-cols-2 gap-6">
+              {[
+                { id: "newsletter" as const, icon: "📬", title: "Monthly Newsletter", desc: "Feature updates, tips, and stats for all users" },
+                { id: "activation" as const, icon: "⚡", title: "Activation Email", desc: "For users who signed up but haven't generated yet" },
+                { id: "engagement" as const, icon: "💬", title: "Engagement Follow-up", desc: "For active users — pro tips and feedback request" },
+                { id: "custom" as const, icon: "✏️", title: "Custom HTML", desc: "Write your own subject and HTML content" },
+              ].map(t => (
+                <button 
+                  key={t.id}
+                  onClick={() => setEmailTemplate(t.id)}
+                  className={cn(
+                    "p-6 rounded-3xl border text-left transition-all",
+                    emailTemplate === t.id 
+                      ? "bg-emerald-50 border-emerald-200 shadow-lg shadow-emerald-100" 
+                      : "bg-white border-gray-100 hover:border-gray-200 hover:shadow-sm"
+                  )}
+                >
+                  <div className="text-3xl mb-3">{t.icon}</div>
+                  <h3 className="font-bold text-gray-900 text-base mb-1">{t.title}</h3>
+                  <p className="text-sm text-gray-500 font-medium">{t.desc}</p>
+                  {emailTemplate === t.id && <div className="mt-3 text-xs font-bold text-emerald-600 flex items-center gap-1"><CheckCircle2 size={14} /> Selected</div>}
+                </button>
+              ))}
+            </div>
+
+            {/* Custom HTML Editor */}
+            {emailTemplate === "custom" && (
+              <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm">
+                <h3 className="font-bold text-gray-900 text-lg mb-4">Custom Email</h3>
+                <input 
+                  type="text" 
+                  placeholder="Email subject..." 
+                  value={customSubject} 
+                  onChange={e => setCustomSubject(e.target.value)}
+                  className="w-full h-12 px-4 border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-emerald-600/10 focus:border-emerald-600 mb-4"
+                />
+                <textarea 
+                  placeholder="Email HTML content..." 
+                  value={customHtml} 
+                  onChange={e => setCustomHtml(e.target.value)}
+                  rows={12}
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm font-mono focus:outline-none focus:ring-2 focus:ring-emerald-600/10 focus:border-emerald-600 resize-y"
+                />
+              </div>
+            )}
+
+            {/* Quick Stats */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm">
+                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Total Users</p>
+                <h3 className="text-2xl font-black text-gray-900">{users.length}</h3>
+              </div>
+              <div className="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm">
+                <p className="text-[10px] font-black text-emerald-500 uppercase tracking-widest mb-1">Selected</p>
+                <h3 className="text-2xl font-black text-emerald-600">{selectedUids.size}</h3>
+              </div>
+              <div className="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm">
+                <p className="text-[10px] font-black text-amber-500 uppercase tracking-widest mb-1">No Exams</p>
+                <h3 className="text-2xl font-black text-amber-600">{users.filter(u => u.examsGenerated === 0).length}</h3>
+              </div>
+              <div className="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm">
+                <p className="text-[10px] font-black text-blue-500 uppercase tracking-widest mb-1">Active (1+ Exams)</p>
+                <h3 className="text-2xl font-black text-blue-600">{users.filter(u => u.examsGenerated >= 1).length}</h3>
+              </div>
+            </div>
+          </div>
         ) : (
           /* BLOG TAB */
           <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
