@@ -425,12 +425,23 @@ export function renderContent(raw: string): string {
     finalHtml = finalHtml.replace(`%%PTABLE_${i}%%`, renderPipeTable(tableText));
   });
 
-  // 6. Final cleanup of AI artifacts (like triple quotes or trailing backticks)
-  const cleanedHtml = finalHtml
+  // 6. Final cleanup of AI artifacts (like triple quotes, code fences, or trailing backticks)
+  let cleanedHtml = finalHtml
     .replace(/"""/g, "")
+    // Strip fenced code blocks with language specifiers (```json, ```latex, ```python, etc.)
+    .replace(/```\w*\n?/g, "")
     .replace(/```/g, "")
+    // Remove stray LaTeX environment fences the AI sometimes injects
+    .replace(/\\begin\{.*?\}/g, "")
+    .replace(/\\end\{.*?\}/g, "")
     .replace(/(<br \/>\s*){3,}/g, "<br /><br />")
     .trim();
+
+  // Wrap naked \boxed{}, \text{}, \mathbf{}, etc. that AI outputs without $ delimiters
+  cleanedHtml = cleanedHtml.replace(
+    /(?<![\$=])((?:\\boxed|\\text|\\mathbf|\\mathit|\\mathrm|\\textbf|\\textit)\{.*?\})(?![\$=])/g,
+    "$$$1$$"
+  );
 
   return `<div dir="auto">${cleanedHtml}</div>`;
 }
