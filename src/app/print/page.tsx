@@ -2,25 +2,18 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { SUBJECT_LABELS, LANGUAGE_LABELS, cn } from "@/lib/utils";
+import { SUBJECT_LABELS } from "@/lib/utils";
 import { getSchoolSettings } from "@/lib/storage";
 import type { ExamContext, Exercise } from "@/types/exam";
 import { renderContent } from "@/lib/renderContent";
 import "katex/dist/katex.min.css";
-
-const DIFFICULTY_CONFIG = {
-  easy: { label_en: "Easy", label_fr: "Facile", label_ar: "سهل", color: "text-emerald-600 bg-emerald-50 border-emerald-100", dot: "bg-emerald-500" },
-  medium: { label_en: "Medium", label_fr: "Moyen", label_ar: "متوسط", color: "text-amber-600 bg-amber-50 border-amber-100", dot: "bg-amber-500" },
-  hard: { label_en: "Hard", label_fr: "Difficile", label_ar: "صعب", color: "text-red-600 bg-red-50 border-red-100", dot: "bg-red-500" },
-};
 
 export default function PrintPage() {
   const router = useRouter();
   const [context, setContext] = useState<ExamContext | null>(null);
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [templateId, setTemplateId] = useState("classic");
-  const [schoolSettings, setSchoolSettings] = useState<{ schoolName?: string; teacherName?: string }>({});
-  const [ready, setReady] = useState(false);
+  const [schoolSettings, setSchoolSettings] = useState<{ schoolName?: string; teacherName?: string; schoolLogo?: string }>({});
 
   useEffect(() => {
     const ctxRaw = sessionStorage.getItem("imtihan_context");
@@ -35,9 +28,7 @@ export default function PrintPage() {
       setExercises(JSON.parse(exRaw));
       setTemplateId(tmpl);
       setSchoolSettings(getSchoolSettings() || {});
-      setReady(true);
-      
-      // Give MathJax/KaTeX and DOM a moment to render before triggering print
+
       setTimeout(() => {
         window.print();
       }, 1000);
@@ -50,8 +41,8 @@ export default function PrintPage() {
 
   const isArabic = context.language === "arabic";
   const lang = isArabic ? "ar" : context.language === "french" ? "fr" : "en";
-  const subjectName = SUBJECT_LABELS[context.subject]?.[lang === "ar" ? "fr" : lang] ?? context.subject; // fallback to fr for now if ar missing
-  
+  const subjectName = SUBJECT_LABELS[context.subject]?.[lang === "ar" ? "fr" : lang] ?? context.subject;
+
   const durationWord = lang === "ar" ? "المدة" : "Durée";
   const totalWord = lang === "ar" ? "المجموع" : "Total";
   const pointsWord = lang === "ar" ? "نقاط" : "points";
@@ -60,211 +51,209 @@ export default function PrintPage() {
   const corrigWord = lang === "ar" ? "الإجابة النموذجية" : "CORRIGÉ";
   const responseWord = lang === "ar" ? "الإجابة" : "Réponse";
   const baremeWord = lang === "ar" ? "سلم التصحيح" : "Barème de correction";
-  const questionWord = lang === "ar" ? "السؤال" : "Question";
-  const criterionWord = lang === "ar" ? "المعيار" : "Critère";
   const methodologyWord = lang === "ar" ? "منهجية الحل" : "Méthodologie";
-  const stepWord = lang === "ar" ? "الخطوة" : "Étape";
-  const observableWord = lang === "ar" ? "المعيار الملاحظ" : "Critère observable";
-  const microWord = lang === "ar" ? "الميكرو-باريم" : "Micro-barème";
+  const microWord = lang === "ar" ? "سلم تنقيط تفصيلي" : "Micro-barème";
+  const stepLabel = lang === "ar" ? "الخطوة" : "Étape";
+  const noteWord = lang === "ar" ? "العلامة" : "Note";
+  const maxWord = lang === "ar" ? "الأقصى" : "Max";
 
   const isModern = templateId === "modern";
   const isFormal = templateId === "formal";
 
+  const primaryColor = isFormal ? "#000000" : "#1a5e3f";
+  const borderColor = isFormal ? "#000000" : isModern ? "#2563eb" : "#1a5e3f";
+  const fontFamily = isFormal ? "Times New Roman, serif" : isModern ? "Arial, sans-serif" : "Georgia, serif";
+
   return (
     <div
       dir={isArabic ? "rtl" : "ltr"}
-      className={cn(
-        "bg-[var(--bg)] text-[var(--text)] min-h-screen p-8 mx-auto max-w-[210mm]", // A4 width approx
-        isFormal ? "font-serif" : isModern ? "font-sans" : "font-serif"
-      )}
+      className="bg-white text-black min-h-screen p-8 mx-auto max-w-[210mm]"
+      style={{ fontFamily }}
     >
-      {/* Print-specific CSS */}
-      <style dangerouslySetInnerHTML={{__html: `
+      <style dangerouslySetInnerHTML={{ __html: `
         @media print {
           @page { margin: 20mm; size: A4; }
-          body { -webkit-print-color-adjust: exact; print-color-adjust: exact; background: var(--bg) !important; }
+          body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
           .page-break { page-break-before: always; }
           .no-break { page-break-inside: avoid; }
-          /* Hide standard UI elements */
           header, footer, nav, button { display: none !important; }
         }
+        table.score-table { width: 100%; border-collapse: collapse; margin: 12px 0 24px 0; font-size: 11px; }
+        table.score-table th, table.score-table td { border: 1px solid #d1d5db; padding: 6px 10px; text-align: center; }
+        table.score-table th { background: #effaf4; font-weight: 700; }
+        table.score-table .bg-subtle { background: #f3f0e8; }
+        table.bareme-table { width: 100%; border-collapse: collapse; margin: 8px 0 16px 0; font-size: 11px; }
+        table.bareme-table th { padding: 5px 8px; text-align: left; background: #f3f0e8; font-weight: 700; border: 1px solid #d1d5db; }
+        table.bareme-table td { padding: 5px 8px; border: 1px solid #d1d5db; vertical-align: top; }
+        table.bareme-table td.pts { text-align: center; font-weight: 700; }
+        .step-badge { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 4px; color: white; font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; }
       `}} />
 
-      {/* Header */}
-      <div className={cn("text-center mb-8", isFormal ? "border-b-4 border-double border-black pb-6" : "border-b-2 border-emerald-800 pb-4")}>
+      {/* ── HEADER ── */}
+      <div className="text-center mb-6" style={isFormal ? { borderBottom: "3px double black", paddingBottom: 20 } : { borderBottom: `2px solid ${borderColor}`, paddingBottom: 14 }}>
+        {schoolSettings.schoolLogo && (
+          <img
+            src={schoolSettings.schoolLogo}
+            alt="School logo"
+            className="mx-auto mb-2"
+            style={{ width: 70, height: 70, objectFit: "contain" }}
+          />
+        )}
         {schoolSettings.schoolName && (
-          <h2 className={cn("text-xl font-bold mb-2", isModern ? "text-blue-700" : isFormal ? "text-black" : "text-emerald-800")}>
+          <h2 className="text-lg font-bold mb-1" style={{ color: primaryColor }}>
             {schoolSettings.schoolName}
           </h2>
         )}
-        <h1 className={cn("text-3xl font-bold mb-2", isModern ? "text-gray-900" : "text-black")}>
+        <h1 className="text-2xl font-bold mb-1">
           {subjectName} — {context.levelId}
         </h1>
-        <div className={cn("flex justify-center items-center gap-4 text-sm", isModern ? "text-gray-600 font-medium" : "text-gray-800")}>
+        <div className="flex justify-center items-center gap-3 text-xs text-gray-600">
+          {schoolSettings.teacherName && <span>{professorWord}: {schoolSettings.teacherName}</span>}
+          {schoolSettings.teacherName && <span>|</span>}
           <span>{durationWord}: {context.duration} min</span>
           <span>|</span>
           <span>{totalWord}: {context.totalPoints} {pointsWord}</span>
-          {schoolSettings.teacherName && (
-            <>
-              <span>|</span>
-              <span>{professorWord}: {schoolSettings.teacherName}</span>
-            </>
-          )}
         </div>
       </div>
 
-      {/* Exercises */}
-      <div className="space-y-6">
-        {exercises.map((ex, i) => {
-          const diff = DIFFICULTY_CONFIG[ex.difficulty] || DIFFICULTY_CONFIG.medium;
-          const diffLabel = lang === "fr" ? diff.label_fr : isArabic ? diff.label_ar : diff.label_en;
+      {/* ── SCORE SUMMARY TABLE (matching Word export) ── */}
+      <table className="score-table">
+        <thead>
+          <tr>
+            <th style={{ width: "28%", textAlign: "left", background: "#effaf4" }}>{exerciseWord}</th>
+            {exercises.map((ex) => (
+              <th key={ex.id} style={{ width: `${56 / exercises.length}%`, textAlign: "center" }}>{ex.number}</th>
+            ))}
+            <th style={{ width: "16%", textAlign: "center", background: "#effaf4" }}>{totalWord}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td className="bg-subtle" style={{ fontWeight: 700, textAlign: "left" }}>{maxWord}</td>
+            {exercises.map((ex) => (
+              <td key={ex.id} style={{ fontWeight: 600 }}>{ex.points}</td>
+            ))}
+            <td className="bg-subtle" style={{ fontWeight: 700 }}>{context.totalPoints}</td>
+          </tr>
+          <tr>
+            <td className="bg-subtle" style={{ fontWeight: 700, textAlign: "left" }}>{noteWord}</td>
+            {exercises.map((ex) => (
+              <td key={ex.id}></td>
+            ))}
+            <td className="bg-subtle"></td>
+          </tr>
+        </tbody>
+      </table>
 
-          return (
-            <div key={ex.id} className="no-break card overflow-hidden p-6">
-              <div className="flex items-start gap-4 mb-6">
-                <div className="w-8 h-8 rounded-lg bg-[var(--bg-subtle)] border border-[var(--border)] flex items-center justify-center flex-shrink-0">
-                  <span className="text-sm font-semibold text-[var(--text)]">{i + 1}</span>
-                </div>
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-sm font-bold text-[var(--text)]">
-                      {exerciseWord} {i + 1}
-                    </span>
-                    <span className="text-sm text-[var(--text-tertiary)]">·</span>
-                    <span className={cn("inline-flex items-center gap-1.5 text-[10px] px-2 py-0.5 rounded-full font-bold border uppercase tracking-wider", diff.color)}>
-                      <span className={cn("w-1.5 h-1.5 rounded-full", diff.dot)} />
-                      {diffLabel}
-                    </span>
-                    <span className="text-sm text-[var(--text-tertiary)]">·</span>
-                    <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-[var(--accent-light)] text-[var(--accent)] border border-[var(--accent)]/20">
-                      {ex.points} {pointsWord}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            
-            <div 
-              className={cn("text-[15px] leading-relaxed", isFormal ? "text-black" : "text-[var(--text)]")}
+      {/* ── EXERCISES ── */}
+      <div className="space-y-6">
+        {exercises.map((ex, i) => (
+          <div key={ex.id} className="no-break">
+            <h2 className="text-base font-bold mb-2" style={{ color: primaryColor }}>
+              {exerciseWord} {ex.number} <span className="text-xs font-normal" style={{ color: "#5c5c5c" }}>({ex.points} {pointsWord})</span>
+            </h2>
+            <div
+              className="text-sm leading-relaxed mb-3"
               dangerouslySetInnerHTML={{ __html: renderContent(ex.statement) }}
             />
 
             {ex.subQuestions && ex.subQuestions.length > 0 && (
-              <div className="mt-5 space-y-3">
+              <div className="ml-8 space-y-2 mb-3">
                 {ex.subQuestions.map((sq, sqIdx) => (
-                  <div key={sqIdx} className="flex gap-3">
-                    <span className={cn("text-sm font-semibold text-[var(--accent)] flex-shrink-0", isArabic ? "w-8" : "w-6")}>{sq.label}</span>
-                    <div className="flex-1">
-                      <span 
-                        className="text-sm text-[var(--text)] leading-relaxed inline-block"
-                        dangerouslySetInnerHTML={{ __html: renderContent(sq.statement) }}
-                      />
-                      <span className={cn("text-xs font-medium text-[var(--text-tertiary)]", isArabic ? "mr-2" : "ml-2")}>({sq.points} pts)</span>
-                    </div>
+                  <div key={sqIdx} className="flex gap-2 text-sm">
+                    <span className="font-semibold flex-shrink-0" style={{ color: primaryColor }}>{sq.label}</span>
+                    <span dangerouslySetInnerHTML={{ __html: renderContent(sq.statement) }} />
+                    <span className="text-xs text-gray-400 flex-shrink-0">({sq.points} pts)</span>
                   </div>
                 ))}
               </div>
             )}
-            </div>
-          );
-        })}
+          </div>
+        ))}
       </div>
 
-      {/* Answer Key / Corrigé */}
-      <div className="page-break mt-12 pt-12">
-        <h1 className={cn("text-3xl font-bold text-center mb-10", isModern ? "text-[var(--text)]" : "text-black")}>
+      {/* ── CORRIGÉ ── */}
+      <div className="page-break mt-8 pt-8">
+        <h1 className="text-2xl font-bold text-center mb-8" style={{ color: primaryColor }}>
           {corrigWord}
         </h1>
 
-        <div className="space-y-8">
-          {exercises.map((ex, i) => (
-            <div key={ex.id} className="no-break card overflow-hidden">
-              <div className="bg-[var(--bg-subtle)] p-6">
-                <div className="flex items-center gap-3 mb-5">
-                  <div className="w-8 h-8 rounded-lg bg-[var(--surface)] border border-[var(--border)] flex items-center justify-center flex-shrink-0">
-                    <span className="text-sm font-semibold text-[var(--text)]">{i + 1}</span>
-                  </div>
-                  <h3 className="text-sm font-bold text-[var(--text)]">
-                    {exerciseWord} {i + 1} - {corrigWord}
-                  </h3>
-                </div>
+        {exercises.map((ex, i) => (
+          <div key={ex.id} className="no-break mb-8">
+            <h2 className="text-base font-bold mb-4" style={{ color: primaryColor }}>
+              {exerciseWord} {ex.number} — {corrigWord}
+            </h2>
 
-                {ex.solution.bareme && ex.solution.bareme.length > 0 && (
-                  <div className="mb-6">
-                    <div className="flex items-center justify-between mb-3">
-                      <span className="text-[10px] font-bold uppercase tracking-widest text-[var(--accent)]">{baremeWord}</span>
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[var(--accent)] text-white">
-                        {ex.solution.bareme.reduce((s, b) => s + b.points, 0)} pts
-                      </span>
-                    </div>
-                    <div className="space-y-1.5">
-                      {ex.solution.bareme.map((b, bIdx) => (
-                        <div key={bIdx} className="flex items-start gap-3 rounded-xl bg-[var(--surface)] border border-[var(--border)] px-3 py-2.5">
-                          <span className="text-xs font-bold text-[var(--accent)] w-24 flex-shrink-0 pt-px leading-tight break-words">{b.label}</span>
-                          <span
-                            className="flex-1 text-xs text-[var(--text-secondary)] leading-relaxed"
-                            dangerouslySetInnerHTML={{ __html: renderContent(b.criterion) }}
-                          />
-                          <span className="flex-shrink-0 inline-flex items-center justify-center min-w-[28px] h-5 px-1.5 rounded-full bg-[var(--accent-light)] text-[var(--accent)] font-bold text-[10px] border border-[var(--accent)]/20">
-                            {b.points}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                <div className={cn(ex.solution.bareme ? "" : "pt-2", "mb-6")}>
-                  <p className="text-xs font-semibold text-[var(--accent)] uppercase tracking-wider mb-2">{responseWord}</p>
-                  <div className="text-sm text-[var(--text)] font-medium leading-relaxed" dangerouslySetInnerHTML={{ __html: renderContent(ex.solution.finalAnswer) }} />
-                </div>
-
-                <div className="mb-6">
-                  <p className="text-xs font-semibold text-[var(--accent)] uppercase tracking-wider mb-2">{methodologyWord}</p>
-                  <div 
-                    className="text-sm text-[var(--text-secondary)] leading-relaxed space-y-1"
-                    dangerouslySetInnerHTML={{ 
-                      __html: renderContent(
-                        (ex.solution.methodology || "").replace(/(?<!^|[\n\r])((?:Étape|Step|خطوة)\s*\d+(?:\s*[:：])?)/gi, "\n\n$1")
-                      ) 
-                    }}
-                  />
-                </div>
-
-                {ex.solution.microBareme && ex.solution.microBareme.length > 0 && (
-                  <div>
-                    <div className={cn("flex items-center justify-between mb-3", isArabic && "flex-row-reverse")}>
-                      <span className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-tertiary)]">
-                        {microWord ?? "Micro-barème"}
-                      </span>
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[var(--surface)] border border-[var(--border)] text-[var(--text-tertiary)]">
-                        {ex.solution.microBareme.reduce((s, mb) => s + mb.points, 0)} pts
-                      </span>
-                    </div>
-                    <div className="rounded-xl border border-[var(--border)] overflow-hidden divide-y divide-[var(--border)] bg-[var(--surface)]">
-                      {ex.solution.microBareme.map((mb, mIdx) => (
-                        <div key={mIdx} className={cn("flex items-start gap-4 px-4 py-3", isArabic && "flex-row-reverse")}>
-                          <span className={cn(
-                            "text-[10px] font-bold text-[var(--accent)] uppercase tracking-widest w-28 flex-shrink-0 pt-0.5 leading-tight break-words",
-                            isArabic ? "pl-2 border-l border-[var(--border)]/50" : "pr-2 border-r border-[var(--border)]/50"
-                          )}>
-                            {mb.step}
-                          </span>
-                          <span
-                            className="flex-1 text-xs text-[var(--text-secondary)] leading-relaxed pt-0.5"
-                            dangerouslySetInnerHTML={{ __html: renderContent(mb.criterion) }}
-                          />
-                          <span className="flex-shrink-0 inline-flex items-center justify-center min-w-[32px] h-6 px-2 rounded-lg bg-[var(--bg-subtle)] border border-[var(--border)] text-[var(--text-tertiary)] font-bold text-[10px] shadow-sm">
-                            {mb.points}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
+            {/* Barème table */}
+            {ex.solution.bareme && ex.solution.bareme.length > 0 && (
+              <div className="mb-4">
+                <p className="text-xs font-bold mb-1" style={{ color: primaryColor }}>{baremeWord}</p>
+                <table className="bareme-table">
+                  <thead>
+                    <tr>
+                      <th style={{ width: "15%" }}>{lang === "ar" ? "السؤال" : "Question"}</th>
+                      <th style={{ width: "10%", textAlign: "center" }}>{lang === "ar" ? "النقاط" : "Points"}</th>
+                      <th style={{ width: "75%" }}>{lang === "ar" ? "معيار التصحيح" : "Critère"}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {ex.solution.bareme.map((b, bIdx) => (
+                      <tr key={bIdx}>
+                        <td style={{ fontWeight: 700, width: "15%" }}>{b.label}</td>
+                        <td className="pts" style={{ width: "10%" }}>{b.points}</td>
+                        <td style={{ width: "75%" }} dangerouslySetInnerHTML={{ __html: renderContent(b.criterion) }} />
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
+            )}
+
+            {/* Final answer */}
+            <div className="mb-4">
+              <p className="text-xs font-bold mb-1" style={{ color: primaryColor }}>{responseWord}</p>
+              <div className="text-sm font-medium leading-relaxed" dangerouslySetInnerHTML={{ __html: renderContent(ex.solution.finalAnswer) }} />
             </div>
-          ))}
-        </div>
+
+            {/* Methodology */}
+            <div className="mb-4">
+              <p className="text-xs font-bold mb-1" style={{ color: primaryColor }}>{methodologyWord}</p>
+              <div
+                className="text-sm leading-relaxed space-y-1"
+                dangerouslySetInnerHTML={{
+                  __html: renderContent(
+                    (ex.solution.methodology || "").replace(/(?<!^|[\n\r])((?:Étape|Step|خطوة)\s*\d+(?:\s*[:：])?)/gi, "\n\n$1")
+                  )
+                }}
+              />
+            </div>
+
+            {/* Micro-barème table */}
+            {ex.solution.microBareme && ex.solution.microBareme.length > 0 && (
+              <div>
+                <p className="text-xs font-bold mb-1" style={{ color: primaryColor }}>{microWord}</p>
+                <table className="bareme-table">
+                  <thead>
+                    <tr>
+                      <th style={{ width: "18%" }}>{stepLabel}</th>
+                      <th style={{ width: "10%", textAlign: "center" }}>Pts</th>
+                      <th style={{ width: "72%" }}>{lang === "ar" ? "المعيار الملاحظ" : "Critère observable"}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {ex.solution.microBareme.map((mb, mIdx) => (
+                      <tr key={mIdx}>
+                        <td style={{ fontWeight: 700, width: "18%" }}>{mb.step}</td>
+                        <td className="pts" style={{ width: "10%" }}>{mb.points}</td>
+                        <td style={{ width: "72%" }} dangerouslySetInnerHTML={{ __html: renderContent(mb.criterion) }} />
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        ))}
       </div>
     </div>
   );
