@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { db } from "@/lib/firebase";
 import { doc, getDoc, addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { Logo } from "@/components/ui/Logo";
 import { Button } from "@/components/ui/Button";
-import { AlertCircle, Clock, Shield, CheckCircle2, Lock } from "lucide-react";
+import { AlertCircle, Clock, Shield, CheckCircle2, Lock, Maximize2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { renderContent } from "@/lib/renderContent";
 
@@ -25,6 +25,7 @@ export default function StudentExamPage() {
   // Anti-cheating states
   const [warnings, setWarnings] = useState(0);
   const [isTabBlurred, setIsTabBlurred] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(true);
 
   useEffect(() => {
     async function loadExam() {
@@ -47,51 +48,52 @@ export default function StudentExamPage() {
     loadExam();
   }, [id]);
 
-  // Anti-cheating: Tab Blur Detection
+  // Anti-cheating: Tab & Visibility Detection + Fullscreen
   useEffect(() => {
     if (!started || submitted) return;
 
-    const handleBlur = () => {
+    const logWarning = () => {
       setIsTabBlurred(true);
       setWarnings(prev => prev + 1);
     };
 
-    const handleFocus = () => {
+    const clearWarning = () => {
       setIsTabBlurred(false);
     };
 
-    window.addEventListener("blur", handleBlur);
-    window.addEventListener("focus", handleFocus);
+    window.addEventListener("blur", logWarning);
+    window.addEventListener("focus", clearWarning);
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden) logWarning();
+    });
 
-    // Disable right-click and copy
-    const preventAction = (e: any) => e.preventDefault();
-    document.addEventListener("contextmenu", preventAction);
-    document.addEventListener("copy", preventAction);
+    // Disable right-click, copy, cut, paste, select
+    const blockAll = (e: Event) => e.preventDefault();
+    document.addEventListener("contextmenu", blockAll);
+    document.addEventListener("copy", blockAll);
+    document.addEventListener("cut", blockAll);
+    document.addEventListener("paste", blockAll);
+    document.addEventListener("selectstart", blockAll);
+
+    // Fullscreen enforcement
+    const onFsChange = () => setIsFullscreen(!!document.fullscreenElement);
+    document.addEventListener("fullscreenchange", onFsChange);
 
     return () => {
-      window.removeEventListener("blur", handleBlur);
-      window.removeEventListener("focus", handleFocus);
-      document.removeEventListener("contextmenu", preventAction);
-      document.removeEventListener("copy", preventAction);
+      window.removeEventListener("blur", logWarning);
+      window.removeEventListener("focus", clearWarning);
+      document.removeEventListener("contextmenu", blockAll);
+      document.removeEventListener("copy", blockAll);
+      document.removeEventListener("cut", blockAll);
+      document.removeEventListener("paste", blockAll);
+      document.removeEventListener("selectstart", blockAll);
+      document.removeEventListener("fullscreenchange", onFsChange);
     };
   }, [started, submitted]);
 
-  // Timer logic
-  useEffect(() => {
-    if (!started || submitted || timeLeft <= 0) return;
-    const timer = setInterval(() => {
-      setTimeLeft(prev => {
-        if (prev <= 1) {
-          handleSubmit();
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-    return () => clearInterval(timer);
-  }, [started, submitted, timeLeft]);
-
-  const handleSubmit = async () => {
+  // Ref to always have the latest handleSubmit for the timer
+  const handleSubmitRef = useRef<() => Promise<void>>(async () => {});
+  const handleSubmit = useCallback(async () => {
     if (isSubmitting) return;
     setIsSubmitting(true);
     try {
@@ -103,12 +105,28 @@ export default function StudentExamPage() {
         submittedAt: serverTimestamp()
       });
       setSubmitted(true);
-    } catch (e) {
+    } catch {
       alert("Failed to submit answers. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
-  };
+  }, [id, answers, warnings, timeLeft, exam?.settings?.timeLimit, isSubmitting]);
+  handleSubmitRef.current = handleSubmit;
+
+  // Timer logic with ref to avoid stale closure
+  useEffect(() => {
+    if (!started || submitted || timeLeft <= 0) return;
+    const timer = setInterval(() => {
+      setTimeLeft(prev => {
+        if (prev <= 1) {
+          handleSubmitRef.current();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [started, submitted, timeLeft]);
 
   if (loading) return <div className="min-h-screen flex items-center justify-center"><Logo size={40} className="animate-pulse" /></div>;
   if (error) return <div className="min-h-screen flex flex-col items-center justify-center p-6 text-center">
@@ -160,14 +178,23 @@ export default function StudentExamPage() {
             <Lock size={12} /> ANTI-CHEATING ACTIVE
           </p>
           <ul className="text-[10px] text-amber-800 space-y-1">
-            <li>• Tab switching is monitored and reported to your teacher.</li>
-            <li>• Right-click and copy-paste are disabled.</li>
-            <li>• Re-entering the exam will be logged.</li>
+            <li>• Fullscreen mode is enforced — exiting logs a warning.</li>
+            <li>• Tab/Window switching is monitored and reported.</li>
+            <li>• Right-click, copy, cut, paste, and selection are disabled.</li>
+            <li>• Leaving the exam page is logged.</li>
+            <li>• Answers auto-submit when time expires.</li>
           </ul>
         </div>
 
-        <Button onClick={() => setStarted(true)} className="w-full h-14 rounded-2xl text-lg font-bold">
-          Start Exam
+        <Button
+          onClick={() => {
+            setStarted(true);
+            document.documentElement.requestFullscreen?.().catch(() => {});
+          }}
+          className="w-full h-14 rounded-2xl text-lg font-bold"
+          icon={<Maximize2 size={16} />}
+        >
+          Start Exam (Fullscreen)
         </Button>
       </div>
     </div>
@@ -192,7 +219,7 @@ export default function StudentExamPage() {
         </div>
       </nav>
 
-      {/* Tab Blur Warning Overlay */}
+      {/* Tab Blur / Fullscreen Warning Overlay */}
       {isTabBlurred && (
         <div className="fixed inset-0 z-[100] bg-red-600/90 backdrop-blur-xl flex items-center justify-center p-6 text-center animate-in fade-in duration-300">
           <div className="max-w-sm space-y-6">
@@ -204,8 +231,22 @@ export default function StudentExamPage() {
               <p className="text-red-50 leading-relaxed font-medium">
                 You have left the exam window. This incident has been reported. Repeated violations may lead to disqualification.
               </p>
+              {!isFullscreen && (
+                <p className="text-red-200 text-sm mt-2 font-semibold">
+                  You have exited fullscreen mode. Please re-enter fullscreen to continue.
+                </p>
+              )}
             </div>
-            <Button variant="secondary" onClick={() => setIsTabBlurred(false)} className="w-full h-12 rounded-xl">
+            <Button
+              variant="secondary"
+              onClick={() => {
+                setIsTabBlurred(false);
+                if (!document.fullscreenElement) {
+                  document.documentElement.requestFullscreen?.().catch(() => {});
+                }
+              }}
+              className="w-full h-12 rounded-xl"
+            >
               I Understand, Continue
             </Button>
           </div>
@@ -238,9 +279,10 @@ export default function StudentExamPage() {
 
               <div className="mt-8 space-y-4">
                 <p className="text-xs font-bold text-[var(--text-tertiary)] uppercase tracking-widest">Your Answer:</p>
-                <textarea 
+                <textarea
                   value={answers[ex.id] || ""}
                   onChange={(e) => setAnswers(prev => ({ ...prev, [ex.id]: e.target.value }))}
+                  onPaste={(e) => e.preventDefault()}
                   placeholder="Type your steps and final answer here..."
                   className="w-full min-h-[160px] p-4 rounded-2xl bg-[var(--surface)] border border-[var(--border)] focus:border-[var(--accent)] focus:ring-0 text-sm transition-all resize-none"
                 />
