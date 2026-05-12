@@ -413,7 +413,10 @@ export async function POST(request: NextRequest) {
           );
           // Increment both monthly and lifetime counters (fire-and-forget)
           // ONLY if this is a fresh generation, not an adjustment/regeneration of a single exercise.
-          if (!isAdjustment) {
+          // Also skip if the AI was clearly cut off (e.g. hit max_tokens) and returned fewer than
+          // half of the requested exercises — don't penalise the user's quota for a truncated run.
+          const generatedEnough = exercises.length >= Math.max(1, Math.ceil(context.exerciseCount * 0.5));
+          if (!isAdjustment && generatedEnough) {
             const batch = adminDb.batch();
             
             // Increment user counters
