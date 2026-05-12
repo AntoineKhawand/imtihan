@@ -5,7 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { FREE_EXAM_LIMIT } from "@/lib/utils";
-import { RefreshCw, Search, Calendar, Clock, ShieldCheck, User, Zap, Sparkles, Plus, BarChart3, TrendingUp, FileText, ArrowRight, Mail, Send, CheckCircle2, XCircle, Check } from "lucide-react";
+import { RefreshCw, Search, Calendar, Clock, ShieldCheck, User, Zap, Sparkles, Plus, BarChart3, TrendingUp, FileText, ArrowRight, Mail, Send, CheckCircle2, XCircle, Check, RotateCcw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -150,6 +150,22 @@ export default function AdminPage() {
       });
       if (res.ok) { toast.success(`Added ${amount} exams`); fetchData(); }
     } catch { toast.error("Failed to add quota"); }
+    finally { setExtending(null); }
+  };
+
+  const handleResetTrial = async (uid: string) => {
+    if (!user) return;
+    setExtending(`${uid}-reset`);
+    try {
+      const token = await user.getIdToken();
+      const res = await fetch("/api/admin/reset-trial", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ targetUid: uid }),
+      });
+      if (res.ok) { toast.success("Free trial reset"); fetchData(); }
+      else { const d = await res.json(); toast.error(d.error || "Failed to reset"); }
+    } catch { toast.error("Failed to reset trial"); }
     finally { setExtending(null); }
   };
 
@@ -427,6 +443,10 @@ export default function AdminPage() {
                             <button onClick={() => handleAddQuota(u.uid, 10)} disabled={!!extending}
                               className="h-8 px-2.5 bg-white border border-gray-200 text-blue-600 rounded-xl text-[10px] font-bold hover:bg-blue-50 transition-colors whitespace-nowrap">
                               {extending === `${u.uid}-q10` ? "..." : "+10Q"}
+                            </button>
+                            <button onClick={() => handleResetTrial(u.uid)} disabled={!!extending}
+                              className="h-8 px-2.5 bg-white border border-red-200 text-red-500 rounded-xl text-[10px] font-bold hover:bg-red-50 transition-colors whitespace-nowrap">
+                              {extending === `${u.uid}-reset` ? <RotateCcw size={11} className="animate-spin" /> : "Reset"}
                             </button>
                           </div>
                         </td>
@@ -751,6 +771,10 @@ export default function AdminPage() {
                 <button onClick={() => handleAddQuota(u.uid, 10)} disabled={!!extending}
                   className="h-10 px-4 bg-gray-100 text-gray-600 rounded-xl text-[10px] font-bold disabled:opacity-50">
                   {extending === `${u.uid}-q10` ? "..." : "+10Q"}
+                </button>
+                <button onClick={() => handleResetTrial(u.uid)} disabled={!!extending}
+                  className="h-10 px-3 bg-white border border-red-200 text-red-500 rounded-xl text-[10px] font-bold disabled:opacity-50 flex items-center justify-center">
+                  {extending === `${u.uid}-reset` ? <RotateCcw size={12} className="animate-spin" /> : "Reset"}
                 </button>
               </div>
             </div>

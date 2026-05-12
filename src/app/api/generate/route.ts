@@ -398,6 +398,16 @@ export async function POST(request: NextRequest) {
         // Stream ended — parse accumulated JSON
         try {
           const exercises = robustParse(extractJSON(accumulated));
+
+          // Guard: if AI returned nothing useful, don't burn quota
+          if (!Array.isArray(exercises) || exercises.length === 0) {
+            controller.enqueue(
+              encoder.encode(`data: ${JSON.stringify({ done: true, error: "The AI returned no exercises. Please try again." })}\n\n`)
+            );
+            controller.close();
+            return;
+          }
+
           controller.enqueue(
             encoder.encode(`data: ${JSON.stringify({ done: true, exercises })}\n\n`)
           );
