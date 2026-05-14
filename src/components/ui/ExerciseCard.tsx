@@ -425,6 +425,41 @@ export function ExerciseCard({
             }}
           />
 
+          {/* MCQ Options */}
+          {exercise.type === "multiple_choice" && exercise.options && exercise.options.length > 0 && (
+            <div
+              className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-2"
+              data-testid="mcq-options"
+            >
+              {exercise.options.map((opt) => (
+                <div
+                  key={opt.label}
+                  className={cn(
+                    "flex items-start gap-2.5 px-3.5 py-2.5 rounded-xl border text-sm transition-colors",
+                    showSolution && opt.isCorrect
+                      ? "border-emerald-400 bg-emerald-50 dark:bg-emerald-950/30 text-emerald-800 dark:text-emerald-300"
+                      : "border-[var(--border)] bg-[var(--surface)] text-[var(--text)]"
+                  )}
+                  data-testid={`mcq-option-${opt.label}`}
+                  data-correct={opt.isCorrect}
+                >
+                  <span className={cn(
+                    "flex-shrink-0 w-5 h-5 rounded-full border text-[11px] font-bold flex items-center justify-center mt-0.5",
+                    showSolution && opt.isCorrect
+                      ? "border-emerald-500 bg-emerald-500 text-white"
+                      : "border-[var(--border)] text-[var(--text-secondary)]"
+                  )}>
+                    {opt.label}
+                  </span>
+                  <span
+                    className="leading-relaxed flex-1"
+                    dangerouslySetInnerHTML={{ __html: renderContent(opt.text) }}
+                  />
+                </div>
+              ))}
+            </div>
+          )}
+
           {/* Sub-questions */}
           {exercise.subQuestions && exercise.subQuestions.length > 0 && (
             <div className="mt-4 space-y-3">

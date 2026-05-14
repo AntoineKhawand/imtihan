@@ -56,6 +56,13 @@ export interface ExamContext {
   geographicContext?: string;
 }
 
+export interface McqOption {
+  /** "A", "B", "C", "D" (or "أ", "ب", "ج", "د" for Arabic) */
+  label: string;
+  text: string;
+  isCorrect: boolean;
+}
+
 export interface Exercise {
   id: string;
   /** Order in the exam, 1-indexed */
@@ -65,6 +72,8 @@ export interface Exercise {
   points: number;
   /** The statement in markdown (LaTeX supported with $...$ and $$...$$) */
   statement: string;
+  /** For multiple_choice exercises: the answer options (A/B/C/D) */
+  options?: McqOption[];
   /** Optional: sub-questions */
   subQuestions?: Array<{
     label: string; // "a)", "b)", "1.", etc.

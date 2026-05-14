@@ -564,6 +564,16 @@ LAYOUT & CONTENT QUALITY:
 - **Layout Consistency**: If the user provided a reference document (Teacher notes or grounding data), observe its structure (e.g., header style, question numbering) and attempt to mimic it in the text output.
 - **Scientific notation**: Use KaTeX for math and \\\\ce{...} for chemistry.
 
+QCM / MULTIPLE-CHOICE RULES (applies whenever type = "multiple_choice"):
+- Generate exactly 4 options labelled "A", "B", "C", "D" (or "أ", "ب", "ج", "د" for Arabic exams).
+- Exactly ONE option must have "isCorrect": true; the others must have "isCorrect": false.
+- Distractors must be plausible — avoid obviously wrong answers. Each distractor should correspond to a common misconception or calculation error.
+- The correct option must NOT always be at the same position — vary it (A, B, C, or D) across questions.
+- The question statement must NOT reveal the answer. The answer belongs in "solution.finalAnswer" and the correct option's "isCorrect" field only.
+- For MCQ, "subQuestions" must be null.
+- "solution.finalAnswer" must state the label and the text of the correct option (e.g. "B — 4,5 m/s").
+- Each MCQ option text may contain LaTeX (inline $...$) for formulas or units.
+
 JSON schema for each exercise:
 {
   "id": string,
@@ -572,6 +582,12 @@ JSON schema for each exercise:
   "difficulty": "easy" | "medium" | "hard",
   "points": number,
   "statement": string,
+  "options": [
+    { "label": "A", "text": string, "isCorrect": boolean },
+    { "label": "B", "text": string, "isCorrect": boolean },
+    { "label": "C", "text": string, "isCorrect": boolean },
+    { "label": "D", "text": string, "isCorrect": boolean }
+  ] | null,
   "subQuestions": [
     { "label": string, "statement": string, "points": number }
   ] | null,
@@ -588,7 +604,8 @@ JSON schema for each exercise:
   },
   "chapterIds": string[],
   "estimatedMinutes": number
-}`;
+}
+IMPORTANT: "options" must be a 4-element array when type is "multiple_choice", and null for all other types.`;
 }
 
 // ---------------------------------------------------------------------------
