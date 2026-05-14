@@ -3,7 +3,7 @@
 import { useState, useRef, useCallback } from "react";
 import { Columns, Eye, Edit3, X, Plus, Trash2, Save, LineChart, Pencil } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { Exercise } from "@/types/exam";
+import type { Exercise, McqOption } from "@/types/exam";
 import { renderContent } from "@/lib/renderContent";
 import { MathPlot } from "./MathPlot";
 
@@ -151,6 +151,9 @@ export function ExerciseEditor({ exercise, onSave, onClose }: ExerciseEditorProp
   const [finalAnswer, setFinalAnswer] = useState(exercise.solution.finalAnswer);
   const [methodology, setMethodology] = useState(exercise.solution.methodology);
   const [viewMode, setViewMode] = useState<"edit" | "preview" | "split">("split");
+  const [options, setOptions] = useState<McqOption[]>(exercise.options ?? []);
+
+  const isMcq = exercise.type === "multiple_choice";
 
   function handleSave() {
     onSave({
@@ -158,6 +161,7 @@ export function ExerciseEditor({ exercise, onSave, onClose }: ExerciseEditorProp
       statement: statement.trim() || exercise.statement,
       points,
       difficulty,
+      options: isMcq && options.length > 0 ? options : undefined,
       subQuestions: subQuestions.length > 0 ? subQuestions : undefined,
       mathPlots: mathPlots.length > 0 ? mathPlots : undefined,
       solution: {
@@ -166,6 +170,14 @@ export function ExerciseEditor({ exercise, onSave, onClose }: ExerciseEditorProp
         methodology: methodology.trim() || exercise.solution.methodology,
       },
     });
+  }
+
+  function setCorrectOption(label: string) {
+    setOptions(prev => prev.map(o => ({ ...o, isCorrect: o.label === label })));
+  }
+
+  function updateOptionText(label: string, text: string) {
+    setOptions(prev => prev.map(o => o.label === label ? { ...o, text } : o));
   }
 
   function addSubQuestion() {
@@ -312,6 +324,53 @@ export function ExerciseEditor({ exercise, onSave, onClose }: ExerciseEditorProp
                 <p className="mt-2 text-[10px] text-[var(--text-tertiary)] italic">Supports KaTeX ($x^2$), Mermaid charts, and AI image tags ([IMAGE: ...])</p>
               </div>
 
+              {/* MCQ Options (edit) */}
+              {isMcq && options.length > 0 && (
+                <div>
+                  <label className="block text-xs font-medium text-[var(--text-secondary)] mb-3 uppercase tracking-wider">
+                    Answer Options — click a radio to change the correct answer
+                  </label>
+                  <div className="space-y-2">
+                    {options.map(opt => (
+                      <div key={opt.label} className={cn(
+                        "flex items-center gap-3 px-3 py-2.5 rounded-xl border transition-colors",
+                        opt.isCorrect
+                          ? "border-emerald-400 bg-emerald-50 dark:bg-emerald-950/20"
+                          : "border-[var(--border)] bg-[var(--bg-subtle)]"
+                      )}>
+                        <button
+                          type="button"
+                          onClick={() => setCorrectOption(opt.label)}
+                          className={cn(
+                            "flex-shrink-0 w-4 h-4 rounded-full border-2 transition-colors",
+                            opt.isCorrect
+                              ? "border-emerald-500 bg-emerald-500"
+                              : "border-[var(--border)] hover:border-emerald-400"
+                          )}
+                          title="Mark as correct"
+                        />
+                        <span className={cn(
+                          "flex-shrink-0 w-5 text-xs font-bold",
+                          opt.isCorrect ? "text-emerald-700" : "text-[var(--text-secondary)]"
+                        )}>
+                          {opt.label}
+                        </span>
+                        <input
+                          type="text"
+                          value={opt.text}
+                          onChange={e => updateOptionText(opt.label, e.target.value)}
+                          className="flex-1 bg-transparent text-sm text-[var(--text)] focus:outline-none placeholder:text-[var(--text-tertiary)]"
+                          placeholder={`Option ${opt.label}…`}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                  <p className="mt-2 text-[10px] text-[var(--text-tertiary)] italic">
+                    Options support LaTeX ($…$). The filled circle marks the correct answer.
+                  </p>
+                </div>
+              )}
+
               {/* Sub-questions */}
               <div>
                 <div className="flex items-center justify-between mb-3">
@@ -399,6 +458,36 @@ export function ExerciseEditor({ exercise, onSave, onClose }: ExerciseEditorProp
                 )}
 
                 <div className="prose-clean overflow-hidden" dangerouslySetInnerHTML={{ __html: renderContent(statement) }} />
+
+                {/* MCQ Options (preview) */}
+                {isMcq && options.length > 0 && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-3">
+                    {options.map(opt => (
+                      <div
+                        key={opt.label}
+                        className={cn(
+                          "flex items-start gap-2.5 px-3 py-2.5 rounded-xl border text-sm",
+                          opt.isCorrect
+                            ? "border-emerald-400 bg-emerald-50 dark:bg-emerald-950/30 text-emerald-800"
+                            : "border-[var(--border)] bg-[var(--surface)] text-[var(--text)]"
+                        )}
+                      >
+                        <span className={cn(
+                          "flex-shrink-0 w-5 h-5 rounded-full border text-[11px] font-bold flex items-center justify-center mt-0.5",
+                          opt.isCorrect
+                            ? "border-emerald-500 bg-emerald-500 text-white"
+                            : "border-[var(--border)] text-[var(--text-secondary)]"
+                        )}>
+                          {opt.label}
+                        </span>
+                        <span
+                          className="leading-relaxed flex-1"
+                          dangerouslySetInnerHTML={{ __html: renderContent(opt.text) }}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                )}
 
                 {subQuestions.length > 0 && (
                   <div className="mt-6 space-y-4 pl-4 border-l-2 border-[var(--border)]">

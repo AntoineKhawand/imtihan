@@ -71,6 +71,10 @@ export function ExerciseCard({
   defaultShowSolution = false,
 }: ExerciseCardProps) {
   const [showSolution, setShowSolution] = useState(defaultShowSolution);
+  // Tracks whether the teacher explicitly clicked Corrigé — used to gate the
+  // MCQ correct-answer highlight so it never shows when the panel is
+  // open by default (defaultShowSolution=true on the generate page).
+  const [userRevealedAnswer, setUserRevealedAnswer] = useState(false);
   const [showActions, setShowActions] = useState(false);
 
   const [showMathTool, setShowMathTool] = useState(false);
@@ -436,7 +440,7 @@ export function ExerciseCard({
                   key={opt.label}
                   className={cn(
                     "flex items-start gap-2.5 px-3.5 py-2.5 rounded-xl border text-sm transition-colors",
-                    showSolution && opt.isCorrect
+                    userRevealedAnswer && opt.isCorrect
                       ? "border-emerald-400 bg-emerald-50 dark:bg-emerald-950/30 text-emerald-800 dark:text-emerald-300"
                       : "border-[var(--border)] bg-[var(--surface)] text-[var(--text)]"
                   )}
@@ -445,7 +449,7 @@ export function ExerciseCard({
                 >
                   <span className={cn(
                     "flex-shrink-0 w-5 h-5 rounded-full border text-[11px] font-bold flex items-center justify-center mt-0.5",
-                    showSolution && opt.isCorrect
+                    userRevealedAnswer && opt.isCorrect
                       ? "border-emerald-500 bg-emerald-500 text-white"
                       : "border-[var(--border)] text-[var(--text-secondary)]"
                   )}>
@@ -637,7 +641,11 @@ export function ExerciseCard({
       {/* Corrigé toggle */}
       <div className="border-t border-[var(--border)]">
         <button
-          onClick={() => setShowSolution(!showSolution)}
+          onClick={() => {
+            const next = !showSolution;
+            setShowSolution(next);
+            if (next) setUserRevealedAnswer(true);
+          }}
           className="w-full flex items-center gap-2 px-6 py-3 text-sm text-[var(--text-secondary)] hover:text-[var(--text)] hover:bg-[var(--bg-subtle)] transition-colors"
         >
           <BookOpen size={13} />

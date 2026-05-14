@@ -175,6 +175,11 @@ const RequestSchema = z.object({
     difficulty: z.string(),
     points: z.number(),
     statement: z.string(),
+    options: z.array(z.object({
+      label: z.string(),
+      text: z.string(),
+      isCorrect: z.boolean(),
+    })).nullable().optional(),
     subQuestions: z.array(z.object({
       label: z.string(),
       statement: z.string(),
@@ -541,6 +546,39 @@ export async function generateWordDocument(
 
     children.push(...(await processContentBlocks(ex.statement, { size: 22, font: fontBody, color: textColor, bidirectional: isArabic, lang })));
 
+    // ── MCQ options ─────────────────────────────────────────────
+    if (ex.type === "multiple_choice" && ex.options && ex.options.length > 0) {
+      children.push(new Paragraph({ text: "", spacing: { after: 60 } }));
+      children.push(new Table({
+        width: { size: 100, type: WidthType.PERCENTAGE },
+        margins: { top: 60, bottom: 60, left: 120, right: 120 },
+        rows: ex.options.map(opt => new TableRow({
+          children: [
+            new TableCell({
+              children: [new Paragraph({
+                children: [new TextRun({ text: opt.label, bold: true, size: 20, color: primaryColor, font: fontBody, rightToLeft: isArabic })],
+                alignment: AlignmentType.CENTER,
+                spacing: { before: 60, after: 60 },
+              })],
+              width: { size: 8, type: WidthType.PERCENTAGE },
+              verticalAlign: AlignmentType.CENTER,
+            }),
+            new TableCell({
+              children: [new Paragraph({
+                children: createFormattedTextRuns(cleanLatexForWord(opt.text), { size: 20, font: fontBody, color: textColor, bidirectional: isArabic }),
+                spacing: { before: 60, after: 60 },
+                bidirectional: isArabic,
+              })],
+              width: { size: 92, type: WidthType.PERCENTAGE },
+              verticalAlign: AlignmentType.CENTER,
+            }),
+          ],
+        })),
+      }));
+      children.push(new Paragraph({ text: "", spacing: { after: 120 } }));
+    }
+    // ────────────────────────────────────────────────────────────
+
     if (ex.subQuestions && Array.isArray(ex.subQuestions) && ex.subQuestions.length > 0) {
       for (const sq of ex.subQuestions) {
         // Handle sub-questions by merging label, statement, and points on one line if possible
@@ -654,6 +692,34 @@ export async function generateWordDocument(
         ],
       }));
       children.push(new Paragraph({ text: "" }));
+    }
+
+    // MCQ correct-answer callout in the answer key
+    if (ex.type === "multiple_choice" && ex.options && ex.options.length > 0) {
+      const correct = ex.options.find(o => o.isCorrect);
+      if (correct) {
+        const correctLabel = lang === "fr" ? "Bonne réponse" : lang === "ar" ? "الإجابة الصحيحة" : "Correct answer";
+        children.push(new Table({
+          width: { size: 100, type: WidthType.PERCENTAGE },
+          rows: [new TableRow({
+            children: [
+              new TableCell({
+                children: [new Paragraph({
+                  children: [
+                    new TextRun({ text: `${correctLabel}: `, bold: true, size: 22, color: primaryColor, font: fontBody }),
+                    new TextRun({ text: `${correct.label} — `, bold: true, size: 22, color: "1a5e3f", font: fontBody }),
+                    ...createFormattedTextRuns(cleanLatexForWord(correct.text), { size: 22, font: fontBody, color: "1a5e3f" }),
+                  ],
+                  spacing: { before: 80, after: 80 },
+                })],
+                shading: { fill: "effaf4" },
+                margins: { top: 80, bottom: 80, left: 160, right: 160 },
+              }),
+            ],
+          })],
+        }));
+        children.push(new Paragraph({ text: "", spacing: { after: 120 } }));
+      }
     }
 
     children.push(...(await processContentBlocks(ex.solution.finalAnswer, { size: 22, font: fontBody, color: textColor, bidirectional: isArabic, lang })));
