@@ -143,6 +143,9 @@ export default function GeneratePage() {
                 }));
                 setExercises(withIds);
                 persistExercises(withIds);
+                if (data.header) {
+                  sessionStorage.setItem("imtihan_extracted_header", JSON.stringify(data.header));
+                }
                 setStatus("done");
               }
             }

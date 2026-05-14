@@ -68,12 +68,20 @@ export default function ExportPage() {
       setExportLanguage(ctx.language);
     } catch { router.replace("/create"); }
 
-    // Pre-fill school settings from localStorage
+    // Pre-fill school settings from localStorage and extracted header
     const settings = getSchoolSettings();
-    if (settings) {
-      setSchoolName(settings.schoolName ?? "");
-      setTeacherName(settings.teacherName ?? "");
-      setSchoolLogo(settings.schoolLogo);
+    const extractedHeaderStr = sessionStorage.getItem("imtihan_extracted_header");
+    let extractedHeader: any = null;
+    if (extractedHeaderStr) {
+      try { extractedHeader = JSON.parse(extractedHeaderStr); } catch {}
+    }
+
+    if (settings || extractedHeader) {
+      setSchoolName(extractedHeader?.schoolName ?? settings?.schoolName ?? "");
+      setClassName(extractedHeader?.className ?? "");
+      setTeacherName(extractedHeader?.teacherName ?? settings?.teacherName ?? "");
+      setExamDate(extractedHeader?.date ?? "");
+      setSchoolLogo(settings?.schoolLogo);
     }
   }, [router]);
 

@@ -1,4 +1,4 @@
-﻿import type { ExamContext } from "@/types/exam";
+import type { ExamContext } from "@/types/exam";
 import { buildChaptersSummary } from "@/data/curricula";
 
 // ---------------------------------------------------------------------------
@@ -516,7 +516,7 @@ CRITICAL RULES:
 
 10. GENERIC CONTENT: Avoid using specific school names (e.g., "Lycée français de Beyrouth") or teacher names unless explicitly provided in teacher notes. Keep the context generic (e.g., "Dans un laboratoire de chimie...", "Un professeur souhaite...").
 
-11. OUTPUT: Start your response with [ and end with ]. Output ONLY the raw JSON array — no prose, no markdown fences, no explanation.
+11. OUTPUT: Output ONLY a JSON object containing a "header" and an "exercises" array. Do not output just an array. No prose, no markdown fences, no explanation.
 
 SOLUTION QUALITY — The corrigé must be readable at a glance:
 - Use ${stepExample} headers (match the exam language — NEVER use English "Step" in a French or Arabic exam). DO NOT use markdown bold stars (**).
@@ -574,10 +574,18 @@ QCM / MULTIPLE-CHOICE RULES (applies whenever type = "multiple_choice"):
 - "solution.finalAnswer" must state the label and the text of the correct option (e.g. "B — 4,5 m/s").
 - Each MCQ option text may contain LaTeX (inline $...$) for formulas or units.
 
-JSON schema for each exercise:
+JSON schema for the output:
 {
-  "id": string,
-  "number": number,
+  "header": {
+    "schoolName": string | null,
+    "className": string | null,
+    "teacherName": string | null,
+    "date": string | null
+  },
+  "exercises": [
+    {
+      "id": string,
+      "number": number,
   "type": "multiple_choice" | "short_answer" | "problem_solving" | "proof" | "calculation" | "lab_analysis",
   "difficulty": "easy" | "medium" | "hard",
   "points": number,
@@ -602,8 +610,8 @@ JSON schema for each exercise:
       { "step": string, "points": number, "criterion": string }
     ]
   },
-  "chapterIds": string[],
-  "estimatedMinutes": number
+    ]
+  }
 }
 IMPORTANT: "options" must be a 4-element array when type is "multiple_choice", and null for all other types.`;
 }
@@ -625,7 +633,7 @@ export function buildGenerateUserPrompt(context: ExamContext, extraContext?: str
   const visualStr = context.visualPreference ? `\nVisual & Graph Requirements:\n${context.visualPreference}` : "";
   const extraContextStr = extraContext ? `\nDOMAIN DATA CONTEXT:\n${extraContext}` : "";
 
-  return `Generate ${context.exerciseCount} exercises. Reply with ONLY a JSON array starting with [ and ending with ] — no markdown, no prose, no explanation. Output must be valid parseable JSON.
+  return `Generate ${context.exerciseCount} exercises. Reply with ONLY a JSON object containing "header" and "exercises" — no markdown, no prose, no explanation. Output must be valid parseable JSON.
 
 Curriculum : ${context.curriculumId}
 Level      : ${context.levelId}
@@ -640,7 +648,9 @@ ${templateStr}
 ${visualStr}
 ${extraContextStr}
 
-Return the JSON array now.`;
+If a document was uploaded, or if the teacher explicitly requested it in the instructions, extract the school name, class name, teacher name, and date into the "header" object. Otherwise, leave those fields null.
+
+Return the JSON object now.`;
 }
 
 // ---------------------------------------------------------------------------

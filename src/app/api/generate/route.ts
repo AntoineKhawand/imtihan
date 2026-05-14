@@ -397,7 +397,18 @@ export async function POST(request: NextRequest) {
 
         // Stream ended — parse accumulated JSON
         try {
-          const exercises = robustParse(extractJSON(accumulated));
+          const parsedData = robustParse(extractJSON(accumulated)) as any;
+          let exercises: any[] = [];
+          let header: any = undefined;
+
+          if (Array.isArray(parsedData)) {
+            exercises = parsedData;
+          } else if (parsedData && Array.isArray(parsedData.exercises)) {
+            exercises = parsedData.exercises;
+            header = parsedData.header;
+          } else if (parsedData && typeof parsedData === 'object') {
+            exercises = [parsedData]; // single exercise fallback
+          }
 
           // Guard: if AI returned nothing useful, don't burn quota
           if (!Array.isArray(exercises) || exercises.length === 0) {
@@ -409,7 +420,7 @@ export async function POST(request: NextRequest) {
           }
 
           controller.enqueue(
-            encoder.encode(`data: ${JSON.stringify({ done: true, exercises })}\n\n`)
+            encoder.encode(`data: ${JSON.stringify({ done: true, exercises, header })}\n\n`)
           );
           // Increment both monthly and lifetime counters (fire-and-forget)
           // ONLY if this is a fresh generation, not an adjustment/regeneration of a single exercise.
