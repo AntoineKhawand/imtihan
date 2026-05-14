@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, FileText, FileDown, Mail, BookOpen, CheckCircle2, Plus, Sparkles, Eye, EyeOff, Save, Shuffle, Globe, Shield, Image as ImageIcon } from "lucide-react";
+import { ArrowLeft, FileText, FileDown, Mail, BookOpen, CheckCircle2, Plus, Sparkles, Eye, EyeOff, Save, Shuffle, Globe, Image as ImageIcon } from "lucide-react";
 import { toast } from "sonner";
 import { UserNav } from "@/components/layout/UserNav";
 import { Button } from "@/components/ui/Button";
@@ -51,10 +51,6 @@ export default function ExportPage() {
   const [variant, setVariant] = useState<"A" | "B">("A");
   const [exportLanguage, setExportLanguage] = useState<"french" | "english" | "arabic">("french");
   const [examSeed] = useState(() => shortId());
-
-  // Live Exam states
-  const [publishing, setPublishing] = useState(false);
-  const [liveLink, setLiveLink] = useState<string | null>(null);
 
   // Track whether we've saved to the library
   const [savedToLibrary, setSavedToLibrary] = useState(false);
@@ -148,37 +144,6 @@ export default function ExportPage() {
     }
   }
 
-  async function handlePublishLive() {
-    if (!context || !exercises.length) return;
-    setPublishing(true);
-    try {
-      const res = await fetch("/api/exam/publish", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          exam: {
-            title: buildExamTitle(context),
-            context,
-            exercises,
-            teacherId: profile?.uid
-          },
-          settings: {
-            timeLimit: context.duration || 60,
-            shuffleQuestions: true,
-            antiCheating: true
-          }
-        })
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to publish");
-      setLiveLink(data.link);
-      if (!savedToLibrary) saveExamToLibrary();
-    } catch (e) {
-      alert(e instanceof Error ? e.message : "Failed to create live link");
-    } finally {
-      setPublishing(false);
-    }
-  }
 
   async function handleSendEmail() {
     if (!context || !exercises.length || !email) return;
@@ -517,59 +482,6 @@ export default function ExportPage() {
             )}
           </div>
 
-          {/* Live Exam Share — Pro */}
-          <div className={cn("card p-6", isFreeTier && "opacity-60 relative")}>
-            {isFreeTier && (
-              <div className="absolute inset-0 z-10 flex items-center justify-center bg-[var(--surface)]/40 backdrop-blur-[1px] rounded-2xl">
-                <div className="bg-[var(--bg)] px-4 py-2 rounded-full border border-[var(--border)] shadow-sm flex items-center gap-2">
-                  <span className="text-xs font-semibold text-[var(--text)]">Pro Feature</span>
-                  <Link href="/community" className="text-xs text-[var(--accent)] hover:underline">Upgrade</Link>
-                </div>
-              </div>
-            )}
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-3">
-                <Globe size={16} className="text-[var(--text-secondary)]" />
-                <span className="text-sm font-semibold text-[var(--text)]">Live Student Link</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Shield size={12} className="text-emerald-500" />
-                <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest">Anti-Cheating Active</span>
-              </div>
-            </div>
-
-            {liveLink ? (
-              <div className="space-y-3 animate-in fade-in slide-in-from-top-2 duration-300">
-                <div className="flex gap-2">
-                  <Input readOnly value={liveLink} className="flex-1 bg-[var(--surface)] font-mono text-[10px]" />
-                  <Button 
-                    variant="secondary" 
-                    size="md" 
-                    onClick={() => {
-                      navigator.clipboard.writeText(liveLink);
-                      toast.success("Link copied to clipboard");
-                    }}
-                  >
-                    Copy
-                  </Button>
-                </div>
-                <p className="text-[10px] text-[var(--text-tertiary)] leading-relaxed">
-                  Students can take this exam online. Their results and any cheating warnings will appear in your dashboard.
-                </p>
-              </div>
-            ) : (
-              <Button 
-                variant="secondary" 
-                className="w-full h-11 rounded-xl border-emerald-100 bg-emerald-50/50 text-emerald-700 hover:bg-emerald-50"
-                onClick={handlePublishLive}
-                loading={publishing}
-                disabled={isFreeTier}
-                icon={<Sparkles size={14} />}
-              >
-                Create Live Link
-              </Button>
-            )}
-          </div>
 
           {/* Email */}
           <div className={cn("card p-6", isFreeTier && "opacity-60 relative")}>
