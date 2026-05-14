@@ -13,7 +13,32 @@ interface ExerciseEditorProps {
   onClose: () => void;
 }
 
-// Click-to-edit field: renders KaTeX/rich content when idle, raw textarea when focused
+function extractMarkdownFromHtml(node: Node): string {
+  let text = "";
+  for (const child of Array.from(node.childNodes)) {
+    if (child.nodeType === Node.TEXT_NODE) {
+      text += child.textContent;
+    } else if (child.nodeType === Node.ELEMENT_NODE) {
+      const el = child as HTMLElement;
+      if (el.hasAttribute("data-placeholder")) {
+        continue;
+      }
+      if (el.hasAttribute("data-raw")) {
+        text += el.getAttribute("data-raw") || "";
+      } else if (el.tagName === "BR") {
+        text += "\n";
+      } else if (el.tagName === "DIV" || el.tagName === "P") {
+        const inner = extractMarkdownFromHtml(el);
+        text += "\n" + inner;
+      } else {
+        text += extractMarkdownFromHtml(el);
+      }
+    }
+  }
+  return text;
+}
+
+// Click-to-edit field: renders KaTeX/rich content and allows native WYSIWYG editing
 function RichField({
   value,
   onChange,
@@ -28,16 +53,41 @@ function RichField({
   mono?: boolean;
 }) {
   const [focused, setFocused] = useState(false);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const divRef = useRef<HTMLDivElement>(null);
 
-  const handleClick = useCallback(() => {
+  const handleFocus = useCallback((e: React.FocusEvent<HTMLDivElement>) => {
     setFocused(true);
-    setTimeout(() => textareaRef.current?.focus(), 0);
-  }, []);
+    if (!value && e.currentTarget.innerHTML.includes('data-placeholder')) {
+      e.currentTarget.innerHTML = "";
+    }
+  }, [value]);
+
+  const handleBlur = () => {
+    setFocused(false);
+    if (!divRef.current) return;
+    const newMarkdown = extractMarkdownFromHtml(divRef.current).replace(/\n{3,}/g, '\n\n').trim();
+    if (newMarkdown !== value.trim()) {
+      onChange(newMarkdown);
+    } else if (!newMarkdown) {
+      divRef.current.innerHTML = `<span style="color:var(--text-tertiary);font-style:italic" data-placeholder="true">${placeholder}</span>`;
+    }
+  };
+
+  const handleDoubleClick = (e: React.MouseEvent) => {
+    const target = e.target as HTMLElement;
+    const rawNode = target.closest('[data-raw]');
+    if (rawNode && rawNode.parentNode) {
+      const rawText = rawNode.getAttribute('data-raw');
+      if (rawText) {
+        const textNode = document.createTextNode(rawText);
+        rawNode.parentNode.replaceChild(textNode, rawNode);
+      }
+    }
+  };
 
   const rendered = value
     ? renderContent(value)
-    : `<span style="color:var(--text-tertiary);font-style:italic">${placeholder}</span>`;
+    : `<span style="color:var(--text-tertiary);font-style:italic" data-placeholder="true">${placeholder}</span>`;
 
   return (
     <div
@@ -48,30 +98,22 @@ function RichField({
           : "border-[var(--border)] hover:border-[var(--border-strong)] cursor-text"
       )}
     >
-      {focused ? (
-        <textarea
-          ref={textareaRef}
-          value={value}
-          onChange={e => onChange(e.target.value)}
-          onBlur={() => setFocused(false)}
-          rows={rows}
-          placeholder={placeholder}
-          className={cn(
-            "w-full px-4 py-3 bg-[var(--bg-subtle)] text-sm text-[var(--text)] leading-relaxed resize-y focus:outline-none rounded-xl",
-            mono && "font-mono"
-          )}
-        />
-      ) : (
-        <div
-          onClick={handleClick}
-          className="px-4 py-3 bg-[var(--bg-subtle)] text-sm text-[var(--text)] leading-relaxed rounded-xl prose-clean overflow-hidden"
-          style={{ minHeight: `${rows * 1.6 + 1.5}rem` }}
-          dangerouslySetInnerHTML={{ __html: rendered }}
-        />
-      )}
-      {/* Edit hint — only shown when idle and non-empty */}
+      <div
+        ref={divRef}
+        contentEditable
+        suppressContentEditableWarning
+        onFocus={handleFocus}
+        onBlur={handleBlur}
+        onDoubleClick={handleDoubleClick}
+        className={cn(
+          "w-full px-4 py-3 bg-[var(--bg-subtle)] text-sm text-[var(--text)] leading-relaxed rounded-xl prose-clean overflow-y-auto outline-none",
+          mono && "font-mono"
+        )}
+        style={{ minHeight: `${rows * 1.6 + 1.5}rem`, maxHeight: '300px' }}
+        dangerouslySetInnerHTML={{ __html: rendered }}
+      />
       {!focused && value && (
-        <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
           <div className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-white/80 border border-[var(--border)] text-[9px] font-bold text-[var(--text-tertiary)] uppercase tracking-wider shadow-sm">
             <Pencil size={8} /> edit
           </div>
@@ -81,7 +123,7 @@ function RichField({
   );
 }
 
-// Compact inline version for sub-question statements (no min-height)
+// Compact inline version for sub-question statements and options
 function RichFieldInline({
   value,
   onChange,
@@ -92,16 +134,41 @@ function RichFieldInline({
   placeholder?: string;
 }) {
   const [focused, setFocused] = useState(false);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const divRef = useRef<HTMLDivElement>(null);
 
-  const handleClick = useCallback(() => {
+  const handleFocus = useCallback((e: React.FocusEvent<HTMLDivElement>) => {
     setFocused(true);
-    setTimeout(() => textareaRef.current?.focus(), 0);
-  }, []);
+    if (!value && e.currentTarget.innerHTML.includes('data-placeholder')) {
+      e.currentTarget.innerHTML = "";
+    }
+  }, [value]);
+
+  const handleBlur = () => {
+    setFocused(false);
+    if (!divRef.current) return;
+    const newMarkdown = extractMarkdownFromHtml(divRef.current).replace(/\n{3,}/g, '\n\n').trim();
+    if (newMarkdown !== value.trim()) {
+      onChange(newMarkdown);
+    } else if (!newMarkdown) {
+      divRef.current.innerHTML = `<span style="color:var(--text-tertiary);font-style:italic" data-placeholder="true">${placeholder}</span>`;
+    }
+  };
+
+  const handleDoubleClick = (e: React.MouseEvent) => {
+    const target = e.target as HTMLElement;
+    const rawNode = target.closest('[data-raw]');
+    if (rawNode && rawNode.parentNode) {
+      const rawText = rawNode.getAttribute('data-raw');
+      if (rawText) {
+        const textNode = document.createTextNode(rawText);
+        rawNode.parentNode.replaceChild(textNode, rawNode);
+      }
+    }
+  };
 
   const rendered = value
     ? renderContent(value)
-    : `<span style="color:var(--text-tertiary);font-style:italic">${placeholder}</span>`;
+    : `<span style="color:var(--text-tertiary);font-style:italic" data-placeholder="true">${placeholder}</span>`;
 
   return (
     <div
@@ -112,25 +179,18 @@ function RichFieldInline({
           : "border-[var(--border)] hover:border-[var(--border-strong)] cursor-text"
       )}
     >
-      {focused ? (
-        <textarea
-          ref={textareaRef}
-          value={value}
-          onChange={e => onChange(e.target.value)}
-          onBlur={() => setFocused(false)}
-          rows={2}
-          placeholder={placeholder}
-          className="w-full px-3 py-2 bg-[var(--surface)] text-sm text-[var(--text)] resize-none focus:outline-none rounded-lg"
-        />
-      ) : (
-        <div
-          onClick={handleClick}
-          className="px-3 py-2 bg-[var(--surface)] text-sm text-[var(--text)] leading-relaxed rounded-lg prose-clean min-h-[2.75rem] overflow-hidden"
-          dangerouslySetInnerHTML={{ __html: rendered }}
-        />
-      )}
+      <div
+        ref={divRef}
+        contentEditable
+        suppressContentEditableWarning
+        onFocus={handleFocus}
+        onBlur={handleBlur}
+        onDoubleClick={handleDoubleClick}
+        className="w-full px-3 py-2 bg-[var(--surface)] text-sm text-[var(--text)] leading-relaxed rounded-lg prose-clean min-h-[2.75rem] overflow-hidden outline-none"
+        dangerouslySetInnerHTML={{ __html: rendered }}
+      />
       {!focused && value && (
-        <div className="absolute top-1.5 right-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="absolute top-1.5 right-1.5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
           <div className="flex items-center gap-0.5 px-1 py-0.5 rounded bg-white/80 border border-[var(--border)] text-[8px] font-bold text-[var(--text-tertiary)] uppercase tracking-wider shadow-sm">
             <Pencil size={7} /> edit
           </div>
@@ -355,13 +415,13 @@ export function ExerciseEditor({ exercise, onSave, onClose }: ExerciseEditorProp
                         )}>
                           {opt.label}
                         </span>
-                        <input
-                          type="text"
-                          value={opt.text}
-                          onChange={e => updateOptionText(opt.label, e.target.value)}
-                          className="flex-1 bg-transparent text-sm text-[var(--text)] focus:outline-none placeholder:text-[var(--text-tertiary)]"
-                          placeholder={`Option ${opt.label}…`}
-                        />
+                        <div className="flex-1 min-w-0">
+                          <RichFieldInline
+                            value={opt.text}
+                            onChange={v => updateOptionText(opt.label, v)}
+                            placeholder={`Option ${opt.label}…`}
+                          />
+                        </div>
                       </div>
                     ))}
                   </div>
