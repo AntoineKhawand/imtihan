@@ -84,7 +84,7 @@ export function LandingPricing({ isAuthenticated }: { isAuthenticated?: boolean 
 
             <ul className="space-y-4 mb-10 flex-1">
               {[
-                "2 complete exams + corrigés",
+                "1 complete exam + corrigé",
                 "All curricula & subjects",
                 "Word + PDF export",
                 "Version A/B generation",

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Pricing — Imtihan Pro",
-  description: "Imtihan Pro à partir de $5.99/mois. 100 examens par mois, toutes les matières, corrigé inclus. Paiement via WhatsApp. Commencez gratuitement avec 2 examens.",
+  description: "Imtihan Pro à partir de $5.99/mois. 100 examens par mois, toutes les matières, corrigé inclus. Paiement via WhatsApp. Commencez gratuitement avec 1 examen.",
   alternates: { canonical: "/pricing" },
   openGraph: {
     title: "Tarifs Imtihan — Générateur d'examens IA au Liban",

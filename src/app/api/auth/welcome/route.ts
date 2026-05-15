@@ -82,7 +82,7 @@ function buildWelcomeNewsletter(name: string): { subject: string; html: string }
                 <tr>
                   <td style="padding:32px;">
                     <div style="font-size:13px;font-weight:800;color:#15803d;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">Gift for new teachers</div>
-                    <div style="font-size:24px;font-weight:800;color:#064e3b;line-height:1.2;margin-bottom:12px;">You have 2 Free Exams waiting</div>
+                    <div style="font-size:24px;font-weight:800;color:#064e3b;line-height:1.2;margin-bottom:12px;">You have 1 Free Exam waiting</div>
                     <p style="margin:0 0 24px;font-size:15px;color:#374151;line-height:1.5;">No credit card, no commitment. Just describe your curriculum and generate.</p>
                     <a href="${APP_URL}/create"
                        style="display:inline-block;background:#1a5e3f;color:#fff;text-decoration:none;padding:16px 36px;border-radius:12px;font-weight:800;font-size:16px;box-shadow:0 8px 20px rgba(26,94,63,0.3);">

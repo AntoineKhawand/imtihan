@@ -93,7 +93,7 @@ export default function Image() {
 
         {/* Bottom: Social proof chips */}
         <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
-          {["2 examens gratuits", "Bac Libanais", "Bac Français", "IB"].map((tag) => (
+          {["1 examen gratuit", "Bac Libanais", "Bac Français", "IB"].map((tag) => (
             <div
               key={tag}
               style={{
