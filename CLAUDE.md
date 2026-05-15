@@ -142,7 +142,7 @@ users/{uid}/exams/{examId}
 
 - [x] **Domain name** — imtihan.live (purchased)
 - [ ] **Accent color final** — currently emerald `#1a5e3f`. Could also be terracotta.
-- [x] **Free tier** — confirmed 2 exams lifetime (not per month).
+- [x] **Free tier** — confirmed 1 exam lifetime (not per month).
 - [ ] **Pricing after free tier** — probably $7–10/month for individuals. School pricing TBD.
 - [ ] **Arabic support** — deferred to v1.1. Do not start until MVP is stable.
 - [ ] **Custom .docx format upload** — deferred to v1.1. Templates only in MVP.
@@ -161,7 +161,7 @@ users/{uid}/exams/{examId}
 - Granular exercise regeneration
 - Methodology in corrigé
 - Word + PDF export
-- 2 free exams, then paywall stub (paywall logic can be a TODO until Stripe is wired)
+- 1 free exam, then paywall stub (paywall logic can be a TODO until Stripe is wired)
 
 **Note on University Curriculum:** While "free-form" for the user, AI responses should be grounded in high-quality past exams (`dawrat`) and syllabi sourced according to the `docs/DATA_SOURCING.md` guide. This ensures authenticity.
 

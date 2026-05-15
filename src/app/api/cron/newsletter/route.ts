@@ -238,7 +238,7 @@ function buildNewsletterHtml(firstName: string, month: string): string {
           Generate an exam now →
         </a>
         <p style="color:#94a3b8;font-size:12px;margin:12px 0 0">
-          2 free exams &nbsp;·&nbsp; No credit card required
+          1 free exam &nbsp;·&nbsp; No credit card required
         </p>
       </td></tr>
     </table>

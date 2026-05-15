@@ -12,6 +12,7 @@ import { saveToBank, type BankExercise } from "@/lib/storage";
 import type { ExamContext, Exercise } from "@/types/exam";
 import { StepIndicator, StepLabel } from "@/app/create/page";
 import { useAuth } from "@/contexts/AuthContext";
+import { isProActive } from "@/lib/subscription";
 import { UserNav } from "@/components/layout/UserNav";
 import { Logo } from "@/components/ui/Logo";
 
@@ -19,7 +20,8 @@ type GenerationStatus = "idle" | "generating" | "done" | "error";
 
 export default function GeneratePage() {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
+  const isFreeTier = !isProActive(profile);
   const [context, setContext] = useState<ExamContext | null>(null);
   const [templateId, setTemplateId] = useState("classic");
   const [exercises, setExercises] = useState<Exercise[]>([]);
@@ -472,6 +474,30 @@ export default function GeneratePage() {
                   />
                 </div>
               ))}
+
+              {isFreeTier && (
+                <div className="mt-6 rounded-2xl border border-[var(--accent)]/30 bg-gradient-to-br from-[var(--accent-light)] to-white p-6 text-center shadow-lg shadow-[var(--accent)]/5 animate-in fade-in slide-in-from-bottom-3 duration-500">
+                  <div className="w-12 h-12 rounded-xl bg-white shadow-sm flex items-center justify-center mx-auto mb-4 border border-[var(--accent)]/10">
+                    <Sparkles size={22} className="text-[var(--accent)]" />
+                  </div>
+                  <h3 className="serif text-xl text-[var(--text)] mb-2">You&apos;ve used your free exam</h3>
+                  <p className="text-sm text-[var(--text-secondary)] mb-5 max-w-sm mx-auto leading-relaxed">
+                    Upgrade to Pro to keep generating — 10 exams/month (20 with a yearly plan), saved history, and priority support.
+                  </p>
+                  <div className="flex flex-col sm:flex-row items-center gap-3 justify-center">
+                    <Link href="/upgrade" className="w-full sm:w-auto">
+                      <Button size="md" className="w-full bg-[var(--accent)] shadow-md shadow-[var(--accent)]/20 px-6">
+                        Upgrade to Pro — $5.99/mo
+                      </Button>
+                    </Link>
+                    <Link href="/dashboard" className="w-full sm:w-auto">
+                      <Button variant="secondary" size="md" className="w-full px-6">
+                        Go to Dashboard
+                      </Button>
+                    </Link>
+                  </div>
+                </div>
+              )}
 
               <div className="pt-4">
                 <Button

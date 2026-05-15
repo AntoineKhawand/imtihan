@@ -148,7 +148,7 @@ function buildActivationEmail(name: string): { subject: string; html: string } {
               <table cellpadding="0" cellspacing="0"><tr>
                 <td style="padding-right:16px;vertical-align:top;font-size:36px;" class="pulse-icon">🎁</td>
                 <td>
-                  <div style="font-weight:800;color:#166534;font-size:16px;margin-bottom:6px;">Your 2 free exams are ready</div>
+                  <div style="font-weight:800;color:#166534;font-size:16px;margin-bottom:6px;">Your free exam is ready</div>
                   <p style="margin:0;color:#15803d;font-size:14px;line-height:1.6;">No credit card, no commitment. Just create your account and start generating immediately.</p>
                 </td>
               </tr></table>

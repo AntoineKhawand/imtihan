@@ -4,7 +4,7 @@ import { SchemaOrg } from "@/components/SchemaOrg";
 
 export const metadata: Metadata = {
   title: "Imtihan — AI Exam Generator for Teachers in Lebanon",
-  description: "Create curriculum-aligned exams for Bac Libanais, Bac Français, IB, and University in seconds. Full answer key included. 2 free exams, no credit card required.",
+  description: "Create curriculum-aligned exams for Bac Libanais, Bac Français, IB, and University in seconds. Full answer key included. 1 free exam, no credit card required.",
   alternates: { canonical: "/" },
   openGraph: {
     title: "Imtihan — AI Exam Generator for Teachers in Lebanon",
@@ -132,7 +132,7 @@ const FAQ_ITEMS = [
   },
   {
     q: "Is it free?",
-    a: "You can generate your first 2 complete exams for free (no credit card required). After that, the Pro subscription unlocks 10 exams/month (20 with a yearly plan)."
+    a: "You can generate your first complete exam for free (no credit card required). After that, the Pro subscription unlocks 10 exams/month (20 with a yearly plan)."
   }
 ];
 
@@ -218,7 +218,7 @@ export default async function LandingPage() {
       "@type": "Offer",
       "price": "0",
       "priceCurrency": "USD",
-      "description": "2 free exams for every user"
+      "description": "1 free exam for every user"
     }
   };
 
@@ -264,9 +264,9 @@ export default async function LandingPage() {
 
         <div className="relative max-w-5xl mx-auto">
           <MotionHero>
-            <div className="group inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-[var(--border)] bg-[var(--surface)] text-xs text-[var(--text-secondary)] mb-8 shadow-sm hover:border-[var(--accent)]/30 hover:bg-[var(--accent)]/5 transition-all duration-300 cursor-default" aria-label="2 free exams — no credit card required">
+            <div className="group inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-[var(--border)] bg-[var(--surface)] text-xs text-[var(--text-secondary)] mb-8 shadow-sm hover:border-[var(--accent)]/30 hover:bg-[var(--accent)]/5 transition-all duration-300 cursor-default" aria-label="1 free exam — no credit card required">
               <Star size={10} className="text-[var(--accent)] fill-[var(--accent)] group-hover:rotate-[72deg] transition-transform duration-500" />
-              <span>2 free exams — no credit card required</span>
+              <span>1 free exam — no credit card required</span>
               <ChevronRight size={10} />
             </div>
 

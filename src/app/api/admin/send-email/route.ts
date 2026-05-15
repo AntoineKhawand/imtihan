@@ -41,7 +41,7 @@ function buildNewsletterHtml(firstName: string): string {
       </tr></table></td></tr></table>
     <div style="text-align:center;margin-top:24px">
       <a href="${APP_URL}/create" style="display:inline-block;background:linear-gradient(135deg,#1a5e3f,#2d8f5f);color:#fff;text-decoration:none;padding:16px 48px;border-radius:13px;font-weight:700;font-size:16px;box-shadow:0 4px 20px rgba(26,94,63,0.35)">Generate an exam now →</a>
-      <p style="color:#94a3b8;font-size:12px;margin:12px 0 0">2 free exams · No credit card required</p>
+      <p style="color:#94a3b8;font-size:12px;margin:12px 0 0">1 free exam · No credit card required</p>
     </div>
   </div>
   <div style="background:#1e293b;border-radius:0 0 20px 20px;padding:32px 44px;text-align:center">
@@ -78,7 +78,7 @@ function buildActivationHtml(firstName: string): string {
 <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:linear-gradient(135deg,#f0fdf4 0%,#ecfdf5 100%);border-radius:18px;border:1px solid #bbf7d0;margin-bottom:32px;">
 <tr><td style="padding:28px 32px;"><table cellpadding="0" cellspacing="0"><tr>
 <td style="padding-right:16px;vertical-align:top;font-size:36px;">🎁</td>
-<td><div style="font-weight:800;color:#166534;font-size:16px;margin-bottom:6px;">Your 2 free exams are ready</div><p style="margin:0;color:#15803d;font-size:14px;line-height:1.6;">No credit card needed.</p></td></tr></table></td></tr></table>
+<td><div style="font-weight:800;color:#166534;font-size:16px;margin-bottom:6px;">Your free exam is ready</div><p style="margin:0;color:#15803d;font-size:14px;line-height:1.6;">No credit card needed.</p></td></tr></table></td></tr></table>
 <div style="text-align:center;"><a href="${APP_URL}/create" style="display:inline-block;background:linear-gradient(135deg,#1a5e3f,#2d8f5f);color:#fff;text-decoration:none;padding:16px 44px;border-radius:14px;font-weight:800;font-size:16px;box-shadow:0 8px 24px rgba(26,94,63,0.35);">Generate my first exam →</a></div>
 </td></tr>
 <tr><td style="background:#f8fafc;padding:32px;text-align:center;border-top:1px solid #eef2f6;"><p style="margin:0;color:#94a3b8;font-size:12px;">Imtihan · Built for Lebanese teachers</p></td></tr>

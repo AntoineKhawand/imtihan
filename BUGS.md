@@ -48,9 +48,9 @@ These are intentional constraints in MVP — document here to avoid re-opening a
 **Status:** MVP tradeoff
 **Details:** If the teacher closes/refreshes the browser mid-workflow, progress is lost. For MVP this is acceptable. v1.1 should persist draft exams to Firestore.
 
-### Free tier: 2 exams lifetime (not monthly)
+### Free tier: 1 exam lifetime (not monthly)
 **Status:** Product decision
-**Details:** Founder confirmed: 2 exams total in the free tier to drive conversion, not 3/month. This may change based on conversion data.
+**Details:** Founder confirmed: 1 exam total in the free tier to drive conversion. This may change based on conversion data.
 
 ---
 

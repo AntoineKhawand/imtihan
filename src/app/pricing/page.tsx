@@ -8,7 +8,7 @@ import { isProActive, getWhatsAppUpgradeLink } from "@/lib/subscription";
 import { Logo } from "@/components/ui/Logo";
 
 const FEATURES_FREE = [
-  "2 complete exams + corrigés",
+  "1 complete exam + corrigé",
   "All curricula & subjects",
   "Word + PDF export",
   "Version A/B generation",
@@ -103,8 +103,8 @@ export default function PricingPage() {
           {/* Free */}
           <div className="card p-8 flex flex-col">
             <p className="text-xs uppercase tracking-wider text-[var(--text-tertiary)] font-medium mb-4">Free</p>
-            <div className="serif text-4xl font-light text-[var(--text)] mb-1">2 Free</div>
-            <p className="text-sm text-[var(--text-secondary)] mb-6">2 exams to try everything</p>
+            <div className="serif text-4xl font-light text-[var(--text)] mb-1">1 Free</div>
+            <p className="text-sm text-[var(--text-secondary)] mb-6">1 exam to try everything</p>
             <ul className="space-y-3 mb-8 flex-1">
               {FEATURES_FREE.map((f) => (
                 <li key={f} className="flex items-start gap-2.5 text-sm text-[var(--text-secondary)]">

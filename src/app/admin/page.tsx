@@ -751,7 +751,7 @@ export default function AdminPage() {
               <div className="grid grid-cols-2 gap-3 mb-4">
                 <div className="bg-gray-50 p-3 rounded-2xl">
                   <p className="text-[10px] text-gray-400 uppercase font-bold mb-1">Monthly Usage</p>
-                  <p className="text-sm font-bold text-gray-900">{u.monthlyExamsGenerated || 0} / {u.proExpiresAt ? (u.planType === "yearly" ? "20" : "10") : "2"}</p>
+                  <p className="text-sm font-bold text-gray-900">{u.monthlyExamsGenerated || 0} / {u.proExpiresAt ? (u.planType === "yearly" ? "20" : "10") : "1"}</p>
                 </div>
                 <div className="bg-blue-50 p-3 rounded-2xl">
                   <p className="text-[10px] text-blue-400 uppercase font-bold mb-1">Bonus Quota</p>

@@ -16,7 +16,7 @@ export const metadata: Metadata = {
     template: "%s — Imtihan",
   },
   description:
-    "Create exams aligned with Bac Libanais, Bac Français, IB, and University curricula in seconds. Full answer key included. 2 free exams, no credit card required.",
+    "Create exams aligned with Bac Libanais, Bac Français, IB, and University curricula in seconds. Full answer key included. 1 free exam, no credit card required.",
   keywords: [
     "AI exam generator Lebanon",
     "générateur d'examens IA Liban",

@@ -11,7 +11,7 @@ import { getHumanitiesContext } from "@/lib/humanities";
 import { GEOGRAPHIC_SUBJECTS } from "@/data/curricula";
 
 const MONTHLY_PERIOD_MS = 30 * 24 * 60 * 60 * 1000;
-const MONTHLY_LIMITS = { free: 2, pro: 10 } as const;
+const MONTHLY_LIMITS = { free: 1, pro: 10 } as const;
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -231,7 +231,7 @@ export async function POST(request: NextRequest) {
     if (!isAdjustment && quotaUsed >= limit) {
       const msg = isPro
         ? `You have reached your monthly limit of ${limit} exams. Contact support if you need more.`
-        : `You have reached your limit of ${baseLimit} free exams. Upgrade to Pro for 10 exams/month (or 20 with a yearly plan).`;
+        : `You have reached your limit of ${baseLimit} free exam. Upgrade to Pro for 10 exams/month (or 20 with a yearly plan).`;
       return NextResponse.json(
         { success: false, errors: [msg] },
         { status: 429, headers: createSecurityHeaders() }
