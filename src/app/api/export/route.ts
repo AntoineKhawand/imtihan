@@ -248,7 +248,6 @@ function cleanLatexForWord(text: string): string {
   cleaned = cleaned.replace(/\$/g, "");
   
   // 3. Replace common text blocks and formatting
-  cleaned = cleaned.replace(/\\boxed\{([^}]+)\}/g, "$1");
   cleaned = cleaned.replace(/\\text\{([^}]+)\}/g, "$1");
   cleaned = cleaned.replace(/\\mathrm\{([^}]+)\}/g, "$1");
   cleaned = cleaned.replace(/\\textbf\{([^}]+)\}/g, "$1");
@@ -306,9 +305,14 @@ function createFormattedTextRuns(
   const { bidirectional, ...runOptions } = baseOptions;
   const runs: TextRun[] = [];
 
+  // Pre-process \boxed{...} BEFORE splitting on $...$, because \boxed{} can
+  // contain nested $\text{ cm}$ markers that would otherwise get torn apart.
+  // The regex handles one level of nested braces (e.g. \text{...} inside \boxed{}).
+  let preprocessed = text.replace(/\\boxed\{((?:[^{}]|\{[^{}]*\})*)\}/g, '$1');
+
   // Split on $...$ / $$...$$ to convert math to unicode text
   const mathSplitRegex = /(\$\$[\s\S]+?\$\$|\$[^$\n]+?\$)/g;
-  const segments = text.split(mathSplitRegex);
+  const segments = preprocessed.split(mathSplitRegex);
 
   for (const seg of segments) {
     if (!seg) continue;
