@@ -64,7 +64,7 @@ function buildNewsletterHtml(firstName: string, month: string): string {
 
     <h1 style="margin:0 0 10px;font-size:28px;font-weight:800;color:#fff;
                line-height:1.25;letter-spacing:-0.5px">
-      Your monthly update<br/>from the Imtihan team
+      Your bi-weekly update<br/>from the Imtihan team
       <img src="https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/1f1f1-1f1e7.png"
            width="22" height="22" style="vertical-align:middle;margin-left:6px" />
     </h1>
@@ -298,7 +298,7 @@ export async function GET(request: NextRequest) {
   }
 
   const month = new Date().toLocaleString("en-US", { month: "long", year: "numeric" });
-  const subject = `📬 Imtihan Newsletter — ${month}`;
+  const subject = `📬 Imtihan Update — ${new Date().toLocaleDateString("en-US", { month: "short", day: "numeric" })}`;
   let sent = 0;
   let errors = 0;
 
@@ -310,16 +310,15 @@ export async function GET(request: NextRequest) {
       const email: string | undefined = data.email;
       if (!email) continue;
 
-      // Skip if this month's newsletter already sent
+      // Skip if sent within the last 13 days (slight buffer for weekly cron)
       const lastNewsletter: number | undefined = data.newsletterSentAt;
       const now = Date.now();
-      const startOfMonth = new Date();
-      startOfMonth.setDate(1);
-      startOfMonth.setHours(0, 0, 0, 0);
-      if (lastNewsletter && lastNewsletter > startOfMonth.getTime()) continue;
+      const THRESHOLD = 13 * 24 * 60 * 60 * 1000;
+      if (lastNewsletter && (now - lastNewsletter < THRESHOLD)) continue;
 
       const firstName = (data.displayName ?? "").split(" ")[0] || "there";
-      const html = buildNewsletterHtml(firstName, month);
+      const displayMonth = new Date().toLocaleString("en-US", { month: "long" });
+      const html = buildNewsletterHtml(firstName, displayMonth);
 
       try {
         const result = await sendEmail({ to: email, toName: data.displayName ?? email, subject, html });
