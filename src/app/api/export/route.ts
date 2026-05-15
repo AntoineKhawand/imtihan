@@ -267,7 +267,7 @@ function cleanLatexForWord(text: string): string {
     "\\dots": "...", "\\ldots": "...", "\\vec": "", "\\overrightarrow": "",
     "\\mathbb{R}": "ℝ", "\\mathbb{N}": "ℕ", "\\mathbb{Z}": "ℤ", "\\mathbb{Q}": "ℚ", "\\mathbb{C}": "ℂ",
     "\\mathbb{P}": "ℙ", "\\mathbb{E}": "𝔼", "\\cup": "∪", "\\cap": "∩", "\\subset": "⊂",
-    "\\subseteq": "⊆", "\\in": "∈", "\\notin": "∉"
+    "\\subseteq": "⊆", "\\notin": "∉"
   };
   
   for (const [key, val] of Object.entries(latexMap)) {
