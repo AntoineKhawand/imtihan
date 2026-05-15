@@ -673,7 +673,7 @@ export async function generateWordDocument(
 
   for (const ex of exercises) {
     children.push(new Paragraph({
-      children: [new TextRun({ text: `${exerciseWord} ${isFormal ? String(ex.number) + "." : ex.number}`, bold: true, size: 24, color: primaryColor, font: fontHeader, rightToLeft: isArabic })],
+      children: [new TextRun({ text: `${exerciseWord} ${isClassic ? String(ex.number) + "." : ex.number}`, bold: true, size: 24, color: primaryColor, font: fontHeader, rightToLeft: isArabic })],
       heading: HeadingLevel.HEADING_2,
       spacing: { before: 240, after: 120 },
       bidirectional: isArabic,
