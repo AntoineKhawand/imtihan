@@ -100,13 +100,28 @@ async function processContentBlocks(
     }
 
     // Handle Mermaid blocks
-    if (line.startsWith("```mermaid")) {
+    if (line.toLowerCase().startsWith("```mermaid") || line.toLowerCase().startsWith("sequencediagram") || line.toLowerCase().startsWith("graph td")) {
       flushParagraph();
       let mermaidCode = "";
-      i++; // Skip the ```mermaid line
-      while (i < lines.length && !lines[i].trim().startsWith("```")) {
-        mermaidCode += lines[i] + "\n";
+      if (line.toLowerCase().startsWith("```mermaid")) {
+        i++; // Skip the ```mermaid line
+        while (i < lines.length && !lines[i].trim().startsWith("```")) {
+          mermaidCode += lines[i] + "\n";
+          i++;
+        }
+      } else {
+        // Line-by-line collection for raw mermaid blocks not wrapped in backticks
+        mermaidCode = line + "\n";
         i++;
+        while (i < lines.length && 
+               lines[i].trim() !== "" && 
+               !lines[i].includes("[IMAGE:") && 
+               !lines[i].includes("Exercice") &&
+               !/^\d+[\s.]/.test(lines[i])) {
+          mermaidCode += lines[i] + "\n";
+          i++;
+        }
+        i--; // Step back so the main loop can process the last line if it's a break
       }
       
       if (mermaidCode.trim()) {
@@ -233,11 +248,13 @@ function cleanLatexForWord(text: string): string {
   cleaned = cleaned.replace(/\$/g, "");
   
   // 3. Replace common text blocks and formatting
+  cleaned = cleaned.replace(/\\boxed\{([^}]+)\}/g, "$1");
   cleaned = cleaned.replace(/\\text\{([^}]+)\}/g, "$1");
   cleaned = cleaned.replace(/\\mathrm\{([^}]+)\}/g, "$1");
   cleaned = cleaned.replace(/\\textbf\{([^}]+)\}/g, "$1");
   cleaned = cleaned.replace(/\\textit\{([^}]+)\}/g, "$1");
   cleaned = cleaned.replace(/\\text\s+/g, ""); 
+  cleaned = cleaned.replace(/\\ /g, " "); 
   
   // 4. Advanced symbol mapping
   const latexMap: Record<string, string> = {
@@ -248,7 +265,10 @@ function cleanLatexForWord(text: string): string {
     "\\leq": "≤", "\\geq": "≥", "\\infty": "∞", "\\rightarrow": "→", "\\implies": "⇒",
     "\\rightleftharpoons": "⇌", "\\pm": "±", "\\degree": "°", "\\parallel": "∥",
     "\\perp": "⊥", "\\forall": "∀", "\\exists": "∃", "\\in": "∈", "\\sum": "Σ",
-    "\\dots": "...", "\\ldots": "...", "\\vec": "", "\\overrightarrow": ""
+    "\\dots": "...", "\\ldots": "...", "\\vec": "", "\\overrightarrow": "",
+    "\\mathbb{R}": "ℝ", "\\mathbb{N}": "ℕ", "\\mathbb{Z}": "ℤ", "\\mathbb{Q}": "ℚ", "\\mathbb{C}": "ℂ",
+    "\\mathbb{P}": "ℙ", "\\mathbb{E}": "𝔼", "\\cup": "∪", "\\cap": "∩", "\\subset": "⊂",
+    "\\subseteq": "⊆", "\\in": "∈", "\\notin": "∉"
   };
   
   for (const [key, val] of Object.entries(latexMap)) {
@@ -263,6 +283,7 @@ function cleanLatexForWord(text: string): string {
   cleaned = cleaned.replace(/\\(sin|cos|tan|ln|log|exp)/g, "$1");
   cleaned = cleaned.replace(/\\( )/g, " "); // escaped spaces
   cleaned = cleaned.replace(/\\{/g, "{").replace(/\\}/g, "}");
+  cleaned = cleaned.replace(/C_f/g, "Cf").replace(/f_x/g, "f(x)"); // common sub mapping
   cleaned = cleaned.replace(/<[^>]*>?/gm, ""); // Strip any accidental HTML tags (like <img>)
   cleaned = cleaned.replace(/\\/g, ""); // Remove any remaining backslashes
   
