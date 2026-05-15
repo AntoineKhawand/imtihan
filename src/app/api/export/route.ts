@@ -3,7 +3,7 @@ import { z } from "zod";
 import { 
   Document, Packer, Paragraph, TextRun, HeadingLevel, 
   AlignmentType, BorderStyle, Table, TableRow, TableCell, WidthType,
-  ImageRun
+  ImageRun, TableBorders, VerticalAlign
 } from "docx";
 
 
