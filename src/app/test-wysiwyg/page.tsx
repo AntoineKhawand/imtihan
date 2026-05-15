@@ -6,14 +6,16 @@ import { Exercise } from "@/types/exam";
 const dummyExercise: Exercise = {
   id: "test1",
   number: 1,
-  type: "open_ended",
+  type: "problem_solving",
   statement: "Calculate $x^2 + y^2 = z^2$ and verify the **bold** text.",
   points: 10,
   difficulty: "medium",
   solution: {
     finalAnswer: "$z = \\sqrt{x^2 + y^2}$",
     methodology: "1. Square $x$\n2. Square $y$\n3. Sum them\n4. Take square root",
-  }
+  },
+  chapterIds: [],
+  estimatedMinutes: 10,
 };
 
 export default function TestWysiwyg() {
