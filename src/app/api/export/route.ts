@@ -392,86 +392,112 @@ export async function generateWordDocument(
 
   // Template configuration
   const isModern = templateId === "modern";
-  const isFormal = templateId === "formal";
+  const isClassic = templateId === "classic" || templateId === "formal";
 
-  const fontBody = isModern ? "Arial" : isFormal ? "Times New Roman" : "Georgia";
-  const fontHeader = isModern ? "Arial" : isFormal ? "Times New Roman" : "Georgia";
+  const fontBody = isModern ? "Helvetica" : "Times New Roman";
+  const fontHeader = isModern ? "Arial" : "Times New Roman";
   
   // Match the UI CSS variables exactly
-  const primaryColor = isFormal ? "000000" : "1a5e3f"; // var(--accent)
-  const textColor = isFormal ? "000000" : "0a0a0a";    // var(--text)
-  const metaColor = isFormal ? "000000" : "5c5c5c";    // var(--text-secondary)
-  const subtleBg = "f3f0e8";                           // var(--bg-subtle)
-  const accentLight = "effaf4";                        // var(--accent-light)
-
+  const primaryColor = isClassic ? "000000" : "1a5e3f"; // var(--accent)
+  const textColor = isClassic ? "000000" : "111827";    // var(--text)
+  const metaColor = isClassic ? "000000" : "6b7280";    // var(--text-secondary)
+  const subtleBg = isClassic ? "ffffff" : "f3f4f6";     // var(--bg-subtle)
+  const accentLight = isClassic ? "ffffff" : "ecfdf5";  // var(--accent-light)
 
   const children: (Paragraph | Table)[] = [];
 
   // ─── Header ────────────────────────────────────────────────
-  if (header?.schoolLogo) {
-    try {
-      const base64Data = header.schoolLogo.split(",")[1] || header.schoolLogo;
-      const logoBuffer = Buffer.from(base64Data, "base64");
-      // Detect image type from data URI prefix (default to png)
-      const mimeMatch = header.schoolLogo.match(/^data:image\/(\w+);/);
-      const imgType = (mimeMatch?.[1] === "jpeg" || mimeMatch?.[1] === "jpg") ? "jpg" : "png";
-      children.push(new Paragraph({
-        children: [
-          new ImageRun({
-            type: imgType,
-            data: logoBuffer,
-            transformation: { width: 80, height: 80 },
-          }),
-        ],
-        alignment: AlignmentType.CENTER,
-        spacing: { after: 200 },
-      }));
-    } catch (e) {
-      console.error("Failed to render school logo in docx:", e);
+  if (isClassic) {
+    // CLASSIC HEADER: Formal, centered, B&W
+    if (header?.schoolLogo) {
+      try {
+        const base64Data = header.schoolLogo.split(",")[1] || header.schoolLogo;
+        const logoBuffer = Buffer.from(base64Data, "base64");
+        const mimeMatch = header.schoolLogo.match(/^data:image\/(\w+);/);
+        const imgType = (mimeMatch?.[1] === "jpeg" || mimeMatch?.[1] === "jpg") ? "jpg" : "png";
+        children.push(new Paragraph({
+          children: [new ImageRun({ type: imgType, data: logoBuffer, transformation: { width: 60, height: 60 } })],
+          alignment: AlignmentType.CENTER,
+          spacing: { after: 120 },
+        }));
+      } catch (e) { console.error(e); }
     }
-  }
 
-  if (header?.schoolName) {
+    if (header?.schoolName) {
+      children.push(new Paragraph({
+        children: [new TextRun({ text: header.schoolName, bold: true, size: 24, font: fontHeader, color: "000000" })],
+        alignment: AlignmentType.CENTER,
+      }));
+    }
+
     children.push(new Paragraph({
-      children: [new TextRun({ text: header.schoolName, bold: true, size: 26, font: fontHeader, color: primaryColor, rightToLeft: isArabic })],
+      children: [
+        new TextRun({ text: `${professorWord}: ${header?.teacherName ?? "..."}  |  ${durationWord}: ${context.duration} min  |  ${totalWord}: ${context.totalPoints} ${pointsWord}`, size: 18, font: fontBody, color: "000000" }),
+      ],
       alignment: AlignmentType.CENTER,
-      spacing: { after: 120 },
-      bidirectional: isArabic,
+      spacing: { after: 100 },
+    }));
+
+    children.push(new Paragraph({
+      children: [new TextRun({ text: `${subjectName} — ${context.levelId}`, bold: true, size: 32, font: fontHeader, color: "000000" })],
+      alignment: AlignmentType.CENTER,
+      heading: HeadingLevel.HEADING_1,
+      border: { bottom: { style: BorderStyle.SINGLE, size: 12, color: "000000", space: 8 } }
+    }));
+    children.push(new Paragraph({ text: "", spacing: { after: 300 } }));
+
+  } else {
+    // MODERN HEADER: Sleek, colorful, table-based alignment
+    const logoRun = header?.schoolLogo ? (() => {
+      try {
+        const base64Data = header.schoolLogo.split(",")[1] || header.schoolLogo;
+        const mimeMatch = header.schoolLogo.match(/^data:image\/(\w+);/);
+        return new ImageRun({ 
+          type: (mimeMatch?.[1] === "jpeg" || mimeMatch?.[1] === "jpg") ? "jpg" : "png", 
+          data: Buffer.from(base64Data, "base64"), 
+          transformation: { width: 70, height: 70 } 
+        });
+      } catch { return null; }
+    })() : null;
+
+    children.push(new Table({
+      width: { size: 100, type: WidthType.PERCENTAGE },
+      borders: TableBorders.NONE,
+      rows: [
+        new TableRow({
+          children: [
+            new TableCell({
+              children: logoRun ? [new Paragraph({ children: [logoRun] })] : [],
+              width: { size: 15, type: WidthType.PERCENTAGE },
+              verticalAlign: VerticalAlign.CENTER,
+            }),
+            new TableCell({
+              children: [
+                new Paragraph({
+                  children: [new TextRun({ text: header?.schoolName || "Institution", bold: true, size: 24, color: primaryColor, font: fontHeader })],
+                  spacing: { after: 40 },
+                }),
+                new Paragraph({
+                  children: [new TextRun({ text: `${subjectName} — ${context.levelId}`, bold: true, size: 36, color: textColor, font: fontHeader })],
+                  spacing: { after: 60 },
+                }),
+                new Paragraph({
+                  children: [new TextRun({ text: `${professorWord}: ${header?.teacherName ?? "..."}  •  ${durationWord}: ${context.duration} min  •  ${totalWord}: ${context.totalPoints} ${pointsWord}`, size: 18, color: metaColor, font: fontBody })],
+                }),
+              ],
+              width: { size: 85, type: WidthType.PERCENTAGE },
+              verticalAlign: VerticalAlign.CENTER,
+            }),
+          ],
+        }),
+      ],
+    }));
+
+    children.push(new Paragraph({
+      border: { bottom: { style: BorderStyle.SINGLE, size: 4, color: primaryColor, space: 10 } },
+      spacing: { after: 400 },
     }));
   }
-
-  children.push(new Paragraph({
-    children: [new TextRun({
-      text: `${subjectName} — ${context.levelId}`,
-      bold: true,
-      size: 32,
-      font: fontHeader,
-      color: textColor,
-      rightToLeft: isArabic,
-    })],
-    alignment: AlignmentType.CENTER,
-    heading: HeadingLevel.HEADING_1,
-    bidirectional: isArabic,
-  }));
-
-  children.push(new Paragraph({
-    children: [
-      new TextRun({ text: `${professorWord}: ${header?.teacherName ?? "..."}`, size: 18, font: fontBody, color: metaColor, rightToLeft: isArabic }),
-      new TextRun({ text: "    |    ", size: 18, font: fontBody, color: metaColor }),
-      new TextRun({ text: `${durationWord}: ${context.duration} min`, size: 18, font: fontBody, color: metaColor, rightToLeft: isArabic }),
-      new TextRun({ text: "    |    ", size: 18, font: fontBody, color: metaColor }),
-      new TextRun({ text: `${totalWord}: ${context.totalPoints} ${pointsWord}`, size: 18, font: fontBody, color: metaColor, rightToLeft: isArabic }),
-    ],
-    alignment: AlignmentType.CENTER,
-    spacing: { after: 200 },
-    bidirectional: isArabic,
-  }));
-
-  // Horizontal Rule
-  children.push(new Paragraph({
-    border: { bottom: { style: BorderStyle.SINGLE, size: 6, color: primaryColor } },
-    spacing: { after: 240 },
-  }));
 
   // ─── Score Summary Table (Teachers love this) ──────────────
   children.push(new Table({
@@ -535,13 +561,14 @@ export async function generateWordDocument(
   for (const ex of exercises) {
     children.push(new Paragraph({
       children: [
-        new TextRun({ text: `${exerciseWord} ${isFormal ? String(ex.number) + "." : ex.number}`, bold: true, size: 24, color: primaryColor, font: fontHeader, rightToLeft: isArabic }),
+        new TextRun({ text: `${exerciseWord} ${isClassic ? String(ex.number) + "." : ex.number}`, bold: true, size: isClassic ? 24 : 26, color: primaryColor, font: fontHeader, rightToLeft: isArabic }),
         new TextRun({ text: `  (${ex.points} ${pointsWord})`, size: 20, color: metaColor, font: fontBody, rightToLeft: isArabic }),
       ],
       heading: HeadingLevel.HEADING_2,
       spacing: { before: 240, after: 120 },
       bidirectional: isArabic,
       alignment: isArabic ? AlignmentType.RIGHT : undefined,
+      shading: isClassic ? undefined : { fill: accentLight },
     }));
 
     children.push(...(await processContentBlocks(ex.statement, { size: 22, font: fontBody, color: textColor, bidirectional: isArabic, lang })));
