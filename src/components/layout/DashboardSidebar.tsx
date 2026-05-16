@@ -23,7 +23,6 @@ const NAV_ITEMS = [
   { label: "New Exam", icon: Plus, href: "/create", highlight: true },
   { label: "Question Bank", icon: Bookmark, href: "/bank" },
   { label: "AI Scanner", icon: Search, href: "/scanner", pro: true },
-  { label: "AI Grading", icon: CheckCircle2, href: "/grade", pro: true },
   { label: "Analytics", icon: TrendingUp, href: "/analytics", pro: true },
   { label: "Community", icon: Users, href: "/community" },
 ];
