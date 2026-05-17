@@ -118,15 +118,19 @@ export default function GeneratePage() {
 
       const decoder = new TextDecoder();
       let accumulated = "";
+      let sseBuffer = "";
 
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
 
-        const chunk = decoder.decode(value, { stream: true });
-        const lines = chunk.split("\n").filter((l) => l.startsWith("data: "));
+        sseBuffer += decoder.decode(value, { stream: true });
+        const lines = sseBuffer.split("\n");
+        // Keep the last (potentially incomplete) line in the buffer
+        sseBuffer = lines.pop() ?? "";
 
         for (const line of lines) {
+          if (!line.startsWith("data: ")) continue;
           try {
             const data = JSON.parse(line.slice(6));
             if (data.chunk) {
@@ -192,13 +196,16 @@ export default function GeneratePage() {
       const reader = res.body?.getReader();
       if (!reader) return;
       const decoder = new TextDecoder();
+      let sseBuffer = "";
 
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
-        const chunk = decoder.decode(value, { stream: true });
-        const lines = chunk.split("\n").filter((l) => l.startsWith("data: "));
+        sseBuffer += decoder.decode(value, { stream: true });
+        const lines = sseBuffer.split("\n");
+        sseBuffer = lines.pop() ?? "";
         for (const line of lines) {
+          if (!line.startsWith("data: ")) continue;
           try {
             const data = JSON.parse(line.slice(6));
             if (data.done && data.exercises?.[0]) {
