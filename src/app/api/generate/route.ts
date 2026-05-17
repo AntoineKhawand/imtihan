@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { withRetryAndFallback, geminiErrorMessage, isRetryableError } from "@/lib/gemini";
-import { getAnthropicClient, isAnthropicConfigured, CLAUDE_MODEL, MAX_TOKENS } from "@/lib/anthropic";
+import { getAnthropicClient, isAnthropicConfigured, GENERATE_MODEL, GENERATE_MAX_TOKENS } from "@/lib/anthropic";
 import { buildGenerateSystemPrompt, buildGenerateUserPrompt } from "@/lib/prompts/generate";
 import { sanitizeError, createSecurityHeaders } from "@/lib/security";
 import * as admin from "firebase-admin";
@@ -162,6 +162,28 @@ function sanitizeJSON(input: string): string {
   return out;
 }
 
+/**
+ * Find the next complete JSON object starting at `from` in `text`.
+ * Returns the object string and the index after its closing brace, or null if incomplete.
+ */
+function findNextCompleteObject(text: string, from: number): { json: string; end: number } | null {
+  let i = from;
+  while (i < text.length && text[i] !== '{') i++;
+  if (i >= text.length) return null;
+  const start = i;
+  let depth = 0, inStr = false, esc = false;
+  for (; i < text.length; i++) {
+    const c = text[i];
+    if (esc) { esc = false; continue; }
+    if (c === '\\' && inStr) { esc = true; continue; }
+    if (c === '"') { inStr = !inStr; continue; }
+    if (inStr) continue;
+    if (c === '{') depth++;
+    else if (c === '}' && --depth === 0) return { json: text.slice(start, i + 1), end: i + 1 };
+  }
+  return null;
+}
+
 function robustParse(text: string): unknown {
   try { return JSON.parse(text); } catch { /* continue */ }
   try { return JSON.parse(sanitizeJSON(text)); } catch { /* continue */ }
@@ -308,8 +330,8 @@ export async function POST(request: NextRequest) {
         }
 
         const claudeStream = await anthropic.messages.create({
-          model: CLAUDE_MODEL,
-          max_tokens: MAX_TOKENS,
+          model: GENERATE_MODEL,
+          max_tokens: GENERATE_MAX_TOKENS,
           system: systemPrompt,
           messages: messages,
           stream: true,
@@ -370,6 +392,9 @@ export async function POST(request: NextRequest) {
     const readable = new ReadableStream({
       async start(controller) {
         let accumulated = "";
+        let exercisesArrayFound = false;
+        let exercisesSearchFrom = 0;
+        let progressiveCount = 0;
 
         try {
           for await (const chunk of stream) {
@@ -377,6 +402,37 @@ export async function POST(request: NextRequest) {
             if (text) {
               accumulated += text;
               controller.enqueue(encoder.encode(`data: ${JSON.stringify({ chunk: text })}\n\n`));
+
+              // Locate the exercises array once it appears in the stream
+              if (!exercisesArrayFound) {
+                const markerIdx = accumulated.indexOf('"exercises"');
+                if (markerIdx !== -1) {
+                  const bracketIdx = accumulated.indexOf('[', markerIdx);
+                  if (bracketIdx !== -1) {
+                    exercisesArrayFound = true;
+                    exercisesSearchFrom = bracketIdx + 1;
+                  }
+                }
+              }
+
+              // Emit each fully-formed exercise object immediately
+              if (exercisesArrayFound) {
+                while (true) {
+                  let pos = exercisesSearchFrom;
+                  while (pos < accumulated.length && /[\s,]/.test(accumulated[pos])) pos++;
+                  if (pos >= accumulated.length || accumulated[pos] !== '{') break;
+                  const result = findNextCompleteObject(accumulated, pos);
+                  if (!result) break;
+                  try {
+                    const exercise = robustParse(result.json);
+                    controller.enqueue(encoder.encode(`data: ${JSON.stringify({ exercise, index: progressiveCount })}\n\n`));
+                    progressiveCount++;
+                    exercisesSearchFrom = result.end;
+                  } catch {
+                    break;
+                  }
+                }
+              }
             }
           }
         } catch (streamErr) {
@@ -385,9 +441,9 @@ export async function POST(request: NextRequest) {
           const msg = isRetryableError(streamErr)
             ? "The AI model is overloaded. Please try again in a moment."
             : `Stream interrupted (${providerName}). Please try again.`;
-          
-          controller.enqueue(encoder.encode(`data: ${JSON.stringify({ 
-            done: true, 
+
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify({
+            done: true,
             error: msg,
             debug: process.env.NODE_ENV !== "production" ? errorDetail : undefined
           })}\n\n`));
@@ -395,23 +451,27 @@ export async function POST(request: NextRequest) {
           return;
         }
 
-        // Stream ended — parse accumulated JSON
+        // Stream ended — full parse to get header + any exercises missed by progressive parser
         try {
           const parsedData = robustParse(extractJSON(accumulated)) as any;
-          let exercises: any[] = [];
+          let allExercises: any[] = [];
           let header: any = undefined;
 
           if (Array.isArray(parsedData)) {
-            exercises = parsedData;
+            allExercises = parsedData;
           } else if (parsedData && Array.isArray(parsedData.exercises)) {
-            exercises = parsedData.exercises;
+            allExercises = parsedData.exercises;
             header = parsedData.header;
           } else if (parsedData && typeof parsedData === 'object') {
-            exercises = [parsedData]; // single exercise fallback
+            allExercises = [parsedData];
           }
 
+          // Only send exercises the progressive parser didn't already emit
+          const remainingExercises = allExercises.slice(progressiveCount);
+          const totalExercises = progressiveCount + remainingExercises.length;
+
           // Guard: if AI returned nothing useful, don't burn quota
-          if (!Array.isArray(exercises) || exercises.length === 0) {
+          if (totalExercises === 0) {
             controller.enqueue(
               encoder.encode(`data: ${JSON.stringify({ done: true, error: "The AI returned no exercises. Please try again." })}\n\n`)
             );
@@ -420,13 +480,13 @@ export async function POST(request: NextRequest) {
           }
 
           controller.enqueue(
-            encoder.encode(`data: ${JSON.stringify({ done: true, exercises, header })}\n\n`)
+            encoder.encode(`data: ${JSON.stringify({ done: true, exercises: remainingExercises, header })}\n\n`)
           );
           // Increment both monthly and lifetime counters (fire-and-forget)
           // ONLY if this is a fresh generation, not an adjustment/regeneration of a single exercise.
           // Also skip if the AI was clearly cut off (e.g. hit max_tokens) and returned fewer than
           // half of the requested exercises — don't penalise the user's quota for a truncated run.
-          const generatedEnough = exercises.length >= Math.max(1, Math.ceil(context.exerciseCount * 0.5));
+          const generatedEnough = totalExercises >= Math.max(1, Math.ceil(context.exerciseCount * 0.5));
           if (!isAdjustment && generatedEnough) {
             const batch = adminDb.batch();
             

@@ -137,18 +137,36 @@ export default function GeneratePage() {
               accumulated += data.chunk;
               setStreamText(accumulated);
             }
+            if (data.exercise) {
+              // Progressive: exercise arrived before stream finished — show it immediately
+              setExercises((prev) => {
+                const ex: Exercise = {
+                  ...data.exercise,
+                  id: data.exercise.id ?? shortId(),
+                  number: (data.index ?? prev.length) + 1,
+                };
+                const next = [...prev, ex];
+                persistExercises(next, context);
+                return next;
+              });
+              setStatus("done");
+            }
             if (data.done) {
               if (data.error) {
                 setError(data.error);
                 setStatus("error");
               } else {
-                const withIds = (data.exercises as Exercise[]).map((ex, i) => ({
-                  ...ex,
-                  id: ex.id ?? shortId(),
-                  number: i + 1,
-                }));
-                setExercises(withIds);
-                persistExercises(withIds);
+                setExercises((prev) => {
+                  // Append any exercises the progressive parser missed
+                  const remaining = (data.exercises as Exercise[] ?? []).map((ex, i) => ({
+                    ...ex,
+                    id: ex.id ?? shortId(),
+                    number: prev.length + i + 1,
+                  }));
+                  const next = [...prev, ...remaining].map((e, i) => ({ ...e, number: i + 1 }));
+                  persistExercises(next, context);
+                  return next;
+                });
                 if (data.header) {
                   sessionStorage.setItem("imtihan_extracted_header", JSON.stringify(data.header));
                 }
