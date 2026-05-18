@@ -214,6 +214,20 @@ HL topics: All SL + Complex numbers, Proof, Series/sums, Differential equations,
   * Use $mol\,dm^{-3}$ and $m\,s^{-1}$ notation.`,
   },
 
+  "physique-chimie": {
+    "bac-francais": `PHYSIQUE-CHIMIE FORMAT (Bac Français — collège : 5ème, 4ème, 3ème, 2nde):
+- This is a COMBINED subject covering both physics AND chemistry. Each exercise may be purely physics, purely chemistry, or mixed — follow the selected chapter(s).
+- Adapt to the specified level: 5ème/4ème = collège (basic), 3ème = fin de collège (intermediate), 2nde = lycée tronc commun (pre-specialty).
+- Opening: always set a brief real-world context ("On dispose d'un circuit électrique…", "Un chimiste prépare une solution de…").
+- Structure: 2–4 sub-questions per exercise, progressing from simpler to harder.
+- "Données :" block mandatory — list all constants, molar masses, or given values used.
+- PHYSICS parts: state the formula in literal form before any numerical application ("Écrire l'expression littérale de… puis calculer…").
+- CHEMISTRY parts: always balance equations; use \\\\ce{...} for formulas; ask students to "Écrire et équilibrer l'équation de la réaction".
+- MATH & CHEMISTRY NOTATION: Use KaTeX $...$ for all formulas and \\\\ce{...} for chemical formulas.
+- "Aide :" prefix for optional hints on hard sub-questions.
+- Total: 20 points for a full exam; adjust proportionally for partial exams.`,
+  },
+
   biology: {
     "bac-libanais": `BIOLOGY FORMAT (Bac Libanais / SVT):
 - Adapt topics to the specified level (from Collège / EB7-EB9 to Lycée / Terminale).
@@ -352,13 +366,13 @@ DIFFICULTY CALIBRATION:
 // Main system prompt builder
 // ---------------------------------------------------------------------------
 
-export function buildGenerateSystemPrompt(context: ExamContext, hasDocument = false): string {
-  const isUniversity = context.curriculumId === "university";
-
-  const chaptersSummary = isUniversity
-    ? null
-    : buildChaptersSummary(context.curriculumId, context.levelId, context.subject, context.chapterIds);
-
+/**
+ * Static system prompt — keyed on (language, curriculum, subject).
+ * Does NOT contain per-request data (chapters, teacher style, document notes)
+ * so it can be sent with cache_control: ephemeral and reused across requests
+ * from the same teacher on the same subject.
+ */
+export function buildGenerateSystemPrompt(context: ExamContext): string {
   const langKey = context.language;
   const currKey = context.curriculumId;
 
@@ -423,15 +437,7 @@ export function buildGenerateSystemPrompt(context: ExamContext, hasDocument = fa
 
   const structural = structuralRules[currKey] ?? "";
 
-  const chapterBlock = isUniversity
-    ? `<course_context>\nUniversity mode: use the teacher's description to determine topics exactly.\nMatch the rigor and notation expected at the described university level.\n</course_context>`
-    : `<selected_chapters>\n${chaptersSummary}\nOnly generate exercises on these chapters. Do not introduce any concept outside this list.\n</selected_chapters>`;
-
   const fewShotText = fewShotExample ? `FORMAT REFERENCE — study this real exam example before generating:\n${fewShotExample}\n` : "";
-
-  const translationText = hasDocument ? `
-- Vocabulary, notation, and level of rigor must match the document, but **EVERY WORD must be in the target language (${context.language})**.
-- TRANSLATION: If the uploaded document is in a different language than ${context.language}, you MUST translate all contexts, scenarios, and scientific terminology into ${context.language}. DO NOT leave any part of the source text in its original language.` : "";
 
   const stepWord = context.language === "french" ? "Étape"
     : context.language === "arabic" ? "الخطوة"
@@ -458,8 +464,6 @@ ${structural}
 ${DIFFICULTY_GUIDE}
 
 ${fewShotText}
-${chapterBlock}
-${translationText}
 ACADEMIC RESEARCH & VERIFICATION (MANDATORY):
 - Before generating any exercise involving physics, chemistry, or mathematics, you must simulate a "check the web" verification phase.
 - Cross-reference all formulas, constants, and notations against authoritative academic sources (e.g., NIST, IUPAC, CERN, or standard official textbooks for the specified curriculum like Bac Français or IB).
@@ -620,7 +624,25 @@ IMPORTANT: "options" must be a 4-element array when type is "multiple_choice", a
 // User prompt builder
 // ---------------------------------------------------------------------------
 
-export function buildGenerateUserPrompt(context: ExamContext, extraContext?: string): string {
+export function buildGenerateUserPrompt(
+  context: ExamContext,
+  extraContext?: string,
+  chaptersSummary?: string,
+  teacherStylePrompt?: string,
+  hasDocument?: boolean,
+): string {
+  const isUniversity = context.curriculumId === "university";
+
+  const chapterBlock = isUniversity
+    ? `<course_context>\nUniversity mode: use the teacher's description to determine topics exactly.\nMatch the rigor and notation expected at the described university level.\n</course_context>`
+    : chaptersSummary
+      ? `<selected_chapters>\n${chaptersSummary}\nOnly generate exercises on these chapters. Do not introduce any concept outside this list.\n</selected_chapters>`
+      : "";
+
+  const translationNote = hasDocument
+    ? `DOCUMENT LANGUAGE NOTE: Vocabulary and rigor must match the uploaded document, but every word of the exam must be in ${context.language}. Translate all source-language content fully — leave nothing untranslated.`
+    : "";
+
   const difficultyBreakdown = `
 - Easy:   ${Math.round(context.difficultyMix.easy   * context.exerciseCount)} exercise(s) (${Math.round(context.difficultyMix.easy   * 100)}%)
 - Medium: ${Math.round(context.difficultyMix.medium * context.exerciseCount)} exercise(s) (${Math.round(context.difficultyMix.medium * 100)}%)
@@ -633,7 +655,7 @@ export function buildGenerateUserPrompt(context: ExamContext, extraContext?: str
   const visualStr = context.visualPreference ? `\nVisual & Graph Requirements:\n${context.visualPreference}` : "";
   const extraContextStr = extraContext ? `\nDOMAIN DATA CONTEXT:\n${extraContext}` : "";
 
-  return `Generate ${context.exerciseCount} exercises. Reply with ONLY a JSON object containing "header" and "exercises" — no markdown, no prose, no explanation. Output must be valid parseable JSON.
+  return `${teacherStylePrompt ? `${teacherStylePrompt}\n\n` : ""}${chapterBlock ? `${chapterBlock}\n\n` : ""}${translationNote ? `${translationNote}\n\n` : ""}Generate ${context.exerciseCount} exercises. Reply with ONLY a JSON object containing "header" and "exercises" — no markdown, no prose, no explanation. Output must be valid parseable JSON.
 
 Curriculum : ${context.curriculumId}
 Level      : ${context.levelId}

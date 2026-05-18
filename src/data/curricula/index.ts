@@ -12,7 +12,7 @@ export const CURRICULA: Record<CurriculumId, Curriculum> = {
 };
 
 export const SUBJECT_GROUPS = {
-  sciences: ["mathematics", "physics", "chemistry", "biology", "svt", "informatics", "nsi", "environmental-systems"],
+  sciences: ["mathematics", "physics", "chemistry", "physique-chimie", "biology", "svt", "informatics", "nsi", "environmental-systems"],
   humanities: ["history", "geography", "history-geography", "philosophy", "civic-education", "economics", "ses", "sociology", "psychology", "global-politics", "law"],
   languages: ["arabic", "french", "english", "spanish", "german"],
   business: ["accounting", "management", "business"],

@@ -12,6 +12,7 @@ export type Subject =
   | "mathematics"
   | "physics"
   | "chemistry"
+  | "physique-chimie"         // Combined Physics-Chemistry (Bac Français — 4ème/5ème)
   | "biology"
   | "svt"                     // Sciences de la Vie et de la Terre
   | "informatics"             // Computer Science / Informatique

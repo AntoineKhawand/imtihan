@@ -21,6 +21,7 @@ export function isAnthropicConfigured(): boolean {
 export const CLAUDE_MODEL = "claude-sonnet-4-6";
 export const MAX_TOKENS = 16000;
 
-// Faster model for exam generation — Haiku 4.5 is ~4x faster than Sonnet
-export const GENERATE_MODEL = "claude-haiku-4-5-20251001";
-export const GENERATE_MAX_TOKENS = 8000;
+// Generation uses the same model as analysis — Sonnet produces better LaTeX,
+// JSON compliance, and complex exercise quality than Haiku for this prompt size.
+export const GENERATE_MODEL = "claude-sonnet-4-6";
+export const GENERATE_MAX_TOKENS = 16000;

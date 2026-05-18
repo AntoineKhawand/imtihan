@@ -246,9 +246,9 @@ export async function POST(request: NextRequest) {
     const { easy, medium, hard } = ctx.difficultyMix;
     const sum = easy + medium + hard;
     if (Math.abs(sum - 1.0) > 0.01) {
-      ctx.difficultyMix.easy   = sum === 0 ? 0.3 : easy   / sum;
-      ctx.difficultyMix.medium = sum === 0 ? 0.5 : medium  / sum;
-      ctx.difficultyMix.hard   = sum === 0 ? 0.2 : hard    / sum;
+      ctx.difficultyMix.easy   = sum === 0 ? 0.2 : easy   / sum;
+      ctx.difficultyMix.medium = sum === 0 ? 0.45 : medium / sum;
+      ctx.difficultyMix.hard   = sum === 0 ? 0.35 : hard   / sum;
     }
 
     // 8. Post-process: if chapterIds is empty and not university, add a warning

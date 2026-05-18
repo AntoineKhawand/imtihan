@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/Button";
 import { ExerciseCard } from "@/components/ui/ExerciseCard";
 import { ExerciseEditor } from "@/components/ui/ExerciseEditor";
 import { shortId } from "@/lib/utils";
-import { saveToBank, type BankExercise } from "@/lib/storage";
+import { saveToBank, getSavedExams, type BankExercise } from "@/lib/storage";
 import type { ExamContext, Exercise } from "@/types/exam";
 import { StepIndicator, StepLabel } from "@/app/create/page";
 import { useAuth } from "@/contexts/AuthContext";
@@ -41,6 +41,40 @@ export default function GeneratePage() {
     sessionStorage.setItem("imtihan_exercises", JSON.stringify(next));
     if (ctx) sessionStorage.setItem("imtihan_exercises_key", JSON.stringify({ c: ctx }));
   }
+
+  // Sync localStorage exam history to server once per week (background, silent)
+  useEffect(() => {
+    const SYNC_KEY = "imtihan_style_synced_at";
+    const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+    const lastSync = Number(localStorage.getItem(SYNC_KEY) ?? 0);
+    if (Date.now() - lastSync < WEEK_MS) return;
+
+    const exams = getSavedExams();
+    if (exams.length === 0) return;
+
+    const summaries = exams.map((e) => ({
+      context: {
+        curriculumId: e.context.curriculumId,
+        subject: e.context.subject,
+        exerciseCount: e.context.exerciseCount,
+        difficultyMix: e.context.difficultyMix,
+        examType: e.context.examType,
+      },
+      exercises: e.exercises.slice(0, 5).map((ex) => ({
+        statement: ex.statement.slice(0, 500),
+        type: ex.type,
+        difficulty: ex.difficulty,
+      })),
+    }));
+
+    fetch("/api/user/sync-style", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ exams: summaries }),
+    })
+      .then((r) => { if (r.ok) localStorage.setItem(SYNC_KEY, String(Date.now())); })
+      .catch(() => { /* silent — style sync is best-effort */ });
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     const raw = sessionStorage.getItem("imtihan_context");

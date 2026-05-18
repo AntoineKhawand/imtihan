@@ -38,7 +38,7 @@ You must return ONLY a valid JSON object — no prose, no markdown fences, no pr
 }
 
 Rules:
-- difficultyMix values must sum to exactly 1.0
+- difficultyMix values must sum to exactly 1.0. Default when not specified: { easy: 0.20, medium: 0.45, hard: 0.35 } — exams should skew medium-to-hard unless the teacher explicitly asks for something easier
 - duration is in minutes (e.g. 1h = 60, 2h = 120)
 - totalPoints: use 20 for Bac Libanais/Français, 100 for IB, best judgment for university
 - chapterIds: infer from the teacher's description using short kebab-case identifiers (e.g. "mecanique-newtonienne", "suites-numeriques", "guerre-froide"). If the teacher lists specific chapters, use those words kebab-cased. For university, always return [].

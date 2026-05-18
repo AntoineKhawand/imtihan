@@ -13,6 +13,7 @@ export const SUBJECT_LABELS: Record<string, { fr: string; en: string; ar: string
   mathematics: { fr: "Mathématiques", en: "Mathematics", ar: "الرياضيات" },
   physics: { fr: "Physique", en: "Physics", ar: "الفيزياء" },
   chemistry: { fr: "Chimie", en: "Chemistry", ar: "الكيمياء" },
+  "physique-chimie": { fr: "Physique-Chimie", en: "Physics-Chemistry", ar: "الفيزياء والكيمياء" },
   biology: { fr: "Biologie", en: "Biology", ar: "علوم الحياة" },
   svt: { fr: "SVT", en: "Life & Earth Sciences", ar: "علوم الحياة والأرض" },
   informatics: { fr: "Informatique", en: "Computer Science", ar: "المعلوماتية" },

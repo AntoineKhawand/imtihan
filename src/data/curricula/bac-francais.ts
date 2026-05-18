@@ -14,7 +14,7 @@ export const bacFrancais: Curriculum = {
   defaultLanguage: "french",
   languages: ["french", "english"],
   subjects: [
-    "mathematics", "physics", "chemistry", "svt", "biology",
+    "mathematics", "physique-chimie", "physics", "chemistry", "svt", "biology",
     "informatics", "nsi",
     "french", "english", "spanish", "german",
     "history-geography", "philosophy",
@@ -48,11 +48,46 @@ export const bacFrancais: Curriculum = {
             objectives: ["Découvrir des textes épiques", "Comprendre la figure du héros"],
           },
         ],
-        physics: [
+        "physique-chimie": [
           {
-            id: "cinq-fr-phys-matter",
+            id: "cinq-fr-pc-matter",
             name: { fr: "Organisation et transformations de la matière", en: "Matter and transformations" },
-            objectives: ["États de la matière", "Mélanges et solutions"],
+            objectives: [
+              "Distinguer les trois états de la matière et leurs propriétés",
+              "Décrire des mélanges et des solutions (homogènes et hétérogènes)",
+              "Expliquer la dissolution et la saturation",
+              "Réaliser des séparations de mélanges (filtration, distillation)",
+            ],
+          },
+          {
+            id: "cinq-fr-pc-light",
+            name: { fr: "La lumière : sources et propagation", en: "Light: sources and propagation" },
+            objectives: [
+              "Distinguer sources primaires et objets diffusants",
+              "Expliquer la propagation rectiligne de la lumière",
+              "Construire les ombres propre et portée",
+              "Expliquer les éclipses de Soleil et de Lune",
+            ],
+          },
+          {
+            id: "cinq-fr-pc-energy",
+            name: { fr: "L'énergie et ses conversions", en: "Energy and its conversions" },
+            objectives: [
+              "Identifier les différentes formes d'énergie",
+              "Décrire des conversions d'énergie dans des chaînes énergétiques",
+              "Calculer une énergie électrique simple ($E = P \\times t$)",
+              "Lier puissance, énergie et durée",
+            ],
+          },
+          {
+            id: "cinq-fr-pc-movement",
+            name: { fr: "Mouvement et vitesse", en: "Movement and speed" },
+            objectives: [
+              "Définir un référentiel et un système",
+              "Caractériser un mouvement (rectiligne, circulaire, uniforme, varié)",
+              "Calculer une vitesse moyenne ($v = d/t$)",
+              "Convertir des unités de vitesse (m/s ↔ km/h)",
+            ],
           },
         ],
       },
@@ -78,11 +113,49 @@ export const bacFrancais: Curriculum = {
             objectives: ["Lire des nouvelles réalistes", "Analyser des textes fantastiques"],
           },
         ],
-        physics: [
+        "physique-chimie": [
           {
-            id: "quat-fr-phys-electricity",
-            name: { fr: "Des signaux pour observer et communiquer", en: "Signals to observe and communicate" },
-            objectives: ["Loi d'Ohm", "Circuits électriques"],
+            id: "quat-fr-pc-electricity",
+            name: { fr: "Électricité — circuits et lois", en: "Electricity — circuits and laws" },
+            objectives: [
+              "Décrire un circuit électrique en série et en dérivation",
+              "Appliquer la loi d'Ohm ($U = R \\times I$)",
+              "Appliquer les lois d'additivité des tensions et des intensités",
+              "Calculer la résistance équivalente d'un circuit",
+              "Calculer la puissance électrique ($P = U \\times I$)",
+            ],
+          },
+          {
+            id: "quat-fr-pc-waves",
+            name: { fr: "Ondes et signaux", en: "Waves and signals" },
+            objectives: [
+              "Distinguer ondes mécaniques et ondes électromagnétiques",
+              "Définir la période, la fréquence et la longueur d'onde",
+              "Calculer la célérité d'une onde ($v = \\lambda \\times f$)",
+              "Expliquer la dispersion de la lumière par un prisme",
+              "Décrire le spectre électromagnétique",
+            ],
+          },
+          {
+            id: "quat-fr-pc-reactions",
+            name: { fr: "Réactions chimiques", en: "Chemical reactions" },
+            objectives: [
+              "Écrire et équilibrer une équation de réaction chimique",
+              "Identifier réactifs et produits",
+              "Décrire une combustion (complète et incomplète)",
+              "Expliquer la conservation de la masse lors d'une réaction",
+              "Calculer des quantités de matière simples",
+            ],
+          },
+          {
+            id: "quat-fr-pc-atoms",
+            name: { fr: "Atomes et molécules", en: "Atoms and molecules" },
+            objectives: [
+              "Décrire le modèle simplifié de l'atome (noyau, électrons)",
+              "Lire et interpréter un symbole atomique",
+              "Distinguer atomes, ions et molécules",
+              "Représenter des molécules simples (formule développée)",
+            ],
           },
         ],
       },
@@ -120,6 +193,37 @@ export const bacFrancais: Curriculum = {
             id: "trois-fr-chem",
             name: { fr: "Structure de la matière", en: "Structure of matter" },
             objectives: ["Modèle atomique", "Ions et pH"],
+          },
+        ],
+        "physique-chimie": [
+          {
+            id: "trois-fr-pc-mechanics",
+            name: { fr: "Mécanique — mouvement et forces", en: "Mechanics — movement and forces" },
+            objectives: [
+              "Calculer la vitesse moyenne d'un objet ($v = d/t$)",
+              "Appliquer la relation poids-masse ($P = m \\times g$)",
+              "Décrire l'interaction gravitationnelle et l'interaction électrostatique",
+              "Utiliser la loi d'Ohm et les lois des circuits (série et dérivation)",
+            ],
+          },
+          {
+            id: "trois-fr-pc-chemistry",
+            name: { fr: "Chimie — atomes, ions et réactions", en: "Chemistry — atoms, ions and reactions" },
+            objectives: [
+              "Décrire le modèle de l'atome (noyau, électrons)",
+              "Définir et calculer des ions, charges et pH",
+              "Écrire et équilibrer des équations de réaction",
+              "Calculer des concentrations en solution ($C = n/V$)",
+            ],
+          },
+          {
+            id: "trois-fr-pc-waves",
+            name: { fr: "Signaux et ondes", en: "Signals and waves" },
+            objectives: [
+              "Caractériser une onde sonore (fréquence, amplitude)",
+              "Appliquer la relation $v = \\lambda \\times f$",
+              "Décrire le spectre lumineux visible et les rayonnements invisibles",
+            ],
           },
         ],
       },
@@ -182,6 +286,37 @@ export const bacFrancais: Curriculum = {
             objectives: [
               "Décrire la constitution de la matière",
               "Modéliser une transformation chimique",
+            ],
+          },
+        ],
+        "physique-chimie": [
+          {
+            id: "sec-fr-pc-waves",
+            name: { fr: "Ondes et signaux", en: "Waves and signals" },
+            objectives: [
+              "Caractériser une onde sonore : période, fréquence, amplitude",
+              "Appliquer $v = \\lambda \\times f$ et calculer la célérité",
+              "Appliquer les lois de la réflexion et de la réfraction (Snell-Descartes)",
+              "Distinguer les différents domaines du spectre électromagnétique",
+            ],
+          },
+          {
+            id: "sec-fr-pc-movements",
+            name: { fr: "Mouvements et interactions", en: "Movements and interactions" },
+            objectives: [
+              "Décrire un mouvement (rectiligne uniforme, circulaire, varié)",
+              "Appliquer la deuxième loi de Newton ($\\vec{F} = m\\vec{a}$) dans des cas simples",
+              "Identifier et représenter les interactions (gravitationnelle, électrique, contact)",
+            ],
+          },
+          {
+            id: "sec-fr-pc-matter",
+            name: { fr: "Constitution et transformations de la matière", en: "Constitution and transformations of matter" },
+            objectives: [
+              "Décrire l'organisation de la matière à l'échelle atomique et moléculaire",
+              "Écrire et équilibrer une équation de réaction chimique",
+              "Calculer une quantité de matière ($n = m/M$) et une concentration molaire ($C = n/V$)",
+              "Identifier un réactif limitant",
             ],
           },
         ],

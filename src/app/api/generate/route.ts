@@ -8,7 +8,8 @@ import * as admin from "firebase-admin";
 import { adminDb, verifySession } from "@/lib/firebase-admin";
 import { getAllElements, formatElementsForPrompt } from "@/lib/chemistry";
 import { getHumanitiesContext } from "@/lib/humanities";
-import { GEOGRAPHIC_SUBJECTS } from "@/data/curricula";
+import { GEOGRAPHIC_SUBJECTS, buildChaptersSummary } from "@/data/curricula";
+import { getTeacherStyle, saveTeacherStyle, buildTeacherStylePrompt } from "@/lib/teacherStyle";
 
 const MONTHLY_PERIOD_MS = 30 * 24 * 60 * 60 * 1000;
 const MONTHLY_LIMITS = { free: 1, pro: 10 } as const;
@@ -26,7 +27,7 @@ const ExamContextSchema = z.object({
   levelId: z.string(),
   subject: z.enum([
     // Sciences
-    "mathematics", "physics", "chemistry", "biology", "svt", "informatics", "nsi", "environmental-systems",
+    "mathematics", "physics", "chemistry", "physique-chimie", "biology", "svt", "informatics", "nsi", "environmental-systems",
     // Humanities & Social Sciences
     "history", "geography", "history-geography", "philosophy", "civic-education",
     "economics", "ses", "sociology", "psychology", "global-politics", "law",
@@ -265,7 +266,7 @@ export async function POST(request: NextRequest) {
     
     // Fetch domain-specific data if needed
     let extraContext: string | undefined;
-    if (context.subject === "chemistry") {
+    if (context.subject === "chemistry" || context.subject === "physique-chimie") {
       try {
         const elements = await getAllElements();
         extraContext = "USE THESE ATOMIC VALUES FOR CALCULATIONS:\n" + formatElementsForPrompt(elements);
@@ -290,8 +291,21 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const systemPrompt = buildGenerateSystemPrompt(context, hasDocument);
-    const userPrompt = buildGenerateUserPrompt(context, extraContext);
+    // Fetch teacher style for personalised prompt injection (non-blocking)
+    const teacherStyle = !isAdjustment
+      ? await getTeacherStyle(uid, context.curriculumId, context.subject).catch(() => null)
+      : null;
+    const teacherStylePrompt = teacherStyle ? buildTeacherStylePrompt(teacherStyle) : "";
+
+    // Chapter summary goes in the user message (keeps system prompt fully static → cacheable)
+    const chaptersSummary = context.curriculumId !== "university"
+      ? buildChaptersSummary(context.curriculumId, context.levelId, context.subject, context.chapterIds)
+      : undefined;
+
+    // Static system prompt — same for all requests with identical (language, curriculum, subject)
+    const systemPrompt = buildGenerateSystemPrompt(context);
+    // Dynamic user prompt — carries per-request context (chapters, teacher style, document note)
+    const userPrompt = buildGenerateUserPrompt(context, extraContext, chaptersSummary, teacherStylePrompt, hasDocument);
 
     // ── AI Generation (Primary: Claude, Fallback: Gemini) ───────────────────
     let stream: AsyncIterable<any>;
@@ -329,15 +343,29 @@ export async function POST(request: NextRequest) {
           messages.push({ role: "user", content: userPrompt });
         }
 
+        // max_tokens scaled to exerciseCount — avoids waiting for unused capacity
+        const maxTokens = Math.min(
+          GENERATE_MAX_TOKENS,
+          Math.max(4000, context.exerciseCount * 1800 + 1500)
+        );
+
         const claudeStream = await anthropic.messages.create({
           model: GENERATE_MODEL,
-          max_tokens: GENERATE_MAX_TOKENS,
-          system: systemPrompt,
+          max_tokens: maxTokens,
+          // Cache the static system prompt — same block reused across requests
+          // for same (language, curriculum, subject), cutting TTFT by ~50 %
+          system: [
+            {
+              type: "text" as const,
+              text: systemPrompt,
+              cache_control: { type: "ephemeral" } as any,
+            },
+          ],
           messages: messages,
           stream: true,
         }, {
           headers: {
-            "anthropic-beta": "pdfs-2024-09-25"
+            "anthropic-beta": "prompt-caching-2024-07-31,pdfs-2024-09-25",
           }
         });
 
@@ -506,6 +534,17 @@ export async function POST(request: NextRequest) {
             }, { merge: true });
 
             batch.commit().catch((e) => console.error("[/api/generate] Failed to update stats:", e));
+
+            // Save teacher style snapshot for personalisation (fire-and-forget)
+            saveTeacherStyle(
+              uid,
+              context,
+              allExercises.map((ex: any) => ({
+                statement: ex.statement ?? "",
+                type: ex.type ?? "problem_solving",
+                difficulty: ex.difficulty ?? "medium",
+              }))
+            ).catch((e) => console.warn("[/api/generate] Failed to save teacher style:", e));
           }
         } catch (err) {
           console.error(`[/api/generate] ${providerName} JSON parse failed. Provider: ${providerName}. Length:`, accumulated.length);
