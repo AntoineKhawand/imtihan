@@ -1,22 +1,22 @@
-import { test, expect } from '@playwright/test';
+﻿import { test, expect } from '@playwright/test';
 
 test.describe('Final Visual Audit', () => {
 
   test('capture landing page - desktop', async ({ page }) => {
-    await page.goto('http://localhost:3000');
+    await page.goto('http://localhost:3005');
     await page.waitForLoadState('networkidle');
     await page.screenshot({ path: 'test-results/landing-desktop.png', fullPage: true });
   });
 
   test('capture landing page - mobile', async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 812 });
-    await page.goto('http://localhost:3000');
+    await page.goto('http://localhost:3005');
     await page.waitForLoadState('networkidle');
     await page.screenshot({ path: 'test-results/landing-mobile.png', fullPage: true });
   });
 
   test('capture community library & preview modal', async ({ page }) => {
-    await page.goto('http://localhost:3000/community');
+    await page.goto('http://localhost:3005/community');
     await page.waitForLoadState('networkidle');
     
     // Capture library grid
@@ -40,13 +40,16 @@ test.describe('Final Visual Audit', () => {
   });
 
   test('capture authentication pages', async ({ page }) => {
-    await page.goto('http://localhost:3000/auth/login');
-    await page.waitForLoadState('networkidle');
+    // Use 'load' not 'networkidle' — Firebase Auth SDK keeps long-polling which
+    // prevents networkidle from ever firing on auth pages.
+    await page.goto('http://localhost:3005/auth/login');
+    await page.waitForLoadState('load');
     await page.screenshot({ path: 'test-results/auth-login.png' });
 
-    await page.goto('http://localhost:3000/auth/register');
-    await page.waitForLoadState('networkidle');
+    await page.goto('http://localhost:3005/auth/register');
+    await page.waitForLoadState('load');
     await page.screenshot({ path: 'test-results/auth-register.png' });
   });
 
 });
+

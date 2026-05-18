@@ -1,6 +1,6 @@
-import { test, expect } from "@playwright/test";
+﻿import { test, expect } from "@playwright/test";
 
-const BASE_URL = "http://localhost:3000";
+const BASE_URL = "http://localhost:3005";
 
 test.describe("Security Tests", () => {
   test("XSS attempt is sanitized in search", async ({ page }) => {

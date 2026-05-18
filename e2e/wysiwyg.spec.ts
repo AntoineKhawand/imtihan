@@ -1,4 +1,4 @@
-import { test, expect, Page } from '@playwright/test';
+﻿import { test, expect, Page } from '@playwright/test';
 
 test.describe('WYSIWYG Editor', () => {
   test.setTimeout(120000); // Allow time for Next.js first compile
@@ -131,3 +131,4 @@ test.describe('WYSIWYG Editor', () => {
     await expect(editorNode).not.toBeVisible({ timeout: 5000 });
   });
 });
+
