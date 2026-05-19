@@ -224,6 +224,12 @@ export function renderContent(raw: string): string {
     return `\\ce{${(inner1 || inner2 || "").trim()}}`;
   });
 
+  // Join chemistry state symbols that appear on their own line after a formula.
+  // Claude sometimes puts (aq), (l), (g), (s) on a new line after the formula,
+  // which causes them to appear as raw text before the next sentence.
+  text = text.replace(/(\\ce\{(?:[^{}]|\{[^{}]*\})*\})\s*\n\s*\((aq|l|g|s)\)/g, '$1($2)');
+  text = text.replace(/(\$[^$\n]{1,150}\$)\s*\n\s*\((aq|l|g|s)\)/g, '$1($2)');
+
   // 1. Identify all Mermaid blocks (both fenced and naked)
   const mermaidBlocks: Array<{ code: string; raw: string }> = [];
   // Removed generic "chart" as it causes false positives with plain text descriptions.
