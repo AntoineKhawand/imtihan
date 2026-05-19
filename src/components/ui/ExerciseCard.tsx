@@ -272,7 +272,7 @@ export function ExerciseCard({
         </div>
 
         {/* Action menu trigger */}
-        <div data-tutorial="exercise-actions" className="flex items-center gap-1.5 flex-shrink-0">
+        <div className="flex items-center gap-1.5 flex-shrink-0">
           {onTransform && (
             <div className="flex items-center bg-[var(--bg-subtle)]/50 rounded-lg border border-[var(--border)] p-0.5 mr-1">
               <button
@@ -314,7 +314,7 @@ export function ExerciseCard({
             </div>
           )}
 
-          <div className="relative">
+          <div data-tutorial="exercise-actions" className="relative">
             <button
               onClick={() => setShowActions(!showActions)}
               className={cn(

@@ -223,6 +223,13 @@ export default function GeneratePage() {
     if (!context) return;
     setRegeneratingId(id);
     try {
+      const original = exercises.find((e) => e.id === id);
+      const exercisePoints = original?.points ?? Math.round(context.totalPoints / Math.max(exercises.length, 1));
+
+      const difficultyNote = targetDifficulty
+        ? `IMPORTANT: Generate a ${targetDifficulty.toUpperCase()} difficulty exercise. This is a difficulty adjustment — the exercise MUST be ${targetDifficulty}.`
+        : "";
+
       const res = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -230,11 +237,13 @@ export default function GeneratePage() {
           context: {
             ...context,
             exerciseCount: 1,
+            totalPoints: exercisePoints,
+            teacherNotes: [difficultyNote, context.teacherNotes].filter(Boolean).join("\n"),
             ...(targetDifficulty ? {
               difficultyMix: {
-                easy: targetDifficulty === "easy" ? 1 : 0,
+                easy:   targetDifficulty === "easy"   ? 1 : 0,
                 medium: targetDifficulty === "medium" ? 1 : 0,
-                hard: targetDifficulty === "hard" ? 1 : 0,
+                hard:   targetDifficulty === "hard"   ? 1 : 0,
               }
             } : {}),
           },
@@ -250,6 +259,21 @@ export default function GeneratePage() {
       if (!reader) return;
       const decoder = new TextDecoder();
       let sseBuffer = "";
+      let applied = false; // prevent double-update if both progressive and done fire
+
+      const applyExercise = (ex: Exercise) => {
+        if (applied) return;
+        applied = true;
+        const newExercise: Exercise = { ...ex, id: shortId() };
+        setExercises((prev) => {
+          const idx = prev.findIndex((e) => e.id === id);
+          if (idx === -1) return prev;
+          const next = [...prev];
+          next[idx] = { ...newExercise, number: idx + 1 };
+          persistExercises(next);
+          return next;
+        });
+      };
 
       while (true) {
         const { done, value } = await reader.read();
@@ -261,17 +285,10 @@ export default function GeneratePage() {
           if (!line.startsWith("data: ")) continue;
           try {
             const data = JSON.parse(line.slice(6));
-            if (data.done && data.exercises?.[0]) {
-              const newExercise: Exercise = { ...data.exercises[0], id: shortId() };
-              setExercises((prev) => {
-                const idx = prev.findIndex((e) => e.id === id);
-                if (idx === -1) return prev;
-                const next = [...prev];
-                next[idx] = { ...newExercise, number: idx + 1 };
-                persistExercises(next);
-                return next;
-              });
-            }
+            // Progressive path: exercise emitted mid-stream (most common for single-exercise regen)
+            if (data.exercise) applyExercise(data.exercise);
+            // Final path: exercise arrived only at stream end
+            if (data.done && data.exercises?.[0]) applyExercise(data.exercises[0]);
           } catch { /* skip */ }
         }
       }
@@ -559,16 +576,18 @@ export default function GeneratePage() {
                 </div>
               )}
 
-              <div data-tutorial="export-button" className="pt-4">
-                <Button
-                  onClick={() => router.push("/create/export")}
-                  size="lg"
-                  className="w-full"
-                  icon={<ArrowRight size={16} />}
-                  iconPosition="right"
-                >
-                  Export exam
-                </Button>
+              <div className="pt-4">
+                <div data-tutorial="export-button">
+                  <Button
+                    onClick={() => router.push("/create/export")}
+                    size="lg"
+                    className="w-full"
+                    icon={<ArrowRight size={16} />}
+                    iconPosition="right"
+                  >
+                    Export exam
+                  </Button>
+                </div>
               </div>
             </div>
           )}

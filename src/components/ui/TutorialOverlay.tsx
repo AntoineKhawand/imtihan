@@ -4,11 +4,9 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import { ChevronRight, ChevronLeft, HelpCircle } from "lucide-react";
 
 const STORAGE_KEY = "imtihan_tour_v1";
-const PAD = 10;        // extra padding around the highlighted element (px)
-const GAP = 16;        // gap between the spotlight edge and the tooltip card (px)
-const TOOLTIP_W = 300; // tooltip card fixed width (px)
-
-const TRANSITION = "all 420ms cubic-bezier(0.4, 0, 0.2, 1)";
+const PAD = 10;        // padding around highlighted element (px)
+const GAP = 16;        // gap between spotlight edge and tooltip (px)
+const TOOLTIP_W = 300; // tooltip fixed width (px)
 
 interface Step {
   selector: string | null;
@@ -34,7 +32,7 @@ const STEPS: Step[] = [
     selector: '[data-tutorial="exercise-actions"]',
     title: "Refine any exercise",
     body: "Click ⚡ to regenerate, make it easier or harder, edit manually, or remove it entirely.",
-    side: "bottom",
+    side: "left",
   },
   {
     selector: '[data-tutorial="solution-toggle"]',
@@ -50,94 +48,49 @@ const STEPS: Step[] = [
   },
 ];
 
-interface SpotRect {
-  top: number;
-  left: number;
-  width: number;
-  height: number;
-}
+interface SpotRect { top: number; left: number; width: number; height: number }
 
-// ─── helpers ────────────────────────────────────────────────────────────────
+function clamp(v: number, lo: number, hi: number) { return Math.max(lo, Math.min(hi, v)); }
 
-function clamp(value: number, min: number, max: number) {
-  return Math.max(min, Math.min(max, value));
-}
-
-/** Wait for the element to be fully visible after a smooth scroll, then measure it. */
-function measureAfterScroll(el: Element): Promise<SpotRect> {
-  return new Promise((resolve) => {
-    el.scrollIntoView({ behavior: "smooth", block: "center" });
-    // Wait for scroll animation + 2 paint frames to settle
-    setTimeout(() => {
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          const r = el.getBoundingClientRect();
-          resolve({
-            top: r.top - PAD,
-            left: r.left - PAD,
-            width: r.width + PAD * 2,
-            height: r.height + PAD * 2,
-          });
-        });
-      });
-    }, 380);
-  });
-}
-
-function computeTooltipStyle(
-  spot: SpotRect | null,
-  side: Step["side"],
-): React.CSSProperties {
-  const vw = window.innerWidth;
-  const vh = window.innerHeight;
-
+function getTooltipStyle(spot: SpotRect | null, side: Step["side"]): React.CSSProperties {
   if (!spot || side === "center") {
-    return {
-      position: "fixed",
-      top: "50%",
-      left: "50%",
-      transform: "translate(-50%, -50%)",
-    };
+    return { position: "fixed", top: "50%", left: "50%", transform: "translate(-50%,-50%)" };
   }
 
-  const clampLeft = (ideal: number) =>
-    clamp(ideal, 12, vw - TOOLTIP_W - 12);
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+  const clampL = (x: number) => clamp(x, 12, vw - TOOLTIP_W - 12);
 
   if (side === "bottom") {
     return {
       position: "fixed",
       top: clamp(spot.top + spot.height + GAP, 12, vh - 240),
-      left: clampLeft(spot.left + spot.width / 2 - TOOLTIP_W / 2),
+      left: clampL(spot.left + spot.width / 2 - TOOLTIP_W / 2),
     };
   }
-
   if (side === "top") {
-    const spaceAbove = spot.top - GAP;
     return {
       position: "fixed",
-      // Anchor the BOTTOM of the tooltip to (spot.top - GAP) from the top
       bottom: clamp(vh - spot.top + GAP, 12, vh - 240),
-      left: clampLeft(spot.left + spot.width / 2 - TOOLTIP_W / 2),
+      left: clampL(spot.left + spot.width / 2 - TOOLTIP_W / 2),
     };
   }
-
   if (side === "left") {
-    const tooltipRight = spot.left - GAP;
-    if (tooltipRight - TOOLTIP_W < 12) {
-      // Not enough space on the left → flip to bottom
+    const leftEdge = spot.left - GAP - TOOLTIP_W;
+    if (leftEdge < 12) {
+      // flip to bottom when there's no room on the left
       return {
         position: "fixed",
         top: clamp(spot.top + spot.height + GAP, 12, vh - 240),
-        left: clampLeft(spot.left + spot.width / 2 - TOOLTIP_W / 2),
+        left: clampL(spot.left + spot.width / 2 - TOOLTIP_W / 2),
       };
     }
     return {
       position: "fixed",
       top: clamp(spot.top + spot.height / 2 - 90, 12, vh - 240),
-      left: tooltipRight - TOOLTIP_W,
+      left: leftEdge,
     };
   }
-
   if (side === "right") {
     return {
       position: "fixed",
@@ -145,25 +98,18 @@ function computeTooltipStyle(
       left: clamp(spot.left + spot.width + GAP, 12, vw - TOOLTIP_W - 12),
     };
   }
-
-  return { position: "fixed", top: "50%", left: "50%", transform: "translate(-50%, -50%)" };
+  return { position: "fixed", top: "50%", left: "50%", transform: "translate(-50%,-50%)" };
 }
 
-// ─── component ──────────────────────────────────────────────────────────────
-
-export function TutorialOverlay({
-  isFreeTier,
-  ready,
-}: {
-  isFreeTier: boolean;
-  ready: boolean;
-}) {
-  const [active, setActive] = useState(false);
-  const [step, setStep] = useState(0);
-  const [spot, setSpot] = useState<SpotRect | null>(null);
+export function TutorialOverlay({ isFreeTier, ready }: { isFreeTier: boolean; ready: boolean }) {
+  const [active, setActive]           = useState(false);
+  const [step, setStep]               = useState(0);
+  const [spot, setSpot]               = useState<SpotRect | null>(null);
   const [tooltipStyle, setTooltipStyle] = useState<React.CSSProperties>({});
-  const [tooltipOpacity, setTooltipOpacity] = useState(1);
-  const measuringRef = useRef(false);
+  // Separate opacity states so panels and tooltip can fade independently
+  const [panelOpacity, setPanelOpacity]     = useState(0);
+  const [tooltipOpacity, setTooltipOpacity] = useState(0);
+  const transitioning = useRef(false);
 
   // Auto-show once for free-tier users after generation finishes
   useEffect(() => {
@@ -173,86 +119,108 @@ export function TutorialOverlay({
     return () => clearTimeout(t);
   }, [isFreeTier, ready]);
 
-  const applySpot = useCallback((newSpot: SpotRect | null, stepIdx: number) => {
+  const measureAndShow = useCallback(async (stepIdx: number) => {
+    if (transitioning.current) return;
+    transitioning.current = true;
+
+    // 1. Fade everything out
+    setPanelOpacity(0);
+    setTooltipOpacity(0);
+    await new Promise(r => setTimeout(r, 160));
+
+    // 2. Find element and scroll it into view
+    const def = STEPS[stepIdx];
+    let newSpot: SpotRect | null = null;
+
+    if (def.selector) {
+      const el = document.querySelector(def.selector);
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+        // Wait for scroll to fully settle (smooth scroll ~400ms) then paint
+        await new Promise(r => setTimeout(r, 420));
+        await new Promise<void>(r => requestAnimationFrame(() => requestAnimationFrame(() => r())));
+        const r = el.getBoundingClientRect();
+        newSpot = {
+          top:    r.top    - PAD,
+          left:   r.left   - PAD,
+          width:  r.width  + PAD * 2,
+          height: r.height + PAD * 2,
+        };
+      }
+    } else {
+      // Center step — no scroll needed, tiny delay
+      await new Promise(r => setTimeout(r, 60));
+    }
+
+    // 3. Snap panels to new position (while still invisible)
     setSpot(newSpot);
-    const style = computeTooltipStyle(newSpot, STEPS[stepIdx].side);
-    setTooltipStyle(style);
+    setTooltipStyle(getTooltipStyle(newSpot, def.side));
+
+    // 4. One more frame so DOM reflects new positions before fading in
+    await new Promise<void>(r => requestAnimationFrame(() => r()));
+
+    // 5. Fade everything in
+    setPanelOpacity(1);
     setTooltipOpacity(1);
+
+    transitioning.current = false;
   }, []);
 
-  const measureStep = useCallback(async (stepIdx: number) => {
-    if (measuringRef.current) return;
-    measuringRef.current = true;
-
-    const def = STEPS[stepIdx];
-
-    // Fade out tooltip while repositioning
-    setTooltipOpacity(0);
-
-    if (!def.selector) {
-      await new Promise(r => setTimeout(r, 80));
-      applySpot(null, stepIdx);
-      measuringRef.current = false;
-      return;
-    }
-
-    const el = document.querySelector(def.selector);
-    if (!el) {
-      applySpot(null, stepIdx);
-      measuringRef.current = false;
-      return;
-    }
-
-    const measured = await measureAfterScroll(el);
-    applySpot(measured, stepIdx);
-    measuringRef.current = false;
-  }, [applySpot]);
-
-  // Re-measure whenever step or active state changes
+  // Trigger measurement whenever step or active changes
   useEffect(() => {
     if (!active) return;
-    measureStep(step);
+    measureAndShow(step);
 
-    const onResize = () => measureStep(step);
+    const onResize = () => {
+      // On resize, re-measure current step but don't animate — just snap
+      const def = STEPS[step];
+      if (def.selector) {
+        const el = document.querySelector(def.selector);
+        if (el) {
+          const r = el.getBoundingClientRect();
+          const s: SpotRect = {
+            top: r.top - PAD, left: r.left - PAD,
+            width: r.width + PAD * 2, height: r.height + PAD * 2,
+          };
+          setSpot(s);
+          setTooltipStyle(getTooltipStyle(s, def.side));
+        }
+      }
+    };
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
-  }, [active, step, measureStep]);
+  }, [active, step, measureAndShow]);
 
   const dismiss = useCallback(() => {
     localStorage.setItem(STORAGE_KEY, "1");
-    setActive(false);
+    setPanelOpacity(0);
+    setTooltipOpacity(0);
+    setTimeout(() => setActive(false), 200);
   }, []);
 
-  const goTo = useCallback((targetStep: number) => {
-    setStep(targetStep);
-  }, []);
+  const goTo = (s: number) => setStep(s);
+  const next = () => { step < STEPS.length - 1 ? goTo(step + 1) : dismiss(); };
+  const prev = () => { if (step > 0) goTo(step - 1); };
+  const reopen = () => { setStep(0); setActive(true); };
 
-  const next = () => {
-    if (step < STEPS.length - 1) goTo(step + 1);
-    else dismiss();
-  };
-
-  const prev = () => {
-    if (step > 0) goTo(step - 1);
-  };
-
-  const reopen = () => {
-    setStep(0);
-    setActive(true);
-  };
-
-  const cur = STEPS[step];
+  const cur    = STEPS[step];
   const isLast = step === STEPS.length - 1;
 
-  // ── Panel values (null = full-screen overlay for center step) ──────────────
-  const topH    = spot ? Math.max(0, spot.top) : null;
-  const bottomT = spot ? spot.top + spot.height : null;
-  const leftW   = spot ? Math.max(0, spot.left) : null;
-  const rightL  = spot ? spot.left + spot.width : null;
+  // Spotlight panel values
+  const topH    = spot ? Math.max(0, spot.top)              : 0;
+  const botT    = spot ? spot.top + spot.height              : 0;
+  const leftW   = spot ? Math.max(0, spot.left)             : 0;
+  const rightL  = spot ? spot.left + spot.width              : 0;
+
+  const panelStyle = (extra: React.CSSProperties): React.CSSProperties => ({
+    ...extra,
+    opacity: panelOpacity,
+    transition: "opacity 200ms ease",
+  });
 
   return (
     <>
-      {/* ── Help (?) button — visible when tutorial is not active ── */}
+      {/* ── Help (?) button ── */}
       {!active && isFreeTier && ready && (
         <button
           onClick={reopen}
@@ -268,75 +236,44 @@ export function TutorialOverlay({
         <>
           {spot ? (
             <>
-              {/* Top */}
-              <div
-                className="fixed inset-x-0 top-0 z-[998] bg-black/75"
-                style={{ height: topH ?? 0, transition: TRANSITION }}
-              />
-              {/* Bottom */}
-              <div
-                className="fixed inset-x-0 bottom-0 z-[998] bg-black/75"
-                style={{ top: bottomT ?? 0, transition: TRANSITION }}
-              />
-              {/* Left */}
-              <div
-                className="fixed top-0 left-0 bottom-0 z-[998] bg-black/75"
-                style={{
-                  top: spot.top,
-                  height: spot.height,
-                  width: leftW ?? 0,
-                  transition: TRANSITION,
-                }}
-              />
-              {/* Right */}
-              <div
-                className="fixed top-0 right-0 bottom-0 z-[998] bg-black/75"
-                style={{
-                  top: spot.top,
-                  height: spot.height,
-                  left: rightL ?? 0,
-                  transition: TRANSITION,
-                }}
-              />
+              {/* Top strip */}
+              <div className="fixed inset-x-0 top-0 z-[998] bg-black/75" style={panelStyle({ height: topH })} />
+              {/* Bottom strip */}
+              <div className="fixed inset-x-0 bottom-0 z-[998] bg-black/75" style={panelStyle({ top: botT })} />
+              {/* Left strip */}
+              <div className="fixed left-0 z-[998] bg-black/75" style={panelStyle({ top: spot.top, width: leftW, height: spot.height })} />
+              {/* Right strip */}
+              <div className="fixed right-0 z-[998] bg-black/75" style={panelStyle({ top: spot.top, left: rightL, height: spot.height })} />
               {/* Glow ring */}
               <div
                 className="fixed z-[998] rounded-xl pointer-events-none"
                 style={{
-                  top: spot.top,
-                  left: spot.left,
-                  width: spot.width,
-                  height: spot.height,
-                  boxShadow: "0 0 0 2px rgba(255,255,255,0.45), 0 0 20px 4px rgba(255,255,255,0.08)",
-                  transition: TRANSITION,
+                  top: spot.top, left: spot.left, width: spot.width, height: spot.height,
+                  boxShadow: "0 0 0 2px rgba(255,255,255,0.5), 0 0 24px 6px rgba(255,255,255,0.08)",
+                  opacity: panelOpacity,
+                  transition: "opacity 200ms ease",
                 }}
               />
             </>
           ) : (
-            <div className="fixed inset-0 z-[998] bg-black/75" style={{ transition: TRANSITION }} />
+            <div className="fixed inset-0 z-[998] bg-black/75" style={{ opacity: panelOpacity, transition: "opacity 200ms ease" }} />
           )}
 
           {/* ── Tooltip card ── */}
           <div
             className="fixed z-[999] bg-[var(--bg)] rounded-2xl shadow-2xl border border-[var(--border)] p-5 pointer-events-auto"
-            style={{
-              ...tooltipStyle,
-              width: TOOLTIP_W,
-              opacity: tooltipOpacity,
-              transition: `top 420ms cubic-bezier(0.4, 0, 0.2, 1), bottom 420ms cubic-bezier(0.4, 0, 0.2, 1), left 420ms cubic-bezier(0.4, 0, 0.2, 1), right 420ms cubic-bezier(0.4, 0, 0.2, 1), opacity 220ms ease`,
-            }}
+            style={{ ...tooltipStyle, width: TOOLTIP_W, opacity: tooltipOpacity, transition: "opacity 200ms ease" }}
           >
-            {/* Progress dots */}
+            {/* Progress dots (clickable) */}
             <div className="flex items-center gap-1.5 mb-4">
               {STEPS.map((_, i) => (
                 <button
                   key={i}
                   onClick={() => goTo(i)}
                   className={`h-1.5 rounded-full transition-all duration-300 ${
-                    i === step
-                      ? "w-5 bg-[var(--accent)]"
-                      : i < step
-                      ? "w-1.5 bg-[var(--accent)]/50"
-                      : "w-1.5 bg-[var(--border)]"
+                    i === step       ? "w-5 bg-[var(--accent)]"
+                    : i < step      ? "w-1.5 bg-[var(--accent)]/50"
+                    :                  "w-1.5 bg-[var(--border)]"
                   }`}
                 />
               ))}
@@ -352,12 +289,8 @@ export function TutorialOverlay({
               {cur.body}
             </p>
 
-            {/* Navigation */}
             <div className="flex items-center justify-between mt-5">
-              <button
-                onClick={dismiss}
-                className="text-[11px] text-[var(--text-tertiary)] hover:text-[var(--text-secondary)] transition-colors"
-              >
+              <button onClick={dismiss} className="text-[11px] text-[var(--text-tertiary)] hover:text-[var(--text-secondary)] transition-colors">
                 Skip
               </button>
               <div className="flex items-center gap-2">
@@ -366,16 +299,14 @@ export function TutorialOverlay({
                     onClick={prev}
                     className="flex items-center gap-1 text-[11px] font-medium text-[var(--text-secondary)] hover:text-[var(--text)] px-2.5 py-1.5 rounded-lg hover:bg-[var(--bg-subtle)] transition-colors"
                   >
-                    <ChevronLeft size={12} />
-                    Back
+                    <ChevronLeft size={12} /> Back
                   </button>
                 )}
                 <button
                   onClick={next}
                   className="flex items-center gap-1 text-[11px] font-semibold bg-[var(--accent)] text-white px-3.5 py-1.5 rounded-lg hover:opacity-90 transition-opacity"
                 >
-                  {isLast ? "Got it!" : "Next"}
-                  {!isLast && <ChevronRight size={12} />}
+                  {isLast ? "Got it!" : "Next"} {!isLast && <ChevronRight size={12} />}
                 </button>
               </div>
             </div>
