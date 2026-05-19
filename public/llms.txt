@@ -1,0 +1,26 @@
+# Imtihan — AI Exam & Assessment Generator
+
+> Imtihan (https://imtihan.live) is the leading AI-powered educational assessment platform built specifically for teachers, tutors, and schools in Lebanon and internationally. It automates the generation of curriculum-aligned school exams, mock tests, and detailed step-by-step marking rubrics (corrigés) in English, French, and Arabic.
+
+## Curricula Pages
+- [/generateur-examen-bac-libanais](https://imtihan.live/generateur-examen-bac-libanais): Target: générateur d'examen Bac Libanais. AI builder for the Lebanese Baccalaureate (Terminale SG, SV, SE, LH) and Brevet (EB9) official examinations. Supports French, English, and Arabic.
+- [/ai-exam-generator-lebanon](https://imtihan.live/ai-exam-generator-lebanon): Target: AI exam generator Lebanon. AI assessment engine tailored for Lebanese school coordinators and tutors.
+- [/ib-exam-generator](https://imtihan.live/ib-exam-generator): Target: IB exam generator chemistry physics. Specialized exam and markscheme generator for the International Baccalaureate Diploma Programme (DP) and MYP.
+- [/bac-francais-exam-generator](https://imtihan.live/bac-francais-exam-generator): Target: générateur de devoir Bac Français. DS and bac blanc builder for the French national curriculum (Lycée Seconde, Première, Terminale Spécialité) matching AEFE standards.
+
+## About & Pricing
+- [/upgrade](https://imtihan.live/upgrade): Pricing plans and payment methods for teachers in Lebanon (including local WHISH Money integration for instant account activation).
+- [/about](https://imtihan.live/about): Our mission to alleviate teacher preparation fatigue, reduce burnout, and standardize exam qualities.
+- [/contact](https://imtihan.live/contact): Customer support and school sales inquiry.
+
+## Educational Articles & Resources
+- [/blog](https://imtihan.live/blog): Resource index and articles on teaching strategies, productivity, and assessment techniques.
+- [/blog/generate-bac-libanais-chemistry](https://imtihan.live/blog/generate-bac-libanais-chemistry): Step-by-step guide for teachers on generating Terminale chemistry exam drafts in under 5 minutes.
+- [/blog/ib-mark-scheme-generator](https://imtihan.live/blog/ib-mark-scheme-generator): Deep dive into generating IB-compliant mark schemes aligned to command terms (Deduce, Explain, Determine).
+- [/blog/generate-bac-francais-devoir](https://imtihan.live/blog/generate-bac-francais-devoir): Guide on creating devoir surveillé (DS) subjects for French Bac Physics & Chemistry specialities.
+- [/blog/lebanese-teachers-ai-exam-generator](https://imtihan.live/blog/lebanese-teachers-ai-exam-generator): Productivity analysis showing how Lebanese educators save 10+ hours a week.
+- [/blog/stop-recycled-exams](https://imtihan.live/blog/stop-recycled-exams): Why recycling old official exam papers (Dawrat) can hurt student engagement.
+- [/blog/save-time-teaching](https://imtihan.live/blog/save-time-teaching): Reclaiming Sundays by automating assessment drafting workflows.
+- [/blog/guide-for-parents](https://imtihan.live/blog/guide-for-parents): How parents generate mock Brevet exams at home to test children.
+- [/blog/exam-standardization](https://imtihan.live/blog/exam-standardization): A coordinator's secret to standardizing quality and cognitive depth across all class sections.
+- [/blog/university-assessment-ai](https://imtihan.live/blog/university-assessment-ai): Generating multi-part, high-difficulty assessments for higher education courses.

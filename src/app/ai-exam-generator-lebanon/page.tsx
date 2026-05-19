@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowRight, Check, Sparkles, BookOpen, Clock, Copy, Layers } from "lucide-react";
 import { Logo } from "@/components/ui/Logo";
 import { PublicFooter } from "@/components/layout/PublicFooter";
+import { SchemaOrg } from "@/components/SchemaOrg";
 
 export const metadata = {
   title: "AI Exam Generator Lebanon | Imtihan",
@@ -40,6 +41,33 @@ const BENEFITS = [
 export default function LebanonAiLanding() {
   return (
     <div className="min-h-screen bg-[var(--bg)] flex flex-col">
+      <SchemaOrg
+        schema={{
+          "@context": "https://schema.org",
+          "@type": "WebApplication",
+          "name": "Imtihan — AI Exam Generator Lebanon",
+          "url": "https://imtihan.live/ai-exam-generator-lebanon",
+          "description": "The leading AI exam generator tailored for teachers and schools in Lebanon. Generate curriculum-aligned exams, Brevet / Bac mock tests, and full corrigés in seconds.",
+          "applicationCategory": "EducationalApplication",
+          "operatingSystem": "All",
+          "offers": {
+            "@type": "Offer",
+            "price": "0.00",
+            "priceCurrency": "USD",
+            "category": "FreeTrial"
+          },
+          "educationalAlignment": [
+            {
+              "@type": "AlignmentObject",
+              "alignmentType": "educationalSubject",
+              "educationalFramework": "Lebanese Educational System",
+              "targetName": "Lebanese School Curriculum",
+              "targetUrl": "https://imtihan.live/ai-exam-generator-lebanon"
+            }
+          ]
+        }}
+      />
+
       {/* Navigation */}
       <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 md:px-10 h-16 bg-[var(--bg)]/75 backdrop-blur-xl border-b border-[var(--border)]/60 transition-colors">
         <Logo size={26} />

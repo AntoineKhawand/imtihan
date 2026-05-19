@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowRight, Check, Star, BookOpen, Clock, Settings, GraduationCap } from "lucide-react";
 import { Logo } from "@/components/ui/Logo";
 import { PublicFooter } from "@/components/layout/PublicFooter";
+import { SchemaOrg } from "@/components/SchemaOrg";
 
 export const metadata = {
   title: "Générateur de Devoir Bac Français | Imtihan",
@@ -40,6 +41,33 @@ const FRENCH_FEATURES = [
 export default function FrenchBacLandingPage() {
   return (
     <div className="min-h-screen bg-[var(--bg)] flex flex-col">
+      <SchemaOrg
+        schema={{
+          "@context": "https://schema.org",
+          "@type": "WebApplication",
+          "name": "Imtihan — Générateur de devoir Bac Français",
+          "url": "https://imtihan.live/bac-francais-exam-generator",
+          "description": "Générateur intelligent de devoirs surveillés (DS) et bacs blancs conformes aux programmes officiels français (Lycée de la Seconde à la Terminale Spécialité).",
+          "applicationCategory": "EducationalApplication",
+          "operatingSystem": "All",
+          "offers": {
+            "@type": "Offer",
+            "price": "0.00",
+            "priceCurrency": "USD",
+            "category": "FreeTrial"
+          },
+          "educationalAlignment": [
+            {
+              "@type": "AlignmentObject",
+              "alignmentType": "educationalSubject",
+              "educationalFramework": "Ministère de l'Éducation Nationale française (AEFE)",
+              "targetName": "Baccalauréat Français (Lycée Seconde, Première, Terminale Spécialité)",
+              "targetUrl": "https://imtihan.live/bac-francais-exam-generator"
+            }
+          ]
+        }}
+      />
+
       {/* Navigation */}
       <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 md:px-10 h-16 bg-[var(--bg)]/75 backdrop-blur-xl border-b border-[var(--border)]/60 transition-colors">
         <Logo size={26} />

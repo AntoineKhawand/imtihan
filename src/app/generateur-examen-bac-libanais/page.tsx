@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowRight, Check, Star, BookOpen, GraduationCap, Award, Printer } from "lucide-react";
 import { Logo } from "@/components/ui/Logo";
 import { PublicFooter } from "@/components/layout/PublicFooter";
+import { SchemaOrg } from "@/components/SchemaOrg";
 
 export const metadata = {
   title: "Générateur d'Examen Bac Libanais IA | Imtihan",
@@ -40,6 +41,40 @@ const FEATURES = [
 export default function BacLibanaisLanding() {
   return (
     <div className="min-h-screen bg-[var(--bg)] flex flex-col">
+      <SchemaOrg
+        schema={{
+          "@context": "https://schema.org",
+          "@type": "WebApplication",
+          "name": "Imtihan — Générateur d'examen Bac Libanais IA",
+          "url": "https://imtihan.live/generateur-examen-bac-libanais",
+          "description": "Le premier générateur d'examen Bac Libanais intelligent. Créez des examens blancs et contrôles (Terminale SG, SV, SE, LH et Brevet EB9) avec corrigé complet en 30 secondes.",
+          "applicationCategory": "EducationalApplication",
+          "operatingSystem": "All",
+          "offers": {
+            "@type": "Offer",
+            "price": "0.00",
+            "priceCurrency": "USD",
+            "category": "FreeTrial"
+          },
+          "educationalAlignment": [
+            {
+              "@type": "AlignmentObject",
+              "alignmentType": "educationalSubject",
+              "educationalFramework": "Lebanese National Curriculum (CRDP Liban)",
+              "targetName": "Baccalauréat Libanais (Terminale SG, SV, SE, LH)",
+              "targetUrl": "https://imtihan.live/generateur-examen-bac-libanais"
+            },
+            {
+              "@type": "AlignmentObject",
+              "alignmentType": "educationalSubject",
+              "educationalFramework": "Lebanese National Curriculum (CRDP Liban)",
+              "targetName": "Brevet Libanais (EB9)",
+              "targetUrl": "https://imtihan.live/generateur-examen-bac-libanais"
+            }
+          ]
+        }}
+      />
+
       {/* Navigation */}
       <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 md:px-10 h-16 bg-[var(--bg)]/75 backdrop-blur-xl border-b border-[var(--border)]/60 transition-colors">
         <Logo size={26} />

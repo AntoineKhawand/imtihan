@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowRight, Check, Award, Compass, Calculator, BookOpen, Layers, Printer } from "lucide-react";
 import { Logo } from "@/components/ui/Logo";
 import { PublicFooter } from "@/components/layout/PublicFooter";
+import { SchemaOrg } from "@/components/SchemaOrg";
 
 export const metadata = {
   title: "IB Exam Generator: Chemistry & Physics | Imtihan",
@@ -40,6 +41,40 @@ const IB_FEATURES = [
 export default function IbLandingPage() {
   return (
     <div className="min-h-screen bg-[var(--bg)] flex flex-col">
+      <SchemaOrg
+        schema={{
+          "@context": "https://schema.org",
+          "@type": "WebApplication",
+          "name": "Imtihan — IB Chemistry & Physics Exam Generator",
+          "url": "https://imtihan.live/ib-exam-generator",
+          "description": "Create IB Diploma Programme (DP) and MYP Chemistry & Physics exams in seconds. Automatically generate detailed mark schemes matching IB Command Terms and rubrics.",
+          "applicationCategory": "EducationalApplication",
+          "operatingSystem": "All",
+          "offers": {
+            "@type": "Offer",
+            "price": "0.00",
+            "priceCurrency": "USD",
+            "category": "FreeTrial"
+          },
+          "educationalAlignment": [
+            {
+              "@type": "AlignmentObject",
+              "alignmentType": "educationalSubject",
+              "educationalFramework": "International Baccalaureate (IB DP / MYP)",
+              "targetName": "IB DP Chemistry (SL/HL)",
+              "targetUrl": "https://imtihan.live/ib-exam-generator"
+            },
+            {
+              "@type": "AlignmentObject",
+              "alignmentType": "educationalSubject",
+              "educationalFramework": "International Baccalaureate (IB DP / MYP)",
+              "targetName": "IB DP Physics (SL/HL)",
+              "targetUrl": "https://imtihan.live/ib-exam-generator"
+            }
+          ]
+        }}
+      />
+
       {/* Navigation */}
       <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 md:px-10 h-16 bg-[var(--bg)]/75 backdrop-blur-xl border-b border-[var(--border)]/60 transition-colors">
         <Logo size={26} />
