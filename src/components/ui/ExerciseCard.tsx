@@ -231,6 +231,7 @@ export function ExerciseCard({
 
   return (
     <div
+      data-tutorial="exercise-card"
       className={cn(
         "card overflow-hidden transition-all duration-300",
         isRegenerating && "opacity-60 pointer-events-none"
@@ -271,7 +272,7 @@ export function ExerciseCard({
         </div>
 
         {/* Action menu trigger */}
-        <div className="flex items-center gap-1.5 flex-shrink-0">
+        <div data-tutorial="exercise-actions" className="flex items-center gap-1.5 flex-shrink-0">
           {onTransform && (
             <div className="flex items-center bg-[var(--bg-subtle)]/50 rounded-lg border border-[var(--border)] p-0.5 mr-1">
               <button
@@ -639,7 +640,7 @@ export function ExerciseCard({
       )}
 
       {/* Corrigé toggle */}
-      <div className="border-t border-[var(--border)]">
+      <div data-tutorial="solution-toggle" className="border-t border-[var(--border)]">
         <button
           onClick={() => {
             const next = !showSolution;

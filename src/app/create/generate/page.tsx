@@ -15,6 +15,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { isProActive } from "@/lib/subscription";
 import { UserNav } from "@/components/layout/UserNav";
 import { Logo } from "@/components/ui/Logo";
+import { TutorialOverlay } from "@/components/ui/TutorialOverlay";
 
 type GenerationStatus = "idle" | "generating" | "done" | "error";
 
@@ -558,7 +559,7 @@ export default function GeneratePage() {
                 </div>
               )}
 
-              <div className="pt-4">
+              <div data-tutorial="export-button" className="pt-4">
                 <Button
                   onClick={() => router.push("/create/export")}
                   size="lg"
@@ -588,6 +589,8 @@ export default function GeneratePage() {
           {bankToast}
         </div>
       )}
+
+      <TutorialOverlay isFreeTier={isFreeTier} ready={status === "done"} />
     </div>
   );
 }

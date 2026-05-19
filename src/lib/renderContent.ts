@@ -390,7 +390,18 @@ export function renderContent(raw: string): string {
       if (p.kind === "math") {
         return renderKaTeX(p.content, false);
       }
-      return applyMarkdown(p.content);
+      // Safety net: catch bare LaTeX commands that Claude output without $...$ delimiters.
+      // This runs on text-only segments (already split out of any $...$), so no lookbehind
+      // ambiguity — anything matched here is genuinely outside math mode.
+      let content = p.content;
+      if (content.includes('\\ce{') || /\\(?:vec|overrightarrow|hat|tilde|bar|frac|sqrt|boxed)\{/.test(content)) {
+        content = content.replace(/(\\ce\{(?:[^{}]|\{[^{}]*\})*\})/g, '$$$1$$');
+        content = content.replace(/(\\(?:vec|overrightarrow|hat|tilde|bar|frac|sqrt|boxed)\{(?:[^{}]|\{[^{}]*\})*\})/g, '$$$1$$');
+        return splitMath(content, "$", "$").map(rp =>
+          rp.kind === "math" ? renderKaTeX(rp.content, false) : applyMarkdown(rp.content)
+        ).join("");
+      }
+      return applyMarkdown(content);
     }).join("");
   }).join("");
 

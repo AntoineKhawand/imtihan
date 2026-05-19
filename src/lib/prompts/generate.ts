@@ -12,14 +12,14 @@ const LANGUAGE_INSTRUCTIONS: Record<string, string> = {
 - Use French typography: guillemets «», no space before colon is wrong — leave one space before : ; ! ?
 - Introduce context with "On considère...", "On dispose de...", "On donne :".
 - Label given constants/data in a block starting with "Données :" or "On donne :".
-- MATH & CHEMISTRY: Use KaTeX for all math and chemical formulas. Wrap math in $...$ (e.g. $x^2$, $K_a$). Use \\ce{...} for chemical formulas (e.g. \\ce{H2O}).
+- MATH & CHEMISTRY: Use KaTeX for all math and chemical formulas. Wrap math in $...$ (e.g. $x^2$, $K_a$). Wrap chemical formulas in $\\\\ce{...}$ — e.g. $\\\\ce{H2O}$, $\\\\ce{Cu^{2+}}$, $\\\\ce{2H2 + O2 -> 2H2O}$. NEVER write \\\\ce{} without surrounding $...$ — bare \\\\ce{} renders as raw code on screen.
 - STRICT MONOLINGUALISM: The entire exam must be in French only. DO NOT include English terms or translations in parentheses (e.g., do NOT write "nom systématique (IUPAC name)").`,
 
   english: `Write the entire exam in English.
 - Use international SI notation (m s⁻¹, N, J, mol dm⁻³).
 - Use "Given:" or "Data:" before providing constants.
 - British/international spelling preferred (centre, colour).
-- MATH & CHEMISTRY: Use KaTeX for all math and chemical formulas. Wrap math in $...$ (e.g. $x^2$, $K_a$). Use \\ce{...} for chemical formulas (e.g. \\ce{H2O}).
+- MATH & CHEMISTRY: Use KaTeX for all math and chemical formulas. Wrap math in $...$ (e.g. $x^2$, $K_a$). Wrap chemical formulas in $\\\\ce{...}$ — e.g. $\\\\ce{H2O}$, $\\\\ce{Cu^{2+}}$, $\\\\ce{2H2 + O2 -> 2H2O}$. NEVER write \\\\ce{} without surrounding $...$ — bare \\\\ce{} renders as raw code on screen.
 - STRICT MONOLINGUALISM: The entire exam must be in English only. Even if the source material is in French or Arabic, you MUST translate every word into English.`,
 
   arabic: `Write the entire exam in Modern Standard Arabic (MSA).
@@ -181,10 +181,10 @@ HL topics: All SL + Complex numbers, Proof, Series/sums, Differential equations,
 - Every reaction equation must be balanced: "Écrire et équilibrer l'équation-bilan".
 - Données : include all Ka, Kb, E°, molar masses needed.
 - CHEMICAL FORMULA NOTATION (CRITICAL):
-  * ALWAYS use \\ce{...} for chemical formulas and equations.
-  * Example: \\ce{H2O}, \\ce{Cu^{2+}}, \\ce{SO4^{2-}}, \\ce{2H2 + O2 -> 2H2O}.
+  * ALWAYS wrap chemical formulas in $\\\\ce{...}$. Example: $\\\\ce{H2O}$, $\\\\ce{Cu^{2+}}$, $\\\\ce{SO4^{2-}}$, $\\\\ce{2H2 + O2 -> 2H2O}$.
+  * NEVER write \\\\ce{} without surrounding $...$ — bare \\\\ce{} renders as raw code text on the teacher's screen.
   * Use $...$ for equilibrium constants ($K_a$, $K_w$), pH, and other variables.
-  * DO NOT use unicode subscripts (H2O) or superscripts; use LaTeX.`,
+  * DO NOT use unicode subscripts (H₂O) or superscripts; use LaTeX.`,
 
     "bac-francais": `CHEMISTRY FORMAT (Bac Français):
 - Adapt topics to the specified level (from Collège / 5ème-3ème to Lycée / Terminale).
@@ -193,10 +193,10 @@ HL topics: All SL + Complex numbers, Proof, Series/sums, Differential equations,
 - "Écrire l'équation de la réaction" — always balance and include state symbols (aq), (l), (g), (s).
 - "Donner le nom systématique de..." for IUPAC naming.
 - CHEMICAL FORMULA NOTATION (CRITICAL):
-  * ALWAYS use \\ce{...} for chemical formulas and equations.
-  * Example: \\ce{H2O}, \\ce{Cu^{2+}}, \\ce{SO4^{2-}}, \\ce{2H2 + O2 -> 2H2O}.
+  * ALWAYS wrap chemical formulas in $\\\\ce{...}$. Example: $\\\\ce{H2O}$, $\\\\ce{Cu^{2+}}$, $\\\\ce{SO4^{2-}}$, $\\\\ce{2H2 + O2 -> 2H2O}$.
+  * NEVER write \\\\ce{} without surrounding $...$ — bare \\\\ce{} renders as raw code text on the teacher's screen.
   * Use $...$ for equilibrium constants ($K_a$, $K_w$), pH, and other variables.
-  * DO NOT use unicode subscripts (H2O) or superscripts; use LaTeX.`,
+  * DO NOT use unicode subscripts (H₂O) or superscripts; use LaTeX.`,
 
     ib: `CHEMISTRY FORMAT (IB Chemistry SL/HL):
 - Start with context: reaction in industry, environmental issue, biological system.
@@ -207,11 +207,11 @@ HL topics: All SL + Complex numbers, Proof, Series/sums, Differential equations,
 - Green chemistry context appreciated (atom economy, percentage yield).
 - For titration: always ask students to "State one indicator and its colour change".
 - CHEMICAL FORMULA NOTATION (CRITICAL):
-  * ALWAYS use \\ce{...} for chemical formulas and equations.
-  * Example: \\ce{H2O}, \\ce{Cu^{2+}}, \\ce{SO4^{2-}}, \\ce{2H2 + O2 -> 2H2O}.
+  * ALWAYS wrap chemical formulas in $\\\\ce{...}$. Example: $\\\\ce{H2O}$, $\\\\ce{Cu^{2+}}$, $\\\\ce{SO4^{2-}}$, $\\\\ce{2H2 + O2 -> 2H2O}$.
+  * NEVER write \\\\ce{} without surrounding $...$ — bare \\\\ce{} renders as raw code text on the teacher's screen.
   * Use $...$ for equilibrium constants ($K_a$, $K_w$), pH, and other variables.
-  * DO NOT use unicode subscripts (H2O) or superscripts; use LaTeX.
-  * Use $mol\,dm^{-3}$ and $m\,s^{-1}$ notation.`,
+  * DO NOT use unicode subscripts (H₂O) or superscripts; use LaTeX.
+  * Use $mol\\,dm^{-3}$ and $m\\,s^{-1}$ notation.`,
   },
 
   "physique-chimie": {
@@ -222,8 +222,8 @@ HL topics: All SL + Complex numbers, Proof, Series/sums, Differential equations,
 - Structure: 2–4 sub-questions per exercise, progressing from simpler to harder.
 - "Données :" block mandatory — list all constants, molar masses, or given values used.
 - PHYSICS parts: state the formula in literal form before any numerical application ("Écrire l'expression littérale de… puis calculer…").
-- CHEMISTRY parts: always balance equations; use \\\\ce{...} for formulas; ask students to "Écrire et équilibrer l'équation de la réaction".
-- MATH & CHEMISTRY NOTATION: Use KaTeX $...$ for all formulas and \\\\ce{...} for chemical formulas.
+- CHEMISTRY parts: always balance equations; use $\\\\ce{...}$ for ALL formulas (e.g. $\\\\ce{H2O}$, $\\\\ce{2H2 + O2 -> 2H2O}$); ask students to "Écrire et équilibrer l'équation de la réaction".
+- MATH & CHEMISTRY NOTATION: Use KaTeX $...$ for all formulas and $\\\\ce{...}$ for chemical formulas. NEVER use \\\\ce{} without surrounding $...$.
 - "Aide :" prefix for optional hints on hard sub-questions.
 - Total: 20 points for a full exam; adjust proportionally for partial exams.`,
   },
@@ -481,7 +481,7 @@ CRITICAL RULES:
 1. All calculations must be correct — verify every numerical answer before writing it.
 2. Numbers must be realistic: no negative masses, no speeds exceeding c, no impossible concentrations.
 3. Each exercise must stay within the selected chapters — no out-of-scope content.
-4. MATH & CHEMISTRY NOTATION — JSON requires double-escaped backslashes: write \\\\frac, \\\\sqrt, \\\\alpha, \\\\vec, \\\\int. For chemical equations, you MUST use mhchem WITH BRACES: \\\\ce{CH4 + 2O2 -> CO2 + 2H2O}. NEVER write \\\\ce without braces (e.g. \\\\ceCH4 is INVALID). Single backslash is INVALID inside a JSON string and will crash the parser.
+4. MATH & CHEMISTRY NOTATION — JSON requires double-escaped backslashes: write \\\\frac, \\\\sqrt, \\\\alpha, \\\\vec, \\\\int. For chemical equations, you MUST wrap mhchem in dollar signs: $\\\\ce{CH4 + 2O2 -> CO2 + 2H2O}$. NEVER write \\\\ce without the surrounding $...$ and NEVER write \\\\ce without braces (e.g. \\\\ceCH4 is INVALID). Bare \\\\ce{} without $...$ will show as raw code text — always $\\\\ce{...}$. Single backslash is INVALID inside a JSON string and will crash the parser.
 5. SCIENTIFIC ACCURACY: We use a high-precision verification engine (Math.js) for all generated answers. Ensure all numerical values, unit conversions, and statistical results are mathematically exact.
 6. NOTATION & SPACING (CRITICAL — ZERO TOLERANCE FOR PLAIN TEXT MATH):
    - ALWAYS put a space between a label and its object (e.g., write "plan $P$", "point $A$", "vecteur $\\vec{n}$").
@@ -491,7 +491,7 @@ CRITICAL RULES:
    - COORDINATES: Use standard notation $(x; y; z)$ or $A(x; y; z)$.
    - ZERO CODE POLICY: Every single variable, equation, and unit must be wrapped in $...$. If it is a mathematical object, it must be LaTeX.
    - **NEVER use backticks (\`)** for mathematical expressions or LaTeX commands. Backticks are for code only.
-   - **NO NESTED \\\\ce**: Never write \\\\ce{\\\\ce{...}}. Use a single \\\\ce{...} for the entire formula or equation.
+   - **NO NESTED \\\\ce**: Never write \\\\ce{\\\\ce{...}}. Use a single $\\\\ce{...}$ for the entire formula or equation.
 
 7. VISUALS — Use the following for visual elements:
    a) TABLES: Use Markdown table syntax with pipes:
@@ -516,7 +516,7 @@ CRITICAL RULES:
      - Avoid redundant technical jargon — explain the physics/math simply.
    - Total points: Must sum exactly to the specified total.
 
-9. CHEMISTRY NOTATION: For all organic molecules, you MUST use \\\\ce{...}. Example: \\\\ce{CH3-CH2-OH}.
+9. CHEMISTRY NOTATION: For all organic molecules and all chemical formulas, you MUST wrap in $\\\\ce{...}$. Example: $\\\\ce{CH3-CH2-OH}$, $\\\\ce{C6H12O6}$, $\\\\ce{Na+}$. NEVER use bare \\\\ce{} without surrounding $...$ — teachers will see raw code text.
 
 10. GENERIC CONTENT: Avoid using specific school names (e.g., "Lycée français de Beyrouth") or teacher names unless explicitly provided in teacher notes. Keep the context generic (e.g., "Dans un laboratoire de chimie...", "Un professeur souhaite...").
 
