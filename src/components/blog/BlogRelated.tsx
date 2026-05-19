@@ -42,6 +42,30 @@ const ARTICLES: Article[] = [
     title: "Complex Assessments Simplified: AI for University Exams",
     category: "Higher Ed",
     readTime: "5 min read"
+  },
+  {
+    slug: "generate-bac-libanais-chemistry",
+    title: "How to generate a Bac Libanais chemistry exam in 5 minutes",
+    category: "Resources",
+    readTime: "5 min read"
+  },
+  {
+    slug: "ib-mark-scheme-generator",
+    title: "IB mark scheme generator: free tool for IB teachers",
+    category: "Resources",
+    readTime: "5 min read"
+  },
+  {
+    slug: "generate-bac-francais-devoir",
+    title: "Générateur de devoir Bac Français : Gagnez des heures sur vos DS",
+    category: "Resources",
+    readTime: "5 min read"
+  },
+  {
+    slug: "lebanese-teachers-ai-exam-generator",
+    title: "Reclaiming Your Evenings: AI Exam Generators in Lebanon",
+    category: "Productivity",
+    readTime: "6 min read"
   }
 ];
 

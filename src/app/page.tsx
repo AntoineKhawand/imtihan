@@ -127,6 +127,18 @@ const FAQ_ITEMS = [
     a: "Thanks to our AI engine, generating a complete exam (2 to 4 exercises) and its grading key usually takes under 30 seconds."
   },
   {
+    q: "Can I upload my own class notes or course summaries?",
+    a: "Yes! You can copy-paste or upload your own course summaries, lesson slides, or notes. Imtihan's AI reads your source documents to generate custom questions that are perfectly aligned with what you taught in class."
+  },
+  {
+    q: "Does it support mathematical formulas and chemistry equations?",
+    a: "Absolutely. Imtihan fully supports LaTeX rendering. All equations, chemical structures, physical units, and math symbols render perfectly in the browser and export cleanly to editable Microsoft Word or PDF files."
+  },
+  {
+    q: "Can I generate different versions of the same exam?",
+    a: "Yes, Imtihan includes a Version A/B feature. You can generate two parallel versions of the same assessment. The system changes numeric values or details while keeping the conceptual difficulty identical, making cheating in class much harder."
+  },
+  {
     q: "Can I export the exam for printing?",
     a: "Yes, all exams and grading keys can be exported as PDFs or Word documents (.docx), ready to be distributed to your students."
   },
