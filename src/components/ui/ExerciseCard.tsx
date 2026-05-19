@@ -656,7 +656,7 @@ export function ExerciseCard({
 
 
         {showSolution && (
-          <div className="px-6 pb-5 space-y-5 bg-[var(--bg-subtle)]">
+          <div className="px-6 pb-4 space-y-3 bg-[var(--bg-subtle)]">
 
             {/* Barème */}
             {exercise.solution.bareme && exercise.solution.bareme.length > 0 && (
@@ -884,7 +884,7 @@ export function ExerciseCard({
               )}
             </div>
 
-            <div className={cn("space-y-6", language === "arabic" && "text-right")} dir={language === "arabic" ? "rtl" : "ltr"}>
+            <div className={cn("space-y-3", language === "arabic" && "text-right")} dir={language === "arabic" ? "rtl" : "ltr"}>
               {/* Methodology */}
               <div>
                 <p className="text-xs font-semibold text-[var(--accent)] uppercase tracking-wider mb-2">
