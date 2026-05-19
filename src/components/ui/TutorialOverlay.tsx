@@ -4,9 +4,9 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import { ChevronRight, ChevronLeft, HelpCircle } from "lucide-react";
 
 const STORAGE_KEY = "imtihan_tour_v1";
-const PAD = 10;        // padding around highlighted element (px)
-const GAP = 16;        // gap between spotlight edge and tooltip (px)
-const TOOLTIP_W = 300; // tooltip fixed width (px)
+const PAD   = 10;   // padding around highlighted element (px)
+const GAP   = 16;   // gap between spotlight edge and tooltip (px)
+const TOOLTIP_W = 300;
 
 interface Step {
   selector: string | null;
@@ -56,7 +56,6 @@ function getTooltipStyle(spot: SpotRect | null, side: Step["side"]): React.CSSPr
   if (!spot || side === "center") {
     return { position: "fixed", top: "50%", left: "50%", transform: "translate(-50%,-50%)" };
   }
-
   const vw = window.innerWidth;
   const vh = window.innerHeight;
   const clampL = (x: number) => clamp(x, 12, vw - TOOLTIP_W - 12);
@@ -69,16 +68,18 @@ function getTooltipStyle(spot: SpotRect | null, side: Step["side"]): React.CSSPr
     };
   }
   if (side === "top") {
+    // Anchor tooltip ABOVE the element — use bottom CSS to stay above it
+    const fromBottom = vh - spot.top + GAP;
     return {
       position: "fixed",
-      bottom: clamp(vh - spot.top + GAP, 12, vh - 240),
+      bottom: clamp(fromBottom, 12, vh - 240),
       left: clampL(spot.left + spot.width / 2 - TOOLTIP_W / 2),
     };
   }
   if (side === "left") {
     const leftEdge = spot.left - GAP - TOOLTIP_W;
     if (leftEdge < 12) {
-      // flip to bottom when there's no room on the left
+      // Not enough room on left — fall back to bottom
       return {
         position: "fixed",
         top: clamp(spot.top + spot.height + GAP, 12, vh - 240),
@@ -101,15 +102,19 @@ function getTooltipStyle(spot: SpotRect | null, side: Step["side"]): React.CSSPr
   return { position: "fixed", top: "50%", left: "50%", transform: "translate(-50%,-50%)" };
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+
 export function TutorialOverlay({ isFreeTier, ready }: { isFreeTier: boolean; ready: boolean }) {
-  const [active, setActive]           = useState(false);
-  const [step, setStep]               = useState(0);
-  const [spot, setSpot]               = useState<SpotRect | null>(null);
-  const [tooltipStyle, setTooltipStyle] = useState<React.CSSProperties>({});
-  // Separate opacity states so panels and tooltip can fade independently
-  const [panelOpacity, setPanelOpacity]     = useState(0);
+  const [active, setActive]               = useState(false);
+  const [step, setStep]                   = useState(0);
+  const [spot, setSpot]                   = useState<SpotRect | null>(null);
+  const [tooltipStyle, setTooltipStyle]   = useState<React.CSSProperties>({});
+  const [panelOpacity, setPanelOpacity]   = useState(0);
   const [tooltipOpacity, setTooltipOpacity] = useState(0);
-  const transitioning = useRef(false);
+
+  // Generation counter — incremented on every step change so stale async
+  // measurements know they've been superseded and can exit early.
+  const gen = useRef(0);
 
   // Auto-show once for free-tier users after generation finishes
   useEffect(() => {
@@ -120,25 +125,30 @@ export function TutorialOverlay({ isFreeTier, ready }: { isFreeTier: boolean; re
   }, [isFreeTier, ready]);
 
   const measureAndShow = useCallback(async (stepIdx: number) => {
-    if (transitioning.current) return;
-    transitioning.current = true;
+    const myGen = ++gen.current;
 
-    // 1. Fade everything out
+    // ── 1. Fade out ──────────────────────────────────────────────────────────
     setPanelOpacity(0);
     setTooltipOpacity(0);
-    await new Promise(r => setTimeout(r, 160));
+    // Wait for the CSS opacity transition to finish (200ms) + a tiny buffer
+    await new Promise(r => setTimeout(r, 220));
+    if (gen.current !== myGen) return; // step changed while fading — abort
 
-    // 2. Find element and scroll it into view
+    // ── 2. Scroll + measure ──────────────────────────────────────────────────
     const def = STEPS[stepIdx];
     let newSpot: SpotRect | null = null;
 
     if (def.selector) {
       const el = document.querySelector(def.selector);
       if (el) {
-        el.scrollIntoView({ behavior: "smooth", block: "center" });
-        // Wait for scroll to fully settle (smooth scroll ~400ms) then paint
-        await new Promise(r => setTimeout(r, 420));
+        // Instant scroll — the overlay is invisible so there's no jarring effect,
+        // and we don't have to guess how long a smooth-scroll animation takes.
+        el.scrollIntoView({ behavior: "instant" as ScrollBehavior, block: "center" });
+
+        // Two paint frames so layout has settled before we measure
         await new Promise<void>(r => requestAnimationFrame(() => requestAnimationFrame(() => r())));
+        if (gen.current !== myGen) return;
+
         const r = el.getBoundingClientRect();
         newSpot = {
           top:    r.top    - PAD,
@@ -148,44 +158,39 @@ export function TutorialOverlay({ isFreeTier, ready }: { isFreeTier: boolean; re
         };
       }
     } else {
-      // Center step — no scroll needed, tiny delay
-      await new Promise(r => setTimeout(r, 60));
+      // Center step — no element, short pause for UX
+      await new Promise(r => setTimeout(r, 40));
+      if (gen.current !== myGen) return;
     }
 
-    // 3. Snap panels to new position (while still invisible)
+    // ── 3. Snap panels to new position (still invisible) ─────────────────────
     setSpot(newSpot);
     setTooltipStyle(getTooltipStyle(newSpot, def.side));
 
-    // 4. One more frame so DOM reflects new positions before fading in
+    // One frame for the DOM to reflect the new positions
     await new Promise<void>(r => requestAnimationFrame(() => r()));
+    if (gen.current !== myGen) return;
 
-    // 5. Fade everything in
+    // ── 4. Fade in ───────────────────────────────────────────────────────────
     setPanelOpacity(1);
     setTooltipOpacity(1);
-
-    transitioning.current = false;
   }, []);
 
-  // Trigger measurement whenever step or active changes
+  // Re-measure whenever step or active state changes
   useEffect(() => {
     if (!active) return;
     measureAndShow(step);
 
     const onResize = () => {
-      // On resize, re-measure current step but don't animate — just snap
+      // On resize snap immediately — no fade needed
       const def = STEPS[step];
-      if (def.selector) {
-        const el = document.querySelector(def.selector);
-        if (el) {
-          const r = el.getBoundingClientRect();
-          const s: SpotRect = {
-            top: r.top - PAD, left: r.left - PAD,
-            width: r.width + PAD * 2, height: r.height + PAD * 2,
-          };
-          setSpot(s);
-          setTooltipStyle(getTooltipStyle(s, def.side));
-        }
-      }
+      if (!def.selector) return;
+      const el = document.querySelector(def.selector);
+      if (!el) return;
+      const r = el.getBoundingClientRect();
+      const s: SpotRect = { top: r.top - PAD, left: r.left - PAD, width: r.width + PAD * 2, height: r.height + PAD * 2 };
+      setSpot(s);
+      setTooltipStyle(getTooltipStyle(s, def.side));
     };
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
@@ -195,24 +200,24 @@ export function TutorialOverlay({ isFreeTier, ready }: { isFreeTier: boolean; re
     localStorage.setItem(STORAGE_KEY, "1");
     setPanelOpacity(0);
     setTooltipOpacity(0);
-    setTimeout(() => setActive(false), 200);
+    setTimeout(() => setActive(false), 220);
   }, []);
 
-  const goTo = (s: number) => setStep(s);
-  const next = () => { step < STEPS.length - 1 ? goTo(step + 1) : dismiss(); };
-  const prev = () => { if (step > 0) goTo(step - 1); };
+  const goTo   = (s: number) => setStep(s);
+  const next   = () => { step < STEPS.length - 1 ? goTo(step + 1) : dismiss(); };
+  const prev   = () => { if (step > 0) goTo(step - 1); };
   const reopen = () => { setStep(0); setActive(true); };
 
   const cur    = STEPS[step];
   const isLast = step === STEPS.length - 1;
 
-  // Spotlight panel values
-  const topH    = spot ? Math.max(0, spot.top)              : 0;
-  const botT    = spot ? spot.top + spot.height              : 0;
-  const leftW   = spot ? Math.max(0, spot.left)             : 0;
-  const rightL  = spot ? spot.left + spot.width              : 0;
+  // Computed panel edges
+  const topH   = spot ? Math.max(0, spot.top)          : 0;
+  const botT   = spot ? spot.top + spot.height          : 0;
+  const leftW  = spot ? Math.max(0, spot.left)          : 0;
+  const rightL = spot ? spot.left + spot.width           : 0;
 
-  const panelStyle = (extra: React.CSSProperties): React.CSSProperties => ({
+  const panelCss = (extra: React.CSSProperties): React.CSSProperties => ({
     ...extra,
     opacity: panelOpacity,
     transition: "opacity 200ms ease",
@@ -236,14 +241,14 @@ export function TutorialOverlay({ isFreeTier, ready }: { isFreeTier: boolean; re
         <>
           {spot ? (
             <>
-              {/* Top strip */}
-              <div className="fixed inset-x-0 top-0 z-[998] bg-black/75" style={panelStyle({ height: topH })} />
-              {/* Bottom strip */}
-              <div className="fixed inset-x-0 bottom-0 z-[998] bg-black/75" style={panelStyle({ top: botT })} />
-              {/* Left strip */}
-              <div className="fixed left-0 z-[998] bg-black/75" style={panelStyle({ top: spot.top, width: leftW, height: spot.height })} />
-              {/* Right strip */}
-              <div className="fixed right-0 z-[998] bg-black/75" style={panelStyle({ top: spot.top, left: rightL, height: spot.height })} />
+              {/* Top */}
+              <div className="fixed inset-x-0 top-0 z-[998] bg-black/75" style={panelCss({ height: topH })} />
+              {/* Bottom */}
+              <div className="fixed inset-x-0 bottom-0 z-[998] bg-black/75" style={panelCss({ top: botT })} />
+              {/* Left */}
+              <div className="fixed left-0 z-[998] bg-black/75" style={panelCss({ top: spot.top, width: leftW, height: spot.height })} />
+              {/* Right */}
+              <div className="fixed right-0 z-[998] bg-black/75" style={panelCss({ top: spot.top, left: rightL, height: spot.height })} />
               {/* Glow ring */}
               <div
                 className="fixed z-[998] rounded-xl pointer-events-none"
@@ -256,7 +261,10 @@ export function TutorialOverlay({ isFreeTier, ready }: { isFreeTier: boolean; re
               />
             </>
           ) : (
-            <div className="fixed inset-0 z-[998] bg-black/75" style={{ opacity: panelOpacity, transition: "opacity 200ms ease" }} />
+            <div
+              className="fixed inset-0 z-[998] bg-black/75"
+              style={{ opacity: panelOpacity, transition: "opacity 200ms ease" }}
+            />
           )}
 
           {/* ── Tooltip card ── */}
@@ -271,9 +279,9 @@ export function TutorialOverlay({ isFreeTier, ready }: { isFreeTier: boolean; re
                   key={i}
                   onClick={() => goTo(i)}
                   className={`h-1.5 rounded-full transition-all duration-300 ${
-                    i === step       ? "w-5 bg-[var(--accent)]"
-                    : i < step      ? "w-1.5 bg-[var(--accent)]/50"
-                    :                  "w-1.5 bg-[var(--border)]"
+                    i === step      ? "w-5 bg-[var(--accent)]"
+                    : i < step     ? "w-1.5 bg-[var(--accent)]/50"
+                    :                 "w-1.5 bg-[var(--border)]"
                   }`}
                 />
               ))}
@@ -290,7 +298,10 @@ export function TutorialOverlay({ isFreeTier, ready }: { isFreeTier: boolean; re
             </p>
 
             <div className="flex items-center justify-between mt-5">
-              <button onClick={dismiss} className="text-[11px] text-[var(--text-tertiary)] hover:text-[var(--text-secondary)] transition-colors">
+              <button
+                onClick={dismiss}
+                className="text-[11px] text-[var(--text-tertiary)] hover:text-[var(--text-secondary)] transition-colors"
+              >
                 Skip
               </button>
               <div className="flex items-center gap-2">
