@@ -493,13 +493,22 @@ CRITICAL RULES:
    - **NEVER use backticks (\`)** for mathematical expressions or LaTeX commands. Backticks are for code only.
    - **NO NESTED \\\\ce**: Never write \\\\ce{\\\\ce{...}}. Use a single $\\\\ce{...}$ for the entire formula or equation.
 
-7. VISUALS — Use the following for visual elements:
-   a) TABLES: Use Markdown table syntax with pipes:
+7. VISUALS & LISTS — Use the following for all visual elements and enumerated content:
+   a) BULLET LISTS (MANDATORY): Any time you write a list of items — categories, examples, conditions, actors, characteristics — you MUST use Markdown bullet syntax with a dash and a space. NEVER write list items as plain lines without a prefix. The renderer will NOT style them as a list otherwise.
+       Correct:
+         - Organismes de formation professionnelle
+         - Centres de formation d'apprentis (CFA)
+         - Écoles privées et établissements supérieurs
+       Wrong (plain lines — renders as raw text):
+         Organismes de formation professionnelle
+         Centres de formation d'apprentis (CFA)
+   b) NUMBERED LISTS: Use "1. ", "2. ", "3. " etc. when order matters.
+   c) TABLES: Use Markdown table syntax with pipes:
        | x | f(x) |
        |---|------|
        | 0 |  1   |
-   b) GRAPHS/DIAGRAMS: You MUST wrap all Mermaid code in triple backticks (\`\`\`mermaid ... \`\`\`).
-       NEVER output raw Mermaid code without backticks. 
+   d) GRAPHS/DIAGRAMS: You MUST wrap all Mermaid code in triple backticks (\`\`\`mermaid ... \`\`\`).
+       NEVER output raw Mermaid code without backticks.
        NEVER output plain text diagrams.
        If the diagram is too complex, use a clear Markdown table.
 
