@@ -283,10 +283,9 @@ export default async function LandingPage() {
             </div>
 
             {/* Headline */}
-            <h1 className="serif text-display-2xl text-[var(--text)] text-balance leading-[0.95] tracking-tighter mb-5">
-              The exam you imagined,
-              <br className="hidden md:inline" />
-              <span className="italic text-transparent bg-clip-text bg-gradient-to-r from-[var(--accent)] to-emerald-400">built in minutes.</span>
+            <h1 className="serif text-display-2xl text-[var(--text)] leading-[0.95] tracking-tighter mb-5">
+              <span className="md:block md:whitespace-nowrap">The exam you imagined,</span>
+              <span className="italic text-transparent bg-clip-text bg-gradient-to-r from-[var(--accent)] to-emerald-400 md:block">built in minutes.</span>
             </h1>
           </MotionHero>
 
