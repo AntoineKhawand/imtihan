@@ -444,7 +444,6 @@ export default function GeneratePage() {
                     onRemove={handleRemove}
                     onEdit={handleEdit}
                     onSaveToBank={handleSaveToBank}
-                    isFreeTier={isFreeTier}
                     savedToBank={savedIds.has(exercise.id)}
                     isRegenerating={regeneratingId === exercise.id}
                   />
