@@ -44,7 +44,13 @@ export function VisitorCounter() {
     return () => { cancelled = true; };
   }, []);
 
-  if (count === null) return null;
+  if (count === null) {
+    return (
+      <div className="h-5 flex items-center justify-start">
+        <div className="w-40 h-3 bg-[var(--bg-subtle)] rounded animate-pulse" />
+      </div>
+    );
+  }
 
   return (
     <div

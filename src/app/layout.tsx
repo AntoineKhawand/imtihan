@@ -1,12 +1,22 @@
 import type { Metadata, Viewport } from "next";
 import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
+import { Fraunces } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import { ToastProvider } from "@/components/ui/Toast";
 import { AuthProvider } from "@/contexts/AuthContext";
+import "katex/dist/katex.min.css";
 import "./globals.css";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://imtihan.live";
+
+const fraunces = Fraunces({
+  subsets: ["latin"],
+  variable: "--font-fraunces",
+  weight: ["300", "400", "500", "600"],
+  style: ["normal", "italic"],
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   metadataBase: new URL(APP_URL),
@@ -115,25 +125,8 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${GeistSans.variable} ${GeistMono.variable}`} suppressHydrationWarning>
-      <head>
-        {/* Resource Hints */}
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link rel="preconnect" href="https://cdn.jsdelivr.net" />
-        <link rel="preconnect" href="https://cdnjs.cloudflare.com" />
-        
-        {/* KaTeX - Preload for performance, but load normally to avoid hydration issues in SSR */}
-        <link 
-          rel="preload" 
-          href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" 
-          as="style" 
-        />
-        <link 
-          rel="stylesheet" 
-          href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" 
-        />
-      </head>
+    <html lang="en" className={`${GeistSans.variable} ${GeistMono.variable} ${fraunces.variable}`} suppressHydrationWarning>
+      <head />
       <body>
         <AuthProvider>
           <ToastProvider>{children}</ToastProvider>

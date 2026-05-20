@@ -2,7 +2,12 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Plus, Search, Users, Heart, Download, BookOpen, Eye, X, Copy, CheckCircle2, Send, FileText, Star, ArrowRight, ArrowLeft } from "lucide-react";
+import { 
+  Plus, Search, Users, Heart, Download, BookOpen, Eye, X, Copy, CheckCircle2, Send, 
+  FileText, Star, ArrowRight, ArrowLeft,
+  Atom, Calculator, FlaskConical, Dna, Brain, Scroll, Languages, PenTool, Type, 
+  Laptop, TrendingUp, Leaf, Globe2, FileSpreadsheet, BarChart3, Scale
+} from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Logo } from "@/components/ui/Logo";
 import { cn, SUBJECT_LABELS } from "@/lib/utils";
@@ -13,37 +18,37 @@ import { FEATURED_EXAMS } from "@/data/communityExams";
 import { renderContent } from "@/lib/renderContent";
 import { useRouter } from "next/navigation";
 
-const SUBJECT_ICONS: Record<string, string> = {
-  physics: "fa-solid fa-atom",
-  physique: "fa-solid fa-atom",
-  mathematics: "fa-solid fa-square-root-variable",
-  mathématiques: "fa-solid fa-square-root-variable",
-  maths: "fa-solid fa-square-root-variable",
-  chemistry: "fa-solid fa-flask-vial",
-  chimie: "fa-solid fa-flask-vial",
-  biology: "fa-solid fa-dna",
-  biologie: "fa-solid fa-dna",
-  philosophy: "fa-solid fa-brain",
-  philosophie: "fa-solid fa-brain",
-  history: "fa-solid fa-scroll",
-  histoire: "fa-solid fa-scroll",
-  english: "fa-solid fa-language",
-  anglais: "fa-solid fa-language",
-  french: "fa-solid fa-pen-nib",
-  français: "fa-solid fa-pen-nib",
-  arabic: "fa-solid fa-font",
-  arabe: "fa-solid fa-font",
-  informatics: "fa-solid fa-laptop-code",
-  informatique: "fa-solid fa-laptop-code",
-  economics: "fa-solid fa-chart-line",
-  économie: "fa-solid fa-chart-line",
-  svt: "fa-solid fa-leaf",
-  geography: "fa-solid fa-earth-americas",
-  géographie: "fa-solid fa-earth-americas",
-  accounting: "fa-solid fa-file-invoice-dollar",
-  comptabilité: "fa-solid fa-file-invoice-dollar",
-  management: "fa-solid fa-chart-bar",
-  law: "fa-solid fa-scale-balanced",
+const SUBJECT_ICONS: Record<string, React.ComponentType<{ size?: number; className?: string }>> = {
+  physics: Atom,
+  physique: Atom,
+  mathematics: Calculator,
+  mathématiques: Calculator,
+  maths: Calculator,
+  chemistry: FlaskConical,
+  chimie: FlaskConical,
+  biology: Dna,
+  biologie: Dna,
+  philosophy: Brain,
+  philosophie: Brain,
+  history: Scroll,
+  histoire: Scroll,
+  english: Languages,
+  anglais: Languages,
+  french: PenTool,
+  français: PenTool,
+  arabic: Type,
+  arabe: Type,
+  informatics: Laptop,
+  informatique: Laptop,
+  economics: TrendingUp,
+  économie: TrendingUp,
+  svt: Leaf,
+  geography: Globe2,
+  géographie: Globe2,
+  accounting: FileSpreadsheet,
+  comptabilité: FileSpreadsheet,
+  management: BarChart3,
+  law: Scale,
 };
 
 const CURRICULUM_LABELS: Record<string, string> = {
@@ -255,14 +260,13 @@ export default function CommunityPage() {
                       <div className="flex items-start gap-4">
                         {(() => {
                           const sKey = (exam.subject ?? exam.context?.subject)?.toLowerCase() || "";
-                          const iconClass = SUBJECT_ICONS[sKey] ?? "📄";
-                          const isFaIcon = iconClass.startsWith("fa-");
+                          const IconComponent = SUBJECT_ICONS[sKey];
                           return (
-                            <div className="w-12 h-12 rounded-2xl bg-[var(--accent-light)] flex items-center justify-center flex-shrink-0 text-[var(--accent)] text-2xl">
-                              {isFaIcon ? (
-                                <i className={iconClass} aria-hidden="true" />
+                            <div className="w-12 h-12 rounded-2xl bg-[var(--accent-light)] flex items-center justify-center flex-shrink-0 text-[var(--accent)]">
+                              {IconComponent ? (
+                                <IconComponent size={24} />
                               ) : (
-                                <span>{iconClass}</span>
+                                <span className="text-xl">📄</span>
                               )}
                             </div>
                           );
