@@ -9,6 +9,7 @@ import { ExerciseCard } from "@/components/ui/ExerciseCard";
 import { ExerciseEditor } from "@/components/ui/ExerciseEditor";
 import { shortId } from "@/lib/utils";
 import { saveToBank, type BankExercise } from "@/lib/storage";
+import { useToast } from "@/components/ui/Toast";
 import type { ExamContext, Exercise } from "@/types/exam";
 import { StepIndicator, StepLabel } from "@/app/create/page";
 import { getChapter } from "@/data/curricula";
@@ -18,6 +19,7 @@ type GenerationStatus = "idle" | "generating" | "done" | "error";
 
 export default function GeneratePage() {
   const router = useRouter();
+  const { showToast } = useToast();
   const [context, setContext] = useState<ExamContext | null>(null);
   const [templateId, setTemplateId] = useState("classic");
   const [exercises, setExercises] = useState<ExerciseWithStatus[]>([]);
