@@ -8,74 +8,36 @@ import { Button } from "@/components/ui/Button";
 import { ExerciseCard } from "@/components/ui/ExerciseCard";
 import { ExerciseEditor } from "@/components/ui/ExerciseEditor";
 import { shortId } from "@/lib/utils";
-import { saveToBank, getSavedExams, type BankExercise } from "@/lib/storage";
+import { saveToBank, type BankExercise } from "@/lib/storage";
 import type { ExamContext, Exercise } from "@/types/exam";
 import { StepIndicator, StepLabel } from "@/app/create/page";
-import { useAuth } from "@/contexts/AuthContext";
-import { isProActive } from "@/lib/subscription";
-import { UserNav } from "@/components/layout/UserNav";
-import { Logo } from "@/components/ui/Logo";
-import { TutorialOverlay } from "@/components/ui/TutorialOverlay";
+import { getChapter } from "@/data/curricula";
 
+type ExerciseWithStatus = Exercise & { isRegenerating?: boolean };
 type GenerationStatus = "idle" | "generating" | "done" | "error";
 
 export default function GeneratePage() {
   const router = useRouter();
-  const { user, profile } = useAuth();
-  const isFreeTier = !isProActive(profile);
   const [context, setContext] = useState<ExamContext | null>(null);
   const [templateId, setTemplateId] = useState("classic");
-  const [exercises, setExercises] = useState<Exercise[]>([]);
+  const [exercises, setExercises] = useState<ExerciseWithStatus[]>([]);
   const [status, setStatus] = useState<GenerationStatus>("idle");
   const [streamText, setStreamText] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [regeneratingId, setRegeneratingId] = useState<string | null>(null);
-  const [transformingId, setTransformingId] = useState<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
+
+  // Placeholder for actual subscription status
+  const isFreeTier = true;
 
   const [editingExercise, setEditingExercise] = useState<Exercise | null>(null);
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
   const [bankToast, setBankToast] = useState<string | null>(null);
-  const [uploadedDoc, setUploadedDoc] = useState<{ base64: string; type: string } | null>(null);
 
-  function persistExercises(next: Exercise[], ctx: ExamContext | null = context) {
+  function persistExercises(next: Exercise[], ctx: ExamContext | null = context, tmpl: string = templateId) {
     sessionStorage.setItem("imtihan_exercises", JSON.stringify(next));
-    if (ctx) sessionStorage.setItem("imtihan_exercises_key", JSON.stringify({ c: ctx }));
+    if (ctx) sessionStorage.setItem("imtihan_exercises_key", JSON.stringify({ c: ctx, t: tmpl }));
   }
-
-  // Sync localStorage exam history to server once per week (background, silent)
-  useEffect(() => {
-    const SYNC_KEY = "imtihan_style_synced_at";
-    const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
-    const lastSync = Number(localStorage.getItem(SYNC_KEY) ?? 0);
-    if (Date.now() - lastSync < WEEK_MS) return;
-
-    const exams = getSavedExams();
-    if (exams.length === 0) return;
-
-    const summaries = exams.map((e) => ({
-      context: {
-        curriculumId: e.context.curriculumId,
-        subject: e.context.subject,
-        exerciseCount: e.context.exerciseCount,
-        difficultyMix: e.context.difficultyMix,
-        examType: e.context.examType,
-      },
-      exercises: e.exercises.slice(0, 5).map((ex) => ({
-        statement: ex.statement.slice(0, 500),
-        type: ex.type,
-        difficulty: ex.difficulty,
-      })),
-    }));
-
-    fetch("/api/user/sync-style", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ exams: summaries }),
-    })
-      .then((r) => { if (r.ok) localStorage.setItem(SYNC_KEY, String(Date.now())); })
-      .catch(() => { /* silent — style sync is best-effort */ });
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     const raw = sessionStorage.getItem("imtihan_context");
@@ -86,27 +48,18 @@ export default function GeneratePage() {
       setContext(ctx);
       setTemplateId(tmpl);
 
-      // Load teacher's uploaded document for NotebookLM-style grounding
-      const fileRaw = sessionStorage.getItem("imtihan_uploaded_file");
-      if (fileRaw) {
-        try {
-          const f = JSON.parse(fileRaw) as { name: string; size: number; type: string; base64: string };
-          setUploadedDoc({ base64: f.base64, type: f.type });
-        } catch { /* ignore */ }
-      }
-
       // If the user already generated exercises and navigates back, restore them
-      // instead of hammering the AI again.
+      // instead of hammering the Gemini API again.
       const cachedEx = sessionStorage.getItem("imtihan_exercises");
       const cachedKey = sessionStorage.getItem("imtihan_exercises_key");
-      const currentKey = JSON.stringify({ c: ctx });
+      const currentKey = JSON.stringify({ c: ctx, t: tmpl });
       if (cachedEx && cachedKey === currentKey) {
         try {
           const parsed = JSON.parse(cachedEx) as Exercise[];
           if (parsed.length > 0) { setExercises(parsed); setStatus("done"); }
         } catch { /* ignore */ }
       } else if (cachedEx && cachedKey !== currentKey) {
-        // Context changed — cached exercises are stale.
+        // Context/template changed — cached exercises are stale.
         sessionStorage.removeItem("imtihan_exercises");
         sessionStorage.removeItem("imtihan_exercises_key");
       }
@@ -132,12 +85,7 @@ export default function GeneratePage() {
       const res = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          context,
-          templateId,
-          isAdjustment: exercises.length > 0,
-          ...(uploadedDoc ? { documentBase64: uploadedDoc.base64, documentMimeType: uploadedDoc.type } : {}),
-        }),
+        body: JSON.stringify({ context, templateId }),
         signal: abortRef.current.signal,
       });
 
@@ -153,58 +101,33 @@ export default function GeneratePage() {
 
       const decoder = new TextDecoder();
       let accumulated = "";
-      let sseBuffer = "";
 
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
 
-        sseBuffer += decoder.decode(value, { stream: true });
-        const lines = sseBuffer.split("\n");
-        // Keep the last (potentially incomplete) line in the buffer
-        sseBuffer = lines.pop() ?? "";
+        const chunk = decoder.decode(value, { stream: true });
+        const lines = chunk.split("\n").filter((l) => l.startsWith("data: "));
 
         for (const line of lines) {
-          if (!line.startsWith("data: ")) continue;
           try {
             const data = JSON.parse(line.slice(6));
             if (data.chunk) {
               accumulated += data.chunk;
               setStreamText(accumulated);
             }
-            if (data.exercise) {
-              // Progressive: exercise arrived before stream finished — show it immediately
-              setExercises((prev) => {
-                const ex: Exercise = {
-                  ...data.exercise,
-                  id: data.exercise.id ?? shortId(),
-                  number: (data.index ?? prev.length) + 1,
-                };
-                const next = [...prev, ex];
-                persistExercises(next, context);
-                return next;
-              });
-              setStatus("done");
-            }
             if (data.done) {
               if (data.error) {
                 setError(data.error);
                 setStatus("error");
               } else {
-                setExercises((prev) => {
-                  // Append any exercises the progressive parser missed
-                  const remaining = (data.exercises as Exercise[] ?? []).map((ex, i) => ({
-                    ...ex,
-                    id: ex.id ?? shortId(),
-                    number: prev.length + i + 1,
-                  }));
-                  const next = [...prev, ...remaining].map((e, i) => ({ ...e, number: i + 1 }));
-                  persistExercises(next, context);
-                  return next;
-                });
-                if (data.header) {
-                  sessionStorage.setItem("imtihan_extracted_header", JSON.stringify(data.header));
-                }
+                const withIds = (data.exercises as Exercise[]).map((ex, i) => ({
+                  ...ex,
+                  id: ex.id ?? shortId(),
+                  number: i + 1,
+                }));
+                setExercises(withIds);
+                sessionStorage.setItem("imtihan_exercises", JSON.stringify(withIds));
                 setStatus("done");
               }
             }
@@ -223,13 +146,6 @@ export default function GeneratePage() {
     if (!context) return;
     setRegeneratingId(id);
     try {
-      const original = exercises.find((e) => e.id === id);
-      const exercisePoints = original?.points ?? Math.round(context.totalPoints / Math.max(exercises.length, 1));
-
-      const difficultyNote = targetDifficulty
-        ? `IMPORTANT: Generate a ${targetDifficulty.toUpperCase()} difficulty exercise. This is a difficulty adjustment — the exercise MUST be ${targetDifficulty}.`
-        : "";
-
       const res = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -237,105 +153,62 @@ export default function GeneratePage() {
           context: {
             ...context,
             exerciseCount: 1,
-            totalPoints: exercisePoints,
-            teacherNotes: [difficultyNote, context.teacherNotes].filter(Boolean).join("\n"),
             ...(targetDifficulty ? {
               difficultyMix: {
-                easy:   targetDifficulty === "easy"   ? 1 : 0,
+                easy: targetDifficulty === "easy" ? 1 : 0,
                 medium: targetDifficulty === "medium" ? 1 : 0,
-                hard:   targetDifficulty === "hard"   ? 1 : 0,
+                hard: targetDifficulty === "hard" ? 1 : 0,
               }
             } : {}),
           },
           templateId,
-          isAdjustment: true,
-          ...(uploadedDoc ? { documentBase64: uploadedDoc.base64, documentMimeType: uploadedDoc.type } : {}),
         }),
       });
+
+      // Optimistic UI update: Mark the specific exercise as updating
+      setExercises(prev => prev.map(ex => ex.id === id ? { ...ex, isRegenerating: true } : ex));
 
       if (!res.ok) return;
 
       const reader = res.body?.getReader();
       if (!reader) return;
       const decoder = new TextDecoder();
-      let sseBuffer = "";
-      let applied = false; // prevent double-update if both progressive and done fire
-
-      const applyExercise = (ex: Exercise) => {
-        if (applied) return;
-        applied = true;
-        const newExercise: Exercise = { ...ex, id: shortId() };
-        setExercises((prev) => {
-          const idx = prev.findIndex((e) => e.id === id);
-          if (idx === -1) return prev;
-          const next = [...prev];
-          next[idx] = { ...newExercise, number: idx + 1 };
-          persistExercises(next);
-          return next;
-        });
-      };
 
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
-        sseBuffer += decoder.decode(value, { stream: true });
-        const lines = sseBuffer.split("\n");
-        sseBuffer = lines.pop() ?? "";
+        const chunk = decoder.decode(value, { stream: true });
+        const lines = chunk.split("\n").filter((l) => l.startsWith("data: "));
         for (const line of lines) {
-          if (!line.startsWith("data: ")) continue;
           try {
             const data = JSON.parse(line.slice(6));
-            // Progressive path: exercise emitted mid-stream (most common for single-exercise regen)
-            if (data.exercise) applyExercise(data.exercise);
-            // Final path: exercise arrived only at stream end
-            if (data.done && data.exercises?.[0]) applyExercise(data.exercises[0]);
+            if (data.done && data.exercises?.[0]) {
+              const newExercise: Exercise = { ...data.exercises[0], id: shortId() };
+              setExercises((prev) => {
+                const idx = prev.findIndex((e) => e.id === id);
+                if (idx === -1) return prev;
+                const next = [...prev];
+                next[idx] = { ...newExercise, number: idx + 1, isRegenerating: false }; // Update with new data, remove updating state
+                sessionStorage.setItem("imtihan_exercises", JSON.stringify(next));
+                return next;
+              });
+            }
           } catch { /* skip */ }
         }
       }
+    } catch (err) {
+      // Revert optimistic update on network error
+      setExercises(prev => prev.map(ex => ex.id === id ? { ...ex, isRegenerating: false } : ex));
+      showToast("Failed to regenerate exercise. Please try again.", "error");
     } finally {
       setRegeneratingId(null);
-    }
-  }
-
-  async function handleTransform(id: string, type: "table" | "visual" | "image" | "plot", prompt?: string) {
-    if (!context) return;
-    const exercise = exercises.find(e => e.id === id);
-    if (!exercise) return;
-    
-    setTransformingId(id);
-    try {
-      const res = await fetch("/api/generate/transform", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-          exercise, 
-          type, 
-          language: context.language,
-          ...(prompt ? { prompt } : {})
-        }),
-      });
-
-      if (!res.ok) return;
-      
-      const data = await res.json();
-      if (data.success && data.exercise) {
-        setExercises((prev) => {
-          const next = prev.map(e => e.id === id ? { ...data.exercise, id, number: e.number } : e);
-          persistExercises(next);
-          return next;
-        });
-      }
-    } catch {
-      // Ignore error for now
-    } finally {
-      setTransformingId(null);
     }
   }
 
   function handleRemove(id: string) {
     setExercises((prev) => {
       const next = prev.filter((e) => e.id !== id).map((e, i) => ({ ...e, number: i + 1 }));
-      persistExercises(next);
+      sessionStorage.setItem("imtihan_exercises", JSON.stringify(next));
       return next;
     });
   }
@@ -347,7 +220,7 @@ export default function GeneratePage() {
   function handleEditorSave(updated: Exercise) {
     setExercises((prev) => {
       const next = prev.map((e) => e.id === updated.id ? updated : e);
-      persistExercises(next);
+      sessionStorage.setItem("imtihan_exercises", JSON.stringify(next));
       return next;
     });
     setEditingExercise(null);
@@ -377,33 +250,40 @@ export default function GeneratePage() {
   );
   const totalEx = exercises.length;
 
+  const chapterCoverage: Array<{ id: string; name: string; count: number; missing: boolean }> = [];
+  if (context && context.curriculumId !== "university") {
+    const counts = new Map<string, number>();
+    for (const ex of exercises) for (const cid of ex.chapterIds ?? []) counts.set(cid, (counts.get(cid) ?? 0) + 1);
+    for (const cid of context.chapterIds) {
+      const ch = getChapter(context.curriculumId, context.levelId, context.subject, cid);
+      const name = ch ? (ch.name.fr ?? ch.name.en ?? cid) : cid;
+      const count = counts.get(cid) ?? 0;
+      chapterCoverage.push({ id: cid, name, count, missing: count === 0 });
+    }
+  }
 
   return (
     <div className="min-h-screen bg-[var(--bg)] flex flex-col">
-      <header className="grid grid-cols-3 items-center px-6 md:px-10 h-16 border-b border-[var(--border)] bg-[var(--bg)]/90 backdrop-blur-md sticky top-0 z-40">
-        <div className="flex items-center">
-          <Link href="/create/confirm" className="flex items-center gap-2 text-[var(--text-secondary)] hover:text-[var(--text)] transition-colors">
-            <ArrowLeft size={16} />
-            <span className="text-sm hidden sm:block font-medium">Back</span>
-          </Link>
+      <header className="flex items-center justify-between px-6 md:px-10 h-16 border-b border-[var(--border)] bg-[var(--bg)]/90 backdrop-blur-md sticky top-0 z-40">
+        <Link href="/create/structure" className="flex items-center gap-2 text-[var(--text-secondary)] hover:text-[var(--text)] transition-colors">
+          <ArrowLeft size={16} />
+          <span className="text-sm hidden sm:block">Back</span>
+        </Link>
+        <div className="flex items-center gap-2">
+          <div className="w-7 h-7 rounded-lg bg-[var(--accent)] flex items-center justify-center">
+            <span className="text-white text-xs font-serif">إ</span>
+          </div>
+          <span className="font-semibold text-sm text-[var(--text)] tracking-tight hidden sm:block">Imtihan</span>
         </div>
-
-        <div className="flex justify-center">
-          <Logo size={28} />
-        </div>
-
-        <div className="flex items-center justify-end gap-4">
-          <StepIndicator current={3} />
-          <UserNav />
-        </div>
+        <StepIndicator current={4} />
       </header>
 
-      <main className="flex-1 px-6 md:px-10 py-12">
+      <main className="flex-1 px-6 md:px-10 pt-12 pb-20">
         <div className="max-w-2xl mx-auto">
 
-          <div className="mb-8 flex items-start justify-between gap-4">
+          <div className="mb-8 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
             <div>
-              <StepLabel step={3} />
+              <StepLabel step={4} />
               <h1 className="serif text-display-lg text-[var(--text)] mb-2">Your exam</h1>
               {status === "done" && (
                 <p className="text-[var(--text-secondary)] text-sm">
@@ -413,12 +293,18 @@ export default function GeneratePage() {
               {status === "generating" && (
                 <p className="text-[var(--text-secondary)] text-sm">Generating {context?.exerciseCount ?? "…"} exercises…</p>
               )}
+              {isFreeTier && status === "generating" && (
+                <p className="mt-2 text-xs text-[var(--text-tertiary)]">
+                  <a href="/pricing" className="text-[var(--accent)] hover:underline">Upgrade to Pro</a> for priority generation.
+                </p>
+              )}
             </div>
             {status === "done" && (
               <Button
                 variant="secondary"
                 size="sm"
                 onClick={generateExam}
+                className="self-start sm:self-auto"
                 icon={<RotateCcw size={13} />}
               >
                 Regenerate all
@@ -444,7 +330,7 @@ export default function GeneratePage() {
                 )}
               </div>
 
-              {[...Array(context?.exerciseCount ?? 2)].map((_, i) => (
+              {[...Array(context?.exerciseCount ?? 3)].map((_, i) => (
                 <div key={i} className="card p-6" style={{ opacity: 1 - i * 0.15 }}>
                   <div className="flex gap-3 mb-5">
                     <div className="skeleton w-9 h-9 rounded-xl flex-shrink-0" />
@@ -474,25 +360,38 @@ export default function GeneratePage() {
                   <p className="text-xs text-red-600 leading-relaxed">{error}</p>
                 </div>
               </div>
-              <div className="flex flex-wrap gap-3">
-                {error?.toLowerCase().includes("limit") ? (
-                  <>
-                    <Button onClick={() => router.push("/upgrade")} icon={<Sparkles size={14} />}>
-                      Upgrade to Pro
-                    </Button>
-                    <Button onClick={generateExam} variant="secondary" icon={<RotateCcw size={14} />}>
-                      Try again
-                    </Button>
-                  </>
-                ) : (
-                  <Button onClick={generateExam} icon={<RotateCcw size={14} />}>
-                    Try again
-                  </Button>
-                )}
-              </div>
+              <Button onClick={generateExam} icon={<RotateCcw size={14} />}>Try again</Button>
             </div>
           )}
 
+          {status === "done" && exercises.length > 0 && chapterCoverage.length > 0 && (
+            <div className="card p-4 mb-3">
+              <p className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-2.5">Chapter coverage</p>
+              <div className="flex flex-wrap gap-1.5">
+                {chapterCoverage.map((c) => (
+                  <span
+                    key={c.id}
+                    className={
+                      c.missing
+                        ? "inline-flex items-center gap-1.5 text-xs px-2 py-0.5 rounded-full border border-red-300 bg-red-50 text-red-600 dark:bg-red-950/20"
+                        : "inline-flex items-center gap-1.5 text-xs px-2 py-0.5 rounded-full border border-[var(--border)] bg-[var(--bg-subtle)] text-[var(--text-secondary)]"
+                    }
+                    title={c.missing ? "No exercise covers this chapter yet" : `${c.count} exercise${c.count > 1 ? "s" : ""}`}
+                  >
+                    {c.name}
+                    <span className={c.missing ? "text-red-500 font-semibold" : "text-[var(--text-tertiary)]"}>
+                      {c.missing ? "!" : `×${c.count}`}
+                    </span>
+                  </span>
+                ))}
+              </div>
+              {chapterCoverage.some((c) => c.missing) && (
+                <p className="text-[11px] text-red-600 mt-2">
+                  Some chapters have no exercise — regenerate individual questions to adjust coverage.
+                </p>
+              )}
+            </div>
+          )}
 
           {status === "done" && exercises.length > 0 && (
             <div className="card p-4 mb-6 flex items-center gap-5 flex-wrap">
@@ -543,51 +442,23 @@ export default function GeneratePage() {
                     onRemove={handleRemove}
                     onEdit={handleEdit}
                     onSaveToBank={handleSaveToBank}
-                    onTransform={handleTransform}
-                    onUpdate={handleEditorSave}
+                    isFreeTier={isFreeTier}
                     savedToBank={savedIds.has(exercise.id)}
-                    isRegenerating={regeneratingId === exercise.id || transformingId === exercise.id}
-                    defaultShowSolution={true}
+                    isRegenerating={regeneratingId === exercise.id}
                   />
                 </div>
               ))}
 
-              {isFreeTier && (
-                <div className="mt-6 rounded-2xl border border-[var(--accent)]/30 bg-gradient-to-br from-[var(--accent-light)] to-white p-6 text-center shadow-lg shadow-[var(--accent)]/5 animate-in fade-in slide-in-from-bottom-3 duration-500">
-                  <div className="w-12 h-12 rounded-xl bg-white shadow-sm flex items-center justify-center mx-auto mb-4 border border-[var(--accent)]/10">
-                    <Sparkles size={22} className="text-[var(--accent)]" />
-                  </div>
-                  <h3 className="serif text-xl text-[var(--text)] mb-2">You&apos;ve used your free exam</h3>
-                  <p className="text-sm text-[var(--text-secondary)] mb-5 max-w-sm mx-auto leading-relaxed">
-                    Upgrade to Pro to keep generating — 10 exams/month (20 with a yearly plan), saved history, and priority support.
-                  </p>
-                  <div className="flex flex-col sm:flex-row items-center gap-3 justify-center">
-                    <Link href="/upgrade" className="w-full sm:w-auto">
-                      <Button size="md" className="w-full bg-[var(--accent)] shadow-md shadow-[var(--accent)]/20 px-6">
-                        Upgrade to Pro — $5.99/mo
-                      </Button>
-                    </Link>
-                    <Link href="/dashboard" className="w-full sm:w-auto">
-                      <Button variant="secondary" size="md" className="w-full px-6">
-                        Go to Dashboard
-                      </Button>
-                    </Link>
-                  </div>
-                </div>
-              )}
-
               <div className="pt-4">
-                <div data-tutorial="export-button">
-                  <Button
-                    onClick={() => router.push("/create/export")}
-                    size="lg"
-                    className="w-full"
-                    icon={<ArrowRight size={16} />}
-                    iconPosition="right"
-                  >
-                    Export exam
-                  </Button>
-                </div>
+                <Button
+                  onClick={() => router.push("/create/export")}
+                  size="lg"
+                  className="w-full"
+                  icon={<ArrowRight size={16} />}
+                  iconPosition="right"
+                >
+                  Export exam
+                </Button>
               </div>
             </div>
           )}
@@ -608,8 +479,6 @@ export default function GeneratePage() {
           {bankToast}
         </div>
       )}
-
-      <TutorialOverlay isFreeTier={isFreeTier} ready={status === "done"} />
     </div>
   );
 }
