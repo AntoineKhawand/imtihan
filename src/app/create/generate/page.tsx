@@ -104,49 +104,55 @@ export default function GeneratePage() {
       const decoder = new TextDecoder();
       let accumulated = "";
       const progressiveExercises: Exercise[] = [];
+      let sseBuffer = "";
+
+      function processEvent(raw: string) {
+        const dataLine = raw.split("\n").find((l) => l.startsWith("data: "));
+        if (!dataLine) return;
+        try {
+          const data = JSON.parse(dataLine.slice(6));
+          if (data.chunk) {
+            accumulated += data.chunk;
+            setStreamText(accumulated);
+          }
+          if (data.exercise !== undefined) {
+            const ex: Exercise = {
+              ...data.exercise,
+              id: data.exercise.id ?? shortId(),
+              number: progressiveExercises.length + 1,
+            };
+            progressiveExercises.push(ex);
+            setExercises([...progressiveExercises]);
+          }
+          if (data.done) {
+            if (data.error) {
+              setError(data.error);
+              setStatus("error");
+            } else {
+              const remaining = ((data.exercises ?? []) as Exercise[]).map((ex, i) => ({
+                ...ex,
+                id: ex.id ?? shortId(),
+                number: progressiveExercises.length + i + 1,
+              }));
+              const all = [...progressiveExercises, ...remaining].map((ex, i) => ({ ...ex, number: i + 1 }));
+              setExercises(all);
+              sessionStorage.setItem("imtihan_exercises", JSON.stringify(all));
+              setStatus("done");
+            }
+          }
+        } catch { /* skip malformed event */ }
+      }
 
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
-
-        const chunk = decoder.decode(value, { stream: true });
-        const lines = chunk.split("\n").filter((l) => l.startsWith("data: "));
-
-        for (const line of lines) {
-          try {
-            const data = JSON.parse(line.slice(6));
-            if (data.chunk) {
-              accumulated += data.chunk;
-              setStreamText(accumulated);
-            }
-            if (data.exercise !== undefined) {
-              const ex: Exercise = {
-                ...data.exercise,
-                id: data.exercise.id ?? shortId(),
-                number: progressiveExercises.length + 1,
-              };
-              progressiveExercises.push(ex);
-              setExercises([...progressiveExercises]);
-            }
-            if (data.done) {
-              if (data.error) {
-                setError(data.error);
-                setStatus("error");
-              } else {
-                const remaining = ((data.exercises ?? []) as Exercise[]).map((ex, i) => ({
-                  ...ex,
-                  id: ex.id ?? shortId(),
-                  number: progressiveExercises.length + i + 1,
-                }));
-                const all = [...progressiveExercises, ...remaining].map((ex, i) => ({ ...ex, number: i + 1 }));
-                setExercises(all);
-                sessionStorage.setItem("imtihan_exercises", JSON.stringify(all));
-                setStatus("done");
-              }
-            }
-          } catch { /* skip malformed SSE lines */ }
-        }
+        sseBuffer += decoder.decode(value, { stream: true });
+        const events = sseBuffer.split("\n\n");
+        sseBuffer = events.pop() ?? "";
+        for (const event of events) processEvent(event);
       }
+      // Flush any remaining buffered event
+      if (sseBuffer.trim()) processEvent(sseBuffer);
     } catch (err) {
       if ((err as Error).name !== "AbortError") {
         setError("Network error. Please try again.");
@@ -187,35 +193,42 @@ export default function GeneratePage() {
       if (!reader) return;
       const decoder = new TextDecoder();
       let newExerciseFromStream: Exercise | null = null;
+      let sseBuffer2 = "";
+
+      function processRegenEvent(raw: string) {
+        const dataLine = raw.split("\n").find((l) => l.startsWith("data: "));
+        if (!dataLine) return;
+        try {
+          const data = JSON.parse(dataLine.slice(6));
+          if (data.exercise !== undefined && !newExerciseFromStream) {
+            newExerciseFromStream = { ...data.exercise, id: shortId() };
+          }
+          if (data.done) {
+            const replacement: Exercise | null =
+              newExerciseFromStream ?? (data.exercises?.[0] ? { ...data.exercises[0], id: shortId() } : null);
+            if (replacement) {
+              setExercises((prev) => {
+                const idx = prev.findIndex((e) => e.id === id);
+                if (idx === -1) return prev;
+                const next = [...prev];
+                next[idx] = { ...replacement, number: idx + 1, isRegenerating: false };
+                sessionStorage.setItem("imtihan_exercises", JSON.stringify(next));
+                return next;
+              });
+            }
+          }
+        } catch { /* skip */ }
+      }
 
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
-        const chunk = decoder.decode(value, { stream: true });
-        const lines = chunk.split("\n").filter((l) => l.startsWith("data: "));
-        for (const line of lines) {
-          try {
-            const data = JSON.parse(line.slice(6));
-            if (data.exercise !== undefined && !newExerciseFromStream) {
-              newExerciseFromStream = { ...data.exercise, id: shortId() };
-            }
-            if (data.done) {
-              const replacement: Exercise | null =
-                newExerciseFromStream ?? (data.exercises?.[0] ? { ...data.exercises[0], id: shortId() } : null);
-              if (replacement) {
-                setExercises((prev) => {
-                  const idx = prev.findIndex((e) => e.id === id);
-                  if (idx === -1) return prev;
-                  const next = [...prev];
-                  next[idx] = { ...replacement, number: idx + 1, isRegenerating: false };
-                  sessionStorage.setItem("imtihan_exercises", JSON.stringify(next));
-                  return next;
-                });
-              }
-            }
-          } catch { /* skip */ }
-        }
+        sseBuffer2 += decoder.decode(value, { stream: true });
+        const events = sseBuffer2.split("\n\n");
+        sseBuffer2 = events.pop() ?? "";
+        for (const event of events) processRegenEvent(event);
       }
+      if (sseBuffer2.trim()) processRegenEvent(sseBuffer2);
     } catch (err) {
       // Revert optimistic update on network error
       setExercises(prev => prev.map(ex => ex.id === id ? { ...ex, isRegenerating: false } : ex));
