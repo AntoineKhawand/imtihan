@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
         extraExamsQuota: d.extraExamsQuota ?? 0,
       };
     });
-    return NextResponse.json({ users });
+    return NextResponse.json({ users }, { headers: { "Cache-Control": "no-store" } });
   } catch (err) {
     console.error("[/api/admin/users]", err);
     return NextResponse.json({ error: "Failed to fetch users" }, { status: 500 });

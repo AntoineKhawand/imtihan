@@ -41,14 +41,19 @@ function formatDate(ts: number | null): string {
 function ProBadge({ expiresAt }: { expiresAt: number | null }) {
   if (!expiresAt) return <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-gray-100 text-gray-500 uppercase tracking-wider">Free</span>;
   const active = expiresAt > Date.now();
+  const expDate = new Date(expiresAt).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+  const daysLeft = Math.ceil((expiresAt - Date.now()) / 86400000);
   return (
-    <span className={cn(
-      "text-[10px] font-bold px-2.5 py-1 rounded-full border shadow-sm flex items-center gap-1.5 w-fit uppercase tracking-wider",
-      active ? "bg-emerald-50 text-emerald-700 border-emerald-100" : "bg-red-50 text-red-700 border-red-100"
-    )}>
-      <div className={cn("w-1.5 h-1.5 rounded-full", active ? "bg-emerald-500 animate-pulse" : "bg-red-500")} />
-      {active ? "Pro" : "Expired"}
-    </span>
+    <div className="flex flex-col gap-0.5">
+      <span className={cn(
+        "text-[10px] font-bold px-2.5 py-1 rounded-full border shadow-sm flex items-center gap-1.5 w-fit uppercase tracking-wider",
+        active ? "bg-emerald-50 text-emerald-700 border-emerald-100" : "bg-red-50 text-red-700 border-red-100"
+      )}>
+        <div className={cn("w-1.5 h-1.5 rounded-full", active ? "bg-emerald-500 animate-pulse" : "bg-red-500")} />
+        {active ? `Pro · ${daysLeft}d left` : "Expired"}
+      </span>
+      <span className="text-[9px] text-gray-400 pl-1">{active ? `Until ${expDate}` : `Expired ${expDate}`}</span>
+    </div>
   );
 }
 
@@ -101,8 +106,8 @@ export default function AdminPage() {
     try {
       const token = await user.getIdToken();
       const [userRes, statsRes] = await Promise.all([
-        fetch("/api/admin/users", { headers: { Authorization: `Bearer ${token}` } }),
-        fetch("/api/admin/stats", { headers: { Authorization: `Bearer ${token}` } }),
+        fetch("/api/admin/users", { headers: { Authorization: `Bearer ${token}` }, cache: "no-store" }),
+        fetch("/api/admin/stats", { headers: { Authorization: `Bearer ${token}` }, cache: "no-store" }),
       ]);
       if (userRes.status === 401 || userRes.status === 403) {
         setIsAuthorized(false);
@@ -127,7 +132,7 @@ export default function AdminPage() {
     if (!user) return;
     setExtending(`${uid}-${days}`);
     try {
-      const token = await user.getIdToken();
+      const token = await user.getIdToken(true);
       const res = await fetch("/api/admin/extend-pro", {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
