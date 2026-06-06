@@ -103,6 +103,7 @@ export default function GeneratePage() {
 
       const decoder = new TextDecoder();
       let accumulated = "";
+      const progressiveExercises: Exercise[] = [];
 
       while (true) {
         const { done, value } = await reader.read();
@@ -118,18 +119,28 @@ export default function GeneratePage() {
               accumulated += data.chunk;
               setStreamText(accumulated);
             }
+            if (data.exercise !== undefined) {
+              const ex: Exercise = {
+                ...data.exercise,
+                id: data.exercise.id ?? shortId(),
+                number: progressiveExercises.length + 1,
+              };
+              progressiveExercises.push(ex);
+              setExercises([...progressiveExercises]);
+            }
             if (data.done) {
               if (data.error) {
                 setError(data.error);
                 setStatus("error");
               } else {
-                const withIds = (data.exercises as Exercise[]).map((ex, i) => ({
+                const remaining = ((data.exercises ?? []) as Exercise[]).map((ex, i) => ({
                   ...ex,
                   id: ex.id ?? shortId(),
-                  number: i + 1,
+                  number: progressiveExercises.length + i + 1,
                 }));
-                setExercises(withIds);
-                sessionStorage.setItem("imtihan_exercises", JSON.stringify(withIds));
+                const all = [...progressiveExercises, ...remaining].map((ex, i) => ({ ...ex, number: i + 1 }));
+                setExercises(all);
+                sessionStorage.setItem("imtihan_exercises", JSON.stringify(all));
                 setStatus("done");
               }
             }
@@ -175,6 +186,7 @@ export default function GeneratePage() {
       const reader = res.body?.getReader();
       if (!reader) return;
       const decoder = new TextDecoder();
+      let newExerciseFromStream: Exercise | null = null;
 
       while (true) {
         const { done, value } = await reader.read();
@@ -184,16 +196,22 @@ export default function GeneratePage() {
         for (const line of lines) {
           try {
             const data = JSON.parse(line.slice(6));
-            if (data.done && data.exercises?.[0]) {
-              const newExercise: Exercise = { ...data.exercises[0], id: shortId() };
-              setExercises((prev) => {
-                const idx = prev.findIndex((e) => e.id === id);
-                if (idx === -1) return prev;
-                const next = [...prev];
-                next[idx] = { ...newExercise, number: idx + 1, isRegenerating: false }; // Update with new data, remove updating state
-                sessionStorage.setItem("imtihan_exercises", JSON.stringify(next));
-                return next;
-              });
+            if (data.exercise !== undefined && !newExerciseFromStream) {
+              newExerciseFromStream = { ...data.exercise, id: shortId() };
+            }
+            if (data.done) {
+              const replacement: Exercise | null =
+                newExerciseFromStream ?? (data.exercises?.[0] ? { ...data.exercises[0], id: shortId() } : null);
+              if (replacement) {
+                setExercises((prev) => {
+                  const idx = prev.findIndex((e) => e.id === id);
+                  if (idx === -1) return prev;
+                  const next = [...prev];
+                  next[idx] = { ...replacement, number: idx + 1, isRegenerating: false };
+                  sessionStorage.setItem("imtihan_exercises", JSON.stringify(next));
+                  return next;
+                });
+              }
             }
           } catch { /* skip */ }
         }
