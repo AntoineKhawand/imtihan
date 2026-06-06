@@ -91,7 +91,7 @@ function CreatePageContent() {
 
   const { profile } = useAuth();
   const isFreeTier = !isProActive(profile);
-  const quotaUsed = profile?.examsGenerated ?? 0;
+  const quotaUsed = isFreeTier ? (profile?.examsGenerated ?? 0) : (profile?.monthlyExamsGenerated ?? 0);
 
   const searchParams = useSearchParams();
 

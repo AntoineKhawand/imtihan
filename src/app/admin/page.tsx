@@ -133,7 +133,12 @@ export default function AdminPage() {
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({ targetUid: uid, days }),
       });
-      if (res.ok) { toast.success(`Extended by ${days} days`); fetchData(); }
+      if (res.ok) {
+        const d = await res.json().catch(() => ({}));
+        const exp = d.expiresDate ? new Date(d.expiresDate).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) : "";
+        toast.success(`Extended by ${days} days${exp ? ` — expires ${exp}` : ""}`);
+        fetchData();
+      } else { const d = await res.json().catch(() => ({})); toast.error(d.error || "Failed to extend"); }
     } catch { toast.error("Failed to extend"); }
     finally { setExtending(null); }
   };
@@ -149,6 +154,7 @@ export default function AdminPage() {
         body: JSON.stringify({ targetUid: uid, amount }),
       });
       if (res.ok) { toast.success(`Added ${amount} exams`); fetchData(); }
+      else { const d = await res.json().catch(() => ({})); toast.error(d.error || "Failed to add quota"); }
     } catch { toast.error("Failed to add quota"); }
     finally { setExtending(null); }
   };
