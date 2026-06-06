@@ -13,6 +13,8 @@ import { useToast } from "@/components/ui/Toast";
 import type { ExamContext, Exercise } from "@/types/exam";
 import { StepIndicator, StepLabel } from "@/app/create/page";
 import { getChapter } from "@/data/curricula";
+import { useAuth } from "@/contexts/AuthContext";
+import { isProActive } from "@/lib/subscription";
 
 type ExerciseWithStatus = Exercise & { isRegenerating?: boolean };
 type GenerationStatus = "idle" | "generating" | "done" | "error";
@@ -20,6 +22,7 @@ type GenerationStatus = "idle" | "generating" | "done" | "error";
 export default function GeneratePage() {
   const router = useRouter();
   const { showToast } = useToast();
+  const { profile } = useAuth();
   const [context, setContext] = useState<ExamContext | null>(null);
   const [templateId, setTemplateId] = useState("classic");
   const [exercises, setExercises] = useState<ExerciseWithStatus[]>([]);
@@ -29,8 +32,7 @@ export default function GeneratePage() {
   const [regeneratingId, setRegeneratingId] = useState<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
 
-  // Placeholder for actual subscription status
-  const isFreeTier = true;
+  const isFreeTier = !isProActive(profile);
 
   const [editingExercise, setEditingExercise] = useState<Exercise | null>(null);
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
@@ -105,6 +107,7 @@ export default function GeneratePage() {
       let accumulated = "";
       const progressiveExercises: Exercise[] = [];
       let sseBuffer = "";
+      let doneReceived = false;
 
       function processEvent(raw: string) {
         const dataLine = raw.split("\n").find((l) => l.startsWith("data: "));
@@ -125,6 +128,7 @@ export default function GeneratePage() {
             setExercises([...progressiveExercises]);
           }
           if (data.done) {
+            doneReceived = true;
             if (data.error) {
               setError(data.error);
               setStatus("error");
@@ -153,6 +157,19 @@ export default function GeneratePage() {
       }
       // Flush any remaining buffered event
       if (sseBuffer.trim()) processEvent(sseBuffer);
+
+      // Stream ended without a done event (e.g. Vercel timeout) — show whatever was parsed
+      if (!doneReceived) {
+        if (progressiveExercises.length > 0) {
+          const all = progressiveExercises.map((ex, i) => ({ ...ex, number: i + 1 }));
+          setExercises(all);
+          sessionStorage.setItem("imtihan_exercises", JSON.stringify(all));
+          setStatus("done");
+        } else {
+          setError("Generation timed out. Please try again.");
+          setStatus("error");
+        }
+      }
     } catch (err) {
       if ((err as Error).name !== "AbortError") {
         setError("Network error. Please try again.");

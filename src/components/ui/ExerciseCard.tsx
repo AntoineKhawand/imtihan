@@ -204,7 +204,7 @@ export function ExerciseCard({
     });
   }
 
-  const difficulty = DIFFICULTY_CONFIG[exercise.difficulty];
+  const difficulty = DIFFICULTY_CONFIG[exercise.difficulty] ?? DIFFICULTY_CONFIG.medium;
   const exerciseLabel = language === "french" ? "Exercice" : "Exercise";
   
 
@@ -655,7 +655,7 @@ export function ExerciseCard({
         </button>
 
 
-        {showSolution && (
+        {showSolution && exercise.solution && (
           <div className="px-6 pb-4 space-y-3 bg-[var(--bg-subtle)]">
 
             {/* Barème */}
