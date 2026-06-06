@@ -55,9 +55,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch { /* non-fatal */ }
   }
 
-  function subscribeToProfile(currentUser: User) {
+  async function fetchProfileFromApi(): Promise<UserProfile | null> {
+    try {
+      const res = await fetch("/api/auth/profile");
+      if (res.ok) {
+        const { profile } = await res.json();
+        return profile as UserProfile;
+      }
+    } catch { /* non-fatal */ }
+    return null;
+  }
+
+  async function subscribeToProfile(currentUser: User) {
     // Cancel any previous listener
     profileUnsub.current?.();
+
+    // Force a token fetch so Firestore has the latest auth state before we subscribe.
+    try {
+      await currentUser.getIdToken();
+    } catch { /* non-fatal */ }
 
     const userRef = doc(db, "users", currentUser.uid);
 
@@ -90,21 +106,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setProfile(newProfile); // fallback
         }
       }
-    }, (err) => {
-      console.error("[AuthContext] Profile listener error:", err);
+    }, async (err) => {
+      // Firestore read failed (e.g. security rules not yet deployed, or transient auth delay).
+      // Fall back to fetching the profile from the server-side API which uses the Admin SDK.
+      console.warn("[AuthContext] Firestore listener error — falling back to API:", err.message);
+      const apiProfile = await fetchProfileFromApi();
+      if (apiProfile) {
+        setProfile(apiProfile);
+        // Poll every 15s so plan upgrades propagate without a hard refresh
+        const intervalId = setInterval(async () => {
+          const updated = await fetchProfileFromApi();
+          if (updated) setProfile(updated);
+        }, 15_000);
+        // Store the interval cleanup in the unsub ref slot (overwrite Firestore unsub)
+        profileUnsub.current = () => clearInterval(intervalId);
+      }
     });
 
     profileUnsub.current = unsub;
   }
 
   useEffect(() => {
-    const unsubAuth = onAuthStateChanged(auth, (currentUser) => {
+    const unsubAuth = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
       syncSessionCookie(currentUser);
 
       if (currentUser) {
-        subscribeToProfile(currentUser);
-        // Update last login timestamp
+        // subscribeToProfile fetches the ID token internally before attaching onSnapshot
+        await subscribeToProfile(currentUser);
+        // Update last login timestamp (token is already valid after subscribeToProfile)
         updateDoc(doc(db, "users", currentUser.uid), {
           lastLoginAt: Date.now()
         }).catch(err => console.error("Failed to update lastLoginAt:", err));
