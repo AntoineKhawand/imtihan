@@ -2,12 +2,12 @@
 
 // DEVELOPMENT ONLY — used exclusively by Playwright e2e tests.
 // Visits /test-auth?uid=xxx&redirect=/dashboard to sign in without Google OAuth.
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { signInWithCustomToken } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 
-export default function TestAuthPage() {
+function TestAuthInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [status, setStatus] = useState("Signing in…");
@@ -59,5 +59,13 @@ export default function TestAuthPage() {
       <p>🧪 Playwright test auth</p>
       <p>{status}</p>
     </div>
+  );
+}
+
+export default function TestAuthPage() {
+  return (
+    <Suspense fallback={<div style={{ fontFamily: "monospace", padding: 32 }}>Loading…</div>}>
+      <TestAuthInner />
+    </Suspense>
   );
 }
