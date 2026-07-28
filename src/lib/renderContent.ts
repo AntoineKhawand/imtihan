@@ -35,8 +35,8 @@ function renderKaTeX(src: string, displayMode: boolean): string {
     // If KaTeX still fails, show the raw math with a monospace fallback
     const raw = displayMode ? `$$${src}$$` : `$${src}$`;
     return displayMode
-      ? `<span class="block font-mono text-sm text-[var(--text)] my-2 overflow-x-auto" data-raw="${escapeHtml(raw)}" contenteditable="false">${src}</span>`
-      : `<code class="font-mono text-xs text-[var(--text)]" data-raw="${escapeHtml(raw)}" contenteditable="false">${src}</code>`;
+      ? `<span class="block font-mono text-sm text-[var(--text)] my-2 overflow-x-auto" data-raw="${escapeHtml(raw)}" contenteditable="false">${escapeHtml(src)}</span>`
+      : `<code class="font-mono text-xs text-[var(--text)]" data-raw="${escapeHtml(raw)}" contenteditable="false">${escapeHtml(src)}</code>`;
   }
 }
 
@@ -297,8 +297,9 @@ export function renderContent(raw: string): string {
 
     // We hide the prompt text entirely if it's an IMAGE_PROMPT or if the user requested it.
     const isImagePrompt = _match.toUpperCase().includes("PROMPT");
+    const safeDescText = escapeHtml(safeDesc.length > 100 ? safeDesc.slice(0, 100) + "…" : safeDesc);
 
-    const html = `<div class="relative group my-6" data-raw="${rawToReplace}" contenteditable="false"><button data-action="remove-visual" data-type="tag" data-content="${rawToReplace}" class="absolute top-2 right-2 z-20 w-6 h-6 rounded-full bg-white/90 backdrop-blur-sm border border-red-100 text-red-500 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center hover:bg-red-50 shadow-sm" title="Remove Visual"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button><div class="relative rounded-xl overflow-hidden border border-[var(--border)] bg-[var(--bg-subtle)] min-h-[140px] flex items-center justify-center"><img id="img-${uid}" src="${src}" alt="Scientific Visual" loading="lazy" class="w-full h-auto object-contain rounded-xl transition-opacity duration-500" style="opacity:0" onload="this.style.opacity='1'; document.getElementById('fb-${uid}').style.display='none'; document.getElementById('spin-${uid}').style.display='none';" onerror="this.style.display='none'; document.getElementById('fb-${uid}').style.display='flex'; document.getElementById('spin-${uid}').style.display='none';"/><div id="spin-${uid}" class="absolute inset-0 flex items-center justify-center bg-[var(--bg-subtle)]"><div class="flex flex-col items-center gap-2"><svg class="animate-spin w-5 h-5 text-[var(--accent)]" viewBox="0 0 24 24" fill="none"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg><span class="text-[9px] font-bold uppercase tracking-widest text-[var(--text-tertiary)] animate-pulse">Generating Visual...</span></div></div><div id="fb-${uid}" class="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-[var(--bg-subtle)] hidden"><span class="text-xl opacity-40">📊</span><p class="text-[10px] font-bold uppercase tracking-tighter text-[var(--text-tertiary)]">Visual Representation</p></div></div>${!isImagePrompt ? `<p class="text-[9px] text-center text-[var(--text-tertiary)] italic mt-2 opacity-60">${safeDesc.length > 100 ? safeDesc.slice(0, 100) + "…" : safeDesc}</p>` : ''}</div>`;
+    const html = `<div class="relative group my-6" data-raw="${rawToReplace}" contenteditable="false"><button data-action="remove-visual" data-type="tag" data-content="${rawToReplace}" class="absolute top-2 right-2 z-20 w-6 h-6 rounded-full bg-white/90 backdrop-blur-sm border border-red-100 text-red-500 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center hover:bg-red-50 shadow-sm" title="Remove Visual"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button><div class="relative rounded-xl overflow-hidden border border-[var(--border)] bg-[var(--bg-subtle)] min-h-[140px] flex items-center justify-center"><img id="img-${uid}" src="${src}" alt="Scientific Visual" loading="lazy" class="w-full h-auto object-contain rounded-xl transition-opacity duration-500" style="opacity:0" onload="this.style.opacity='1'; document.getElementById('fb-${uid}').style.display='none'; document.getElementById('spin-${uid}').style.display='none';" onerror="this.style.display='none'; document.getElementById('fb-${uid}').style.display='flex'; document.getElementById('spin-${uid}').style.display='none';"/><div id="spin-${uid}" class="absolute inset-0 flex items-center justify-center bg-[var(--bg-subtle)]"><div class="flex flex-col items-center gap-2"><svg class="animate-spin w-5 h-5 text-[var(--accent)]" viewBox="0 0 24 24" fill="none"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg><span class="text-[9px] font-bold uppercase tracking-widest text-[var(--text-tertiary)] animate-pulse">Generating Visual...</span></div></div><div id="fb-${uid}" class="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-[var(--bg-subtle)] hidden"><span class="text-xl opacity-40">📊</span><p class="text-[10px] font-bold uppercase tracking-tighter text-[var(--text-tertiary)]">Visual Representation</p></div></div>${!isImagePrompt ? `<p class="text-[9px] text-center text-[var(--text-tertiary)] italic mt-2 opacity-60">${safeDescText}</p>` : ''}</div>`;
     
     visualBlocks.push(html);
     return `%%VISUAL_${idx}%%`;
@@ -339,9 +340,11 @@ export function renderContent(raw: string): string {
         } else if (val === "||") {
           displayVal = `<div class="flex justify-center gap-1 h-12 items-center"><div class="w-0.5 h-full bg-red-400/60"></div><div class="w-0.5 h-full bg-red-400/60"></div></div>`;
         } else if (val === "+" || val === "-") {
-          displayVal = `<span class="font-bold text-xl opacity-80">${val}</span>`;
+          displayVal = `<span class="font-bold text-xl opacity-80">${escapeHtml(val)}</span>`;
         } else if (val === "0") {
           displayVal = `<div class="flex flex-col items-center gap-1"><span class="w-2 h-2 rounded-full border-2 border-[var(--text)]/40"></span></div>`;
+        } else {
+          displayVal = escapeHtml(displayVal);
         }
 
         tableHtml += `<td class="${extraClasses}">${displayVal}</td>`;
