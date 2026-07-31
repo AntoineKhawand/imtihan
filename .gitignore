@@ -47,3 +47,11 @@ firebase-debug.log
 # Generated exams (local testing)
 generated/
 tmp/
+
+# Helper scripts created during dev sessions
+fix-git-lock.ps1
+commit-ux.bat
+commit-result.txt
+push-to-github.bat
+push-result.txt
+push-ux.bat

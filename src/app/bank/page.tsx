@@ -54,12 +54,14 @@ async function shareToSchoolBank(
   entry: BankExercise,
   schoolName: string,
   contributorName: string,
+  teacherUid: string,
 ) {
   const slug = schoolSlugFrom(schoolName);
   await addDoc(collection(db, "schoolBank"), {
     schoolSlug: slug,
     schoolName,
     contributor: contributorName,
+    sharedBy: teacherUid,
     subject: entry.subject,
     tags: entry.tags ?? [],
     exercise: {
@@ -119,10 +121,15 @@ export default function BankPage() {
       toast.error("Set your school name in account settings first.");
       return;
     }
-    const promise = shareToSchoolBank(entry, userSchool, profile?.displayName ?? "Educator");
+    const promise = shareToSchoolBank(
+      entry,
+      userSchool,
+      profile?.displayName ?? "Educator",
+      user?.uid ?? "",
+    );
     toast.promise(promise, {
-      loading: "Sharing with your school bank…",
-      success: "Shared! Your colleagues can now see it.",
+      loading: "Sharing to student bank…",
+      success: "Shared! Students can now practice this exercise.",
       error:   "Share failed — please try again.",
     });
     try { await promise; if (tab === "school") loadSchool(); } catch {}
@@ -483,7 +490,7 @@ function BankCard({
 
           <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
             {!isSchool && onShare && (
-              <button onClick={onShare} title="Share with School"
+              <button onClick={onShare} title="Share to Student Bank"
                 className="p-2 rounded-lg text-[var(--text-secondary)] hover:text-emerald-600 hover:bg-emerald-50 transition-colors">
                 <Share2 size={14} />
               </button>

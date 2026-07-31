@@ -24,8 +24,30 @@ export async function signInAs(
   await page.waitForURL((url) => !url.pathname.startsWith("/test-auth"), {
     timeout: 45_000,
   });
+
+  // The redirect above is a client-side router.replace(), which /test-auth
+  // fires after a flat 1500ms guess that AuthContext's syncSessionCookie()
+  // has finished POSTing to /api/auth/session — not a guarantee. Since most
+  // app routes (dashboard/create/bank/community/admin/...) are
+  // proxy.ts-protected, landing on one before that cookie truly exists gets
+  // you bounced straight back to /auth/login instead of redirectTo. Poll for
+  // the cookie (a cold Firebase Admin SDK / Firestore round trip can
+  // occasionally outlast that flat delay), and if we did get bounced,
+  // re-navigate to redirectTo now that the cookie is actually in place.
+  const hasSessionCookie = async () =>
+    (await page.context().cookies()).some((c) => c.name === "__session");
+
+  const deadline = Date.now() + 20_000;
+  while (!(await hasSessionCookie()) && Date.now() < deadline) {
+    await page.waitForTimeout(250);
+  }
+
+  if (!new URL(page.url()).pathname.startsWith(redirectTo)) {
+    await page.goto(`${BASE_URL}${redirectTo}`);
+  }
+
   // Give the AuthContext onSnapshot listener time to load the profile from Firestore
-  await page.waitForTimeout(3000);
+  await page.waitForTimeout(1500);
 }
 
 /**
