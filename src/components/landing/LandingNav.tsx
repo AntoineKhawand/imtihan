@@ -52,7 +52,7 @@ export function LandingNav({ isAuthenticated }: LandingNavProps) {
               </Link>
               <Link
                 href="/auth/login"
-                className="inline-flex items-center gap-1.5 h-9 px-4 rounded-xl bg-[var(--accent)] text-white text-sm font-semibold hover:opacity-90 active:scale-95 transition-all duration-200 shadow-sm hover:shadow-[0_4px_16px_rgba(79,70,229,0.30)]"
+                className="inline-flex items-center gap-1.5 h-9 px-4 rounded-xl bg-[var(--accent)] text-white text-sm font-semibold hover:opacity-90 active:scale-95 transition-all duration-200 shadow-sm hover:shadow-[0_4px_16px_rgba(26,94,63,0.30)]"
               >
                 Try free <ArrowRight size={14} />
               </Link>

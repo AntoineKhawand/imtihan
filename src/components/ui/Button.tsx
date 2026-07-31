@@ -16,7 +16,7 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 const VARIANT_STYLES: Record<Variant, string> = {
   primary:
-    "bg-[var(--accent)] text-white hover:opacity-90 active:scale-95 shadow-sm hover:shadow-[0_4px_16px_rgba(79,70,229,0.35)]",
+    "bg-[var(--accent)] text-white hover:opacity-90 active:scale-95 shadow-sm hover:shadow-[0_4px_16px_rgba(26,94,63,0.35)]",
   secondary:
     "bg-[var(--surface)] text-[var(--text)] border border-[var(--border)] hover:border-[var(--accent)]/30 hover:bg-[var(--accent-light)] active:scale-95",
   ghost:

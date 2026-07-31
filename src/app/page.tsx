@@ -267,7 +267,7 @@ export default async function LandingPage() {
           <div className="flex flex-col sm:flex-row gap-3">
             <Link
               href="/auth/login"
-              className="inline-flex items-center justify-center gap-2 h-12 px-7 rounded-xl bg-[var(--accent)] text-white text-base font-semibold hover:opacity-90 active:scale-95 transition-all duration-200 shadow-[0_4px_20px_rgba(79,70,229,0.30)] hover:shadow-[0_6px_28px_rgba(79,70,229,0.45)] ring-1 ring-inset ring-white/20"
+              className="inline-flex items-center justify-center gap-2 h-12 px-7 rounded-xl bg-[var(--accent)] text-white text-base font-semibold hover:opacity-90 active:scale-95 transition-all duration-200 shadow-[0_4px_20px_rgba(26,94,63,0.30)] hover:shadow-[0_6px_28px_rgba(26,94,63,0.45)] ring-1 ring-inset ring-white/20"
             >
               Create your first exam <ArrowRight size={16} />
             </Link>
@@ -300,7 +300,7 @@ export default async function LandingPage() {
             </div>
             <Link
               href="/create"
-              className="inline-flex items-center gap-2 h-10 px-5 rounded-xl bg-[var(--accent)] text-white text-sm font-semibold hover:opacity-90 active:scale-95 transition-all duration-200 shadow-sm hover:shadow-[0_4px_16px_rgba(79,70,229,0.30)] self-start md:self-auto"
+              className="inline-flex items-center gap-2 h-10 px-5 rounded-xl bg-[var(--accent)] text-white text-sm font-semibold hover:opacity-90 active:scale-95 transition-all duration-200 shadow-sm hover:shadow-[0_4px_16px_rgba(26,94,63,0.30)] self-start md:self-auto"
             >
               Try it now <ArrowRight size={14} />
             </Link>
@@ -345,7 +345,7 @@ export default async function LandingPage() {
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {SUBJECT_CATEGORIES.map((cat) => (
-              <div key={cat.label} className="card p-5 flex flex-col gap-4 bg-[var(--surface)] hover:-translate-y-1.5 hover:shadow-[0_16px_48px_rgba(79,70,229,0.10)] transition-all duration-300 cursor-default">
+              <div key={cat.label} className="card p-5 flex flex-col gap-4 bg-[var(--surface)] hover:-translate-y-1.5 hover:shadow-[0_16px_48px_rgba(26,94,63,0.10)] transition-all duration-300 cursor-default">
                 <div className="flex items-center gap-2.5">
                   <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${cat.color}`}>
                     <cat.Icon size={16} />
@@ -381,7 +381,7 @@ export default async function LandingPage() {
             {FEATURES.map((f, i) => (
               <div
                 key={f.title}
-                className="card p-8 group hover:-translate-y-1.5 hover:shadow-[0_16px_48px_rgba(79,70,229,0.10)] transition-all duration-300"
+                className="card p-8 group hover:-translate-y-1.5 hover:shadow-[0_16px_48px_rgba(26,94,63,0.10)] transition-all duration-300"
                 style={{ animationDelay: `${i * 100}ms` }}
               >
                 <div className="w-10 h-10 rounded-xl bg-[var(--accent-light)] text-[var(--accent)] flex items-center justify-center mb-5 group-hover:scale-110 transition-transform">
@@ -428,7 +428,7 @@ export default async function LandingPage() {
           <p className="text-xs uppercase tracking-widest text-[var(--accent)] font-medium mb-12">What teachers say</p>
           <div className="grid md:grid-cols-3 gap-5">
             {TESTIMONIALS.map((t) => (
-              <div key={t.name} className="card bg-[var(--surface)] p-7 flex flex-col justify-between gap-5 hover:-translate-y-1.5 hover:shadow-[0_16px_48px_rgba(79,70,229,0.10)] transition-all duration-300">
+              <div key={t.name} className="card bg-[var(--surface)] p-7 flex flex-col justify-between gap-5 hover:-translate-y-1.5 hover:shadow-[0_16px_48px_rgba(26,94,63,0.10)] transition-all duration-300">
                 <div>
                   <div className="flex gap-0.5 mb-4">
                     {[...Array(5)].map((_, i) => (
