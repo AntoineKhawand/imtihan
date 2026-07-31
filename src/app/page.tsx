@@ -26,16 +26,12 @@ import {
   BookMarked,
   TrendingUp,
   GraduationCap,
-  MessageSquare,
-  SlidersHorizontal,
   Sparkles,
-  Download,
 } from "lucide-react";
 import { MotionHero, MotionStats, MotionHowItWorks, MotionStreamingPreview } from "@/components/landing/LandingMotion";
 import { LandingPricing } from "@/components/landing/LandingPricing";
+import { LandingNav } from "@/components/landing/LandingNav";
 import { VisitorCounter } from "@/components/landing/VisitorCounter";
-import { UserNav } from "@/components/layout/UserNav";
-import { Logo } from "@/components/ui/Logo";
 import { PublicFooter } from "@/components/layout/PublicFooter";
 
 const STATS = [
@@ -239,40 +235,12 @@ export default async function LandingPage() {
       <SchemaOrg schema={[softwareSchema, faqSchema, organizationSchema]} />
 
       {/* ── NAV ─────────────────────────────────────────────────────── */}
-      <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 md:px-10 h-16 bg-[var(--bg)]/75 backdrop-blur-xl border-b border-[var(--border)]/60 transition-colors">
-        <Logo size={26} />
-        <div className="hidden md:flex items-center gap-6 text-sm text-[var(--text-secondary)]">
-          <Link href="#how" className="hover:text-[var(--text)] transition-colors">How it works</Link>
-          <Link href="#subjects" className="hover:text-[var(--text)] transition-colors">Subjects</Link>
-          <Link href="#testimonials" className="hover:text-[var(--text)] transition-colors">Reviews</Link>
-          <Link href="#pricing" className="hover:text-[var(--text)] transition-colors">Pricing</Link>
-        </div>
-        <div className="flex items-center gap-3">
-          {isAuthenticated ? (
-            <UserNav />
-          ) : (
-            <>
-              <Link
-                href="/auth/login"
-                className="hidden md:inline-flex items-center text-sm text-[var(--text-secondary)] hover:text-[var(--text)] transition-colors"
-              >
-                Sign in
-              </Link>
-              <Link
-                href="/auth/login"
-                className="inline-flex items-center gap-1.5 h-9 px-4 rounded-xl bg-[var(--accent)] text-white text-sm font-medium hover:opacity-90 transition-opacity shadow-sm"
-              >
-                Try free <ArrowRight size={14} />
-              </Link>
-            </>
-          )}
-        </div>
-      </nav>
+      <LandingNav isAuthenticated={isAuthenticated} />
 
       {/* ── HERO ─────────────────────────────────────────────────────── */}
       <section className="relative pt-32 pb-20 md:pt-44 md:pb-28 px-6 md:px-10 overflow-hidden">
-        <div className="absolute top-0 right-0 w-[800px] h-[800px] rounded-full bg-[var(--accent)] opacity-[0.045] blur-3xl -translate-y-1/3 translate-x-1/3 pointer-events-none" />
-        <div className="absolute bottom-0 left-0 w-[500px] h-[500px] rounded-full bg-violet-400 opacity-[0.03] blur-3xl translate-y-1/3 -translate-x-1/3 pointer-events-none" />
+        <div className="absolute top-0 right-0 w-[800px] h-[800px] rounded-full bg-[var(--accent)] opacity-[0.05] blur-3xl -translate-y-1/3 translate-x-1/3 pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-[500px] h-[500px] rounded-full bg-[var(--orange)] opacity-[0.04] blur-3xl translate-y-1/3 -translate-x-1/3 pointer-events-none" />
 
         <div className="relative max-w-5xl mx-auto">
           <MotionHero>
@@ -285,7 +253,7 @@ export default async function LandingPage() {
             {/* Headline */}
             <h1 className="serif text-display-2xl text-[var(--text)] leading-[0.95] tracking-tighter mb-5">
               <span className="md:block md:whitespace-nowrap">The exam you imagined,</span>
-              <span className="italic text-transparent bg-clip-text bg-gradient-to-r from-[var(--accent)] to-emerald-400 md:block">built in minutes.</span>
+              <span className="italic text-transparent bg-clip-text bg-gradient-to-r from-[var(--accent)] to-[var(--orange)] md:block">built in minutes.</span>
             </h1>
           </MotionHero>
 
@@ -299,13 +267,13 @@ export default async function LandingPage() {
           <div className="flex flex-col sm:flex-row gap-3">
             <Link
               href="/auth/login"
-              className="inline-flex items-center justify-center gap-2 h-12 px-7 rounded-xl bg-[var(--accent)] text-white text-base font-medium hover:bg-[var(--accent)]/90 active:scale-[0.98] transition-all duration-300 shadow-[0_0_15px_rgba(26,94,63,0.2)] hover:shadow-[0_0_25px_rgba(26,94,63,0.35)] ring-1 ring-inset ring-white/20"
+              className="inline-flex items-center justify-center gap-2 h-12 px-7 rounded-xl bg-[var(--accent)] text-white text-base font-semibold hover:opacity-90 active:scale-95 transition-all duration-200 shadow-[0_4px_20px_rgba(79,70,229,0.30)] hover:shadow-[0_6px_28px_rgba(79,70,229,0.45)] ring-1 ring-inset ring-white/20"
             >
               Create your first exam <ArrowRight size={16} />
             </Link>
             <Link
               href="#how"
-              className="inline-flex items-center justify-center gap-2 h-12 px-7 rounded-xl border border-[var(--border)] text-[var(--text)] text-base font-medium hover:border-[var(--border-strong)] hover:bg-[var(--bg-subtle)] transition-all"
+              className="inline-flex items-center justify-center gap-2 h-12 px-7 rounded-xl border border-[var(--border)] text-[var(--text)] text-base font-medium hover:border-[var(--accent)]/30 hover:bg-[var(--accent-light)] active:scale-95 transition-all duration-200"
             >
               See how it works
             </Link>
@@ -332,7 +300,7 @@ export default async function LandingPage() {
             </div>
             <Link
               href="/create"
-              className="inline-flex items-center gap-2 h-10 px-5 rounded-xl bg-[var(--accent)] text-white text-sm font-medium hover:opacity-90 transition-opacity self-start md:self-auto"
+              className="inline-flex items-center gap-2 h-10 px-5 rounded-xl bg-[var(--accent)] text-white text-sm font-semibold hover:opacity-90 active:scale-95 transition-all duration-200 shadow-sm hover:shadow-[0_4px_16px_rgba(79,70,229,0.30)] self-start md:self-auto"
             >
               Try it now <ArrowRight size={14} />
             </Link>
@@ -377,7 +345,7 @@ export default async function LandingPage() {
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {SUBJECT_CATEGORIES.map((cat) => (
-              <div key={cat.label} className="card p-5 flex flex-col gap-4 bg-[var(--surface)] hover:-translate-y-1 hover:shadow-xl hover:shadow-black/[0.05] transition-all duration-300 ring-1 ring-black/[0.02]">
+              <div key={cat.label} className="card p-5 flex flex-col gap-4 bg-[var(--surface)] hover:-translate-y-1.5 hover:shadow-[0_16px_48px_rgba(79,70,229,0.10)] transition-all duration-300 cursor-default">
                 <div className="flex items-center gap-2.5">
                   <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${cat.color}`}>
                     <cat.Icon size={16} />
@@ -413,7 +381,7 @@ export default async function LandingPage() {
             {FEATURES.map((f, i) => (
               <div
                 key={f.title}
-                className="card p-8 group hover:-translate-y-1 hover:shadow-xl hover:shadow-black/[0.05] transition-all duration-300 ring-1 ring-black/[0.02]"
+                className="card p-8 group hover:-translate-y-1.5 hover:shadow-[0_16px_48px_rgba(79,70,229,0.10)] transition-all duration-300"
                 style={{ animationDelay: `${i * 100}ms` }}
               >
                 <div className="w-10 h-10 rounded-xl bg-[var(--accent-light)] text-[var(--accent)] flex items-center justify-center mb-5 group-hover:scale-110 transition-transform">
@@ -428,12 +396,12 @@ export default async function LandingPage() {
       </section>
 
       {/* ── CURRICULA STRIP ──────────────────────────────────────────── */}
-      <section className="relative px-6 md:px-10 py-16 bg-gradient-to-br from-[var(--accent)] to-[#0d3422] overflow-hidden border-y border-emerald-900/30">
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-emerald-400/10 blur-[100px] rounded-full translate-x-1/3 -translate-y-1/3 pointer-events-none" />
-        <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-emerald-600/15 blur-[120px] rounded-full -translate-x-1/3 translate-y-1/3 pointer-events-none" />
+      <section className="relative px-6 md:px-10 py-16 bg-gradient-to-br from-[var(--accent)] to-[#312E81] overflow-hidden border-y border-[var(--accent)]/20">
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[var(--orange)]/10 blur-[100px] rounded-full translate-x-1/3 -translate-y-1/3 pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-white/5 blur-[120px] rounded-full -translate-x-1/3 translate-y-1/3 pointer-events-none" />
         <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-8">
           <div className="relative z-10">
-            <p className="text-emerald-200 text-xs uppercase tracking-widest font-medium mb-2">Supported curricula</p>
+            <p className="text-indigo-200 text-xs uppercase tracking-widest font-medium mb-2">Supported curricula</p>
             <h3 className="serif text-2xl text-white font-light leading-snug">
               One tool for every<br />school in Lebanon
             </h3>
@@ -447,7 +415,7 @@ export default async function LandingPage() {
             ].map((c) => (
               <div key={c.name} className="rounded-xl border border-white/20 bg-white/10 backdrop-blur-sm px-4 py-3 hover:bg-white/20 transition-colors duration-300 cursor-default">
                 <p className="text-white text-sm font-semibold leading-snug">{c.name}</p>
-                <p className="text-emerald-200 text-xs mt-0.5 leading-relaxed">{c.sub}</p>
+                <p className="text-indigo-200 text-xs mt-0.5 leading-relaxed">{c.sub}</p>
               </div>
             ))}
           </div>
@@ -460,7 +428,7 @@ export default async function LandingPage() {
           <p className="text-xs uppercase tracking-widest text-[var(--accent)] font-medium mb-12">What teachers say</p>
           <div className="grid md:grid-cols-3 gap-5">
             {TESTIMONIALS.map((t) => (
-              <div key={t.name} className="card bg-[var(--surface)] p-7 flex flex-col justify-between gap-5 hover:-translate-y-1 hover:shadow-xl hover:shadow-black/[0.04] transition-all duration-300 ring-1 ring-black/[0.02]">
+              <div key={t.name} className="card bg-[var(--surface)] p-7 flex flex-col justify-between gap-5 hover:-translate-y-1.5 hover:shadow-[0_16px_48px_rgba(79,70,229,0.10)] transition-all duration-300">
                 <div>
                   <div className="flex gap-0.5 mb-4">
                     {[...Array(5)].map((_, i) => (

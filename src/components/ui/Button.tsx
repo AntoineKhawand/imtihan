@@ -16,13 +16,13 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 const VARIANT_STYLES: Record<Variant, string> = {
   primary:
-    "bg-[var(--accent)] text-white hover:opacity-90 active:scale-[0.98] shadow-sm",
+    "bg-[var(--accent)] text-white hover:opacity-90 active:scale-95 shadow-sm hover:shadow-[0_4px_16px_rgba(79,70,229,0.35)]",
   secondary:
-    "bg-[var(--surface)] text-[var(--text)] border border-[var(--border)] hover:border-[var(--border-strong)] hover:bg-[var(--bg-subtle)] active:scale-[0.98]",
+    "bg-[var(--surface)] text-[var(--text)] border border-[var(--border)] hover:border-[var(--accent)]/30 hover:bg-[var(--accent-light)] active:scale-95",
   ghost:
-    "text-[var(--text-secondary)] hover:text-[var(--text)] hover:bg-[var(--bg-subtle)] active:scale-[0.98]",
+    "text-[var(--text-secondary)] hover:text-[var(--text)] hover:bg-[var(--bg-subtle)] active:scale-95",
   danger:
-    "bg-[var(--danger)] text-white hover:opacity-90 active:scale-[0.98]",
+    "bg-[var(--danger)] text-white hover:opacity-90 active:scale-95 hover:shadow-[0_4px_16px_rgba(184,74,42,0.3)]",
 };
 
 const SIZE_STYLES: Record<Size, string> = {
@@ -39,8 +39,8 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         type={type}
         disabled={disabled || loading}
         className={cn(
-          "relative inline-flex items-center justify-center font-medium transition-all duration-150 focus-ring select-none",
-          "disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100",
+          "relative inline-flex items-center justify-center font-medium transition-all duration-200 focus-ring select-none",
+          "disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100 disabled:shadow-none",
           VARIANT_STYLES[variant],
           SIZE_STYLES[size],
           className

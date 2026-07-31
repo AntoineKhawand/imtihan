@@ -6,7 +6,7 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // Editorial palette — ink, cream, emerald
+        // Editorial palette — ink, cream, emerald (kept for compatibility)
         ink: {
           DEFAULT: "#0a0a0a",
           900: "#111111",
@@ -45,12 +45,45 @@ const config: Config = {
           500: "#b84a2a",
           600: "#943820",
         },
+        // ── Claymorphism design system ──────────────────────────────────────
+        // Primary: Indigo #4F46E5
+        primary: {
+          DEFAULT: "#4F46E5",
+          50:  "#EEF2FF",
+          100: "#E0E7FF",
+          200: "#C7D2FE",
+          300: "#A5B4FC",
+          400: "#818CF8",
+          500: "#6366F1",
+          600: "#4F46E5",
+          700: "#4338CA",
+          800: "#3730A3",
+          900: "#312E81",
+          950: "#1E1B4B",
+        },
+        // Accent: Orange #EA580C
+        "orange-accent": {
+          DEFAULT: "#EA580C",
+          50:  "#FFF7ED",
+          100: "#FFEDD5",
+          200: "#FED7AA",
+          300: "#FDBA74",
+          400: "#FB923C",
+          500: "#F97316",
+          600: "#EA580C",
+          700: "#C2410C",
+          800: "#9A3412",
+          900: "#7C2D12",
+        },
       },
       fontFamily: {
-        // Distinctive choices — not Inter/Roboto
+        // Original fonts (kept for compatibility)
         serif: ["var(--font-fraunces)", "Georgia", "serif"],
-        sans: ["var(--font-geist)", "system-ui", "sans-serif"],
-        mono: ["var(--font-geist-mono)", "monospace"],
+        sans:  ["var(--font-geist)", "system-ui", "sans-serif"],
+        mono:  ["var(--font-geist-mono)", "monospace"],
+        // New design-system fonts
+        heading: ["var(--font-nunito)", "Nunito", "sans-serif"],
+        body:    ["var(--font-dm-sans)", "DM Sans", "system-ui", "sans-serif"],
       },
       fontSize: {
         "display-2xl": ["clamp(3.5rem, 8vw, 6.5rem)", { lineHeight: "0.95", letterSpacing: "-0.04em" }],

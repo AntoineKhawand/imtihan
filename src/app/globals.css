@@ -7,8 +7,10 @@
     --font-fraunces: 'Fraunces', Georgia, serif;
     --font-geist: 'Geist', system-ui, sans-serif;
     --font-geist-mono: 'Geist Mono', monospace;
+    --font-nunito: 'Nunito', sans-serif;
+    --font-dm-sans: 'DM Sans', system-ui, sans-serif;
 
-    /* Light mode */
+    /* Light mode — Indigo #4F46E5 primary + Orange #EA580C accent */
     --bg: #faf8f3;
     --bg-subtle: #f3f0e8;
     --surface: #ffffff;
@@ -18,9 +20,13 @@
     --text: #0a0a0a;
     --text-secondary: #5c5c5c;
     --text-tertiary: #a3a3a3;
-    --accent: #1a5e3f;
-    --accent-light: #effaf4;
-    --accent-text: #1a5e3f;
+    /* Primary: Indigo */
+    --accent: #4F46E5;
+    --accent-light: rgba(79, 70, 229, 0.1);
+    --accent-text: #4338CA;
+    /* Orange accent */
+    --orange: #EA580C;
+    --orange-light: rgba(234, 88, 12, 0.1);
     --danger: #b84a2a;
     --warning: #c57c22;
   }
@@ -35,9 +41,13 @@
     --text: #fafaf7;
     --text-secondary: #a3a3a3;
     --text-tertiary: #5c5c5c;
-    --accent: #4fb17c;
-    --accent-light: rgba(79, 177, 124, 0.1);
-    --accent-text: #82cfa3;
+    /* Primary: lighter indigo for dark bg */
+    --accent: #818CF8;
+    --accent-light: rgba(129, 140, 248, 0.15);
+    --accent-text: #A5B4FC;
+    /* Orange accent */
+    --orange: #FB923C;
+    --orange-light: rgba(251, 146, 60, 0.15);
     --danger: #d46b47;
     --warning: #e8a94a;
   }
@@ -58,7 +68,8 @@
   body {
     background-color: var(--bg);
     color: var(--text);
-    font-family: var(--font-geist), system-ui, sans-serif;
+    /* DM Sans as primary body font */
+    font-family: var(--font-dm-sans), var(--font-geist), system-ui, sans-serif;
     font-size: 16px;
     line-height: 1.6;
     /* Only transition background to avoid "flash" glitches on interactive elements */
@@ -107,8 +118,12 @@
 }
 
 @layer components {
-  .serif { font-family: var(--font-fraunces), Georgia, serif; }
-  .mono { font-family: var(--font-geist-mono), monospace; }
+  .serif   { font-family: var(--font-fraunces), Georgia, serif; }
+  .mono    { font-family: var(--font-geist-mono), monospace; }
+  /* Nunito for UI headings */
+  .heading { font-family: var(--font-nunito), Nunito, sans-serif; font-weight: 700; }
+  /* DM Sans explicit utility */
+  .body-font { font-family: var(--font-dm-sans), system-ui, sans-serif; }
 
   /* Noise texture overlay */
   .noise::after {
@@ -136,16 +151,35 @@
     opacity: 0.5;
   }
 
-  /* Card styles */
+  /* ── Claymorphism card ──────────────────────────────────────────────── */
   .card {
     background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    border: 1px solid rgba(255, 255, 255, 0.20);
+    border-radius: 20px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.04);
+    transition: box-shadow 0.25s ease, transform 0.2s ease, border-color 0.2s ease;
   }
   .card:hover {
-    border-color: var(--border-strong);
-    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12), 0 2px 6px rgba(0, 0, 0, 0.06);
+    border-color: rgba(79, 70, 229, 0.15);
+  }
+  /* Elevated card with backdrop blur for modal-like surfaces */
+  .card-elevated {
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.30);
+    border-radius: 24px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12), 0 1px 4px rgba(0, 0, 0, 0.06);
+  }
+  .dark .card {
+    background: var(--surface);
+    border-color: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.30), 0 1px 3px rgba(0, 0, 0, 0.20);
+  }
+  .dark .card:hover {
+    border-color: rgba(129, 140, 248, 0.20);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.40), 0 2px 6px rgba(0, 0, 0, 0.25);
   }
 
   /* Focus ring */
@@ -190,11 +224,11 @@
 
   .mesh-gradient {
     background-color: var(--bg);
-    background-image: 
-      radial-gradient(at 0% 0%, rgba(26, 94, 63, 0.05) 0px, transparent 50%),
-      radial-gradient(at 100% 0%, rgba(255, 191, 0, 0.05) 0px, transparent 50%),
-      radial-gradient(at 100% 100%, rgba(26, 94, 63, 0.1) 0px, transparent 50%),
-      radial-gradient(at 0% 100%, rgba(26, 94, 63, 0.05) 0px, transparent 50%);
+    background-image:
+      radial-gradient(at 0% 0%, rgba(79, 70, 229, 0.06) 0px, transparent 50%),
+      radial-gradient(at 100% 0%, rgba(234, 88, 12, 0.05) 0px, transparent 50%),
+      radial-gradient(at 100% 100%, rgba(79, 70, 229, 0.08) 0px, transparent 50%),
+      radial-gradient(at 0% 100%, rgba(234, 88, 12, 0.04) 0px, transparent 50%);
   }
 }
 

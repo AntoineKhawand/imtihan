@@ -2,14 +2,15 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { 
-  LayoutDashboard, 
-  Plus, 
-  Bookmark, 
-  Search, 
-  CheckCircle2, 
-  TrendingUp, 
-  Users, 
+import {
+  LayoutDashboard,
+  Plus,
+  Bookmark,
+  Search,
+  CheckCircle2,
+  TrendingUp,
+  Users,
+  Globe,
   Sparkles,
   Settings,
   CreditCard
@@ -22,9 +23,10 @@ const NAV_ITEMS = [
   { label: "Overview", icon: LayoutDashboard, href: "/dashboard" },
   { label: "New Exam", icon: Plus, href: "/create", highlight: true },
   { label: "Question Bank", icon: Bookmark, href: "/bank" },
+  { label: "Students", icon: Users, href: "/teacher/students" },
   { label: "AI Scanner", icon: Search, href: "/scanner", pro: true },
   { label: "Analytics", icon: TrendingUp, href: "/analytics", pro: true },
-  { label: "Community", icon: Users, href: "/community" },
+  { label: "Community", icon: Globe, href: "/community" },
 ];
 
 export function DashboardSidebar() {
@@ -44,10 +46,10 @@ export function DashboardSidebar() {
               key={item.href}
               href={item.href}
               className={cn(
-                "flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition-all group",
-                isActive 
-                  ? "bg-[var(--accent)] text-white shadow-lg shadow-[var(--accent)]/20" 
-                  : "text-[var(--text-secondary)] hover:bg-[var(--bg-subtle)] hover:text-[var(--text)]",
+                "flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group",
+                isActive
+                  ? "bg-[var(--accent)] text-white shadow-lg shadow-[var(--accent)]/25 scale-[1.01]"
+                  : "text-[var(--text-secondary)] hover:bg-[var(--accent-light)] hover:text-[var(--accent)]",
                 item.highlight && !isActive && "border border-[var(--accent)]/30 bg-[var(--accent-light)]/30 text-[var(--accent)]"
               )}
             >
@@ -74,9 +76,9 @@ export function DashboardSidebar() {
 
       {!isPro && (
         <div className="p-4 border-t border-[var(--border)]">
-          <Link 
+          <Link
             href="/upgrade"
-            className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-bold bg-gradient-to-br from-emerald-600 to-teal-800 text-white shadow-lg shadow-emerald-200 hover:scale-[1.02] transition-transform group overflow-hidden relative"
+            className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-bold bg-gradient-to-br from-[var(--accent)] to-[#4338CA] text-white shadow-lg shadow-[var(--accent)]/25 hover:scale-[1.02] hover:shadow-[var(--accent)]/35 active:scale-[0.99] transition-all duration-200 group overflow-hidden relative"
           >
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:animate-shine" />
             <CreditCard size={18} />
