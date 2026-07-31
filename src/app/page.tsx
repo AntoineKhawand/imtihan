@@ -401,7 +401,7 @@ export default async function LandingPage() {
         <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-white/5 blur-[120px] rounded-full -translate-x-1/3 translate-y-1/3 pointer-events-none" />
         <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-8">
           <div className="relative z-10">
-            <p className="text-indigo-200 text-xs uppercase tracking-widest font-medium mb-2">Supported curricula</p>
+            <p className="text-emerald-200 text-xs uppercase tracking-widest font-medium mb-2">Supported curricula</p>
             <h3 className="serif text-2xl text-white font-light leading-snug">
               One tool for every<br />school in Lebanon
             </h3>
@@ -415,7 +415,7 @@ export default async function LandingPage() {
             ].map((c) => (
               <div key={c.name} className="rounded-xl border border-white/20 bg-white/10 backdrop-blur-sm px-4 py-3 hover:bg-white/20 transition-colors duration-300 cursor-default">
                 <p className="text-white text-sm font-semibold leading-snug">{c.name}</p>
-                <p className="text-indigo-200 text-xs mt-0.5 leading-relaxed">{c.sub}</p>
+                <p className="text-emerald-200 text-xs mt-0.5 leading-relaxed">{c.sub}</p>
               </div>
             ))}
           </div>

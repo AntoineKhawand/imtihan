@@ -78,7 +78,7 @@ export function DashboardSidebar() {
         <div className="p-4 border-t border-[var(--border)]">
           <Link
             href="/upgrade"
-            className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-bold bg-gradient-to-br from-[var(--accent)] to-[#4338CA] text-white shadow-lg shadow-[var(--accent)]/25 hover:scale-[1.02] hover:shadow-[var(--accent)]/35 active:scale-[0.99] transition-all duration-200 group overflow-hidden relative"
+            className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-bold bg-gradient-to-br from-[var(--accent)] to-[#185c3f] text-white shadow-lg shadow-[var(--accent)]/25 hover:scale-[1.02] hover:shadow-[var(--accent)]/35 active:scale-[0.99] transition-all duration-200 group overflow-hidden relative"
           >
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:animate-shine" />
             <CreditCard size={18} />

@@ -19,7 +19,7 @@ interface SpinnerProps {
 
 /**
  * Accessible loading spinner.
- * Defaults to indigo (var(--accent)) ring colour.
+ * Defaults to emerald (var(--accent)) ring colour.
  */
 export function Spinner({ size = "md", color, className, label = "Loading…" }: SpinnerProps) {
   return (
