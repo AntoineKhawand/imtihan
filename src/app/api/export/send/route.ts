@@ -24,6 +24,7 @@ const RequestSchema = z.object({
     schoolLogo: z.string().optional(),
   }).optional(),
   to: z.string().email(),
+  includeSolution: z.boolean().optional().default(true),
 });
 
 /**
@@ -37,15 +38,18 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Invalid request" }, { status: 400 });
     }
 
-    const { context, templateId, exercises, header, to } = parsed.data;
+    const { context, templateId, exercises, header, to, includeSolution } = parsed.data;
 
     // 1. Generate the buffer on the server
-    const buffer = await generateWordDocument(context, templateId, exercises, header ?? {});
+    const buffer = await generateWordDocument(context, templateId, exercises, header ?? {}, includeSolution);
     const base64 = Buffer.from(buffer).toString("base64");
     const fileName = `Imtihan_${context.subject}_${context.levelId}.docx`;
 
     // 2. Send via Brevo directly
     const subject = `Your Exam: ${context.subject} — ${context.levelId}`;
+    const corrigeNote = includeSolution
+      ? "It includes the complete corrigé."
+      : "Exam questions only (no answer key).";
     const result = await sendEmail({
       to,
       subject,
@@ -56,7 +60,7 @@ export async function POST(request: NextRequest) {
           <p><strong>Subject:</strong> ${context.subject}</p>
           <p><strong>Level:</strong> ${context.levelId}</p>
           <br/>
-          <p style="color: #666; font-size: 13px;">Attached is your professional Word document (.docx). It includes the complete corrigé.</p>
+          <p style="color: #666; font-size: 13px;">Attached is your professional Word document (.docx). ${corrigeNote}</p>
         </div>
       `,
       attachment: { name: fileName, content: base64 },

@@ -216,6 +216,7 @@ const RequestSchema = z.object({
     }),
   })),
   format: z.enum(["word", "pdf"]),
+  includeAnswerKey: z.boolean().optional().default(true),
   header: z.object({
     schoolName: z.string().optional(),
     className: z.string().optional(),
@@ -356,10 +357,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Invalid request" }, { status: 400 });
     }
 
-    const { context, templateId, exercises, format, header } = parsed.data;
+    const { context, templateId, exercises, format, header, includeAnswerKey } = parsed.data;
 
     if (format === "word" || format === "pdf") {
-      const buffer = await generateWordDocument(context, templateId, exercises, header ?? {});
+      const buffer = await generateWordDocument(context, templateId, exercises, header ?? {}, includeAnswerKey);
       const isPdf = format === "pdf";
       return new NextResponse(new Uint8Array(buffer), {
         headers: {
@@ -381,7 +382,8 @@ export async function generateWordDocument(
   context: z.infer<typeof RequestSchema>["context"],
   templateId: string,
   exercises: z.infer<typeof RequestSchema>["exercises"],
-  header: z.infer<typeof RequestSchema>["header"]
+  header: z.infer<typeof RequestSchema>["header"],
+  includeAnswerKey = true
 ): Promise<Buffer> {
   const subjectName = SUBJECT_LABELS[context.subject] ?? context.subject;
   const lang = context.language === "french" ? "fr" : context.language === "arabic" ? "ar" : "en";
@@ -684,7 +686,12 @@ export async function generateWordDocument(
     children.push(new Paragraph({ text: "" }));
   }
 
-  // ─── Corrigé ──────────────────────────────────────────────
+  // ─── Corrigé (only if includeAnswerKey is true) ───────────
+  if (!includeAnswerKey) {
+    const doc = new Document({ sections: [{ properties: {}, children }] });
+    return Buffer.from(await Packer.toBuffer(doc));
+  }
+
   const corrigWord = lang === "fr" ? "CORRIGÉ" : lang === "ar" ? "الإجابة النموذجية" : "ANSWER KEY";
   children.push(new Paragraph({
     pageBreakBefore: true,

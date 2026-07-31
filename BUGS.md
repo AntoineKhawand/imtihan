@@ -98,6 +98,60 @@ These are intentional constraints in MVP — document here to avoid re-opening a
 
 ---
 
+## BUG-004: Export step indicator shows "Step 3 of 5" instead of "Step 5 of 5"
+**Status:** Fixed
+**Severity:** Low
+**Area:** UI / Export
+**Reported:** 2026-07-31
+**Fixed:** 2026-07-31
+
+**Description:** The export page (`/create/export`) rendered `<StepIndicator current={3} />` and `<StepLabel step={3} />`, so the progress dots showed Step 3 as active and the label read "Step 3 of 5" — visually incorrect for the final step.
+**Root cause:** Copy-paste error when the export page was created.
+**Fix:** Changed both props to `current={5}` / `step={5}`.
+
+---
+
+## BUG-005: "Include corrigé" email checkbox had no effect
+**Status:** Fixed
+**Severity:** Medium
+**Area:** Export / API
+**Reported:** 2026-07-31
+**Fixed:** 2026-07-31
+
+**Description:** The export page has an "Include corrigé" checkbox for email delivery (`emailIncludeSolution`) and an "Includes corrigé / Exam only" toggle for Word download (`includeAnswerKey`). Neither value was being honoured — the server always generated documents with the full answer key regardless of the toggle state.
+**Root cause (1):** `emailIncludeSolution` was tracked in state but never included in the JSON body sent to `/api/export/send`.
+**Root cause (2):** `/api/export/route.ts` `RequestSchema` had no `includeAnswerKey` field, so the value sent by the client was silently dropped.
+**Root cause (3):** `generateWordDocument` had no `includeAnswerKey` parameter.
+**Fix:** Added `includeAnswerKey` to `RequestSchema`, updated `generateWordDocument` signature to accept it with a default of `true`, added an early return that skips the corrigé section when `false`. Updated `/api/export/send` to accept and forward `includeSolution`. Updated client to pass `includeSolution: emailIncludeSolution` in the email request body.
+
+---
+
+## BUG-006: Math rendering — subscripts, Greek letters, \\text{} appeared as raw LaTeX
+**Status:** Fixed
+**Severity:** High
+**Area:** UI / Generation
+**Reported:** 2026-07-30
+**Fixed:** 2026-07-31
+
+**Description:** Raw LaTeX strings appeared in the exercise preview, e.g. `Z_0 = $R = 50$ \text{ Ω}$`. The `splitMath` function mishandled odd numbers of `$` delimiters, and the text-segment processor didn't catch `\Omega`, `\text{}`, `\frac{}{}`, or subscripted variables like `R_1`.
+**Root cause:** (a) `splitMath` treated unclosed `$` as the start of a math block, creating a huge "math" segment from the stray `$` to the end of the string; (b) the inline safety net only matched `\ce{}`, `\vec{}`, and a handful of other commands — not `\text{}`, Greek letters, or subscripted variable patterns; (c) the final cleanup pass wrapped bare LaTeX in `$...$` strings but never re-rendered them to KaTeX.
+**Fix:** Modified `splitMath` to strip the opening delimiter and treat the rest as plain text when no closing delimiter is found. Expanded the inline safety net to auto-wrap: `\text{}`, bare Greek letters (`\Omega`, `\alpha`, etc.), `\frac{A}{B}` (two-brace handling), and subscripted variables (`R_1`, `Z_0`, `U_{CE}` — with `{` in the lookbehind to prevent double-wrapping inside `\cmd{…}` arguments). Removed the broken final-cleanup `$...$` wrapping that was adding delimiters without rendering them. Confirmed with a 17-case regression test (17/17 pass).
+
+---
+
+## BUG-007: Landing page buttons and cards had stale indigo drop-shadow colours
+**Status:** Fixed
+**Severity:** Low
+**Area:** UI / Landing
+**Reported:** 2026-07-31
+**Fixed:** 2026-07-31
+
+**Description:** Button hover shadows and card hover shadows on the landing page used hardcoded `rgba(79,70,229,…)` — the old indigo accent — even after the accent was reverted to emerald `#1a5e3f`. The shadows glowed indigo/purple instead of emerald on hover.
+**Root cause:** The previous colour revert fixed CSS variables (`--accent` → emerald) but missed 7 hardcoded `rgba()` values in Tailwind arbitrary shadow classes in `page.tsx`, `Button.tsx`, and `LandingNav.tsx`.
+**Fix:** Replaced all 7 occurrences with `rgba(26,94,63,…)` (emerald equivalent). The `indigo-600` in `renderContent.ts` step-badge colour rotation is intentional and was left unchanged.
+
+---
+
 ## Reporting a Bug
 
 1. Check this file first — it might already be documented.

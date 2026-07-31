@@ -58,7 +58,9 @@ function splitMath(text: string, open: string, close: string): Array<{ kind: "te
     }
     const end = text.indexOf(close, start + open.length);
     if (end === -1) {
-      parts.push({ kind: "text", content: text.slice(start) });
+      // Unclosed delimiter — treat the opening delimiter as plain text (strip it) to
+      // avoid a huge "math" segment that is actually prose.
+      parts.push({ kind: "text", content: text.slice(start + open.length) });
       break;
     }
     parts.push({ kind: "math", content: text.slice(start + open.length, end) });
@@ -399,13 +401,39 @@ export function renderContent(raw: string): string {
       if (p.kind === "math") {
         return renderKaTeX(p.content, false);
       }
-      // Safety net: catch bare LaTeX commands that Claude output without $...$ delimiters.
-      // This runs on text-only segments (already split out of any $...$), so no lookbehind
-      // ambiguity — anything matched here is genuinely outside math mode.
+      // Safety net: catch bare LaTeX that the AI output without $...$ delimiters.
+      // Runs on text-only segments (already split by $), so anything matched is genuinely
+      // outside math mode — no false positives on already-wrapped expressions.
       let content = p.content;
-      if (content.includes('\\ce{') || /\\(?:vec|overrightarrow|hat|tilde|bar|frac|sqrt|boxed)\{/.test(content)) {
-        content = content.replace(/(\\ce\{(?:[^{}]|\{[^{}]*\})*\})/g, '$$$1$$');
-        content = content.replace(/(\\(?:vec|overrightarrow|hat|tilde|bar|frac|sqrt|boxed)\{(?:[^{}]|\{[^{}]*\})*\})/g, '$$$1$$');
+      const GREEK = /\\(?:Omega|omega|alpha|beta|gamma|delta|epsilon|zeta|eta|theta|iota|kappa|lambda|mu|nu|xi|pi|rho|sigma|tau|upsilon|phi|chi|psi|Alpha|Beta|Gamma|Delta|Epsilon|Zeta|Eta|Theta|Iota|Kappa|Lambda|Mu|Nu|Xi|Pi|Rho|Sigma|Tau|Upsilon|Phi|Chi|Psi)(?![a-zA-Z{])/;
+      const SUBSCRIPT = /(?<![\\$\w{])([A-Za-z](?:_\{[A-Za-z0-9\s]+\}|_[A-Za-z0-9]+))/;
+      const hasBareLatex = (
+        content.includes('\\ce{') ||
+        content.includes('\\text{') ||
+        /\\(?:vec|overrightarrow|hat|tilde|bar|frac|sqrt|boxed)\{/.test(content) ||
+        GREEK.test(content) ||
+        SUBSCRIPT.test(content)
+      );
+      if (hasBareLatex) {
+        // \frac takes TWO brace groups — handle it first to avoid a partial match
+        content = content.replace(
+          /(\\frac\{(?:[^{}]|\{[^{}]*\})*\}\{(?:[^{}]|\{[^{}]*\})*\})/g, '$$$1$$'
+        );
+        // All other single-brace commands (\ce, \text, \vec, …)
+        content = content.replace(
+          /(\\(?:ce|text|vec|overrightarrow|hat|tilde|bar|sqrt|boxed)\{(?:[^{}]|\{[^{}]*\})*\})/g, '$$$1$$'
+        );
+        // Bare Greek letters / physics symbols (e.g. \Omega, \alpha, \mu)
+        content = content.replace(
+          /(\\(?:Omega|omega|alpha|beta|gamma|delta|epsilon|zeta|eta|theta|iota|kappa|lambda|mu|nu|xi|pi|rho|sigma|tau|upsilon|phi|chi|psi|Alpha|Beta|Gamma|Delta|Epsilon|Zeta|Eta|Theta|Iota|Kappa|Lambda|Mu|Nu|Xi|Pi|Rho|Sigma|Tau|Upsilon|Phi|Chi|Psi)(?![a-zA-Z{]))/g,
+          '$$$1$$'
+        );
+        // Subscripted variables outside math (e.g. R_1, Z_0, U_{CE}).
+        // The {  in the lookbehind prevents re-wrapping variables already inside \cmd{...}.
+        content = content.replace(
+          /(?<![\\$\w{])([A-Za-z](?:_\{[A-Za-z0-9\s]+\}|_[A-Za-z0-9]+))(?![A-Za-z$])/g,
+          '$$$1$$'
+        );
         return splitMath(content, "$", "$").map(rp =>
           rp.kind === "math" ? renderKaTeX(rp.content, false) : applyMarkdown(rp.content)
         ).join("");
@@ -471,11 +499,9 @@ export function renderContent(raw: string): string {
     .replace(/(<br \/>\s*){3,}/g, "<br /><br />")
     .trim();
 
-  // Wrap naked \boxed{}, \text{}, \mathbf{}, etc. that AI outputs without $ delimiters
-  cleanedHtml = cleanedHtml.replace(
-    /(?<![\$=])((?:\\boxed|\\text|\\mathbf|\\mathit|\\mathrm|\\textbf|\\textit)\{.*?\})(?![\$=])/g,
-    "$$$1$$"
-  );
+  // Note: bare LaTeX that slips past the inline processor would have been wrapped in $...$
+  // above but never re-rendered (since we're already in HTML at this point). Those cases
+  // are now handled upstream in the inline safety net before KaTeX rendering.
 
   return `<div dir="auto">${cleanedHtml}</div>`;
 }
