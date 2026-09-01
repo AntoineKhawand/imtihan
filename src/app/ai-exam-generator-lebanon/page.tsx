@@ -3,6 +3,7 @@ import { ArrowRight, Check, Sparkles, BookOpen, Clock, Copy, Layers } from "luci
 import { Logo } from "@/components/ui/Logo";
 import { PublicFooter } from "@/components/layout/PublicFooter";
 import { SchemaOrg } from "@/components/SchemaOrg";
+import { LandingFAQ, buildFaqSchema } from "@/components/landing/LandingFAQ";
 
 export const metadata = {
   title: "AI Exam Generator Lebanon | Imtihan",
@@ -38,34 +39,60 @@ const BENEFITS = [
   }
 ];
 
+const LEBANON_FAQ_ITEMS = [
+  {
+    q: "What makes this AI exam generator different for Lebanon specifically?",
+    a: "Imtihan understands Lebanon's trilingual, multi-curriculum reality natively — Bac Libanais, Bac Français, and IB — and generates exams in Arabic, French, or English depending on what you teach, not a generic translation of one template.",
+  },
+  {
+    q: "How much time does it actually save teachers?",
+    a: "Most teachers report saving 10+ hours a week. Drafting questions, formatting diagrams, and writing a full step-by-step corrigé — work that normally takes an evening — takes under 30 seconds.",
+  },
+  {
+    q: "What is Version A/B and how does it prevent cheating?",
+    a: "Version A/B instantly clones a generated exam into a second version with different numbers or scenarios but identical difficulty, so students seated next to each other get different papers.",
+  },
+  {
+    q: "Can I generate exams from my own class notes?",
+    a: "Yes. Upload your slides, PDFs, or textbook chapters and Imtihan's AI reads them to write questions matched to exactly what you covered in class, instead of generic textbook content.",
+  },
+  {
+    q: "Which schools and curricula does Imtihan support in Lebanon?",
+    a: "Imtihan supports the Lebanese Baccalaureate and Brevet (EB9), the French Baccalaureate, the International Baccalaureate, and university-level courses — covering the curricula actually taught in Lebanese schools.",
+  },
+];
+
 export default function LebanonAiLanding() {
   return (
     <div className="min-h-screen bg-[var(--bg)] flex flex-col">
       <SchemaOrg
-        schema={{
-          "@context": "https://schema.org",
-          "@type": "WebApplication",
-          "name": "Imtihan — AI Exam Generator Lebanon",
-          "url": "https://imtihan.live/ai-exam-generator-lebanon",
-          "description": "The leading AI exam generator tailored for teachers and schools in Lebanon. Generate curriculum-aligned exams, Brevet / Bac mock tests, and full corrigés in seconds.",
-          "applicationCategory": "EducationalApplication",
-          "operatingSystem": "All",
-          "offers": {
-            "@type": "Offer",
-            "price": "0.00",
-            "priceCurrency": "USD",
-            "category": "FreeTrial"
+        schema={[
+          {
+            "@context": "https://schema.org",
+            "@type": "WebApplication",
+            "name": "Imtihan — AI Exam Generator Lebanon",
+            "url": "https://imtihan.live/ai-exam-generator-lebanon",
+            "description": "The leading AI exam generator tailored for teachers and schools in Lebanon. Generate curriculum-aligned exams, Brevet / Bac mock tests, and full corrigés in seconds.",
+            "applicationCategory": "EducationalApplication",
+            "operatingSystem": "All",
+            "offers": {
+              "@type": "Offer",
+              "price": "0.00",
+              "priceCurrency": "USD",
+              "category": "FreeTrial"
+            },
+            "educationalAlignment": [
+              {
+                "@type": "AlignmentObject",
+                "alignmentType": "educationalSubject",
+                "educationalFramework": "Lebanese Educational System",
+                "targetName": "Lebanese School Curriculum",
+                "targetUrl": "https://imtihan.live/ai-exam-generator-lebanon"
+              }
+            ]
           },
-          "educationalAlignment": [
-            {
-              "@type": "AlignmentObject",
-              "alignmentType": "educationalSubject",
-              "educationalFramework": "Lebanese Educational System",
-              "targetName": "Lebanese School Curriculum",
-              "targetUrl": "https://imtihan.live/ai-exam-generator-lebanon"
-            }
-          ]
-        }}
+          buildFaqSchema(LEBANON_FAQ_ITEMS),
+        ]}
       />
 
       {/* Navigation */}
@@ -172,6 +199,8 @@ export default function LebanonAiLanding() {
             </Link>
           </div>
         </section>
+
+        <LandingFAQ items={LEBANON_FAQ_ITEMS} />
       </main>
 
       <PublicFooter />

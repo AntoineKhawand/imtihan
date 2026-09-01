@@ -48,10 +48,10 @@ firebase-debug.log
 generated/
 tmp/
 
-# Helper scripts created during dev sessions
+# Helper scripts created during dev/automation sessions (git-push workaround
+# bat files, scratch/result files) — generalized pattern so new ones from the
+# daily scheduled task don't need a new .gitignore entry each time.
+*.bat
+*-result.txt
+scan-result.txt
 fix-git-lock.ps1
-commit-ux.bat
-commit-result.txt
-push-to-github.bat
-push-result.txt
-push-ux.bat

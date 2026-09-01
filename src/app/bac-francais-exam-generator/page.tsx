@@ -3,6 +3,7 @@ import { ArrowRight, Check, Star, BookOpen, Clock, Settings, GraduationCap } fro
 import { Logo } from "@/components/ui/Logo";
 import { PublicFooter } from "@/components/layout/PublicFooter";
 import { SchemaOrg } from "@/components/SchemaOrg";
+import { LandingFAQ, buildFaqSchema } from "@/components/landing/LandingFAQ";
 
 export const metadata = {
   title: "Générateur de Devoir Bac Français | Imtihan",
@@ -38,34 +39,60 @@ const FRENCH_FEATURES = [
   }
 ];
 
+const BAC_FRANCAIS_FAQ_ITEMS = [
+  {
+    q: "Le générateur suit-il les programmes officiels de l'Éducation Nationale ?",
+    a: "Oui. Les devoirs générés couvrent les enseignements de spécialité (Mathématiques, Physique-Chimie, SVT, SES) et le tronc commun, de la Seconde à la Terminale, conformément aux programmes AEFE.",
+  },
+  {
+    q: "Les consignes respectent-elles les compétences évaluées au Bac ?",
+    a: "Oui, les énoncés sont formulés selon les compétences clés du Baccalauréat français : S'approprier, Analyser, Réaliser, Valider, Communiquer — les mêmes attendus que ceux des sujets officiels.",
+  },
+  {
+    q: "Puis-je générer un Devoir Surveillé (DS) à partir de mon cours ?",
+    a: "Oui. Téléversez vos chapitres de manuel, diapositives ou notes de cours : l'IA génère un DS aligné précisément sur les notions que vous avez enseignées en classe.",
+  },
+  {
+    q: "Le corrigé et le barème sont-ils fournis automatiquement ?",
+    a: "Oui, chaque devoir est livré avec sa grille de correction détaillée et son barème indicatif, ce qui uniformise l'évaluation entre plusieurs classes ou enseignants.",
+  },
+  {
+    q: "Est-ce accessible gratuitement pour un premier essai ?",
+    a: "Oui, un premier devoir complet est généré gratuitement sans carte bancaire. L'abonnement Pro débloque ensuite 10 générations par mois (20 en formule annuelle).",
+  },
+];
+
 export default function FrenchBacLandingPage() {
   return (
     <div className="min-h-screen bg-[var(--bg)] flex flex-col">
       <SchemaOrg
-        schema={{
-          "@context": "https://schema.org",
-          "@type": "WebApplication",
-          "name": "Imtihan — Générateur de devoir Bac Français",
-          "url": "https://imtihan.live/bac-francais-exam-generator",
-          "description": "Générateur intelligent de devoirs surveillés (DS) et bacs blancs conformes aux programmes officiels français (Lycée de la Seconde à la Terminale Spécialité).",
-          "applicationCategory": "EducationalApplication",
-          "operatingSystem": "All",
-          "offers": {
-            "@type": "Offer",
-            "price": "0.00",
-            "priceCurrency": "USD",
-            "category": "FreeTrial"
+        schema={[
+          {
+            "@context": "https://schema.org",
+            "@type": "WebApplication",
+            "name": "Imtihan — Générateur de devoir Bac Français",
+            "url": "https://imtihan.live/bac-francais-exam-generator",
+            "description": "Générateur intelligent de devoirs surveillés (DS) et bacs blancs conformes aux programmes officiels français (Lycée de la Seconde à la Terminale Spécialité).",
+            "applicationCategory": "EducationalApplication",
+            "operatingSystem": "All",
+            "offers": {
+              "@type": "Offer",
+              "price": "0.00",
+              "priceCurrency": "USD",
+              "category": "FreeTrial"
+            },
+            "educationalAlignment": [
+              {
+                "@type": "AlignmentObject",
+                "alignmentType": "educationalSubject",
+                "educationalFramework": "Ministère de l'Éducation Nationale française (AEFE)",
+                "targetName": "Baccalauréat Français (Lycée Seconde, Première, Terminale Spécialité)",
+                "targetUrl": "https://imtihan.live/bac-francais-exam-generator"
+              }
+            ]
           },
-          "educationalAlignment": [
-            {
-              "@type": "AlignmentObject",
-              "alignmentType": "educationalSubject",
-              "educationalFramework": "Ministère de l'Éducation Nationale française (AEFE)",
-              "targetName": "Baccalauréat Français (Lycée Seconde, Première, Terminale Spécialité)",
-              "targetUrl": "https://imtihan.live/bac-francais-exam-generator"
-            }
-          ]
-        }}
+          buildFaqSchema(BAC_FRANCAIS_FAQ_ITEMS),
+        ]}
       />
 
       {/* Navigation */}
@@ -172,6 +199,8 @@ export default function FrenchBacLandingPage() {
             </Link>
           </div>
         </section>
+
+        <LandingFAQ items={BAC_FRANCAIS_FAQ_ITEMS} title="Tout ce qu'il faut savoir" eyebrow="Questions fréquentes" />
       </main>
 
       <PublicFooter />

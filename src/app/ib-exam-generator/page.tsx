@@ -3,6 +3,7 @@ import { ArrowRight, Check, Award, Compass, Calculator, BookOpen, Layers, Printe
 import { Logo } from "@/components/ui/Logo";
 import { PublicFooter } from "@/components/layout/PublicFooter";
 import { SchemaOrg } from "@/components/SchemaOrg";
+import { LandingFAQ, buildFaqSchema } from "@/components/landing/LandingFAQ";
 
 export const metadata = {
   title: "IB Exam Generator: Chemistry & Physics | Imtihan",
@@ -38,41 +39,67 @@ const IB_FEATURES = [
   }
 ];
 
+const IB_FAQ_ITEMS = [
+  {
+    q: "Does Imtihan follow official IB command terms?",
+    a: "Yes. Every generated question uses official IB command terms — Explain, Deduce, Determine, Evaluate, State — matched to the correct mark allocation, so questions read exactly like an official DP paper.",
+  },
+  {
+    q: "Can I generate both SL and HL exams?",
+    a: "Yes. You choose Standard Level (SL) or Higher Level (HL) difficulty when describing your exam, and Imtihan adjusts both question depth and the mark scheme accordingly.",
+  },
+  {
+    q: "Does the mark scheme match IB grading conventions?",
+    a: "Yes. Each mark scheme includes exact calculations, formula substitutions, state symbols, alternative accepted methods, and mark-by-mark breakdowns — the same structure IB examiners use.",
+  },
+  {
+    q: "Which IB subjects are supported?",
+    a: "IB DP and MYP Chemistry and Physics are fully supported today, covering the complete SL/HL syllabus for both subjects. Additional IB subjects are on the roadmap.",
+  },
+  {
+    q: "Can I export IB exams to Word or PDF?",
+    a: "Yes. Every exam and its mark scheme export as an editable .docx file or a print-ready PDF, with all mathematical notation rendered in proper LaTeX formatting.",
+  },
+];
+
 export default function IbLandingPage() {
   return (
     <div className="min-h-screen bg-[var(--bg)] flex flex-col">
       <SchemaOrg
-        schema={{
-          "@context": "https://schema.org",
-          "@type": "WebApplication",
-          "name": "Imtihan — IB Chemistry & Physics Exam Generator",
-          "url": "https://imtihan.live/ib-exam-generator",
-          "description": "Create IB Diploma Programme (DP) and MYP Chemistry & Physics exams in seconds. Automatically generate detailed mark schemes matching IB Command Terms and rubrics.",
-          "applicationCategory": "EducationalApplication",
-          "operatingSystem": "All",
-          "offers": {
-            "@type": "Offer",
-            "price": "0.00",
-            "priceCurrency": "USD",
-            "category": "FreeTrial"
-          },
-          "educationalAlignment": [
-            {
-              "@type": "AlignmentObject",
-              "alignmentType": "educationalSubject",
-              "educationalFramework": "International Baccalaureate (IB DP / MYP)",
-              "targetName": "IB DP Chemistry (SL/HL)",
-              "targetUrl": "https://imtihan.live/ib-exam-generator"
+        schema={[
+          {
+            "@context": "https://schema.org",
+            "@type": "WebApplication",
+            "name": "Imtihan — IB Chemistry & Physics Exam Generator",
+            "url": "https://imtihan.live/ib-exam-generator",
+            "description": "Create IB Diploma Programme (DP) and MYP Chemistry & Physics exams in seconds. Automatically generate detailed mark schemes matching IB Command Terms and rubrics.",
+            "applicationCategory": "EducationalApplication",
+            "operatingSystem": "All",
+            "offers": {
+              "@type": "Offer",
+              "price": "0.00",
+              "priceCurrency": "USD",
+              "category": "FreeTrial"
             },
-            {
-              "@type": "AlignmentObject",
-              "alignmentType": "educationalSubject",
-              "educationalFramework": "International Baccalaureate (IB DP / MYP)",
-              "targetName": "IB DP Physics (SL/HL)",
-              "targetUrl": "https://imtihan.live/ib-exam-generator"
-            }
-          ]
-        }}
+            "educationalAlignment": [
+              {
+                "@type": "AlignmentObject",
+                "alignmentType": "educationalSubject",
+                "educationalFramework": "International Baccalaureate (IB DP / MYP)",
+                "targetName": "IB DP Chemistry (SL/HL)",
+                "targetUrl": "https://imtihan.live/ib-exam-generator"
+              },
+              {
+                "@type": "AlignmentObject",
+                "alignmentType": "educationalSubject",
+                "educationalFramework": "International Baccalaureate (IB DP / MYP)",
+                "targetName": "IB DP Physics (SL/HL)",
+                "targetUrl": "https://imtihan.live/ib-exam-generator"
+              }
+            ]
+          },
+          buildFaqSchema(IB_FAQ_ITEMS),
+        ]}
       />
 
       {/* Navigation */}
@@ -183,6 +210,8 @@ export default function IbLandingPage() {
             </Link>
           </div>
         </section>
+
+        <LandingFAQ items={IB_FAQ_ITEMS} />
       </main>
 
       <PublicFooter />

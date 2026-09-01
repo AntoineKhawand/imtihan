@@ -3,6 +3,7 @@ import { ArrowRight, Check, Star, BookOpen, GraduationCap, Award, Printer } from
 import { Logo } from "@/components/ui/Logo";
 import { PublicFooter } from "@/components/layout/PublicFooter";
 import { SchemaOrg } from "@/components/SchemaOrg";
+import { LandingFAQ, buildFaqSchema } from "@/components/landing/LandingFAQ";
 
 export const metadata = {
   title: "Générateur d'Examen Bac Libanais IA | Imtihan",
@@ -38,41 +39,67 @@ const FEATURES = [
   }
 ];
 
+const BAC_LIBANAIS_FAQ_ITEMS = [
+  {
+    q: "Le générateur respecte-t-il le format des examens officiels libanais ?",
+    a: "Oui. Les examens générés respectent la structure, la rigueur et le barème des Dawrat officielles du Ministère de l'Éducation libanais, pour le Brevet (EB9) comme pour les quatre sections du Baccalauréat (SG, SV, SE, LH).",
+  },
+  {
+    q: "Dans quelles langues puis-je générer mes examens ?",
+    a: "Vous pouvez générer vos exercices en français ou en anglais pour les matières scientifiques (Mathématiques, Physique, Chimie, SVT), et en arabe littéraire pour l'histoire-géographie et les matières littéraires.",
+  },
+  {
+    q: "Le corrigé est-il inclus automatiquement ?",
+    a: "Oui, chaque examen généré est accompagné d'un corrigé détaillé avec méthodologie complète, formules, et barème par question — prêt à distribuer ou à garder pour la correction.",
+  },
+  {
+    q: "Est-ce gratuit pour commencer ?",
+    a: "Oui, chaque enseignant peut générer un premier examen complet gratuitement, sans carte bancaire. L'abonnement Pro débloque ensuite 10 examens par mois (20 en formule annuelle).",
+  },
+  {
+    q: "Puis-je exporter mes examens en Word ou PDF ?",
+    a: "Oui. Chaque examen et son corrigé s'exportent en un clic au format .docx modifiable ou en PDF prêt à imprimer, mise en page professionnelle incluse.",
+  },
+];
+
 export default function BacLibanaisLanding() {
   return (
     <div className="min-h-screen bg-[var(--bg)] flex flex-col">
       <SchemaOrg
-        schema={{
-          "@context": "https://schema.org",
-          "@type": "WebApplication",
-          "name": "Imtihan — Générateur d'examen Bac Libanais IA",
-          "url": "https://imtihan.live/generateur-examen-bac-libanais",
-          "description": "Le premier générateur d'examen Bac Libanais intelligent. Créez des examens blancs et contrôles (Terminale SG, SV, SE, LH et Brevet EB9) avec corrigé complet en 30 secondes.",
-          "applicationCategory": "EducationalApplication",
-          "operatingSystem": "All",
-          "offers": {
-            "@type": "Offer",
-            "price": "0.00",
-            "priceCurrency": "USD",
-            "category": "FreeTrial"
-          },
-          "educationalAlignment": [
-            {
-              "@type": "AlignmentObject",
-              "alignmentType": "educationalSubject",
-              "educationalFramework": "Lebanese National Curriculum (CRDP Liban)",
-              "targetName": "Baccalauréat Libanais (Terminale SG, SV, SE, LH)",
-              "targetUrl": "https://imtihan.live/generateur-examen-bac-libanais"
+        schema={[
+          {
+            "@context": "https://schema.org",
+            "@type": "WebApplication",
+            "name": "Imtihan — Générateur d'examen Bac Libanais IA",
+            "url": "https://imtihan.live/generateur-examen-bac-libanais",
+            "description": "Le premier générateur d'examen Bac Libanais intelligent. Créez des examens blancs et contrôles (Terminale SG, SV, SE, LH et Brevet EB9) avec corrigé complet en 30 secondes.",
+            "applicationCategory": "EducationalApplication",
+            "operatingSystem": "All",
+            "offers": {
+              "@type": "Offer",
+              "price": "0.00",
+              "priceCurrency": "USD",
+              "category": "FreeTrial"
             },
-            {
-              "@type": "AlignmentObject",
-              "alignmentType": "educationalSubject",
-              "educationalFramework": "Lebanese National Curriculum (CRDP Liban)",
-              "targetName": "Brevet Libanais (EB9)",
-              "targetUrl": "https://imtihan.live/generateur-examen-bac-libanais"
-            }
-          ]
-        }}
+            "educationalAlignment": [
+              {
+                "@type": "AlignmentObject",
+                "alignmentType": "educationalSubject",
+                "educationalFramework": "Lebanese National Curriculum (CRDP Liban)",
+                "targetName": "Baccalauréat Libanais (Terminale SG, SV, SE, LH)",
+                "targetUrl": "https://imtihan.live/generateur-examen-bac-libanais"
+              },
+              {
+                "@type": "AlignmentObject",
+                "alignmentType": "educationalSubject",
+                "educationalFramework": "Lebanese National Curriculum (CRDP Liban)",
+                "targetName": "Brevet Libanais (EB9)",
+                "targetUrl": "https://imtihan.live/generateur-examen-bac-libanais"
+              }
+            ]
+          },
+          buildFaqSchema(BAC_LIBANAIS_FAQ_ITEMS),
+        ]}
       />
 
       {/* Navigation */}
@@ -179,6 +206,8 @@ export default function BacLibanaisLanding() {
             </Link>
           </div>
         </section>
+
+        <LandingFAQ items={BAC_LIBANAIS_FAQ_ITEMS} title="Tout ce qu'il faut savoir" eyebrow="Questions fréquentes" />
       </main>
 
       <PublicFooter />
