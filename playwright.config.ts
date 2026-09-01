@@ -28,7 +28,12 @@ export default defineConfig({
     command: "npx next dev --turbopack -p 3005",
     url: "http://localhost:3005",
     reuseExistingServer: true,
-    timeout: 120_000,
+    // Bumped from 120s -> 180s: a live run on 2026-09-01 timed out at the
+    // 120s mark on a cold boot (Turbopack + Firebase Admin init). See
+    // DAILY_LOG.md for the investigation; browsers were already cached
+    // (ruling out a Playwright install issue), so this was a genuine slow
+    // boot, not a missing-dependency problem.
+    timeout: 180_000,
   },
   projects: [
     {

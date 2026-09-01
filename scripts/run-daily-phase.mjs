@@ -61,12 +61,21 @@ function runPlaywright(specFile) {
   const jsonOut = path.join(os.tmpdir(), `imtihan-phase-report-${Date.now()}.json`);
   const relSpec = path.join("e2e", "phases", specFile);
 
+  // On Windows, spawning a .cmd file (npx.cmd) without shell:true from a
+  // nested Node process (this script is itself invoked by `npm run`, which
+  // spawns `node scripts/run-daily-phase.mjs`) fails silently: spawnSync
+  // returns almost instantly with status null (-> exitCode defaults to 1
+  // below) and produces no stdout/stderr at all, even with stdio:'inherit'.
+  // That exact symptom ("0 passed, 0 failed in 0.0s", no visible playwright
+  // output) is what the 2026-09-01 daily run hit. shell:true makes Node run
+  // the .cmd through cmd.exe properly. See DAILY_LOG.md for the diagnosis.
   const result = spawnSync(
     process.platform === "win32" ? "npx.cmd" : "npx",
     ["playwright", "test", relSpec, "--reporter=list,json"],
     {
       cwd: ROOT,
       stdio: "inherit",
+      shell: process.platform === "win32",
       env: { ...process.env, PLAYWRIGHT_JSON_OUTPUT_NAME: jsonOut },
     }
   );

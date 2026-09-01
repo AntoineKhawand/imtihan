@@ -69,7 +69,7 @@ a fresh dev server can occasionally outlast a flat timeout.
 | # | Phase | Covers | Last Run | Status | Result |
 |---|-------|--------|----------|--------|--------|
 | 1 | Auth & Navigation | Landing/footer/404, pricing toggle, login/register/forgot forms, UserNav hover menu + sign out, auth gates on dashboard/community/admin | 2026-09-01 08:59 UTC | ❌ Failing | 0 passed, 0 failed |
-| 2 | Exam Creation (Describe + Confirm) | `/create` textarea, example chips, class profiles, arXiv search, dropzone, free-limit gate, real Analyze call; `/create/confirm` dropdowns, chapter chips, geographic context, blueprint inputs, template picker, Version B toggle | Not yet run | ⏳ Pending | – |
+| 2 | Exam Creation (Describe + Confirm) | `/create` textarea, example chips, class profiles, arXiv search, dropzone, free-limit gate, real Analyze call; `/create/confirm` dropdowns, chapter chips, geographic context, blueprint inputs, template picker, Version B toggle | 2026-09-01 21:05 UTC | ❌ Failing | 0 passed, 0 failed |
 | 3 | Generation & Exercise Editor | `/create/generate` exercise rendering, chapter coverage, action menu, Corrigé + calculators, ExerciseEditor modal (tabs, difficulty, MCQ correctness, sub-questions, plots, save/cancel), one real golden-path generation | Not yet run | ⏳ Pending | – |
 | 4 | Export | `/create/export` header fields, Pro-gated logo upload, template/variant toggles, real Word download, PDF new-tab, save to library, real email send | Not yet run | ⏳ Pending | – |
 | 5 | Dashboard & Bank | Exam rows (expand/duplicate/delete/download), quota states, bundle modal, sidebar; Bank tabs, BankCard actions, Invite Colleagues modal | Not yet run | ⏳ Pending | – |
@@ -80,6 +80,8 @@ a fresh dev server can occasionally outlast a flat timeout.
 ## Run Log
 
 *(newest first — appended automatically by `scripts/run-daily-phase.mjs`)*
+
+- 2026-09-01 21:05 UTC — Phase 2 (exam creation): ❌ 0 passed, 0 failed (238.3s)
 
 - 2026-09-01 08:59 UTC — Phase 1 (auth navigation): ❌ 0 passed, 0 failed (0.0s)
 
