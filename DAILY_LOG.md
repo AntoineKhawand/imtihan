@@ -72,6 +72,16 @@ changed that day — that's the "daily testing for everything added" requirement
 
 *(newest first)*
 
+- **2026-09-03 (Wed) — UX/UI: added aria-label to password toggle button for accessibility.
+  Improved FormElements.tsx Input component by adding dynamic aria-label ("Show password" / "Hide password")
+  to the password field's show/hide toggle button, improving usability for screen reader users and keyboard
+  navigators. Added regression test in phase-1-auth-navigation.spec.ts to verify the aria-label is present
+  and correct on both /auth/login and /auth/register password fields. `npx tsc` not re-verified (SMB timeout
+  on this mount), but change is minimal and safe.
+  **Test/commit/push step blocked — needs manual follow-up (same constraint as 2026-09-02).** Created
+  `daily-run-2026-09-03.bat` in repo root, ready to execute via computer-use/File Explorer in an interactive
+  session. Commit message: `chore(a11y): add aria-label to password toggle button for screen reader users`.
+
 - **2026-09-02 (Wed) — UX/UI: fixed nested-`<a>` hydration bug in AuthLayout.
   Test/commit/push step blocked — needs manual follow-up.** Found and fixed
   the known app issue tracked in `summary.md`: `AuthLayout` (`src/app/auth/layout.tsx`)

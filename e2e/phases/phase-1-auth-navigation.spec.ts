@@ -254,6 +254,21 @@ test.describe("AuthLayout — no nested anchors", () => {
   }
 });
 
+// ─── Password field accessibility ────────────────────────────────────────────
+// Regression test: password toggle button must have aria-label for screen readers.
+
+test.describe("Password toggle button accessibility", () => {
+  for (const path of ["/auth/login", "/auth/register", "/auth/forgot"]) {
+    if (path === "/auth/forgot") continue; // forgot page doesn't have a password field
+
+    test(`${path} password toggle has aria-label`, async ({ page }) => {
+      await page.goto(BASE_URL + path);
+      const toggleButton = page.locator('button[aria-label*="password"]');
+      await expect(toggleButton).toHaveAttribute("aria-label", /Show password|Hide password/);
+    });
+  }
+});
+
 // ─── UserNav (hover menu) & sign out ──────────────────────────────────────────
 
 test.describe("UserNav — signed in", () => {
