@@ -69,6 +69,61 @@ function splitMath(text: string, open: string, close: string): Array<{ kind: "te
   return parts;
 }
 
+/**
+ * Fix malformed \boxed{...} expressions where the AI nested stray $...$
+ * delimiters INSIDE the braces instead of wrapping the whole boxed
+ * expression in a single outer $...$ pair, e.g.:
+ *   \boxed{$y = h$ + x\tan\alpha - \frac{g}{2v_0^2\cos^2\alpha}\,x^2}
+ * The inner "$y = h$" confuses splitMath, which cuts the brace content in
+ * half at the first "$" it finds — leaving the rest as unrendered raw
+ * LaTeX text. This walks \boxed{...} spans with proper brace-depth
+ * tracking (so nested commands like \frac{a}{b} inside are handled
+ * correctly), strips any stray "$" found inside, and ensures the whole
+ * expression is wrapped in exactly one outer $...$ pair.
+ */
+function fixBoxedMath(text: string): string {
+  const KEYWORD = "\\boxed{";
+  let result = "";
+  let i = 0;
+  while (i < text.length) {
+    const idx = text.indexOf(KEYWORD, i);
+    if (idx === -1) {
+      result += text.slice(i);
+      break;
+    }
+    result += text.slice(i, idx);
+
+    let depth = 0;
+    let j = idx + KEYWORD.length - 1; // index of the opening '{'
+    const start = j;
+    let closed = false;
+    for (; j < text.length; j++) {
+      if (text[j] === "{") depth++;
+      else if (text[j] === "}") {
+        depth--;
+        if (depth === 0) {
+          j++;
+          closed = true;
+          break;
+        }
+      }
+    }
+
+    if (!closed) {
+      // Unbalanced braces — bail out rather than risk corrupting content.
+      result += text.slice(idx);
+      return result;
+    }
+
+    const inner = text.slice(start + 1, j - 1).replace(/\$/g, "");
+    const rebuilt = `\\boxed{${inner}}`;
+    const alreadyWrapped = result.endsWith("$") && text[j] === "$";
+    result += alreadyWrapped ? rebuilt : `$${rebuilt}$`;
+    i = j;
+  }
+  return result;
+}
+
 function parseLists(text: string): string {
   const lines = text.split("\n");
   const result: string[] = [];
@@ -221,6 +276,8 @@ export function renderContent(raw: string): string {
 
   // Convert backticks containing LaTeX triggers (\, ^, _, {) to math blocks
   text = text.replace(/`([^`]*[\\^_{][^`]*)`/g, "$$$1$$");
+  // Fix \boxed{...} with stray internal $ delimiters (see fixBoxedMath doc comment)
+  text = fixBoxedMath(text);
   // Fix nested \ce{\ce{...}} hallucinations
   text = text.replace(/\\ce\s*\{(?:\s*\\ce\s*\{([\s\S]*?)\}|([\s\S]*?))\}/g, (_match, inner1, inner2) => {
     return `\\ce{${(inner1 || inner2 || "").trim()}}`;

@@ -1,5 +1,5 @@
 import type { ExamContext } from "@/types/exam";
-import { buildChaptersSummary } from "@/data/curricula";
+import { buildChaptersSummary, getChapter } from "@/data/curricula";
 
 // ---------------------------------------------------------------------------
 // Language instructions
@@ -480,7 +480,7 @@ STRICT MONOLINGUALISM (ZERO TOLERANCE FOR MIXED LANGUAGES):
 CRITICAL RULES:
 1. All calculations must be correct — verify every numerical answer before writing it.
 2. Numbers must be realistic: no negative masses, no speeds exceeding c, no impossible concentrations.
-3. Each exercise must stay within the selected chapters — no out-of-scope content.
+3. Each exercise must stay within the selected chapters — no out-of-scope content. CHAPTER COVERAGE IS MANDATORY: the user prompt includes a per-exercise chapter assignment ("CHAPTER COVERAGE" block) — every selected chapter MUST appear in at least one exercise (or as a distinct sub-question when an exercise is assigned multiple chapters). Do not concentrate all exercises on only 1-2 chapters while ignoring others that were selected.
 4. MATH & CHEMISTRY NOTATION — JSON requires double-escaped backslashes: write \\\\frac, \\\\sqrt, \\\\alpha, \\\\vec, \\\\int. For chemical equations, you MUST wrap mhchem in dollar signs: $\\\\ce{CH4 + 2O2 -> CO2 + 2H2O}$. NEVER write \\\\ce without the surrounding $...$ and NEVER write \\\\ce without braces (e.g. \\\\ceCH4 is INVALID). Bare \\\\ce{} without $...$ will show as raw code text — always $\\\\ce{...}$. Single backslash is INVALID inside a JSON string and will crash the parser.
 5. SCIENTIFIC ACCURACY: We use a high-precision verification engine (Math.js) for all generated answers. Ensure all numerical values, unit conversions, and statistical results are mathematically exact.
 6. NOTATION & SPACING (CRITICAL — ZERO TOLERANCE FOR PLAIN TEXT MATH):
@@ -534,7 +534,7 @@ CRITICAL RULES:
 SOLUTION QUALITY — The corrigé must be readable at a glance:
 - Use ${stepExample} headers (match the exam language — NEVER use English "Step" in a French or Arabic exam). DO NOT use markdown bold stars (**).
 - Show the literal formula BEFORE putting numbers in.
-- End with a boxed final answer: "$\\\\\\\\boxed{result}$".
+- End with a boxed final answer: "$\\\\\\\\boxed{result}$". The boxed content itself must be PLAIN LaTeX with NO internal $...$ delimiters — the single outer $...$ pair already covers the whole boxed expression. WRONG: $\\\\\\\\boxed{$y = h$ + x\\\\\\\\tan\\\\\\\\alpha}$ (stray $ signs inside the braces break rendering). RIGHT: $\\\\\\\\boxed{y = h + x\\\\\\\\tan\\\\\\\\alpha}$.
 
 LATEX IN METHODOLOGY (CRITICAL — violations produce unreadable corrigés):
 - EVERY mathematical symbol, formula, equation, fraction, vector, or variable MUST be wrapped in $...$. No exceptions.
@@ -557,7 +557,7 @@ LATEX IN METHODOLOGY (CRITICAL — violations produce unreadable corrigés):
     |---|---|---|---|---|
     | $f'(x)$ | $+$ | $0$ | $-$ | $0$ | $+$ |
     | $f(x)$ | $-\\\\\\\\infty$ | $\\\\\\\\nearrow 2$ | $\\\\\\\\searrow$ | $\\\\\\\\nearrow +\\\\\\\\infty$ |
-- BOXED ANSWERS: Every final result MUST be in $\\\\\\\\boxed{...}$ and wrapped in $...$. Example: "$\\\\\\\\boxed{y = 12x - 5}$".
+- BOXED ANSWERS: Every final result MUST be in $\\\\\\\\boxed{...}$ and wrapped in ONE outer $...$ pair. Example: "$\\\\\\\\boxed{y = 12x - 5}$". NEVER place additional $...$ delimiters inside the braces (e.g. $\\\\\\\\boxed{$y = 12x - 5$}$ is WRONG and renders as broken raw text) — everything inside \\\\\\\\boxed{...} is already math.
 
 BARÈME (mandatory for every exercise):
 - bareme: one entry per sub-question (or per main question if no sub-questions). label = the question label ("1.a", "Q2", "Partie B - 3", etc.), points = integer, criterion = one short sentence stating what earns those points (e.g. "Expression correcte de la force de Coulomb" or "Balanced equation with state symbols").
@@ -629,6 +629,47 @@ JSON schema for the output:
 IMPORTANT: "options" must be a 4-element array when type is "multiple_choice", and null for all other types.`;
 }
 
+/**
+ * Deterministically maps every selected chapter to at least one exercise
+ * number, mirroring the explicit per-exercise difficulty breakdown below.
+ * Without this, the AI is only told "stay within these chapters" with no
+ * requirement that ALL of them appear — so with a short exercise count it
+ * would freely cover only 1-2 chapters and silently skip the rest (the
+ * "Chapter coverage" warning teachers see on /create/generate).
+ *
+ * - If exerciseCount >= chapters: every chapter gets >=1 exercise; any
+ *   leftover exercise slots cycle back through the chapter list.
+ * - If exerciseCount < chapters: multiple chapters are assigned to the same
+ *   exercise, with an explicit instruction to cover each as a distinct
+ *   sub-question rather than dropping any chapter.
+ */
+function buildChapterDistribution(context: ExamContext): string {
+  if (context.curriculumId === "university") return "";
+  const { chapterIds, exerciseCount, curriculumId, levelId, subject } = context;
+  if (!chapterIds || chapterIds.length === 0 || exerciseCount < 1) return "";
+
+  const names = chapterIds.map((cid) => {
+    const ch = getChapter(curriculumId, levelId, subject, cid);
+    return ch ? (ch.name.fr ?? ch.name.en ?? cid) : cid;
+  });
+
+  const perExercise: string[][] = Array.from({ length: exerciseCount }, () => []);
+  names.forEach((name, idx) => {
+    perExercise[idx % exerciseCount].push(name);
+  });
+  // If there are fewer chapters than exercises, cycle back through the
+  // chapter list to fill the remaining exercise slots.
+  for (let i = names.length; i < exerciseCount; i++) {
+    perExercise[i].push(names[i % names.length]);
+  }
+
+  const lines = perExercise.map((chNames, i) =>
+    `- Exercise ${i + 1} → ${chNames.map((n) => `"${n}"`).join(" + ")}${chNames.length > 1 ? " (cover EACH as a distinct sub-question within this exercise — do not drop any of them)" : ""}`
+  );
+
+  return `\nCHAPTER COVERAGE (MANDATORY — every chapter listed in <selected_chapters> must appear in at least one exercise; never silently skip a selected chapter):\n${lines.join("\n")}`;
+}
+
 // ---------------------------------------------------------------------------
 // User prompt builder
 // ---------------------------------------------------------------------------
@@ -657,6 +698,8 @@ export function buildGenerateUserPrompt(
 - Medium: ${Math.round(context.difficultyMix.medium * context.exerciseCount)} exercise(s) (${Math.round(context.difficultyMix.medium * 100)}%)
 - Hard:   ${Math.round(context.difficultyMix.hard   * context.exerciseCount)} exercise(s) (${Math.round(context.difficultyMix.hard   * 100)}%)`;
 
+  const chapterDistribution = buildChapterDistribution(context);
+
   const teacherNotesStr = context.teacherNotes ? `\nTeacher notes:\n${context.teacherNotes}` : "";
   const templateStr = context.templateType === "modern"
     ? "\nTEMPLATE: Use the standard Modern (Standard) layout. Ignore the visual layout of any uploaded documents — use them for content only."
@@ -674,6 +717,7 @@ Exam type  : ${context.examType}
 Duration   : ${context.duration} minutes
 Total points: ${context.totalPoints} (points must sum to exactly ${context.totalPoints})
 Difficulty : ${difficultyBreakdown}
+${chapterDistribution}
 ${teacherNotesStr}
 ${templateStr}
 ${visualStr}

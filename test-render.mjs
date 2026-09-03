@@ -61,8 +61,40 @@ function applySafetyNet(content) {
   return content;
 }
 
+function fixBoxedMath(text) {
+  const KEYWORD = "\\boxed{";
+  let result = "";
+  let i = 0;
+  while (i < text.length) {
+    const idx = text.indexOf(KEYWORD, i);
+    if (idx === -1) { result += text.slice(i); break; }
+    result += text.slice(i, idx);
+
+    let depth = 0;
+    let j = idx + KEYWORD.length - 1;
+    const start = j;
+    let closed = false;
+    for (; j < text.length; j++) {
+      if (text[j] === "{") depth++;
+      else if (text[j] === "}") {
+        depth--;
+        if (depth === 0) { j++; closed = true; break; }
+      }
+    }
+    if (!closed) { result += text.slice(idx); return result; }
+
+    const inner = text.slice(start + 1, j - 1).replace(/\$/g, "");
+    const rebuilt = `\\boxed{${inner}}`;
+    const alreadyWrapped = result.endsWith("$") && text[j] === "$";
+    result += alreadyWrapped ? rebuilt : `$${rebuilt}$`;
+    i = j;
+  }
+  return result;
+}
+
 function renderSimple(raw) {
-  const text = raw.replace(/\\n/g, "\n");
+  let text = raw.replace(/\\n/g, "\n");
+  text = fixBoxedMath(text);
   const displayParts = splitMath(text, "$$", "$$");
   return displayParts.map(part => {
     if (part.kind === "math") return `[DISPLAY:${part.content.trim()}]`;
@@ -168,6 +200,26 @@ const TESTS = [
     name: "17. Empty math between $$",
     input: `The voltage is $V_1 = 5 V$ and $V_2 = $ 10 V.`,
     desc: "Empty math between two adjacent $"
+  },
+  {
+    name: "18. User-reported: \\boxed{} with stray internal $ (projectile motion)",
+    input: `\\boxed{$y = h$ + x\\tan\\alpha - \\frac{g}{2v_0^2\\cos^2\\alpha}\\,x^2}`,
+    desc: "Nested $ inside \\boxed{} braces breaks splitMath — must be stripped and the whole thing wrapped in one outer $...$"
+  },
+  {
+    name: "19. \\boxed{} with stray $ inside a sentence",
+    input: `Donc la réponse finale est \\boxed{$v = 3\\,m/s$}.`,
+    desc: "Same bug pattern, embedded mid-sentence"
+  },
+  {
+    name: "20. \\boxed{} already correctly wrapped",
+    input: `La solution est $\\boxed{y = 12x - 5}$.`,
+    desc: "Correct AI output — must stay a single MATH segment, not double-wrapped"
+  },
+  {
+    name: "21. \\boxed{} with nested \\frac, no stray $",
+    input: `\\boxed{T_0 = 2\\pi\\sqrt{\\frac{m}{k}}}`,
+    desc: "Nested braces (\\sqrt{\\frac{m}{k}}) inside \\boxed{} must not confuse brace-depth tracking"
   },
 ];
 

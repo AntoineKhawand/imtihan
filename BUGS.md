@@ -58,6 +58,56 @@ These are intentional constraints in MVP — document here to avoid re-opening a
 
 ---
 
+## BUG-008: \boxed{} final answers with stray internal $ delimiters render as raw LaTeX
+**Status:** Fixed
+**Severity:** High
+**Area:** UI / Generation / Math rendering
+**Reported:** 2026-09-03
+**Fixed:** 2026-09-03
+
+**Description:** Physics/chemistry corrigés sometimes showed the raw LaTeX code instead of rendered math,
+e.g. `\boxed{$y = h$ + x\tan\alpha - \frac{g}{2v_0^2\cos^2\alpha}\,x^2}` appeared verbatim on screen.
+**Root cause:** The generation prompt told the AI to wrap final answers as `$\boxed{result}$` (one outer
+$...$ pair) but a separate "wrap every variable in $...$" rule caused the AI to also nest `$...$` around
+sub-expressions INSIDE the `\boxed{}` braces. `renderContent.ts`'s `splitMath()` naively finds the first
+`$` and treats it as a delimiter boundary — it cut straight through the `\boxed{...}` braces, corrupting
+the brace matching and leaving everything after the first internal `$` as unrendered raw text.
+**Fix:** (1) Added `fixBoxedMath()` in `renderContent.ts` — a brace-depth-aware preprocessing pass that
+finds every `\boxed{...}` span (correctly handling nested braces like `\frac{a}{b}` inside), strips any
+stray `$` found inside, and ensures the whole expression is wrapped in exactly one outer `$...$` pair
+before the normal KaTeX pipeline runs. Runs defensively regardless of what the AI outputs. (2) Clarified
+`src/lib/prompts/generate.ts`'s boxed-answer rules to explicitly forbid internal `$` delimiters, with a
+right/wrong example. Added 4 new cases (18-21) to `test-render.mjs`'s regression harness — all pass
+(21/21 total).
+
+---
+
+## BUG-009: Some selected chapters get zero exercises ("Chapter coverage" warning)
+**Status:** Fixed
+**Severity:** Medium
+**Area:** Generation / Prompts
+**Reported:** 2026-09-03
+**Fixed:** 2026-09-03
+
+**Description:** When a teacher selected multiple chapters (e.g. "Mécanique — mouvements dans l'espace"
+and "Électromagnétisme" among others), the generated exam sometimes had zero exercises tagged with one
+or more of the selected chapters — flagged by the `/create/generate` "Chapter coverage" warning ("Some
+chapters have no exercise — regenerate individual questions to adjust coverage").
+**Root cause:** Unlike difficulty (which gets an explicit per-exercise breakdown — "Easy: 2, Medium: 1,
+Hard: 1"), chapters had no equivalent per-exercise assignment. The prompt only said "stay within these
+selected chapters" with no requirement that every one of them actually appear, so with a short exercise
+count relative to the number of selected chapters, the AI could freely concentrate all exercises on just
+1-2 chapters.
+**Fix:** Added `buildChapterDistribution()` in `src/lib/prompts/generate.ts` — deterministically maps
+every selected chapter to a specific exercise number (round-robin) before generation, mirroring the
+difficulty breakdown pattern. When there are more chapters than exercises, multiple chapters are assigned
+to the same exercise with an explicit instruction to cover each as a distinct sub-question rather than
+dropping any. Verified the distribution algorithm against 6 scenarios (more/fewer/equal chapters vs.
+exercises) — every chapter is guaranteed at least one assigned exercise slot in all cases. Also
+strengthened the system prompt's chapter-scope rule to reference this mandatory coverage requirement.
+
+---
+
 ## BUG-001: Register page syntax error — double `return (` statement
 **Status:** Fixed
 **Severity:** Critical
