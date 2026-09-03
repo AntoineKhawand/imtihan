@@ -48,7 +48,6 @@ spends a small amount of real quota:
 - `/create/generate`'s "Back" link points to `/create/structure`, which doesn't exist (404). Tracked as a spawned follow-up.
 - `/bank`'s "Go to Settings" link (My School tab, no school set) points to `/account`, which doesn't exist (404). Tracked as a spawned follow-up.
 - The cache key written before navigating to `/create/generate` from the Community "Remix" action (and in the pre-existing `e2e/qcm.spec.ts` seed helper) omits the `t: templateId` field that `create/generate/page.tsx` expects, so the exercise cache never matches and a live regeneration fires even when cached exercises exist. Tracked as a spawned follow-up.
-- `AuthLayout` wraps `<Logo>` in its own `<Link href="/">`, but `Logo` already renders an internal `<Link href="/">` — nested anchors trigger a hydration-mismatch and a full client remount on every `/auth/*` page load. Tracked as a spawned follow-up.
 - The CSP header (`src/proxy.ts`) doesn't whitelist `googletagmanager.com`, so Google Analytics is silently blocked by the browser on every page load. Tracked as a spawned follow-up.
 
 ## Architecture note: auth gating happens in `src/proxy.ts`

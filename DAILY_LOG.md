@@ -53,28 +53,71 @@ changed that day — that's the "daily testing for everything added" requirement
   indefinitely on this SMB-mounted repo** — don't fall back to bash git as a workaround for a
   blocked computer-use grant; it's not a faster path, it's just a different way to get stuck. Same
   goes for `tsc --noEmit` from bash — it can time out well past 3 minutes on this mount even with
-  no real type errors; don't treat a bash timeout on it as a signal something is broken.
+  no real type errors; don't treat a bash timeout on it as a signal something is broken. `git log`
+  (local, read-only, no network/index touch) is reliably fast from bash even when `git status`/
+  `git push` are not — use it to sanity-check whether a stuck Windows-side commit actually landed
+  before assuming nothing happened.
+- **A `git push` inside a combined test+commit+push `.bat` can hang indefinitely with zero output,
+  even though `git commit` in the same script just succeeded and a bare `git push origin master` in
+  a fresh, separate `.bat` immediately afterward succeeds in seconds.** Root cause unconfirmed (not
+  GitHub auth or network — the isolated retry proved that); possibly something about the long-running
+  cmd session's state after `npm run test:e2e:daily` finishes. If a combined script's `git push` step
+  produces no output for several minutes, don't keep waiting or hunting for the stuck process in Task
+  Manager (its Processes tab doesn't reliably show/scroll to short-lived console processes via
+  computer-use anyway) — just verify the commit landed with `git log` (see above), then write and run
+  a second, minimal push-only `.bat` (`del index.lock` + `git push origin master` + status file). It's
+  a fast, reliable escape hatch and avoids re-running the whole test suite just to retry a push.
 
 ## Run Log
 
 *(newest first)*
 
-- **2026-09-01 (2nd run) — Playwright runner bugfix, blocked on execution.** Investigated why the
-  first run's `npm run test:e2e:daily` produced `Phase 1 done: 0 passed, 0 failed in 0.0s` with
-  *zero* visible Playwright output in between (not a slow-boot timeout — the earlier 120s→180s
-  `webServer` timeout bump from this morning's first run wasn't the cause). Root cause:
-  `scripts/run-daily-phase.mjs` spawns `npx.cmd` via `spawnSync` without `shell: true`. On Windows,
-  spawning a `.cmd` file directly from a nested Node process (this script is itself invoked by
-  `npm run`, which spawns `node scripts/run-daily-phase.mjs`) can fail near-instantly with a null
-  exit status and no stdout/stderr at all despite `stdio: 'inherit'` — which matches the symptom
-  exactly. Fixed by adding `shell: process.platform === "win32"` to that `spawnSync` call. **Not
-  yet verified end-to-end**: this run's `request_access(["File Explorer", "Command Prompt"])`
-  calls were both rejected with "can't be approved during a scheduled run" (see Operational notes
-  above — new finding), and a bash-side `git status`/`tsc --noEmit` fallback attempt hung past 30s
-  and 177s respectively without completing, so nothing was committed or pushed this run. A
-  ready-to-run `daily-run2-2026-09-01.bat` is sitting in the repo root (uncommitted, untracked) —
-  next run (or Antoine, interactively) should execute it via computer-use to confirm Phase 1
-  actually passes now and to commit/push the fix.
+- **2026-09-02 (Wed) — UX/UI: fixed nested-`<a>` hydration bug in AuthLayout.
+  Test/commit/push step blocked — needs manual follow-up.** Found and fixed
+  the known app issue tracked in `summary.md`: `AuthLayout` (`src/app/auth/layout.tsx`)
+  wrapped `<Logo>` in its own `<Link href="/">`, and `Logo` always rendered an
+  internal `<Link href="/">` too — nested `<a>` tags are invalid HTML and were
+  forcing a hydration-mismatch + full client remount on every `/auth/login`,
+  `/auth/register`, and `/auth/forgot` page load. Fix: added an `asLink` prop
+  to `Logo` (`src/components/ui/Logo.tsx`, defaults to `true` for every other
+  existing call site) so a caller that already wraps it in a link can opt out
+  of Logo's own `<Link>` and render a plain `<span>` instead; `AuthLayout` now
+  passes `asLink={false}`. No color/token changes. Removed the now-resolved
+  item from `summary.md`'s "Known app issues" list and the stale workaround
+  comments in `e2e/phases/phase-1-auth-navigation.spec.ts` that referenced
+  this bug. Added a new regression block to that same spec —
+  `AuthLayout — no nested anchors` — that loads all three auth pages at a
+  desktop (lg+) viewport and asserts zero `<a>` elements contain another
+  `<a>` in the DOM. `npx tsc --noEmit --skipLibCheck` ran clean (exit 0, fast,
+  no timeout).
+  **This run could not execute the `.bat` (test + commit + push) step**:
+  `request_access` for Command Prompt / File Explorer returned "can't be
+  approved during a scheduled run" on both the first call and the same-turn
+  retry — per the operational note below, there's no workaround from inside
+  an unattended run. `daily-run-2026-09-02.bat` is sitting in the repo root,
+  ready to run as-is (runs `npm run test:e2e:daily`, then `git add`/`commit`/
+  `push`, writing output to `daily-run-2026-09-02-result.txt` and a
+  `daily-run-2026-09-02-status.txt` marker on completion) — it just needs
+  either an interactive session (so the access dialog can be approved) or a
+  manual double-click. **Today's Playwright phase run and code push did not
+  happen; the fix above is committed to disk but not to git.**
+
+- **2026-09-02 — Playwright runner bugfix confirmed + pushed (commit `d4ed89a`).** Antoine asked
+  interactively to commit/push the fix left pending by the prior run. Ran `daily-run2-2026-09-01.bat`
+  via computer-use: the `shell: true` fix **worked** — Phase 2 actually executed this time (238.3s,
+  real Playwright output) instead of the previous instant `0 passed, 0 failed in 0.0s` crash, so the
+  spawnSync root cause is confirmed fixed. Phase 2 itself then hit a *separate*, genuine issue —
+  `Error: Timed out waiting 180000ms from config.webServer` — i.e. the dev server still doesn't come
+  up within 180s even after this morning's 120s→180s bump; that's still open, see the note below.
+  `git add`/`commit` completed fine (message: `fix(e2e): use shell:true when spawning npx.cmd on
+  Windows in daily phase runner`), but `git push` then hung for ~19 minutes with zero output and no
+  visible process in Task Manager's Processes tab before I gave up waiting on it — see new
+  Operational note below. A second, minimal `push-only-2026-09-02.bat` (just `git push origin
+  master`, no test rerun) ran instantly and succeeded (`0cb12d6..d4ed89a  master -> master`), so the
+  push itself works fine in isolation; whatever the first run's cmd session got stuck on, it wasn't
+  GitHub auth or network. **Next run should investigate the Phase 2 `webServer` timeout** — check
+  for a stale process already holding port 3005 from a previous run (the likely culprit, since nothing
+  else changed since the 180s bump), or profile the dev server's actual cold-boot time directly.
 
 - **2026-09-01 — Playwright pipeline validation.** Ran the daily phase script live for the first time (previously "no runs yet"). Findings: (1) `npx playwright install chromium --with-deps` **hangs indefinitely on Windows** — `--with-deps` triggers a UAC elevation request that lands on the secure desktop and can't be approved by unattended automation. Never use `--with-deps` on Windows; it's unnecessary here anyway. (2) Chromium is already cached locally (`%USERPROFILE%\AppData\Local\ms-playwright`, several versions) — installs without `--with-deps` are a fast no-op. (3) `npx playwright test` on Phase 1 timed out waiting for the dev server (`Error: Timed out waiting 120000ms from config.webServer`) — bumped `playwright.config.ts`'s webServer timeout from 120s to 180s to give Turbopack + Firebase Admin cold-boot more room. **Not yet re-verified end to end after the timeout bump** — next scheduled run should confirm Phase 1 actually passes now, and if it still times out at 180s, investigate further (check for a port-3005 process left over from a previous run, or profile the boot directly) rather than keep raising the timeout blindly.
 

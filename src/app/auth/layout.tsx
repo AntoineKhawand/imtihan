@@ -32,7 +32,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         {/* Top: Logo */}
         <div className="relative z-10">
           <Link href="/" className="inline-flex items-center gap-3 hover:opacity-80 transition-opacity">
-            <Logo size={36} showText={false} />
+            <Logo size={36} showText={false} asLink={false} />
             <span className="text-white font-bold text-lg tracking-tight">Imtihan</span>
           </Link>
         </div>

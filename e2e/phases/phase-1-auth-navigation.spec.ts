@@ -132,11 +132,8 @@ test.describe("/auth/login", () => {
 
   test("Sign in enables once both fields are filled, and rejects bad creds", async ({ page }) => {
     await page.goto(BASE_URL + "/auth/login");
-    // AuthLayout nests a <Link> around <Logo>, which itself renders its own
-    // <Link> — a hydration-mismatch (see the spawned follow-up) that forces
-    // a full client remount shortly after first paint. Waiting for
-    // networkidle here avoids filling fields right before that remount
-    // wipes them.
+    // First load also pays Turbopack's route compile cost — wait for
+    // network to settle before interacting with the form.
     await page.waitForLoadState("networkidle");
     await page.locator("input#email").fill("nonexistent-e2e-user@example.com");
     await page.locator('input[type="password"]').fill("WrongPassword123!");
@@ -177,7 +174,7 @@ test.describe("/auth/register", () => {
 
   test("weak password (<6 chars) is rejected without creating an account", async ({ page }) => {
     await page.goto(BASE_URL + "/auth/register");
-    await page.waitForLoadState("networkidle"); // see AuthLayout hydration note above
+    await page.waitForLoadState("networkidle"); // first-load Turbopack compile cost
     const uniqueEmail = `pw-e2e-weakpass-${Date.now()}@test.imtihan.live`;
     await page.locator("input#full-name").fill("E2E Test Teacher");
     await page.locator("input#email").fill(uniqueEmail);
@@ -232,6 +229,29 @@ test.describe("/auth/forgot", () => {
     await page.getByRole("button", { name: /Didn't get the email/i }).click();
     await expect(page.locator("input#email-address")).toBeVisible();
   });
+});
+
+// ─── AuthLayout structural integrity ──────────────────────────────────────────
+// Regression coverage for a fixed bug: AuthLayout used to wrap <Logo> in its
+// own <Link href="/">, and Logo always rendered an internal <Link href="/">
+// too — nested <a> tags are invalid HTML and forced React to discard and
+// remount the whole subtree on hydration (see summary.md's "Known app
+// issues" — now resolved via Logo's `asLink` prop). This guards against the
+// pattern coming back on any of the three auth pages.
+
+test.describe("AuthLayout — no nested anchors", () => {
+  for (const path of ["/auth/login", "/auth/register", "/auth/forgot"]) {
+    test(`${path} has no nested <a> elements in the desktop side panel`, async ({ page }) => {
+      await page.setViewportSize({ width: 1440, height: 900 }); // side panel only renders at lg+
+      await page.goto(BASE_URL + path);
+      await page.waitForLoadState("networkidle");
+
+      const nestedAnchorCount = await page.evaluate(() =>
+        Array.from(document.querySelectorAll("a")).filter((a) => a.querySelector("a")).length
+      );
+      expect(nestedAnchorCount).toBe(0);
+    });
+  }
 });
 
 // ─── UserNav (hover menu) & sign out ──────────────────────────────────────────

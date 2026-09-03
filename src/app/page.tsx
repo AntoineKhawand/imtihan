@@ -253,7 +253,7 @@ export default async function LandingPage() {
             {/* Headline */}
             <h1 className="serif text-display-2xl text-[var(--text)] leading-[0.95] tracking-tighter mb-5">
               <span className="md:block md:whitespace-nowrap">The exam you imagined,</span>
-              <span className="italic text-transparent bg-clip-text bg-gradient-to-r from-[var(--accent)] to-[var(--orange)] md:block">built in minutes.</span>
+              <span className="italic text-transparent bg-clip-text bg-gradient-to-r from-[var(--accent)] to-emerald-400 md:block">built in minutes.</span>
             </h1>
           </MotionHero>
 
@@ -396,9 +396,9 @@ export default async function LandingPage() {
       </section>
 
       {/* ── CURRICULA STRIP ──────────────────────────────────────────── */}
-      <section className="relative px-6 md:px-10 py-16 bg-gradient-to-br from-[var(--accent)] to-[#312E81] overflow-hidden border-y border-[var(--accent)]/20">
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[var(--orange)]/10 blur-[100px] rounded-full translate-x-1/3 -translate-y-1/3 pointer-events-none" />
-        <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-white/5 blur-[120px] rounded-full -translate-x-1/3 translate-y-1/3 pointer-events-none" />
+      <section className="relative px-6 md:px-10 py-16 bg-gradient-to-br from-[var(--accent)] to-[#0d3422] overflow-hidden border-y border-emerald-900/30">
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-emerald-400/10 blur-[100px] rounded-full translate-x-1/3 -translate-y-1/3 pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-emerald-600/15 blur-[120px] rounded-full -translate-x-1/3 translate-y-1/3 pointer-events-none" />
         <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-8">
           <div className="relative z-10">
             <p className="text-emerald-200 text-xs uppercase tracking-widest font-medium mb-2">Supported curricula</p>
