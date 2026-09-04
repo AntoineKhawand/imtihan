@@ -18,7 +18,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { isProActive } from "@/lib/subscription";
 import { db } from "@/lib/firebase";
 import {
-  collection, addDoc, getDocs, query, where, serverTimestamp, orderBy,
+  collection, addDoc, getDocs, query, where, serverTimestamp, orderBy, doc, updateDoc,
 } from "firebase/firestore";
 
 const DIFFICULTY_CONFIG = {
@@ -93,6 +93,8 @@ export default function BankPage() {
   const [loadingSchool, setLoadingSchool] = useState(false);
   const [inviteEmail, setInviteEmail]   = useState("");
   const [copied, setCopied]             = useState(false);
+  const [schoolInput, setSchoolInput]   = useState("");
+  const [savingSchool, setSavingSchool] = useState(false);
 
   const userSchool = profile?.school ?? "";
   const slug       = schoolSlugFrom(userSchool);
@@ -133,6 +135,23 @@ export default function BankPage() {
       error:   "Share failed — please try again.",
     });
     try { await promise; if (tab === "school") loadSchool(); } catch {}
+  }
+
+  async function handleSaveSchool() {
+    const name = schoolInput.trim();
+    if (!name) { toast.error("Enter your school name."); return; }
+    if (!user) { toast.error("Please sign in again and retry."); return; }
+    setSavingSchool(true);
+    try {
+      await updateDoc(doc(db, "users", user.uid), { school: name });
+      toast.success(`School set to "${name}". Colleagues with the same school name will now share your bank.`);
+      setSchoolInput("");
+    } catch (err) {
+      console.error("[Bank] handleSaveSchool:", err);
+      toast.error("Couldn't save your school name — please try again.");
+    } finally {
+      setSavingSchool(false);
+    }
   }
 
   function handleRemove(id: string) {
@@ -305,11 +324,25 @@ export default function BankPage() {
                 </div>
                 <h2 className="serif text-xl text-[var(--text)]">Set your school first</h2>
                 <p className="text-sm text-[var(--text-secondary)] max-w-sm mx-auto leading-relaxed">
-                  Add your school name in your account settings. Your colleagues who use the same school name will automatically share the same bank.
+                  Add your school name below. Colleagues who register with the same school name will automatically share the same bank.
                 </p>
-                <Link href="/account">
-                  <Button variant="secondary">Go to Settings</Button>
-                </Link>
+                <form
+                  onSubmit={(e) => { e.preventDefault(); handleSaveSchool(); }}
+                  className="flex flex-col sm:flex-row gap-2 max-w-sm mx-auto"
+                >
+                  <input
+                    type="text"
+                    value={schoolInput}
+                    onChange={(e) => setSchoolInput(e.target.value)}
+                    placeholder="e.g. Collège Notre-Dame"
+                    aria-label="School name"
+                    disabled={savingSchool}
+                    className="flex-1 px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] text-sm text-[var(--text)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/30"
+                  />
+                  <Button type="submit" variant="secondary" disabled={savingSchool || !schoolInput.trim()}>
+                    {savingSchool ? "Saving…" : "Save"}
+                  </Button>
+                </form>
               </div>
             ) : (
               /* School bank — Pro + school set */

@@ -269,7 +269,7 @@ test.describe("/bank", () => {
     await expect(page.getByRole("link", { name: /Upgrade to Pro — \$5\.99\/mo/ })).toHaveAttribute("href", "/upgrade");
   });
 
-  test("My School tab: pro tier without a school set sees Go to Settings", async ({ page, request }) => {
+  test("My School tab: pro tier without a school set can save one inline", async ({ page, request }) => {
     await setupTestUser(request, TEST_PRO_UID, { ...PRO_PROFILE, school: "" });
     await signInAs(page, TEST_PRO_UID, "/create");
     await seedBank(page, []);
@@ -277,7 +277,23 @@ test.describe("/bank", () => {
 
     await page.getByRole("button", { name: "My School" }).click();
     await expect(page.getByText("Set your school first")).toBeVisible({ timeout: 20_000 });
-    await expect(page.getByRole("link", { name: "Go to Settings" })).toHaveAttribute("href", "/account");
+
+    // No dead /account link — the form saves the school name in place.
+    await expect(page.getByRole("link", { name: "Go to Settings" })).toHaveCount(0);
+
+    const input = page.getByPlaceholder("e.g. Collège Notre-Dame");
+    await expect(input).toBeVisible();
+    const saveButton = page.getByRole("button", { name: "Save" });
+    await expect(saveButton).toBeDisabled();
+
+    await input.fill("E2E Inline School");
+    await expect(saveButton).toBeEnabled();
+    await saveButton.click();
+
+    await expect(page.getByText(/School set to/)).toBeVisible({ timeout: 15_000 });
+    // Profile updates propagate via the Firestore onSnapshot listener — the
+    // "no school set" card should be replaced by the school bank view.
+    await expect(page.getByText("E2E Inline School")).toBeVisible({ timeout: 15_000 });
   });
 
   test("My School tab: pro tier with a school set can open Invite Colleagues and copy the link", async ({ page, request }) => {

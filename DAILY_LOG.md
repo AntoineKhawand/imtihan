@@ -72,6 +72,36 @@ changed that day — that's the "daily testing for everything added" requirement
 
 *(newest first)*
 
+- **2026-09-04 (Fri) — UX/UI: fixed the `/bank` dead "Go to Settings" link (the last remaining
+  known app issue in `summary.md`). Pro teachers with no school set previously hit a "Go to
+  Settings" button linking to `/account`, a route that has never existed anywhere in the app
+  (confirmed via search — no `/account` page, no settings page at all). Rather than build a whole
+  new settings page (out of scope for a one-day UI fix), replaced the dead link with an inline
+  form right on `/bank`'s "My School" tab: a text input + Save button that writes `school` on
+  `users/{uid}` directly via `updateDoc` (`firebase/firestore`), the same pattern `AuthContext`
+  already uses for `examsGenerated`/`lastLoginAt`. On save, the Firestore `onSnapshot` listener in
+  `AuthContext` propagates the change and the "no school set" card is replaced by the school bank
+  view automatically — no reload needed. Updated `e2e/phases/phase-5-dashboard-bank.spec.ts`'s
+  "Go to Settings" test to instead fill the input, click Save, and assert the school bank view
+  appears (also asserts the dead `/account` link is gone). `npx tsc --noEmit --skipLibCheck` ran
+  clean (exit 0). No color/token changes.
+  **Friday feature-ideas step:** added 3 new grounded ideas to `FEATURE_IDEAS.md` under
+  "Week of 2026-09-04" (School-Name Autocomplete/Normalization — a direct follow-on from today's
+  fix, since exact-slug matching means typos silently split one school into two banks;
+  Chapter-Level Struggle Highlighting on `/teacher/students`; Duplicate/Overlap Warning Before
+  Generating). Nothing implemented — awaiting Antoine's approval per policy. **Gmail connector was
+  not available in this session**, so the weekly ideas email did not send; ideas are in
+  `FEATURE_IDEAS.md` for Antoine to read there instead.
+  **Test/commit/push step blocked — needs manual follow-up (same constraint as 2026-09-02 and
+  2026-09-03).** `request_access` for Command Prompt/File Explorer returned "can't be approved
+  during a scheduled run" on both the immediate call and the same-turn retry.
+  `daily-run-2026-09-04.bat` is sitting in the repo root, ready to run as-is (runs
+  `npm run test:e2e:daily`, then `git add`/`commit`/`push`, writing output to
+  `daily-run-2026-09-04-result.txt` and a `daily-run-2026-09-04-status.txt` marker on completion).
+  Commit message baked into the script: `feat(bank): replace dead /account link with inline
+  school-name save form`. **Today's Playwright phase run and code push did not happen; the fix
+  above is committed to disk but not to git or deployed.**
+
 - **2026-09-03 (Wed) — UX/UI: added aria-label to password toggle button for accessibility.
   Improved FormElements.tsx Input component by adding dynamic aria-label ("Show password" / "Hide password")
   to the password field's show/hide toggle button, improving usability for screen reader users and keyboard

@@ -40,6 +40,42 @@ something already deferred to v1.1/v2 without flagging that explicitly.
    building if it starts to feel like full Arabic exam generation rather than translation of an
    already-generated exam.*
 
+## Week of 2026-09-04 — proposed, awaiting approval
+
+1. **School-Name Autocomplete/Normalization.** Today's run replaced `/bank`'s dead "Go to
+   Settings" link with an inline school-name save form (see `DAILY_LOG.md` 2026-09-04) — teachers
+   can now actually set their school post-registration, via `updateDoc` on `users/{uid}`. But the
+   School Bank feature matches colleagues purely by an exact-match slug
+   (`schoolSlugFrom()` in `src/app/bank/page.tsx` and `src/lib/schoolBank.ts`), so two teachers at
+   the same school who type "Collège Notre-Dame" vs. "College Notre Dame" end up in two separate,
+   empty-feeling banks. Fix: when a teacher types a school name (at registration or in the new
+   inline save form), query existing `schoolBank`/other `users` docs for a close slug match and
+   suggest "Did you mean [existing school]?" before saving. No new AI calls — a simple Firestore
+   prefix/slug query. *Effort: small-medium (2-3 days). Risk: low — additive UI only, doesn't
+   change how the slug matching itself works.*
+
+2. **Chapter-Level Struggle Highlighting on `/teacher/students`.** The Students dashboard already
+   aggregates each student's `student_attempts` by subject (`bySubject: { total, correct }` in
+   `teacher/students/page.tsx`), but every attempt record also carries enough context to group by
+   chapter (exercises are generated against `chapterIds`). Add a chapter-level breakdown — e.g. a
+   small bar showing "Algebra: 41% correct across 12 students" — so a teacher deciding which
+   chapters to cover in their next exam has a real signal instead of guessing. Pairs naturally with
+   last week's still-unapproved "Performance-Aware Difficulty Calibration" idea but is scoped
+   narrower (just surfacing the aggregation on the existing page, no generation-time hook).
+   *Effort: medium (needs a new Firestore aggregation query grouped by chapter, plus a chart/list
+   UI block). Risk: low — read-only, additive to an existing authenticated page.*
+
+3. **Duplicate/Overlap Warning Before Generating.** `SavedExam.context.chapterIds` is already
+   stored per exam (used by last week's proposed Chapter Coverage Insights idea). When a teacher
+   starts `/create` with a class profile and chapter selection that heavily overlaps
+   (same subject + level + ≥70% shared `chapterIds`) with an exam they generated in the last
+   ~14 days, show a small inline notice — "You generated a similar [subject] exam on [chapter] on
+   [date] — view it, or continue to generate a new one anyway" — with a link to the existing exam.
+   Purely advisory, never blocks generation. Reduces accidental near-duplicate Gemini/Claude calls
+   (real cost) and gives teachers a faster path to reusing what they already have.
+   *Effort: small (1-2 days — a client-side comparison against already-fetched saved exams before
+   the `/api/analyze` or `/api/generate` call, no new backend). Risk: low.*
+
 ## Shipped
 
 *(none yet)*
