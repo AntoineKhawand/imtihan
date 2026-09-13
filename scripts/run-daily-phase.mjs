@@ -59,7 +59,14 @@ function pickPhase(phases, forcedNum) {
 
 function runPlaywright(specFile) {
   const jsonOut = path.join(os.tmpdir(), `imtihan-phase-report-${Date.now()}.json`);
-  const relSpec = path.join("e2e", "phases", specFile);
+  // Playwright treats this CLI argument as a regex matched against file paths.
+  // path.join() emits backslashes on Windows, and a bare backslash in a regex
+  // is an escape character (e.g. "\p" can mean something else entirely), so
+  // the pattern silently fails to match anything -> "No tests found." even
+  // though the file exists. Forward slashes work as literal path separators
+  // in Playwright's matcher on every OS, so always use those regardless of
+  // platform.
+  const relSpec = ["e2e", "phases", specFile].join("/");
 
   // On Windows, spawning a .cmd file (npx.cmd) without shell:true from a
   // nested Node process (this script is itself invoked by `npm run`, which

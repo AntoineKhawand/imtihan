@@ -88,13 +88,15 @@ a fresh dev server can occasionally outlast a flat timeout.
 | 3 | Generation & Exercise Editor | `/create/generate` exercise rendering, chapter coverage, action menu, Corrigé + calculators, ExerciseEditor modal (tabs, difficulty, MCQ correctness, sub-questions, plots, save/cancel), one real golden-path generation | 2026-09-03 07:50 UTC | ❌ Failing | 0 passed, 0 failed |
 | 4 | Export | `/create/export` header fields, Pro-gated logo upload, template/variant toggles, real Word download, PDF new-tab, save to library, real email send | 2026-09-03 08:01 UTC | ❌ Failing | 0 passed, 0 failed |
 | 5 | Dashboard & Bank | Exam rows (expand/duplicate/delete/download), quota states, bundle modal, sidebar; Bank tabs, BankCard actions, Invite Colleagues modal | 2026-09-13 18:31 UTC | ❌ Failing | 0 passed, 0 failed |
-| 6 | Community | Sign-in gate, free-tier blur, HowToShare, search/sort, Like/Preview/Download/Remix, preview modal | Not yet run | ⏳ Pending | – |
+| 6 | Community | Sign-in gate, free-tier blur, HowToShare, search/sort, Like/Preview/Download/Remix, preview modal | 2026-09-13 18:35 UTC | ❌ Failing | 6 passed, 4 failed |
 | 7 | Admin panel | Non-admin redirect (see Phase 1), tab switcher, user row actions (scoped to test user only), email tab UI (never sends), blog tab UI (never publishes) | Not yet run | ⏳ Pending | – |
 | 8 | Pricing/Upgrade/Scanner/Contact | Authenticated pricing CTAs, upgrade form + WhatsApp path, Pro-gated scanner + real digitization call, contact form | Not yet run | ⏳ Pending | – |
 
 ## Run Log
 
 *(newest first — appended automatically by `scripts/run-daily-phase.mjs`)*
+
+- 2026-09-13 18:35 UTC — Phase 6 (community): ❌ 6 passed, 4 failed (175.6s)
 
 - 2026-09-13 18:31 UTC — Phase 5 (dashboard bank): ❌ 0 passed, 0 failed (105.5s)
 
