@@ -431,6 +431,15 @@ export const bacLibanais: Curriculum = {
       id: "terminale-s",
       name: { fr: "Terminale S", en: "Grade 12 — Science track" },
       chapters: {
+        // Mathematics chapters audited 2026-09-09 against the official CRDP "Curriculum of
+        // Mathematics" (crdp.org, General Sciences section, Third Year) — see
+        // docs/DATA_SOURCING.md. Previous "Probabilités — lois continues" objectives (normal/
+        // exponential distributions, confidence intervals) did not exist anywhere in the CRDP
+        // programme and have been replaced with the actual Third Year probability unit
+        // (conditional probability, total probability, discrete random variable law). Also added
+        // three chapters present in the official programme but previously missing entirely:
+        // logarithmic/exponential functions, differential equations, and analytic geometry in
+        // space — all long-standing, heavily-weighted (20-40h) units on real Terminale exams.
         mathematics: [
           {
             id: "ter-math-complex",
@@ -439,6 +448,15 @@ export const bacLibanais: Curriculum = {
               "Manipuler formes algébrique, trigonométrique, exponentielle",
               "Résoudre équations du second degré à coefficients complexes",
               "Utiliser les nombres complexes en géométrie",
+            ],
+          },
+          {
+            id: "ter-math-log-exp",
+            name: { fr: "Fonctions logarithmiques et exponentielles", en: "Logarithmic and exponential functions" },
+            objectives: [
+              "Étudier la fonction logarithme népérien et la fonction exponentielle",
+              "Utiliser le logarithme de base a et les fonctions puissances",
+              "Étudier les limites et la croissance comparée des fonctions",
             ],
           },
           {
@@ -451,12 +469,29 @@ export const bacLibanais: Curriculum = {
             ],
           },
           {
-            id: "ter-math-probability",
-            name: { fr: "Probabilités — lois continues", en: "Probability — continuous distributions" },
+            id: "ter-math-diff-eq",
+            name: { fr: "Équations différentielles", en: "Differential equations" },
             objectives: [
-              "Utiliser la loi normale",
-              "Utiliser la loi exponentielle",
-              "Construire un intervalle de confiance",
+              "Résoudre une équation différentielle à variables séparables",
+              "Résoudre une équation différentielle linéaire du premier ordre à coefficients constants",
+            ],
+          },
+          {
+            id: "ter-math-space-geometry",
+            name: { fr: "Géométrie analytique dans l'espace", en: "Analytic geometry in space" },
+            objectives: [
+              "Déterminer l'équation d'un plan, d'une droite et d'une sphère dans l'espace",
+              "Étudier l'orthogonalité et le parallélisme de droites et de plans",
+              "Utiliser le produit vectoriel et le produit mixte",
+            ],
+          },
+          {
+            id: "ter-math-probability",
+            name: { fr: "Probabilités conditionnelles", en: "Conditional probability" },
+            objectives: [
+              "Calculer des probabilités conditionnelles et étudier l'indépendance de deux événements",
+              "Appliquer la formule des probabilités totales",
+              "Construire la loi de probabilité d'une variable aléatoire discrète",
             ],
           },
         ],

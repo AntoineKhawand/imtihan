@@ -2,6 +2,31 @@ import Link from "next/link";
 import { ArrowLeft, CheckCircle2, Shield, Heart, Zap, BookOpen } from "lucide-react";
 import { Logo } from "@/components/ui/Logo";
 import { PublicFooter } from "@/components/layout/PublicFooter";
+import { SchemaOrg } from "@/components/SchemaOrg";
+import { LandingFAQ, buildFaqSchema } from "@/components/landing/LandingFAQ";
+
+const ABOUT_FAQ_ITEMS = [
+  {
+    q: "What does \"Imtihan\" mean?",
+    a: "Imtihan (إمتحان) is Arabic for \"exam\" or \"assessment\" — the name reflects the app's focus on Lebanese and international school assessments.",
+  },
+  {
+    q: "What is Imtihan's mission?",
+    a: "To give teachers their time back by automating the most repetitive part of assessment work — drafting curriculum-aligned exams and corrigés — so teachers can spend that time teaching instead of formatting.",
+  },
+  {
+    q: "Which curricula and languages does Imtihan support?",
+    a: "Bac Libanais (aligned with CRDP), Bac Français (the French Lycée / AEFE system), and the International Baccalaureate (IB DP/MYP). Teachers can describe what they need in French, English, or Arabic.",
+  },
+  {
+    q: "Does the AI replace a teacher's professional judgment?",
+    a: "No. Imtihan generates a starting draft and an editable export — the teacher reviews, edits, and remains the final expert on every exam before it reaches students.",
+  },
+  {
+    q: "How long does it take to generate a full exam?",
+    a: "A complete set of curriculum-aligned questions with a step-by-step correction key (corrigé) is typically ready in under 30 seconds.",
+  },
+];
 
 export const metadata = {
   title: "About Us — Imtihan | AI Exam Generator for Teachers",
@@ -17,6 +42,7 @@ export const metadata = {
 export default function AboutPage() {
   return (
     <div className="min-h-screen bg-[var(--bg)] flex flex-col">
+      <SchemaOrg schema={buildFaqSchema(ABOUT_FAQ_ITEMS)} />
       {/* Navigation */}
       <header className="flex items-center justify-between px-6 md:px-10 h-16 border-b border-[var(--border)] bg-[var(--bg)]/90 backdrop-blur-md sticky top-0 z-40">
         <Link href="/" className="flex items-center gap-2 text-[var(--text-secondary)] hover:text-[var(--text)] transition-colors">
@@ -119,6 +145,8 @@ export default function AboutPage() {
             </div>
           </div>
         </section>
+
+        <LandingFAQ items={ABOUT_FAQ_ITEMS} />
       </main>
 
       <PublicFooter />

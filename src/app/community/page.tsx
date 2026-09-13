@@ -128,9 +128,15 @@ export default function CommunityPage() {
   }
 
   function handleUse(exam: typeof FEATURED_EXAMS[0]) {
+    // Community exams always render with the default "classic" template (no
+    // per-exam templateId is stored), so the cache key must match exactly what
+    // /create/generate computes on mount ({ c: ctx, t: tmpl }, tmpl defaulting
+    // to "classic") — otherwise it treats the cache as stale and fires a live
+    // Gemini/Claude regeneration instead of showing the remixed exam instantly.
     sessionStorage.setItem("imtihan_context", JSON.stringify(exam.context));
+    sessionStorage.setItem("imtihan_templateId", "classic");
     sessionStorage.setItem("imtihan_exercises", JSON.stringify(exam.exercises));
-    sessionStorage.setItem("imtihan_exercises_key", JSON.stringify({ c: exam.context }));
+    sessionStorage.setItem("imtihan_exercises_key", JSON.stringify({ c: exam.context, t: "classic" }));
     sessionStorage.setItem("imtihan_remix_source", exam.title);
     router.push("/create/generate");
   }

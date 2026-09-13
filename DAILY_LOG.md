@@ -11,10 +11,17 @@
 |---|---|
 | Monday | UX/UI improvement + Playwright coverage |
 | Tuesday | SEO / GEO / AEO strategy |
-| Wednesday | UX/UI improvement + Playwright coverage |
+| Wednesday | **Curriculum coverage & exemplar-learning** (see `CURRICULUM_COVERAGE_STRATEGY.md`) + Playwright coverage |
 | Thursday | SEO / GEO / AEO strategy |
 | Friday | UX/UI improvement + Playwright coverage **+ weekly feature-ideas email** |
 | Sat/Sun | Off (no scheduled run) |
+
+**2026-09-04:** Wednesday's focus changed from UX/UI to Curriculum Coverage at Antoine's request —
+he wants the tool's chapter/exercise data actively verified against real sources (CRDP, BO, IBO)
+and the generation pipeline to improve from real usage over time, without spending extra AI
+credits to do it. See `CURRICULUM_COVERAGE_STRATEGY.md` for the full plan and `docs/DATA_SOURCING.md`
+(newly written the same day — was referenced in `CLAUDE.md` §9 but never actually existed) for the
+sourcing methodology. UX/UI improvement is now Monday + Friday only (was Mon/Wed/Fri).
 
 Color palette is locked (emerald `#1a5e3f` accent, per `CLAUDE.md` §10) — UI days never introduce
 new colors, only layout/interaction/accessibility/consistency improvements within the existing
@@ -71,6 +78,89 @@ changed that day — that's the "daily testing for everything added" requirement
 ## Run Log
 
 *(newest first)*
+
+- **2026-09-09 (Wed) — Curriculum Coverage: audited `bac-libanais.ts` Terminale-S mathematics
+  chapters against the official CRDP "Curriculum of Mathematics" page (crdp.org, General Sciences
+  section, Third Year — fetched and read in full today).** Found a real inaccuracy:
+  `ter-math-probability`'s objectives described continuous-distribution content (normal law,
+  exponential law, confidence intervals) that does not appear anywhere in the official CRDP
+  programme — replaced with the actual Third Year probability unit (conditional probability,
+  independence, total probability formula, discrete random variable law), which the source
+  document confirms verbatim. Also added three chapters that are substantial (20-40h each) units
+  in the real programme but were entirely missing from the file: logarithmic/exponential functions
+  (`ter-math-log-exp`), differential equations (`ter-math-diff-eq`), and analytic geometry in space
+  (`ter-math-space-geometry`) — all near-universal on real Terminale exam papers, so their absence
+  meant generated exams could never draw on them. Added a dated source comment above the chapter
+  array. Checked off the corresponding item in `CURRICULUM_COVERAGE_STRATEGY.md` with a note that
+  EB9→Première-S were spot-checked (look accurate) but a full line-by-line pass on those levels,
+  plus Bac Français/IB, is left for future Wednesdays — one curriculum/level slice per run to keep
+  diffs reviewable. No AI generation credits spent (WebSearch + direct CRDP page fetch only, per
+  the Wednesday constraint). `npx tsc --noEmit --skipLibCheck` ran clean (exit 0, no SMB timeout
+  this run).
+  **Test/commit/push step blocked again this run — same constraint as every recent run.**
+  `request_access` for Command Prompt/File Explorer returned "can't be approved during a scheduled
+  run" on the immediate call and the same-turn retry. `daily-run-2026-09-09.bat` is in the repo
+  root, ready to run as-is (commit message: `fix(curricula): correct Terminale-S probability
+  chapter and add missing CRDP math chapters`). **Today's Playwright phase run and code push did
+  not happen; the changes above are on disk but not committed to git.**
+
+- **2026-09-08 (Tue) — SEO/AEO: added `LandingFAQ` + `FAQPage` JSON-LD to `/pricing`, `/about`,
+  and `/upgrade`** (top backlog item in `SEO_STRATEGY.md`). Each page gets 5 FAQ items grounded
+  strictly in that page's own existing copy/numbers (no new claims introduced). `/pricing` and
+  `/upgrade` are `"use client"` page components, so the FAQ section + schema render from their
+  (server-component) `layout.tsx` files, after `{children}`; `/about` is already a server
+  component so the FAQ is inline on the page, before `PublicFooter`. While researching each
+  page's numbers for the FAQ copy, noticed `/pricing` advertises 100 exams/month for Pro while
+  `/upgrade` advertises 10/month (20/month yearly) for the same plan — a pre-existing
+  inconsistency between the two pages, not introduced today (each page's FAQ matches only that
+  page's own figure, so it doesn't add a third conflicting number). Flagged in `SEO_STRATEGY.md`
+  under a new "Noted while working" section for Antoine or a future UI-day pass — reconciling the
+  real number is a product decision, not a Tuesday SEO call. No color/token changes.
+  `npx tsc --noEmit --skipLibCheck` timed out on the SMB mount (the known, previously-documented
+  issue — not a signal of a real type error); the changes themselves are small, additive JSX +
+  plain-object literals following the exact pattern already used on the 4 curricula landing pages,
+  so risk is low.
+  **Test/commit/push step blocked again this run — same constraint as every recent run.**
+  `request_access` for Command Prompt/File Explorer returned "can't be approved during a scheduled
+  run" on the immediate call and the same-turn retry. `daily-run-2026-09-08.bat` is in the repo
+  root, ready to run as-is (commit message: `feat(seo): add LandingFAQ + FAQPage schema to
+  /pricing, /about, /upgrade`). **Today's Playwright phase run and code push did not happen; the
+  changes above are on disk but not committed to git.**
+
+- **2026-09-07 (Mon) — UX/UI: fixed the Community "Remix" cache-key bug** (last remaining item
+  from `summary.md`'s "Known app issues" list, plus one entirely new find). `handleUse()` in
+  `src/app/community/page.tsx` wrote `imtihan_exercises_key` as `{ c: exam.context }` while
+  `/create/generate` compares against `{ c: context, t: templateId }` on mount (`templateId`
+  read from a separate `imtihan_templateId` key, defaulting to `"classic"`) — the keys could
+  never match, so every Remix click discarded the seeded cache as "stale" and silently fired a
+  real Gemini/Claude generation instead of showing the community exam's exercises instantly.
+  Fix: `handleUse()` now also writes `imtihan_templateId: "classic"` (community exams have no
+  per-exam template, they always use the default) and includes `t: "classic"` in the cache key.
+  Applied the identical fix to the two pre-existing `seedMcq`/inline seed helpers in
+  `e2e/qcm.spec.ts` that had the same gap. Extended
+  `e2e/phases/phase-6-community.spec.ts`'s Remix test with a new case asserting the cache key
+  includes `t:"classic"` and that the "Generating your exam…" streaming copy never appears after
+  a Remix click (i.e. no live regen fires). `npx tsc --noEmit --skipLibCheck` ran clean (exit 0,
+  no SMB timeout this time).
+  While verifying, found two other "Known app issues" list entries were already stale/resolved
+  and not marked as such — the `/create/structure` 404 was fixed back in commit `51e4c7f`
+  (it's now a client redirect to `/create/confirm`), and the `/bank` "Go to Settings" 404 was
+  fixed 2026-09-04. Updated `summary.md`'s list to strike both through with their fix commits/dates,
+  and added a new open item there: the 2026-09-04 run's Phase 5 attempt failed with `Process from
+  config.webServer was not able to start. Exit code: 1` — a *different* failure mode from the
+  earlier `webServer` timeout already tracked (2026-09-01/02 entries below); not investigated
+  today (out of scope for a one-day UI fix), flagged in `summary.md` for whoever next touches e2e
+  infra. Also confirmed via `git log` that the 2026-09-04 entry below undersold itself: the
+  `daily-run-2026-09-04.bat` script *did* get run at some point after that entry was written (its
+  result/status files exist and show a completed — if Phase-5-failing — run), and the commit
+  (`4b353cf`, later re-committed as `0b28a71` with an identical message/diff) is confirmed pushed
+  to `origin/master`. No color/token changes today.
+  **Test/commit/push step blocked again this run — same constraint as recent Mon/Wed/Fri runs.**
+  `request_access` for Command Prompt/File Explorer returned "can't be approved during a scheduled
+  run" on the immediate call and the same-turn retry. `daily-run-2026-09-07.bat` is in the repo
+  root, ready to run as-is (commit message: `fix(community): correct Remix cache key so cached
+  exercises render instantly instead of triggering a live regeneration`). **Today's Playwright
+  phase run and code push did not happen; the fix above is committed to disk but not to git.**
 
 - **2026-09-04 (Fri) — UX/UI: fixed the `/bank` dead "Go to Settings" link (the last remaining
   known app issue in `summary.md`). Pro teachers with no school set previously hit a "Go to

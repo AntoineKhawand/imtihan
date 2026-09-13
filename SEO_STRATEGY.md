@@ -14,8 +14,11 @@ keep each change reviewable and low-risk for an unattended push.
 ## Backlog (highest priority first)
 
 ### AEO
-- [ ] Add `LandingFAQ` (see `src/components/landing/LandingFAQ.tsx`) to `/pricing`, `/about`,
-      and `/upgrade` — currently no FAQ/AEO content outside the homepage + 4 curricula pages.
+- [x] **2026-09-08** — Added `LandingFAQ` (5 items each, grounded in each page's own existing
+      copy/numbers) + `FAQPage` JSON-LD to `/pricing`, `/about`, and `/upgrade`. `/pricing` and
+      `/upgrade` are client-component pages, so the FAQ + schema render from their (server
+      component) `layout.tsx` files after `{children}`; `/about` is already a server component so
+      it's inline on the page itself, before `PublicFooter`.
 - [ ] Audit blog posts (`src/app/blog/*`) for a direct-answer opening paragraph (first 40-60
       words should stand alone as a complete answer to the title's implicit question) — AI
       Overviews and Perplexity preferentially quote the first substantive paragraph.
@@ -52,6 +55,16 @@ keep each change reviewable and low-risk for an unattended push.
 ### AEO / GEO — done
 - [x] **2026-09-01** — Added `FAQPage` JSON-LD + visible Q&A (`LandingFAQ`) to all 4 curricula
       landing pages (previously zero FAQ content/schema outside the homepage).
+- [x] **2026-09-08** — Added `LandingFAQ` + `FAQPage` JSON-LD to `/pricing`, `/about`, `/upgrade`.
+
+## Noted while working (not fixed today — out of Tuesday's scope)
+
+- `/pricing` advertises 100 exams/month for Pro; `/upgrade` advertises 10/month (20/month on the
+  yearly plan) for the same Pro plan — a real numeric inconsistency between the two pages, not
+  something introduced by today's FAQ items (the FAQ copy for each page matches that page's own
+  existing numbers so it doesn't add a *third* conflicting figure). This should get reconciled to
+  one true number, but that's a product/pricing decision, not a Tuesday SEO-day call — flagging
+  for Antoine or a UI-day pass rather than guessing which figure is correct.
 
 ## Notes for whoever (human or agent) picks the next item
 

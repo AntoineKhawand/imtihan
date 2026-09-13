@@ -45,10 +45,15 @@ const MCQ_CONTEXT = {
 };
 
 async function seedMcq(page: Page) {
+  // Must include t: "classic" — /create/generate compares against
+  // { c: context, t: templateId } (templateId defaulting to "classic") on
+  // mount, so an incomplete key here is silently discarded as stale and a
+  // real generation call fires instead of restoring this seeded exercise.
   await page.evaluate(({ exercise, context }) => {
     sessionStorage.setItem("imtihan_exercises", JSON.stringify([exercise]));
     sessionStorage.setItem("imtihan_context", JSON.stringify(context));
-    sessionStorage.setItem("imtihan_exercises_key", JSON.stringify({ c: context }));
+    sessionStorage.setItem("imtihan_templateId", "classic");
+    sessionStorage.setItem("imtihan_exercises_key", JSON.stringify({ c: context, t: "classic" }));
   }, { exercise: MCQ_EXERCISE, context: MCQ_CONTEXT });
 }
 
@@ -133,7 +138,8 @@ test.describe("QCM — Generate page rendering", () => {
     await page.evaluate(({ ex, ctx }) => {
       sessionStorage.setItem("imtihan_exercises", JSON.stringify([ex]));
       sessionStorage.setItem("imtihan_context", JSON.stringify(ctx));
-      sessionStorage.setItem("imtihan_exercises_key", JSON.stringify({ c: ctx }));
+      sessionStorage.setItem("imtihan_templateId", "classic");
+      sessionStorage.setItem("imtihan_exercises_key", JSON.stringify({ c: ctx, t: "classic" }));
     }, { ex: calcExercise, ctx: calcCtx });
     await page.reload();
     await page.waitForLoadState("networkidle");

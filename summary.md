@@ -45,10 +45,26 @@ spends a small amount of real quota:
 
 ## Known app issues found while building this suite (not test bugs)
 
-- `/create/generate`'s "Back" link points to `/create/structure`, which doesn't exist (404). Tracked as a spawned follow-up.
-- `/bank`'s "Go to Settings" link (My School tab, no school set) points to `/account`, which doesn't exist (404). Tracked as a spawned follow-up.
-- The cache key written before navigating to `/create/generate` from the Community "Remix" action (and in the pre-existing `e2e/qcm.spec.ts` seed helper) omits the `t: templateId` field that `create/generate/page.tsx` expects, so the exercise cache never matches and a live regeneration fires even when cached exercises exist. Tracked as a spawned follow-up.
-- The CSP header (`src/proxy.ts`) doesn't whitelist `googletagmanager.com`, so Google Analytics is silently blocked by the browser on every page load. Tracked as a spawned follow-up.
+- ~~`/create/generate`'s "Back" link points to `/create/structure`, which doesn't exist (404).~~
+  **Resolved** (commit `51e4c7f`) — `/create/structure` now exists as a client-side redirect to
+  `/create/confirm`, so the link is no longer a 404.
+- ~~`/bank`'s "Go to Settings" link (My School tab, no school set) points to `/account`, which
+  doesn't exist (404).~~ **Resolved (2026-09-04)** — replaced with an inline school-name save
+  form directly on `/bank`.
+- ~~The cache key written before navigating to `/create/generate` from the Community "Remix"
+  action omits the `t: templateId` field that `create/generate/page.tsx` expects, so the exercise
+  cache never matches and a live regeneration fires even when cached exercises exist.~~
+  **Resolved (2026-09-07)** — `handleUse()` in `src/app/community/page.tsx` now also writes
+  `imtihan_templateId: "classic"` and includes `t: "classic"` in the cache key, matching what
+  `/create/generate` computes on mount. The pre-existing `e2e/qcm.spec.ts` seed helpers had the
+  same gap and were fixed the same way.
+- The CSP header (`src/proxy.ts`) doesn't whitelist `googletagmanager.com`, so Google Analytics is
+  silently blocked by the browser on every page load. Tracked as a spawned follow-up.
+- **New (2026-09-04):** the daily Phase 5 run failed with `Process from config.webServer was not
+  able to start. Exit code: 1` — different from the earlier `webServer` *timeout* issue already
+  tracked in `DAILY_LOG.md`'s 2026-09-01/02 entries. Not yet investigated; next run touching e2e
+  infra should check for a stale process holding port 3005, a missing/changed `.env.local` key, or
+  a Turbopack build error surfaced only on cold boot.
 
 ## Architecture note: auth gating happens in `src/proxy.ts`
 
@@ -71,7 +87,7 @@ a fresh dev server can occasionally outlast a flat timeout.
 | 2 | Exam Creation (Describe + Confirm) | `/create` textarea, example chips, class profiles, arXiv search, dropzone, free-limit gate, real Analyze call; `/create/confirm` dropdowns, chapter chips, geographic context, blueprint inputs, template picker, Version B toggle | 2026-09-01 21:05 UTC | ❌ Failing | 0 passed, 0 failed |
 | 3 | Generation & Exercise Editor | `/create/generate` exercise rendering, chapter coverage, action menu, Corrigé + calculators, ExerciseEditor modal (tabs, difficulty, MCQ correctness, sub-questions, plots, save/cancel), one real golden-path generation | 2026-09-03 07:50 UTC | ❌ Failing | 0 passed, 0 failed |
 | 4 | Export | `/create/export` header fields, Pro-gated logo upload, template/variant toggles, real Word download, PDF new-tab, save to library, real email send | 2026-09-03 08:01 UTC | ❌ Failing | 0 passed, 0 failed |
-| 5 | Dashboard & Bank | Exam rows (expand/duplicate/delete/download), quota states, bundle modal, sidebar; Bank tabs, BankCard actions, Invite Colleagues modal | Not yet run | ⏳ Pending | – |
+| 5 | Dashboard & Bank | Exam rows (expand/duplicate/delete/download), quota states, bundle modal, sidebar; Bank tabs, BankCard actions, Invite Colleagues modal | 2026-09-13 18:31 UTC | ❌ Failing | 0 passed, 0 failed |
 | 6 | Community | Sign-in gate, free-tier blur, HowToShare, search/sort, Like/Preview/Download/Remix, preview modal | Not yet run | ⏳ Pending | – |
 | 7 | Admin panel | Non-admin redirect (see Phase 1), tab switcher, user row actions (scoped to test user only), email tab UI (never sends), blog tab UI (never publishes) | Not yet run | ⏳ Pending | – |
 | 8 | Pricing/Upgrade/Scanner/Contact | Authenticated pricing CTAs, upgrade form + WhatsApp path, Pro-gated scanner + real digitization call, contact form | Not yet run | ⏳ Pending | – |
@@ -79,6 +95,8 @@ a fresh dev server can occasionally outlast a flat timeout.
 ## Run Log
 
 *(newest first — appended automatically by `scripts/run-daily-phase.mjs`)*
+
+- 2026-09-13 18:31 UTC — Phase 5 (dashboard bank): ❌ 0 passed, 0 failed (105.5s)
 
 - 2026-09-03 08:01 UTC — Phase 4 (export): ❌ 0 passed, 0 failed (22.4s)
 

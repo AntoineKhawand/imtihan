@@ -121,4 +121,33 @@ test.describe("/community — pro tier", () => {
     const remixSource = await page.evaluate(() => sessionStorage.getItem("imtihan_remix_source"));
     expect(remixSource).toBe("Physique — Mécanique et Électromagnétisme");
   });
+
+  test("Remix shows the cached exam instantly instead of firing a live regeneration", async ({ page }) => {
+    // Regression for the cache-key mismatch bug (summary.md "Known app issues"):
+    // handleUse() used to write imtihan_exercises_key as { c: context } while
+    // /create/generate compares against { c: context, t: templateId } on mount,
+    // so the keys never matched, the cache was discarded as stale, and a real
+    // Gemini/Claude generation fired on every Remix — wasting quota and making
+    // the user wait instead of seeing the community exam's exercises at once.
+    await signInAs(page, TEST_PRO_UID, "/community");
+    const card = page.locator(".card", { hasText: "Physique — Mécanique et Électromagnétisme" });
+    await expect(card).toBeVisible({ timeout: 20_000 });
+
+    await card.getByTitle("Generate a similar exam using this structure").click();
+    await page.waitForURL(/\/create\/generate/, { timeout: 20_000 });
+
+    // The cache key /create/generate computes on mount must match what Remix wrote.
+    const [cachedKey, templateId] = await page.evaluate(() => [
+      sessionStorage.getItem("imtihan_exercises_key"),
+      sessionStorage.getItem("imtihan_templateId"),
+    ]);
+    expect(templateId).toBe("classic");
+    expect(cachedKey).toContain('"t":"classic"');
+
+    // No live generation should ever kick in — the streaming/loading copy
+    // must never appear, and the cached exercise content should render
+    // immediately without a real API call.
+    await expect(page.getByText("Generating your exam…")).toBeHidden();
+    await expect(page.getByText(/Exercise 1/i)).toBeVisible({ timeout: 10_000 });
+  });
 });
