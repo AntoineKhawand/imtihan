@@ -13,6 +13,12 @@ import { signInAs, setupTestUser, TEST_FREE_UID, TEST_PRO_UID } from "../helpers
 const BASE_URL = "http://localhost:3005";
 const PRO_PROFILE = { proExpiresAt: Date.now() + 30 * 24 * 60 * 60 * 1000, planType: "monthly" };
 
+// The "How sharing works" Copy button uses navigator.clipboard.writeText(),
+// which Chromium denies by default outside a real user gesture / permission
+// grant. Without this, the promise rejects, "Copied!" never renders, and the
+// app also logs an unhandled rejection — grant it explicitly for this phase.
+test.use({ permissions: ["clipboard-read", "clipboard-write"] });
+
 test.describe("/community — free tier", () => {
   test("content is blurred behind a Pro upsell", async ({ page, request }) => {
     await setupTestUser(request, TEST_FREE_UID, { proExpiresAt: null, examsGenerated: 0 });
@@ -31,7 +37,9 @@ test.describe("/community — pro tier", () => {
 
   test("no blur overlay and no upsell banner", async ({ page }) => {
     await signInAs(page, TEST_PRO_UID, "/community");
-    await expect(page.getByText("Community Library")).toBeVisible({ timeout: 20_000 });
+    // getByText would also match Next.js's route-announcer live-region div
+    // (accessibility scaffolding, not page content) — scope to the heading.
+    await expect(page.getByRole("heading", { name: "Community Library" })).toBeVisible({ timeout: 20_000 });
     await expect(page.getByText("Pro feature — Community Library")).toBeHidden();
     await expect(page.locator(".opacity-40.blur-sm")).toBeHidden();
   });
@@ -147,7 +155,11 @@ test.describe("/community — pro tier", () => {
     // No live generation should ever kick in — the streaming/loading copy
     // must never appear, and the cached exercise content should render
     // immediately without a real API call.
+    // Note: this seeded exam's context.language is "french", and
+    // ExerciseCard (unlike the community preview modal, which hardcodes
+    // English) renders the localized label "Exercice" for French exams —
+    // match both so this isn't tied to one exam's language.
     await expect(page.getByText("Generating your exam…")).toBeHidden();
-    await expect(page.getByText(/Exercise 1/i)).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByText(/Exerc(ise|ice) 1/i)).toBeVisible({ timeout: 10_000 });
   });
 });

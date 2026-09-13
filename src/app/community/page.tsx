@@ -480,6 +480,10 @@ function HowToShare() {
     navigator.clipboard.writeText("share@imtihan.live").then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 2500);
+    }).catch(() => {
+      // Clipboard permission can be denied by the browser/OS (e.g. no
+      // secure-context focus, or a locked-down test/CI environment) — fail
+      // silently rather than surfacing an unhandled promise rejection.
     });
   }
 
