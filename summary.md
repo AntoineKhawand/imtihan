@@ -83,18 +83,32 @@ a fresh dev server can occasionally outlast a flat timeout.
 
 | # | Phase | Covers | Last Run | Status | Result |
 |---|-------|--------|----------|--------|--------|
-| 1 | Auth & Navigation | Landing/footer/404, pricing toggle, login/register/forgot forms, UserNav hover menu + sign out, auth gates on dashboard/community/admin | 2026-09-01 08:59 UTC | ❌ Failing | 0 passed, 0 failed |
-| 2 | Exam Creation (Describe + Confirm) | `/create` textarea, example chips, class profiles, arXiv search, dropzone, free-limit gate, real Analyze call; `/create/confirm` dropdowns, chapter chips, geographic context, blueprint inputs, template picker, Version B toggle | 2026-09-01 21:05 UTC | ❌ Failing | 0 passed, 0 failed |
-| 3 | Generation & Exercise Editor | `/create/generate` exercise rendering, chapter coverage, action menu, Corrigé + calculators, ExerciseEditor modal (tabs, difficulty, MCQ correctness, sub-questions, plots, save/cancel), one real golden-path generation | 2026-09-03 07:50 UTC | ❌ Failing | 0 passed, 0 failed |
-| 4 | Export | `/create/export` header fields, Pro-gated logo upload, template/variant toggles, real Word download, PDF new-tab, save to library, real email send | 2026-09-03 08:01 UTC | ❌ Failing | 0 passed, 0 failed |
-| 5 | Dashboard & Bank | Exam rows (expand/duplicate/delete/download), quota states, bundle modal, sidebar; Bank tabs, BankCard actions, Invite Colleagues modal | 2026-09-13 18:31 UTC | ❌ Failing | 0 passed, 0 failed |
+| 1 | Auth & Navigation | Landing/footer/404, pricing toggle, login/register/forgot forms, UserNav hover menu + sign out, auth gates on dashboard/community/admin | 2026-09-13 21:33 UTC | ❌ Failing | 30 passed, 3 failed |
+| 2 | Exam Creation (Describe + Confirm) | `/create` textarea, example chips, class profiles, arXiv search, dropzone, free-limit gate, real Analyze call; `/create/confirm` dropdowns, chapter chips, geographic context, blueprint inputs, template picker, Version B toggle | 2026-09-13 21:37 UTC | ❌ Failing | 17 passed, 2 failed |
+| 3 | Generation & Exercise Editor | `/create/generate` exercise rendering, chapter coverage, action menu, Corrigé + calculators, ExerciseEditor modal (tabs, difficulty, MCQ correctness, sub-questions, plots, save/cancel), one real golden-path generation | 2026-09-13 21:41 UTC | ❌ Failing | 17 passed, 2 failed |
+| 4 | Export | `/create/export` header fields, Pro-gated logo upload, template/variant toggles, real Word download, PDF new-tab, save to library, real email send | 2026-09-13 21:43 UTC | ❌ Failing | 11 passed, 1 failed |
+| 5 | Dashboard & Bank | Exam rows (expand/duplicate/delete/download), quota states, bundle modal, sidebar; Bank tabs, BankCard actions, Invite Colleagues modal | 2026-09-13 21:46 UTC | ❌ Failing | 12 passed, 3 failed |
 | 6 | Community | Sign-in gate, free-tier blur, HowToShare, search/sort, Like/Preview/Download/Remix, preview modal | 2026-09-13 19:33 UTC | ❌ Failing | 9 passed, 1 failed |
-| 7 | Admin panel | Non-admin redirect (see Phase 1), tab switcher, user row actions (scoped to test user only), email tab UI (never sends), blog tab UI (never publishes) | Not yet run | ⏳ Pending | – |
-| 8 | Pricing/Upgrade/Scanner/Contact | Authenticated pricing CTAs, upgrade form + WhatsApp path, Pro-gated scanner + real digitization call, contact form | Not yet run | ⏳ Pending | – |
+| 7 | Admin panel | Non-admin redirect (see Phase 1), tab switcher, user row actions (scoped to test user only), email tab UI (never sends), blog tab UI (never publishes) | 2026-09-13 21:48 UTC | ❌ Failing | 4 passed, 4 failed |
+| 8 | Pricing/Upgrade/Scanner/Contact | Authenticated pricing CTAs, upgrade form + WhatsApp path, Pro-gated scanner + real digitization call, contact form | 2026-09-13 21:51 UTC | ❌ Failing | 10 passed, 2 failed |
 
 ## Run Log
 
 *(newest first — appended automatically by `scripts/run-daily-phase.mjs`)*
+
+- 2026-09-13 21:51 UTC — Phase 8 (pricing upgrade misc): ❌ 10 passed, 2 failed (140.2s)
+
+- 2026-09-13 21:48 UTC — Phase 7 (admin): ❌ 4 passed, 4 failed (129.1s)
+
+- 2026-09-13 21:46 UTC — Phase 5 (dashboard bank): ❌ 12 passed, 3 failed (182.3s)
+
+- 2026-09-13 21:43 UTC — Phase 4 (export): ❌ 11 passed, 1 failed (123.6s)
+
+- 2026-09-13 21:41 UTC — Phase 3 (generation editor): ❌ 17 passed, 2 failed (247.5s)
+
+- 2026-09-13 21:37 UTC — Phase 2 (exam creation): ❌ 17 passed, 2 failed (231.6s)
+
+- 2026-09-13 21:33 UTC — Phase 1 (auth navigation): ❌ 30 passed, 3 failed (305.6s)
 
 - 2026-09-13 19:33 UTC — Phase 6 (community): ❌ 9 passed, 1 failed (180.5s)
 
