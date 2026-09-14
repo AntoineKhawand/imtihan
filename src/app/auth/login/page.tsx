@@ -2,11 +2,18 @@
 
 import { Suspense, useState, useEffect } from "react";
 import Link from "next/link";
-import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
-import { auth } from "@/lib/firebase";
+import {
+  signInWithEmailAndPassword,
+  signInWithPopup,
+  GoogleAuthProvider,
+  getAdditionalUserInfo,
+} from "firebase/auth";
+import { doc, setDoc, serverTimestamp } from "firebase/firestore";
+import { auth, db } from "@/lib/firebase";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/FormElements";
 import { Logo as BrandLogo } from "@/components/ui/Logo";
+import fpPromise from "@fingerprintjs/fingerprintjs";
 
 function getRedirectDestination(): string {
   if (typeof document === "undefined") return "/create";
@@ -72,8 +79,47 @@ function LoginForm() {
       const provider = new GoogleAuthProvider();
       provider.setCustomParameters({ prompt: "select_account" });
       const credential = await signInWithPopup(auth, provider);
+      const additionalInfo = getAdditionalUserInfo(credential);
+      if (additionalInfo?.isNewUser) {
+        // Google can silently create a brand-new account right here if this
+        // email has never signed in before. AuthContext's onSnapshot fallback
+        // would eventually create the Firestore profile too, but it races
+        // against the window.location.assign below and can be cut off by the
+        // page reload before the write completes — leaving a valid Firebase
+        // Auth user with no `users/{uid}` doc (invisible in /admin). Create
+        // it explicitly and await it here, same as the register page does.
+        const fp = await fpPromise.load();
+        const fpResult = await fp.get();
+        const fingerprint = fpResult.visitorId;
+
+        const checkRes = await fetch("/api/auth/check-device", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ fingerprint }),
+        });
+        const checkData = await checkRes.json();
+
+        if (!checkRes.ok || !checkData.allowed) {
+          await credential.user.delete();
+          setError(checkData.error || "Registration blocked for this device.");
+          return;
+        }
+
+        await setDoc(doc(db, "users", credential.user.uid), {
+          uid: credential.user.uid,
+          email: credential.user.email ?? "",
+          displayName: credential.user.displayName ?? "",
+          createdAt: serverTimestamp(),
+          role: "teacher",
+          country: "LB",
+          examsGenerated: 0,
+          subscription: { status: "none", tier: "free" },
+          fingerprint,
+        });
+        fetch("/api/auth/welcome", { method: "POST" }).catch(() => {});
+      }
       await setSessionCookie(await credential.user.getIdToken());
-      window.location.assign(dest);
+      window.location.assign(additionalInfo?.isNewUser ? "/dashboard" : dest);
     } catch (err: unknown) {
       const code = (err as { code?: string }).code ?? "";
       if (code === "auth/popup-closed-by-user" || code === "auth/cancelled-popup-request") {
