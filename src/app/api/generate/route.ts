@@ -22,7 +22,12 @@ export async function GET() {
   return NextResponse.json({ status: "ok", timestamp: Date.now() });
 }
 
-const ExamContextSchema = z.object({
+// Exported so other route handlers that transform an already-validated
+// ExamContext (e.g. src/app/api/exam/translate/route.ts) can reuse the exact
+// same shape instead of re-declaring it — same precedent as
+// src/app/api/export/send/route.ts importing generateWordDocument from
+// src/app/api/export/route.ts.
+export const ExamContextSchema = z.object({
   curriculumId: z.enum(["bac-libanais", "bac-francais", "ib", "university"]),
   levelId: z.string(),
   subject: z.enum([
@@ -64,8 +69,10 @@ const RequestSchema = z.object({
 /**
  * Extract the first JSON array or object from a string, string-aware so
  * brackets inside string literals don't throw off the depth counter.
+ * Exported for reuse by src/app/api/exam/translate/route.ts — AI JSON output
+ * needs this same hardening regardless of which endpoint calls the model.
  */
-function extractJSON(raw: string): string {
+export function extractJSON(raw: string): string {
   const stripped = raw.replace(/```[\w]*\n?/g, "").replace(/```/g, "").trim();
   let start = -1;
   for (let i = 0; i < stripped.length; i++) {
@@ -95,7 +102,8 @@ function extractJSON(raw: string): string {
  * Outside a string literal, normalize smart quotes to regular quotes and
  * strip trailing commas before } or ].
  */
-function sanitizeJSON(input: string): string {
+// Exported for reuse by src/app/api/exam/translate/route.ts.
+export function sanitizeJSON(input: string): string {
   // Normalize smart quotes and non-breaking spaces globally first.
   let text = input
     .replace(/[\u201C\u201D\u201E]/g, '"')
@@ -185,7 +193,8 @@ function findNextCompleteObject(text: string, from: number): { json: string; end
   return null;
 }
 
-function robustParse(text: string): unknown {
+// Exported for reuse by src/app/api/exam/translate/route.ts.
+export function robustParse(text: string): unknown {
   try { return JSON.parse(text); } catch { /* continue */ }
   try { return JSON.parse(sanitizeJSON(text)); } catch { /* continue */ }
   // Legacy fallback: brute-force double all lone backslashes globally.
