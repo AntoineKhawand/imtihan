@@ -88,21 +88,28 @@ function LoginForm() {
         // page reload before the write completes — leaving a valid Firebase
         // Auth user with no `users/{uid}` doc (invisible in /admin). Create
         // it explicitly and await it here, same as the register page does.
-        const fp = await fpPromise.load();
-        const fpResult = await fp.get();
-        const fingerprint = fpResult.visitorId;
+        let fingerprint: string | null = null;
+        try {
+          const fp = await fpPromise.load();
+          const fpResult = await fp.get();
+          fingerprint = fpResult.visitorId;
+        } catch (fpErr) {
+          console.warn("[Login] Fingerprinting unavailable, skipping device check:", fpErr);
+        }
 
-        const checkRes = await fetch("/api/auth/check-device", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ fingerprint }),
-        });
-        const checkData = await checkRes.json();
+        if (fingerprint) {
+          const checkRes = await fetch("/api/auth/check-device", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ fingerprint }),
+          });
+          const checkData = await checkRes.json();
 
-        if (!checkRes.ok || !checkData.allowed) {
-          await credential.user.delete();
-          setError(checkData.error || "Registration blocked for this device.");
-          return;
+          if (!checkRes.ok || !checkData.allowed) {
+            await credential.user.delete();
+            setError(checkData.error || "Registration blocked for this device.");
+            return;
+          }
         }
 
         await setDoc(doc(db, "users", credential.user.uid), {
@@ -114,7 +121,7 @@ function LoginForm() {
           country: "LB",
           examsGenerated: 0,
           subscription: { status: "none", tier: "free" },
-          fingerprint,
+          ...(fingerprint ? { fingerprint } : {}),
         });
         fetch("/api/auth/welcome", { method: "POST" }).catch(() => {});
       }
@@ -133,6 +140,7 @@ function LoginForm() {
       } else if ((err as Error).message?.startsWith("session-failed")) {
         setError("Sign-in succeeded but session could not be created. Check your server configuration.");
       } else {
+        console.error("[Login] handleGoogle failed:", err);
         setError(`Google sign-in failed: ${code || "unknown error"}`);
       }
       setGoogleLoading(false);
