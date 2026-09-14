@@ -384,7 +384,7 @@ export default function ConfirmPage() {
 
           <Button
             onClick={handleContinue}
-            disabled={context.chapterIds.length === 0}
+            disabled={context.curriculumId !== "university" && context.chapterIds.length === 0}
             size="lg"
             className="w-full"
             icon={<ArrowRight size={16} />}
