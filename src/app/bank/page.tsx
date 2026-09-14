@@ -63,12 +63,19 @@ async function shareToSchoolBank(
     contributor: contributorName,
     sharedBy: teacherUid,
     subject: entry.subject,
+    // Added for /api/tools/chapter-performance (Performance-Aware Difficulty
+    // Calibration) — that route joins on curriculumId + subject +
+    // exercise.chapterIds, neither of which this write used to include, so
+    // the feature could never find a match. Purely additive: existing
+    // readers (practice page, bank page) ignore fields they don't know about.
+    curriculumId: entry.curriculumId,
     tags: entry.tags ?? [],
     exercise: {
       statement: entry.exercise.statement,
       difficulty: entry.exercise.difficulty,
       points: entry.exercise.points,
       estimatedMinutes: entry.exercise.estimatedMinutes,
+      chapterIds: entry.exercise.chapterIds ?? [],
       solution: {
         finalAnswer: entry.exercise.solution.finalAnswer,
         methodology: entry.exercise.solution.methodology,
