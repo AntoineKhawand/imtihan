@@ -3,14 +3,14 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, ArrowRight, Sparkles, RotateCcw, X, BookmarkCheck } from "lucide-react";
+import { ArrowLeft, ArrowRight, Sparkles, RotateCcw, X, BookmarkCheck, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { ExerciseCard } from "@/components/ui/ExerciseCard";
 import { ExerciseEditor } from "@/components/ui/ExerciseEditor";
 import { shortId } from "@/lib/utils";
 import { saveToBank, type BankExercise } from "@/lib/storage";
 import { useToast } from "@/components/ui/Toast";
-import type { ExamContext, Exercise } from "@/types/exam";
+import type { ExamContext, Exercise, Difficulty } from "@/types/exam";
 import { StepIndicator, StepLabel } from "@/app/create/page";
 import { getChapter } from "@/data/curricula";
 import { useAuth } from "@/contexts/AuthContext";
@@ -18,6 +18,41 @@ import { isProActive } from "@/lib/subscription";
 
 type ExerciseWithStatus = Exercise & { isRegenerating?: boolean };
 type GenerationStatus = "idle" | "generating" | "done" | "error";
+
+// ── Performance-aware difficulty calibration (advisory only) ──────────────────
+// Purely informational: read-only aggregate of past student_attempts on this
+// chapter, joined via the school bank. Never influences generation.
+
+type ChapterPerformanceStats = { attempts: number; correct: number; pct: number };
+type ChapterPerformanceByDifficulty = Partial<Record<Difficulty, ChapterPerformanceStats>>;
+
+const DIFFICULTY_ORDER: Difficulty[] = ["easy", "medium", "hard"];
+
+function isChapterPerformanceStats(value: unknown): value is ChapterPerformanceStats {
+  if (typeof value !== "object" || value === null) return false;
+  const v = value as Record<string, unknown>;
+  return typeof v.attempts === "number" && typeof v.correct === "number" && typeof v.pct === "number";
+}
+
+/** Parses the /api/tools/chapter-performance response defensively — this is advisory UI, never trust the network blindly. */
+function parseChapterPerformance(data: unknown): ChapterPerformanceByDifficulty | null {
+  if (typeof data !== "object" || data === null) return null;
+  const d = data as Record<string, unknown>;
+  if (d.success !== true || d.hasData !== true || typeof d.byDifficulty !== "object" || d.byDifficulty === null) return null;
+  const raw = d.byDifficulty as Record<string, unknown>;
+  const result: ChapterPerformanceByDifficulty = {};
+  for (const diff of DIFFICULTY_ORDER) {
+    if (isChapterPerformanceStats(raw[diff])) result[diff] = raw[diff] as ChapterPerformanceStats;
+  }
+  return Object.keys(result).length > 0 ? result : null;
+}
+
+/** Short, terse advisory suggestion based on the historical score — never auto-applied. */
+function perfSuggestion(pct: number): string {
+  if (pct >= 80) return " — consider skewing harder";
+  if (pct < 50) return " — consider reviewing before this exam";
+  return "";
+}
 
 export default function GeneratePage() {
   const router = useRouter();
@@ -37,6 +72,10 @@ export default function GeneratePage() {
   const [editingExercise, setEditingExercise] = useState<Exercise | null>(null);
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
   const [bankToast, setBankToast] = useState<string | null>(null);
+
+  // Advisory only — never wired into the generation request.
+  const [chapterPerf, setChapterPerf] = useState<ChapterPerformanceByDifficulty | null>(null);
+  const [chapterPerfDismissed, setChapterPerfDismissed] = useState(false);
 
   function persistExercises(next: Exercise[], ctx: ExamContext | null = context, tmpl: string = templateId) {
     sessionStorage.setItem("imtihan_exercises", JSON.stringify(next));
@@ -75,6 +114,33 @@ export default function GeneratePage() {
       generateExam();
     }
   }, [context]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Fetch the performance-aware difficulty note once, when curriculum/subject/chapters
+  // are known. Non-blocking, fails silently — this must never affect generation.
+  useEffect(() => {
+    if (!context || context.chapterIds.length === 0) return;
+    let cancelled = false;
+
+    fetch("/api/tools/chapter-performance", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        curriculumId: context.curriculumId,
+        subject: context.subject,
+        chapterIds: context.chapterIds,
+      }),
+    })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (cancelled) return;
+        const perf = parseChapterPerformance(data);
+        if (perf) setChapterPerf(perf);
+      })
+      .catch(() => { /* purely advisory — never surface this as an error */ });
+
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [context?.curriculumId, context?.subject, context?.chapterIds?.join(",")]);
 
   async function generateExam() {
     if (!context) return;
@@ -440,6 +506,36 @@ export default function GeneratePage() {
                   Some chapters have no exercise — regenerate individual questions to adjust coverage.
                 </p>
               )}
+            </div>
+          )}
+
+          {status === "done" && chapterPerf && !chapterPerfDismissed && (
+            <div className="card p-4 mb-3 relative">
+              <button
+                onClick={() => setChapterPerfDismissed(true)}
+                className="absolute top-3 right-3 text-[var(--text-tertiary)] hover:text-[var(--text)] transition-colors"
+                aria-label="Dismiss"
+              >
+                <X size={14} />
+              </button>
+              <div className="flex items-start gap-2.5 pr-6">
+                <TrendingUp size={15} className="text-[var(--accent)] flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-1.5">
+                    Past performance
+                  </p>
+                  <div className="space-y-1">
+                    {DIFFICULTY_ORDER.filter((d) => chapterPerf[d]).map((d) => {
+                      const stats = chapterPerf[d]!;
+                      return (
+                        <p key={d} className="text-xs text-[var(--text)] leading-relaxed">
+                          Students scored <strong>{stats.pct}%</strong> on {d}-difficulty questions in this chapter last time{perfSuggestion(stats.pct)}.
+                        </p>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
             </div>
           )}
 
