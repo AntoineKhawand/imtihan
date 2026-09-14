@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { SkeletonList } from "@/components/ui/Skeleton";
 import { DashboardSidebar } from "@/components/layout/DashboardSidebar";
 import { RenewalBanner } from "@/components/ui/RenewalBanner";
+import { ChapterCoverageWidget } from "@/components/ui/ChapterCoverageWidget";
 import { cn, formatDate, FREE_EXAM_LIMIT, shortId } from "@/lib/utils";
 import { isProActive, isInGracePeriod } from "@/lib/subscription";
 import { getSavedExams, deleteExam, saveExam, type SavedExam } from "@/lib/storage";
@@ -222,6 +223,9 @@ export default function DashboardPage() {
             </div>
           ))}
         </div>
+
+        {/* Chapter coverage insights */}
+        <ChapterCoverageWidget exams={exams} />
 
         {/* Subscription status */}
         <div className="card p-4 mb-6 flex items-center gap-4">
