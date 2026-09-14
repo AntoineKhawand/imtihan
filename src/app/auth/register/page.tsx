@@ -79,17 +79,28 @@ function RegisterForm() {
       if (displayName.trim()) {
         await updateProfile(credential.user, { displayName: displayName.trim() });
       }
-      await setDoc(doc(db, "users", credential.user.uid), {
-        uid: credential.user.uid,
-        email: credential.user.email ?? "",
-        displayName: displayName.trim() || "",
-        createdAt: serverTimestamp(),
-        role,
-        country: "LB",
-        examsGenerated: 0,
-        subscription: { status: "none", tier: "free" },
-        fingerprint,
-      });
+      // Force a fresh ID token before the Firestore write so the client SDK's
+      // auth state has fully propagated — reduces (but doesn't eliminate) the
+      // chance of a permission-denied race right after account creation.
+      await credential.user.getIdToken(true);
+      try {
+        await setDoc(doc(db, "users", credential.user.uid), {
+          uid: credential.user.uid,
+          email: credential.user.email ?? "",
+          displayName: displayName.trim() || "",
+          createdAt: serverTimestamp(),
+          role,
+          country: "LB",
+          examsGenerated: 0,
+          subscription: { status: "none", tier: "free" },
+          fingerprint,
+        });
+      } catch (profileErr) {
+        // Don't strand the account: the Firebase Auth user already exists at
+        // this point. /api/auth/session below creates the Firestore profile
+        // server-side (via the Admin SDK, immune to this race) as a fallback.
+        console.warn("[register] Client-side profile write failed, relying on server-side fallback:", profileErr);
+      }
       await setSessionCookie(await credential.user.getIdToken());
       // 🎉 Send welcome newsletter (fire-and-forget)
       fetch("/api/auth/welcome", { method: "POST" }).catch(() => {});
@@ -136,21 +147,35 @@ function RegisterForm() {
           return;
         }
 
-        await setDoc(doc(db, "users", credential.user.uid), {
-          uid: credential.user.uid,
-          email: credential.user.email ?? "",
-          displayName: credential.user.displayName ?? "",
-          createdAt: serverTimestamp(),
-          role,
-          country: "LB",
-          examsGenerated: 0,
-          subscription: { status: "none", tier: "free" },
-          fingerprint,
-        });
-        // 🎉 Send welcome newsletter for new Google users (fire-and-forget)
-        fetch("/api/auth/welcome", { method: "POST" }).catch(() => {});
+        // Force a fresh ID token before the Firestore write (see handleRegister
+        // for why — reduces the chance of a permission-denied race).
+        await credential.user.getIdToken(true);
+        try {
+          await setDoc(doc(db, "users", credential.user.uid), {
+            uid: credential.user.uid,
+            email: credential.user.email ?? "",
+            displayName: credential.user.displayName ?? "",
+            createdAt: serverTimestamp(),
+            role,
+            country: "LB",
+            examsGenerated: 0,
+            subscription: { status: "none", tier: "free" },
+            fingerprint,
+          });
+        } catch (profileErr) {
+          // Don't strand the account — /api/auth/session's ensureUserProfile
+          // creates the profile server-side as a fallback (see handleRegister).
+          console.warn("[register] Client-side profile write failed, relying on server-side fallback:", profileErr);
+        }
       }
       await setSessionCookie(await credential.user.getIdToken());
+      if (additionalInfo?.isNewUser) {
+        // 🎉 Send welcome newsletter for new Google users (fire-and-forget).
+        // Must run AFTER setSessionCookie — /api/auth/welcome requires the
+        // __session cookie to identify the user, which didn't exist yet if
+        // this ran earlier (silently failing every time for Google sign-ups).
+        fetch("/api/auth/welcome", { method: "POST" }).catch(() => {});
+      }
       const dest = explicitRedirect ?? (additionalInfo?.isNewUser ? "/dashboard" : "/create");
       window.location.assign(dest);
     } catch (err: unknown) {
