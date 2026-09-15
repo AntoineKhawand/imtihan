@@ -3,6 +3,7 @@ import { z } from "zod";
 import { withRetryAndFallback, geminiErrorMessage } from "@/lib/gemini";
 import { getAnthropicClient, isAnthropicConfigured, CLAUDE_MODEL, MAX_TOKENS } from "@/lib/anthropic";
 import { buildAnalyzeSystemPrompt, buildAnalyzeUserPrompt, buildCurriculaReference } from "@/lib/prompts/analyze";
+import { getAllChapterIds } from "@/data/curricula";
 import { sanitizeError, createSecurityHeaders } from "@/lib/security";
 import { verifySession } from "@/lib/firebase-admin";
 
@@ -251,7 +252,26 @@ export async function POST(request: NextRequest) {
       ctx.difficultyMix.hard   = sum === 0 ? 0.35 : hard   / sum;
     }
 
-    // 8. Post-process: if chapterIds is empty and not university, add a warning
+    // 8. Post-process: chapterIds must be real, matching the curriculum's
+    //    actual chapter data. The prompt tells the model to copy real
+    //    CHAPTER_ID values from <curriculum_reference>, but nothing enforced
+    //    that until now — the exact same class of gap already fixed for
+    //    /api/generate's response handling (see CURRICULUM_COVERAGE_STRATEGY.md).
+    //    Only filters when the subject actually has defined chapters; a
+    //    subject/level with none yet is left to the model's own inference
+    //    (already flagged low-confidence by the prompt's own warnings rule).
+    if (ctx.curriculumId !== "university") {
+      const realChapterIds = new Set(getAllChapterIds(ctx.curriculumId, ctx.levelId, ctx.subject));
+      if (realChapterIds.size > 0) {
+        const invented = ctx.chapterIds.filter((cid) => !realChapterIds.has(cid));
+        if (invented.length > 0) {
+          console.warn(`[/api/analyze] Dropping invented chapterIds not in the real curriculum data: ${invented.join(", ")}`);
+        }
+        ctx.chapterIds = ctx.chapterIds.filter((cid) => realChapterIds.has(cid));
+      }
+    }
+
+    // 9. Post-process: if chapterIds is empty and not university, add a warning
     //    and fill in a placeholder so downstream steps don't break
     if (ctx.chapterIds.length === 0 && ctx.curriculumId !== "university") {
       ctx.chapterIds = ["general"];

@@ -36,6 +36,14 @@ export interface ExamContext {
   exerciseCount: number;
   /** Total points (usually 20 in French system, 100 in IB) */
   totalPoints: number;
+  /**
+   * Optional per-exercise point breakdown, e.g. [5, 10, 5] for a 3-exercise,
+   * 20-point exam — lets a teacher set an uneven split instead of leaving it
+   * to the model's own discretion. Must sum to totalPoints and have exactly
+   * exerciseCount entries when present; omit to keep the previous automatic
+   * behavior.
+   */
+  pointsPerExercise?: number[];
   /** Difficulty mix — must sum to 1.0 */
   difficultyMix: {
     easy: number;

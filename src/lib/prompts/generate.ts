@@ -352,6 +352,55 @@ NOTICE in this example:
 - M1 = method mark, A1 = answer mark.
 - "/" shows alternative acceptable responses.
 - "Award [X] for correct final answer" allows full marks without intermediate steps.`,
+
+  // Sources (two independent real papers, cross-checked against each other —
+  // the second one caught real gaps the first alone had missed, notably a
+  // whole third exam option):
+  // 1. Bac Liban — Sociologie, filière Sciences Sociales et Économiques,
+  //    session ordinaire 2024 (4 juillet 2024), officiel CRDP —
+  //    https://www.crdp.org/sites/default/files/SE_Socio_2024_1_Ar.pdf
+  //    (extracted via pdftotext — see docs/DATA_SOURCING.md)
+  // 2. A real school trial exam, Ahliah School, Grade 12 Sociologie et
+  //    Économie, Trial 3, May 2026 (provided directly by the founder — a
+  //    teacher-written mock exam, not an official CRDP paper, but built to
+  //    match the real state exam's shape, and it did: it confirmed most of
+  //    what source 1 showed and additionally surfaced the full essay/
+  //    dissertation option that source 1's extraction had run past without
+  //    being caught the first time).
+  // Verified/reconciled 2026-09-15.
+  "bac-libanais-sociology": `FORMAT EXAMPLE — modelled on two real Bac Liban Sociologie papers (2024 official CRDP exam, 2.5h; and a real 2026 school trial exam built to the same shape), 20 points total:
+
+STRUCTURE: ONE mandatory section, then a choice between TWO very differently-shaped 12-point alternatives. This is NOT a menu of independent exercises like Math/Physics — never generate "Exercice 1, 2, 3..." for this subject.
+
+SECTION 1 — MANDATORY (8 points): "استعمال مفاهيم وتقنيات" (Using concepts and techniques). The official exam offers two alternative phrasings of this same section (student picks one, never mixing); a school trial may give just one. Real question types seen, mix 4-6 of these per exam (points vary slightly by session, roughly as shown):
+1. Term recall (~1.5 pts, 3 parts): "سمّ/اذكر المفهوم أو المصطلح الاجتماعي المناسب لكل من العبارات الآتية" (Name the sociological concept/term matching each statement) — 3 short descriptive statements, one concept-name answer each.
+2. Distinguish-by-one-difference (~1 pt, 2 parts): "ميز بفارق واحد بين المفاهيم التالية" (Distinguish, with one difference, between the following concepts) — always a named pair (e.g. "المجتمع الأهلي" vs. "المجتمع السياسي").
+3. Classify-and-justify OR odd-one-out (~1.25-1.5 pts): either "صنف العبارات الآتية ضمن مجموعتين متجانستين ثم برر إجابتك" (Sort the following into two homogeneous groups, then justify) or "استخرج العنصر غير المناسب...ثم برر" (extract the one that doesn't belong, then justify) over a short list of 4-6 related terms — both real, interchangeable phrasings of the same underlying skill (categorization judgment); use either.
+4. Justify-a-statement (~1 pt, 1 part): "برر بفكرة واحدة صحة الجملة التالية" (Justify, with one idea, why the following statement is true) — a single short sociological claim.
+5. Relationship explanation (0.5-1.5 pts, 1-2 parts): "بيّن العلاقة بين..." (Show the relationship between: [concept A] and [concept B]) — always a paired-concept prompt, never a single term.
+6. Applied research-methodology scenario (~1.75-2 pts, 3 parts): a short real-world social phenomenon or local case is described (e.g. a popular weekly market, or declining Arabic proficiency among students), then the student must: (a) name the correct research technique for a described data-collection step (observation vs. survey) and justify it; (b) design one question per point under the matching technique's real constraints — if a questionnaire: 3 answer choices per question; if observation: 2 material + 2 human aspects to note; (c) write one interview question for a relevant informant.
+
+Then the student picks ONE of these two 12-point alternatives:
+
+OPTION A — "تحليل مستندات" (Document analysis, 12 points). 3 real documents, always a mix of: an official/government text (a real policy or law), a statistical table (real, sourced, often comparing two years — e.g. a literacy-rate table by region, "Ministry of Social Affairs" sourced), and a journalistic or opinion excerpt (sourced with outlet name). 5-6 short questions (0.5-1.5 pts each) ask the student to identify concepts/relationships within and across documents, compare data points, and explain causes — THEN a final synthesis sub-question (~4 pts) asks for an extended written response ("اكتب نصًا...") that still must draw on the documents plus outside course knowledge, naming a real policy direction and proposing concrete measures.
+
+OPTION B — "دراسة موضوع اجتماعي" (Social-topic study, 12 points) — a full French-methodology DISSERTATION, not document-analysis. One real document is given only as a springboard/quote, not for detailed analysis. Real point structure from an official answer key:
+- المقدمة / Introduction (3 pts): أهمية الموضوع — why the topic matters (~1.5), الإطار الزماني والمكاني — time/place framing (~0.25), الإشكالية — a clear problem question the essay will answer (~0.5), التصميم — a stated outline of the essay's plan (~0.75).
+- جسم الموضوع / Body (7 pts): define the key concepts and the relationship between them (~1.5); examine real conditions/evidence with actual statistics and comparisons, not vague generalities (~1.5); evaluate the relevant institution's or state's role, both positive AND negative (~1); propose exactly 3 concrete measures/solutions (~1.5); the remaining points reward coherence and depth across the body.
+- الخاتمة / Conclusion (2 pts): summarize the argument and directly answer the إشكالية from the intro (~1), end with an "ouverture" — a broader open question extending the topic (~0.5).
+
+DOCUMENT FORMAT — MANDATORY, exact and literal (every document in Option A, and Option B's single springboard document): each document MUST be its own paragraph, in this exact shape with nothing else interleaved:
+  المستند رقم (N) — [type/context, e.g. نص رسمي, جدول إحصائي, مقال صحفي]
+  [the document's own text/data, one or more lines]
+  المصدر: [a real, specific, named source — a ministry/agency name, an outlet + author + date, a statistics agency + year — never "Source: N/A" and never omitted]
+A real example of a correctly-sourced document, verbatim shape (from an actual paper): a document ending on its own line reading exactly "المصدر: SIAB News.com" — that trailing "المصدر: ..." line is REQUIRED on every single document, with no exceptions, and must be the last line of that document's paragraph (nothing after it but a blank line before the next document or question). When the exam language is French or English, use "Source :" / "Source:" the same way, still as its own trailing line. A document without this line is malformed — the app's renderer specifically looks for "المصدر:"/"Source:" to box the document visually, so skipping it means the document displays as unstyled loose text instead of a proper sourced document box.
+
+NOTICE across both real papers:
+- Every sub-question shows its own point value in parentheses beside it (e.g. "(0.75 علامة)"), unlike the Bac Liban math paper's exercise-level-only point values.
+- Command vocabulary is conceptual, not computational: "سمّ/اذكر" (name), "ميز" (distinguish), "صنف" (classify), "برر" (justify), "بيّن العلاقة" (show the relationship) — never "احسب" (calculate).
+- Documents (Option A) are always real, dated, and sourced (a named ministry/agency, a named outlet) — never generic or unsourced data. Follow the exact DOCUMENT FORMAT above for every one of them.
+- Option B's document is a springboard quote, not a set to cross-analyze — don't confuse the two options' use of documents. It still needs the same "المصدر:"/"Source:" trailing line.
+- These two 12-point options are structurally different exercise TYPES, not just different topics — when generating a full exam for this subject, pick one shape deliberately (matching whichever the teacher's request implies) rather than blending both.`,
 };
 
 // ---------------------------------------------------------------------------
@@ -381,8 +430,15 @@ export function buildGenerateSystemPrompt(context: ExamContext): string {
   // Pick the right language instruction
   const languageInstruction = LANGUAGE_INSTRUCTIONS[langKey] ?? LANGUAGE_INSTRUCTIONS.english;
 
-  // Pick few-shot format example
-  const fewShotKey = currKey === "ib" ? "ib-english" : "bac-libanais-french";
+  // Pick few-shot format example — subject-aware where a real exemplar exists
+  // (sociology's real exam shape — two alternative concept sections plus a
+  // document-analysis alternative — is nothing like a math paper's numbered
+  // exercises, so falling back to the math example would actively mislead
+  // the model here rather than just being unhelpful).
+  const fewShotKey =
+    currKey === "ib" ? "ib-english"
+    : currKey === "bac-libanais" && context.subject === "sociology" ? "bac-libanais-sociology"
+    : "bac-libanais-french";
   const fewShotExample = FEW_SHOT_EXAMPLES[fewShotKey] ?? "";
 
   // Pick command terms: Arabic Bac Libanais has its own block
@@ -410,7 +466,13 @@ export function buildGenerateSystemPrompt(context: ExamContext): string {
 - Each exercise shows its point value in parentheses: "Exercice 2 (7 points)".
 - Always include a "Données :" block with all constants and given values.
 - Total must equal exactly 20 points.
-- Corrigé: use numbered steps per sub-question. Write "Barème :" at the end with point breakdown.`,
+- Corrigé: use numbered steps per sub-question. Write "Barème :" at the end with point breakdown.
+- EXCEPTION — Sociologie (and similarly-structured humanities tracks): if a
+  FORMAT REFERENCE example below describes a different real structure
+  (e.g. alternative sections the student chooses between, rather than a
+  sequential Exercice 1/2/3 list), follow that example instead — these
+  rules describe the math/science exam shape specifically, not every
+  Bac Libanais subject.`,
 
     "bac-francais": `STRUCTURE RULES (Bac Français):
 - Number exercises: "Exercice 1 (X points)" or use thematic titles ("Exercice — Mécanique (6 points)").
@@ -702,6 +764,21 @@ export function buildGenerateUserPrompt(
 
   const chapterDistribution = buildChapterDistribution(context);
 
+  // Optional per-exercise point breakdown — a teacher-set override (e.g.
+  // [5, 10, 5] for 3 exercises / 20 points) instead of leaving the split to
+  // the model. Only applied when it's actually usable: right length, right
+  // sum — a malformed one is silently ignored rather than sent as a
+  // contradictory instruction (the model would otherwise have to guess which
+  // of two conflicting numbers to honor).
+  const pointsPerExercise = context.pointsPerExercise;
+  const pointsBreakdownValid =
+    !!pointsPerExercise &&
+    pointsPerExercise.length === context.exerciseCount &&
+    pointsPerExercise.reduce((a, b) => a + b, 0) === context.totalPoints;
+  const pointsBreakdown = pointsBreakdownValid
+    ? `\nEXERCISE POINT VALUES (MANDATORY — set by the teacher, do not redistribute):\n${pointsPerExercise!.map((p, i) => `- Exercise ${i + 1} → exactly ${p} points`).join("\n")}`
+    : "";
+
   const teacherNotesStr = context.teacherNotes ? `\nTeacher notes:\n${context.teacherNotes}` : "";
   const templateStr = context.templateType === "modern"
     ? "\nTEMPLATE: Use the standard Modern (Standard) layout. Ignore the visual layout of any uploaded documents — use them for content only."
@@ -719,6 +796,7 @@ Exam type  : ${context.examType}
 Duration   : ${context.duration} minutes
 Total points: ${context.totalPoints} (points must sum to exactly ${context.totalPoints})
 Difficulty : ${difficultyBreakdown}
+${pointsBreakdown}
 ${chapterDistribution}
 ${teacherNotesStr}
 ${templateStr}

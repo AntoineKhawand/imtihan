@@ -17,6 +17,14 @@ import { Input, Toggle } from "@/components/ui/StructureFormElements";
 import { useAuth } from "@/contexts/AuthContext";
 import { isProActive } from "@/lib/subscription";
 
+/** Even split of `total` points across `count` exercises, e.g. (20, 3) → [7, 7, 6] — extra points land on the earliest exercises. */
+function evenPointSplit(total: number, count: number): number[] {
+  if (count <= 0) return [];
+  const base = Math.floor(total / count);
+  const remainder = total - base * count;
+  return Array.from({ length: count }, (_, i) => base + (i < remainder ? 1 : 0));
+}
+
 const DURATION_OPTIONS = [
   { value: "20",  label: "20 min" },
   { value: "30",  label: "30 min" },
@@ -72,6 +80,21 @@ export default function ConfirmPage() {
 
   function update<K extends keyof ExamContext>(key: K, value: ExamContext[K]) {
     setContext((prev) => prev ? { ...prev, [key]: value } : prev);
+  }
+
+  /** The points-per-exercise values to actually display: the teacher's own edited breakdown when it still matches exerciseCount, otherwise a fresh even split. */
+  const displayPoints = context
+    ? (context.pointsPerExercise && context.pointsPerExercise.length === context.exerciseCount
+        ? context.pointsPerExercise
+        : evenPointSplit(context.totalPoints, context.exerciseCount))
+    : [];
+  const displayPointsSum = displayPoints.reduce((a, b) => a + (b || 0), 0);
+  const pointsMismatch = context ? displayPointsSum !== context.totalPoints : false;
+
+  function updateExercisePoints(index: number, value: number) {
+    const next = [...displayPoints];
+    next[index] = value;
+    update("pointsPerExercise", next);
   }
 
   function handleContinue() {
@@ -277,6 +300,37 @@ export default function ConfirmPage() {
                 <Input type="number" label="Total Points" value={context.totalPoints} onChange={(e) => update("totalPoints", parseInt(e.target.value, 10))} />
                 <Input type="number" label="Exercises" value={context.exerciseCount} onChange={(e) => update("exerciseCount", parseInt(e.target.value, 10))} />
               </div>
+
+              {/* Per-exercise point breakdown — defaults to an even split, editable to
+                  set e.g. Exercise 1 = 5, Exercise 2 = 10, Exercise 3 = 5 instead of
+                  leaving the distribution entirely to the model. */}
+              {context.exerciseCount > 0 && (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs font-semibold text-[var(--text)] uppercase tracking-wide">Points per Exercise</p>
+                    <span className={cn("text-xs font-mono", pointsMismatch ? "text-[var(--danger)]" : "text-[var(--text-tertiary)]")}>
+                      {displayPointsSum} / {context.totalPoints}
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {displayPoints.map((pts, i) => (
+                      <div key={i} className="w-20">
+                        <Input
+                          type="number"
+                          label={`Ex. ${i + 1}`}
+                          value={pts}
+                          onChange={(e) => updateExercisePoints(i, parseInt(e.target.value, 10) || 0)}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                  {pointsMismatch && (
+                    <p className="text-xs text-[var(--danger)]">
+                      Points must add up to {context.totalPoints} (currently {displayPointsSum}).
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
           </div>
 
@@ -384,7 +438,7 @@ export default function ConfirmPage() {
 
           <Button
             onClick={handleContinue}
-            disabled={context.curriculumId !== "university" && context.chapterIds.length === 0}
+            disabled={(context.curriculumId !== "university" && context.chapterIds.length === 0) || pointsMismatch}
             size="lg"
             className="w-full"
             icon={<ArrowRight size={16} />}

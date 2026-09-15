@@ -446,6 +446,38 @@ export function renderContent(raw: string): string {
     text = out.join("\n");
   }
 
+  // 2.6 Detect "document" blocks — used by document-analysis exercises
+  // (Sociology, Economics, History, SES: "المستند رقم (1)", "الوثيقة أ",
+  // "Document n°1", ...). The reliable anchor is the CITED SOURCE line
+  // ("المصدر: ...", "Source: ...") that real exam documents always end
+  // with — walking from a document's header to its own source line, rather
+  // than guessing where a block ends, means this only boxes documents that
+  // actually comply with the sourcing requirement (see
+  // src/lib/prompts/generate.ts's Sociology exemplar), which also makes any
+  // document missing a source visibly NOT boxed instead of silently wrong.
+  const documentBlocks: string[] = [];
+  text = text.replace(
+    /(\*{0,2}\s*(?:المستند(?:\s+رقم)?|الوثيقة(?:\s+رقم)?|Document(?:\s+n°|\s+No\.?)?)[^\n*]*\*{0,2})\s*\n([\s\S]*?)\n\s*(\*{0,2}\s*(?:المصدر|Source)\s*[:：][^\n]*?)\*{0,2}\s*(?=\n|$)/gi,
+    (match: string, header: string, body: string, sourceLine: string) => {
+      const idx = documentBlocks.length;
+      const cleanHeader = header.replace(/\*+/g, "").trim();
+      const cleanBody = body
+        .trim()
+        .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+        .replace(/\n\s*\n/g, "<br /><br />")
+        .replace(/\n/g, "<br />");
+      const cleanSource = sourceLine.replace(/\*+/g, "").trim();
+      const html =
+        `<div class="my-4 rounded-xl border border-[var(--border)] bg-[var(--bg-subtle)] p-4" data-raw="${escapeHtml(match)}" contenteditable="false" dir="auto">` +
+        `<div class="text-[11px] font-bold uppercase tracking-wide text-[var(--text-tertiary)] mb-2">${escapeHtml(cleanHeader)}</div>` +
+        `<div class="text-sm text-[var(--text)] leading-relaxed">${cleanBody}</div>` +
+        `<div class="text-[11px] italic text-[var(--text-tertiary)] mt-3 pt-2 border-t border-[var(--border)]">${escapeHtml(cleanSource)}</div>` +
+        `</div>`;
+      documentBlocks.push(html);
+      return `\n%%DOC_${idx}%%\n`;
+    }
+  );
+
   text = parseNakedMath(text);
 
   let displayParts = splitMath(text, "$$", "$$");
@@ -542,6 +574,11 @@ export function renderContent(raw: string): string {
   // 5. Restore pipe tables with KaTeX-rendered cells
   pipeTableBlocks.forEach((tableText, i) => {
     finalHtml = finalHtml.replace(`%%PTABLE_${i}%%`, renderPipeTable(tableText));
+  });
+
+  // 5.5 Restore document blocks
+  documentBlocks.forEach((docHtml, i) => {
+    finalHtml = finalHtml.replace(`%%DOC_${i}%%`, docHtml);
   });
 
   // 6. Final cleanup of AI artifacts (like triple quotes, code fences, or trailing backticks)
