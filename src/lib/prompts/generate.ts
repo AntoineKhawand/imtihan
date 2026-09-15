@@ -764,6 +764,21 @@ export function buildGenerateUserPrompt(
 
   const chapterDistribution = buildChapterDistribution(context);
 
+  // Optional per-exercise point breakdown — a teacher-set override (e.g.
+  // [5, 10, 5] for 3 exercises / 20 points) instead of leaving the split to
+  // the model. Only applied when it's actually usable: right length, right
+  // sum — a malformed one is silently ignored rather than sent as a
+  // contradictory instruction (the model would otherwise have to guess which
+  // of two conflicting numbers to honor).
+  const pointsPerExercise = context.pointsPerExercise;
+  const pointsBreakdownValid =
+    !!pointsPerExercise &&
+    pointsPerExercise.length === context.exerciseCount &&
+    pointsPerExercise.reduce((a, b) => a + b, 0) === context.totalPoints;
+  const pointsBreakdown = pointsBreakdownValid
+    ? `\nEXERCISE POINT VALUES (MANDATORY — set by the teacher, do not redistribute):\n${pointsPerExercise!.map((p, i) => `- Exercise ${i + 1} → exactly ${p} points`).join("\n")}`
+    : "";
+
   const teacherNotesStr = context.teacherNotes ? `\nTeacher notes:\n${context.teacherNotes}` : "";
   const templateStr = context.templateType === "modern"
     ? "\nTEMPLATE: Use the standard Modern (Standard) layout. Ignore the visual layout of any uploaded documents — use them for content only."
@@ -781,6 +796,7 @@ Exam type  : ${context.examType}
 Duration   : ${context.duration} minutes
 Total points: ${context.totalPoints} (points must sum to exactly ${context.totalPoints})
 Difficulty : ${difficultyBreakdown}
+${pointsBreakdown}
 ${chapterDistribution}
 ${teacherNotesStr}
 ${templateStr}

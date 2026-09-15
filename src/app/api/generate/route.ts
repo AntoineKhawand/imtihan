@@ -51,6 +51,7 @@ export const ExamContextSchema = z.object({
   duration: z.number(),
   exerciseCount: z.number(),
   totalPoints: z.number(),
+  pointsPerExercise: z.array(z.number()).optional(),
   difficultyMix: z.object({ easy: z.number(), medium: z.number(), hard: z.number() }),
   teacherNotes: z.string().optional(),
   generateVersionB: z.boolean().optional(),
