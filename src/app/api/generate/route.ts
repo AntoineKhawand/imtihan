@@ -16,7 +16,15 @@ const MONTHLY_LIMITS = { free: 1, pro: 10 } as const;
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-export const maxDuration = 60;
+// Was 60 — measured directly (real Claude call, real 2-exercise Sociology
+// request with the real prompt): 163.9s wall-clock, end_turn, not truncated.
+// At 60s Vercel kills the function mid-stream, which is why only exercise 1
+// (the document-less mandatory section) ever made it to the client.
+// Vercel enforces a real ceiling per plan regardless of this value — Hobby
+// caps at 60s no matter what's set here, Pro allows up to 300s. If this
+// number is still being silently capped after deploying, the account needs
+// Pro (or higher) for content-rich subjects to actually finish.
+export const maxDuration = 300;
 
 export async function GET() {
   return NextResponse.json({ status: "ok", timestamp: Date.now() });
@@ -458,10 +466,22 @@ export async function POST(request: NextRequest) {
           messages.push({ role: "user", content: userPrompt });
         }
 
-        // max_tokens scaled to exerciseCount — avoids waiting for unused capacity
+        // max_tokens scaled to exerciseCount — avoids waiting for unused capacity.
+        // The per-exercise allowance (was 1800) assumed short math/science
+        // exercises; it silently HARD-TRUNCATED content-rich humanities
+        // exercises (Sociology's real document-analysis/dissertation options
+        // routinely run several thousand tokens each once real sourced
+        // documents + full corrigé/bareme/microBareme are included — a live
+        // 2-exercise Sociology generation used ~8.4k output tokens against
+        // this formula's old 5.1k ceiling for exerciseCount=2, i.e. Claude
+        // was cut off mid-JSON and the route could only return whatever
+        // partial exercise had already completed). Raising it doesn't cost
+        // more when a request doesn't need it — Anthropic bills actual
+        // output tokens, not the max_tokens ceiling — so there's no downside
+        // to being generous here; GENERATE_MAX_TOKENS remains the real cap.
         const maxTokens = Math.min(
           GENERATE_MAX_TOKENS,
-          Math.max(4000, context.exerciseCount * 1800 + 1500)
+          Math.max(6000, context.exerciseCount * 6000 + 3000)
         );
 
         const claudeStream = await anthropic.messages.create({

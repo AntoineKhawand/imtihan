@@ -519,7 +519,7 @@ export default function GeneratePage() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-[var(--accent-text)]">Generating your exam…</p>
-                  <p className="text-xs text-[var(--accent-text)]/60 mt-0.5">This usually takes 15–30 seconds</p>
+                  <p className="text-xs text-[var(--accent-text)]/60 mt-0.5">Usually 15–30 seconds — longer (up to a few minutes) for exams with documents or extended write-ups</p>
                 </div>
                 {streamProgress > 0 && (
                   <span className="text-xs font-mono text-[var(--accent)]/60 tabular-nums flex-shrink-0">
