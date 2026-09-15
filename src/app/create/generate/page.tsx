@@ -3,10 +3,11 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, ArrowRight, Sparkles, RotateCcw, X, BookmarkCheck, TrendingUp } from "lucide-react";
+import { ArrowLeft, ArrowRight, Sparkles, RotateCcw, X, BookmarkCheck, TrendingUp, RefreshCw, Plus } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { ExerciseCard } from "@/components/ui/ExerciseCard";
 import { ExerciseEditor } from "@/components/ui/ExerciseEditor";
+import { Logo } from "@/components/ui/Logo";
 import { shortId } from "@/lib/utils";
 import { saveToBank, type BankExercise } from "@/lib/storage";
 import { useToast } from "@/components/ui/Toast";
@@ -65,6 +66,7 @@ export default function GeneratePage() {
   const [streamText, setStreamText] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [regeneratingId, setRegeneratingId] = useState<string | null>(null);
+  const [addingChapterId, setAddingChapterId] = useState<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
 
   const isFreeTier = !isProActive(profile);
@@ -321,6 +323,91 @@ export default function GeneratePage() {
     }
   }
 
+  /**
+   * Targeted fix for a chapter with zero generated exercises: generates exactly
+   * one exercise scoped to that single chapter (via a narrowed context) and
+   * appends it — as opposed to handleRegenerate, which replaces an existing
+   * exercise and re-sends the full original chapterIds list.
+   */
+  async function handleAddChapterExercise(chapterId: string) {
+    if (!context) return;
+    setAddingChapterId(chapterId);
+    try {
+      const res = await fetch("/api/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          context: {
+            ...context,
+            chapterIds: [chapterId],
+            exerciseCount: 1,
+          },
+          templateId,
+        }),
+      });
+
+      if (!res.ok) {
+        let message = "Failed to add a question for this chapter. Please try again.";
+        try {
+          const data = await res.json();
+          if (typeof data?.errors?.[0] === "string") message = data.errors[0];
+        } catch { /* ignore body parse failure */ }
+        showToast(message, "error");
+        return;
+      }
+
+      const reader = res.body?.getReader();
+      if (!reader) {
+        showToast("Failed to add a question for this chapter. Please try again.", "error");
+        return;
+      }
+
+      const decoder = new TextDecoder();
+      let newExercise: Exercise | null = null;
+      let sseBuffer = "";
+
+      function processAddEvent(raw: string) {
+        const dataLine = raw.split("\n").find((l) => l.startsWith("data: "));
+        if (!dataLine) return;
+        try {
+          const data = JSON.parse(dataLine.slice(6));
+          if (data.exercise !== undefined && !newExercise) {
+            newExercise = { ...data.exercise, id: shortId() };
+          }
+          if (data.done && !newExercise && data.exercises?.[0]) {
+            newExercise = { ...data.exercises[0], id: shortId() };
+          }
+        } catch { /* skip malformed event */ }
+      }
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        sseBuffer += decoder.decode(value, { stream: true });
+        const events = sseBuffer.split("\n\n");
+        sseBuffer = events.pop() ?? "";
+        for (const event of events) processAddEvent(event);
+      }
+      if (sseBuffer.trim()) processAddEvent(sseBuffer);
+
+      if (!newExercise) {
+        showToast("Failed to add a question for this chapter. Please try again.", "error");
+        return;
+      }
+
+      setExercises((prev) => {
+        const appended: ExerciseWithStatus = { ...(newExercise as Exercise), number: prev.length + 1 };
+        const next = [...prev, appended];
+        sessionStorage.setItem("imtihan_exercises", JSON.stringify(next));
+        return next;
+      });
+    } catch {
+      showToast("Failed to add a question for this chapter. Please try again.", "error");
+    } finally {
+      setAddingChapterId(null);
+    }
+  }
+
   function handleRemove(id: string) {
     setExercises((prev) => {
       const next = prev.filter((e) => e.id !== id).map((e, i) => ({ ...e, number: i + 1 }));
@@ -385,12 +472,7 @@ export default function GeneratePage() {
           <ArrowLeft size={16} />
           <span className="text-sm hidden sm:block">Back</span>
         </Link>
-        <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg bg-[var(--accent)] flex items-center justify-center">
-            <span className="text-white text-xs font-serif">إ</span>
-          </div>
-          <span className="font-semibold text-sm text-[var(--text)] tracking-tight hidden sm:block">Imtihan</span>
-        </div>
+        <Logo size={28} />
         <StepIndicator current={4} />
       </header>
 
@@ -484,26 +566,40 @@ export default function GeneratePage() {
             <div className="card p-4 mb-3">
               <p className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-2.5">Chapter coverage</p>
               <div className="flex flex-wrap gap-1.5">
-                {chapterCoverage.map((c) => (
-                  <span
-                    key={c.id}
-                    className={
-                      c.missing
-                        ? "inline-flex items-center gap-1.5 text-xs px-2 py-0.5 rounded-full border border-red-300 bg-red-50 text-red-600 dark:bg-red-950/20"
-                        : "inline-flex items-center gap-1.5 text-xs px-2 py-0.5 rounded-full border border-[var(--border)] bg-[var(--bg-subtle)] text-[var(--text-secondary)]"
-                    }
-                    title={c.missing ? "No exercise covers this chapter yet" : `${c.count} exercise${c.count > 1 ? "s" : ""}`}
-                  >
-                    {c.name}
-                    <span className={c.missing ? "text-red-500 font-semibold" : "text-[var(--text-tertiary)]"}>
-                      {c.missing ? "!" : `×${c.count}`}
+                {chapterCoverage.map((c) =>
+                  c.missing ? (
+                    <button
+                      key={c.id}
+                      type="button"
+                      onClick={() => handleAddChapterExercise(c.id)}
+                      disabled={addingChapterId !== null}
+                      aria-label={`Add a question for ${c.name}`}
+                      title="No exercise covers this chapter yet — click to add one"
+                      className="inline-flex items-center gap-1.5 text-xs px-2 py-0.5 rounded-full border border-red-300 bg-red-50 text-red-600 dark:bg-red-950/20 hover:bg-red-100 dark:hover:bg-red-950/40 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                    >
+                      {c.name}
+                      {addingChapterId === c.id ? (
+                        <RefreshCw size={11} className="animate-spin" />
+                      ) : (
+                        <span className="text-red-500 font-semibold">!</span>
+                      )}
+                    </button>
+                  ) : (
+                    <span
+                      key={c.id}
+                      className="inline-flex items-center gap-1.5 text-xs px-2 py-0.5 rounded-full border border-[var(--border)] bg-[var(--bg-subtle)] text-[var(--text-secondary)]"
+                      title={`${c.count} exercise${c.count > 1 ? "s" : ""}`}
+                    >
+                      {c.name}
+                      <span className="text-[var(--text-tertiary)]">×{c.count}</span>
                     </span>
-                  </span>
-                ))}
+                  )
+                )}
               </div>
               {chapterCoverage.some((c) => c.missing) && (
-                <p className="text-[11px] text-red-600 mt-2">
-                  Some chapters have no exercise — regenerate individual questions to adjust coverage.
+                <p className="text-[11px] text-red-600 mt-2 flex items-center gap-1">
+                  <Plus size={11} className="flex-shrink-0" />
+                  Click a missing chapter above to generate one question for it.
                 </p>
               )}
             </div>
