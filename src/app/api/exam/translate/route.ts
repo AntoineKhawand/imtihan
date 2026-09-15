@@ -1,15 +1,32 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import * as admin from "firebase-admin";
 import { withRetryAndFallback, geminiErrorMessage } from "@/lib/gemini";
 import { getAnthropicClient, isAnthropicConfigured, GENERATE_MODEL, GENERATE_MAX_TOKENS } from "@/lib/anthropic";
 import { buildTranslateExamSystemPrompt, buildTranslateExamUserPrompt } from "@/lib/prompts/translateExam";
 import { sanitizeError, createSecurityHeaders } from "@/lib/security";
+import { adminDb, verifySession } from "@/lib/firebase-admin";
 import { ExamContextSchema, extractJSON, robustParse } from "@/app/api/generate/route";
 import type { Exercise } from "@/types/exam";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
+
+// ── Daily translation cap ──────────────────────────────────────────────────
+// This is a real, billed AI call (Claude/Gemini), so it must never be
+// reachable without a valid session — same non-negotiable as /api/generate.
+// It is NOT counted against the monthly exam-generation quota, though:
+// translating an exam the user already paid quota for once shouldn't cost a
+// second full "exam" against their monthly limit — that would be too harsh
+// for what is, from the AI's perspective, a much cheaper transform (no
+// curriculum grounding, no exercise design, just prose translation).
+// Instead it gets its own low, generous-for-a-real-teacher daily cap, reset
+// every 24h, tracked on the user doc (translationsToday / translationsPeriodStart)
+// — same pattern as /api/generate's monthly counters — to bound cost from a
+// compromised or malicious session without ever touching the exam quota.
+const DAILY_PERIOD_MS = 24 * 60 * 60 * 1000;
+const DAILY_TRANSLATION_LIMIT = 20;
 
 export async function GET() {
   return NextResponse.json({ status: "ok", timestamp: Date.now() });
@@ -56,6 +73,45 @@ export async function POST(request: NextRequest) {
         { status: 400, headers: createSecurityHeaders() }
       );
     }
+
+    // ── Auth (mandatory, no exceptions) + daily translation cap ────────────
+    const uid = await verifySession(request);
+    if (!uid) {
+      return NextResponse.json(
+        { success: false, errors: ["Unauthorized. Please sign in."] },
+        { status: 401, headers: createSecurityHeaders() }
+      );
+    }
+
+    const userRef = adminDb.collection("users").doc(uid);
+    const userSnap = await userRef.get();
+    if (!userSnap.exists) {
+      return NextResponse.json(
+        { success: false, errors: ["User profile not found."] },
+        { status: 404, headers: createSecurityHeaders() }
+      );
+    }
+
+    const userData = userSnap.data()!;
+    const now = Date.now();
+    const translationsPeriodStart: number = userData.translationsPeriodStart ?? now;
+    const periodExpired = now - translationsPeriodStart > DAILY_PERIOD_MS;
+    const translationsToday: number = periodExpired ? 0 : (userData.translationsToday ?? 0);
+
+    if (translationsToday >= DAILY_TRANSLATION_LIMIT) {
+      return NextResponse.json(
+        {
+          success: false,
+          errors: [`You have reached your daily limit of ${DAILY_TRANSLATION_LIMIT} translations. Please try again tomorrow.`],
+        },
+        { status: 429, headers: createSecurityHeaders() }
+      );
+    }
+
+    if (periodExpired) {
+      await userRef.update({ translationsToday: 0, translationsPeriodStart: now });
+    }
+    // ─────────────────────────────────────────────────────────────────────
 
     const systemPrompt = buildTranslateExamSystemPrompt(targetLanguage);
     const userPrompt = buildTranslateExamUserPrompt(
@@ -153,6 +209,12 @@ export async function POST(request: NextRequest) {
           { status: 502, headers: createSecurityHeaders() }
         );
       }
+
+      // Only burn a slot on a genuinely successful translation — fire-and-forget,
+      // same convention as /api/generate's quota increment.
+      userRef
+        .update({ translationsToday: admin.firestore.FieldValue.increment(1) })
+        .catch((e) => console.error("[/api/exam/translate] Failed to update translation counter:", e));
 
       return NextResponse.json(
         { success: true, exercises: translatedExercises, header: parsedResult?.header ?? header ?? null },

@@ -42,6 +42,14 @@ function isDifficulty(value: unknown): value is Difficulty {
  *
  * schoolBank docs don't carry a levelId, so this scopes only by
  * curriculumId + subject + chapterIds — an accepted limitation, not a bug.
+ *
+ * Deliberately left unauthenticated: unlike /api/generate and
+ * /api/exam/translate, this is not a billed AI call and returns only
+ * aggregate, non-identifying percentages (no per-student data, no PII).
+ * Worst case for an anonymous caller is a handful of extra Firestore reads,
+ * bounded by the request Zod schema (chapterIds capped at 20) and by
+ * MAX_SCHOOLBANK_IDS below. If this route ever starts returning anything
+ * more granular than aggregate stats, add verifySession() here too.
  */
 export async function POST(request: NextRequest) {
   try {
@@ -79,7 +87,14 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const schoolBankIds = [...difficultyByDocId.keys()];
+    // Cap the number of matched exercises we join against before fanning out
+    // "in" queries below — this route is unauthenticated (see route-level
+    // comment), so without a cap a request naming broad/high-traffic chapters
+    // could force an unbounded number of Firestore reads. 300 is generous for
+    // this advisory feature (it only needs a representative sample, not every
+    // attempt ever made) and keeps the worst case at 10 reads (chunk of 30).
+    const MAX_SCHOOLBANK_IDS = 300;
+    const schoolBankIds = [...difficultyByDocId.keys()].slice(0, MAX_SCHOOLBANK_IDS);
     if (schoolBankIds.length === 0) {
       return NextResponse.json(
         { success: true, hasData: false, sampleSize: 0 },

@@ -103,9 +103,10 @@ export default function DashboardPage() {
   // handler and src/lib/prompts/translateExam.ts for the scope boundary.
   async function handleTranslate(exam: SavedExam, targetLanguage: Language): Promise<boolean> {
     try {
+      const token = await currentUser?.getIdToken();
       const res = await fetch("/api/exam/translate", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({
           context: exam.context,
           header: exam.header,
