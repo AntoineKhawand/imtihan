@@ -133,7 +133,11 @@ function parseLists(text: string): string {
     const line = lines[i].trim();
     if (/^([-*•]|\d+\.)\s+/.test(line)) {
       if (!inList) {
-        result.push('<ul class="list-disc ml-6 my-2 space-y-1 text-[var(--text-secondary)]">');
+        // ms-6 (margin-inline-start), not ml-6 — the list needs to indent
+        // from the correct side automatically under the container's dir
+        // (ExerciseCard sets dir="rtl" for Arabic); a hardcoded left margin
+        // put Arabic bullet lists flush against the wrong edge.
+        result.push('<ul class="list-disc ms-6 my-2 space-y-1 text-[var(--text-secondary)]">');
         inList = true;
       }
       const match = line.match(/^([-*•]|\d+\.)\s+/);
@@ -467,8 +471,21 @@ export function renderContent(raw: string): string {
         .replace(/\n\s*\n/g, "<br /><br />")
         .replace(/\n/g, "<br />");
       const cleanSource = sourceLine.replace(/\*+/g, "").trim();
+      // A document's captured span can itself contain an untouched
+      // %%PTABLE_N%%/%%VISUAL_N%%/%%MERMAID_N%% token (those blocks are
+      // extracted from the raw text before document detection runs, so a
+      // table/image/diagram inside a document is already just a placeholder
+      // by the time this regex captures it). The later global placeholder
+      // restore can't tell "this token is the real slot" from "this token
+      // is quoted inside another block's data-raw" — it replaces every
+      // literal occurrence — so neutralize any nested token here first,
+      // otherwise data-raw (used for click-to-edit, see ExerciseEditor.tsx)
+      // would end up holding rendered HTML instead of editable raw text.
+      const safeRaw = match.replace(/%%(PTABLE|VISUAL|MERMAID)_\d+%%/g, (_m, kind: string) =>
+        kind === "PTABLE" ? "[table]" : kind === "VISUAL" ? "[image]" : "[diagram]"
+      );
       const html =
-        `<div class="my-4 rounded-xl border border-[var(--border)] bg-[var(--bg-subtle)] p-4" data-raw="${escapeHtml(match)}" contenteditable="false" dir="auto">` +
+        `<div class="my-4 rounded-xl border border-[var(--border)] bg-[var(--bg-subtle)] p-4" data-raw="${escapeHtml(safeRaw)}" contenteditable="false" dir="auto">` +
         `<div class="text-[11px] font-bold uppercase tracking-wide text-[var(--text-tertiary)] mb-2">${escapeHtml(cleanHeader)}</div>` +
         `<div class="text-sm text-[var(--text)] leading-relaxed">${cleanBody}</div>` +
         `<div class="text-[11px] italic text-[var(--text-tertiary)] mt-3 pt-2 border-t border-[var(--border)]">${escapeHtml(cleanSource)}</div>` +
@@ -531,22 +548,61 @@ export function renderContent(raw: string): string {
     }).join("");
   }).join("");
 
+  // A line "is HTML" for line-break purposes only when it's a structural
+  // BLOCK element (div/table/ul/li) that already manages its own spacing —
+  // never an INLINE one (<strong>, <em>, <code>) from ordinary bold/italic/
+  // code markdown. The old blanket "starts with <" / "ends with >" check
+  // treated a line like "**الوثيقة أ:**" (→ "<strong>...</strong>") as if it
+  // were a block element and silently dropped the <br /> that should have
+  // separated it from the previous line — collapsing real paragraph
+  // structure into a run-on wall of text, especially bad for
+  // document-heavy exams (Sociology, SES, History...) that lead almost
+  // every paragraph with a bolded document label.
+  const BLOCK_TAG_START = /^<(div|table|ul|li)\b/i;
+  const BLOCK_TAG_END = /<\/(div|table|ul|li)>\s*$/i;
+  function isBlockHtmlStart(line: string): boolean { return BLOCK_TAG_START.test(line); }
+  function isBlockHtmlEnd(line: string): boolean { return BLOCK_TAG_END.test(line); }
+
   // 3. Process newlines safely BEFORE replacing placeholders.
   // This ensures that the HTML inside visual/mermaid blocks isn't shredded.
   const htmlLines = html.split("\n");
   let finalHtml = "";
   for (let i = 0; i < htmlLines.length; i++) {
     const line = htmlLines[i];
-    if (!line.trim()) continue;
+    if (!line.trim()) {
+      // A blank line is an intentional paragraph break in the source (e.g.
+      // between two quoted documents, or before a "Données :" list) — this
+      // used to be silently dropped, making a paragraph break render
+      // identically to a plain line break (single <br />) between the
+      // surrounding lines. Only add the extra gap between two real text
+      // lines — never around a table/image/diagram/document block, which
+      // already manage their own spacing (and normalization upstream
+      // collapses 3+ newlines to at most one blank line here, so there's
+      // never more than one of these to consider at a time).
+      // Only add ONE extra <br /> here — the next real line's own normal
+      // transition logic below will independently add its usual single
+      // <br /> against this now-consumed blank line (its "previous line" is
+      // empty, which reads as neither HTML nor a placeholder), so the two
+      // together naturally produce a clean double break without this branch
+      // having to duplicate that logic itself.
+      const prevReal = i > 0 ? htmlLines[i - 1].trim() : "";
+      const nextReal = i < htmlLines.length - 1 ? htmlLines[i + 1].trim() : "";
+      const prevIsHtmlOrPlaceholder = isBlockHtmlEnd(prevReal) || /%%(VISUAL|MERMAID|PTABLE|DOC)_\d+%%/.test(prevReal);
+      const nextIsHtmlOrPlaceholder = isBlockHtmlStart(nextReal) || /%%(VISUAL|MERMAID|PTABLE|DOC)_\d+%%/.test(nextReal);
+      if (prevReal && nextReal && !prevIsHtmlOrPlaceholder && !nextIsHtmlOrPlaceholder) {
+        finalHtml += "<br />";
+      }
+      continue;
+    }
     if (i > 0) {
       const prevLine = htmlLines[i-1].trim();
       const currLine = line.trim();
-      const isPrevHtml = prevLine.endsWith(">");
-      const isCurrHtml = currLine.startsWith("<");
+      const isPrevHtml = isBlockHtmlEnd(prevLine);
+      const isCurrHtml = isBlockHtmlStart(currLine);
       // Don't add <br /> if we are moving between tags or if it's a placeholder line
       // OR if the current line is a standalone math symbol (like an arrow)
-      const isPlaceholder = line.includes("%%VISUAL_") || line.includes("%%MERMAID_") || line.includes("%%PTABLE_");
-      const wasPlaceholder = htmlLines[i-1].includes("%%VISUAL_") || htmlLines[i-1].includes("%%MERMAID_") || htmlLines[i-1].includes("%%PTABLE_");
+      const isPlaceholder = line.includes("%%VISUAL_") || line.includes("%%MERMAID_") || line.includes("%%PTABLE_") || line.includes("%%DOC_");
+      const wasPlaceholder = htmlLines[i-1].includes("%%VISUAL_") || htmlLines[i-1].includes("%%MERMAID_") || htmlLines[i-1].includes("%%PTABLE_") || htmlLines[i-1].includes("%%DOC_");
       const isShortMath = line.trim().startsWith("<span class=\"katex") && line.trim().length < 200;
 
       if (!isPrevHtml && !isCurrHtml && !isPlaceholder && !wasPlaceholder && !isShortMath) {
@@ -556,9 +612,25 @@ export function renderContent(raw: string): string {
     finalHtml += line;
   }
 
+  // 3.5 Restore document blocks BEFORE visual/mermaid/table blocks. A
+  // document's captured body can itself contain an untouched %%PTABLE_N%%,
+  // %%VISUAL_N%%, or %%MERMAID_N%% token — those blocks are extracted from
+  // the raw text earlier (steps 1/2/2.5), before document detection (2.6)
+  // even runs, so a table/image/diagram inside a document is already just a
+  // placeholder by the time the document regex captures it. That nested
+  // token only becomes "live" in finalHtml once the document's own HTML is
+  // spliced in here — restoring it any later means the table/visual/mermaid
+  // restore passes below run before the token they're looking for actually
+  // exists in finalHtml, and it's left showing up literally (e.g. a document
+  // that contains a statistics table rendering "%%PTABLE_0%%" as raw text
+  // instead of the table).
+  documentBlocks.forEach((docHtml, i) => {
+    finalHtml = finalHtml.split(`%%DOC_${i}%%`).join(docHtml);
+  });
+
   // 4. Put Visual/Mermaid blocks back LAST
   visualBlocks.forEach((visualHtml, i) => {
-    finalHtml = finalHtml.replace(`%%VISUAL_${i}%%`, visualHtml);
+    finalHtml = finalHtml.split(`%%VISUAL_${i}%%`).join(visualHtml);
   });
 
   mermaidBlocks.forEach((block, i) => {
@@ -568,17 +640,12 @@ export function renderContent(raw: string): string {
     const rawToReplace = block.raw.replace(/"/g, "&quot;");
     
     const visualHtml = `<div class="relative group my-6" data-raw="${escapeHtml(block.raw)}" contenteditable="false"><button data-action="remove-visual" data-type="mermaid" data-content="${rawToReplace}" class="absolute top-2 right-2 z-20 w-6 h-6 rounded-full bg-white/90 backdrop-blur-sm border border-red-100 text-red-500 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center hover:bg-red-50 shadow-sm" title="Remove Diagram"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button><div class="relative flex justify-center bg-white p-4 rounded-xl border border-[var(--border)] shadow-sm overflow-x-auto min-h-[100px] items-center"><img id="m-img-${uid}" src="${src}" alt="Diagram" class="max-w-full h-auto transition-opacity duration-500" style="opacity:0" onload="this.style.opacity='1'; document.getElementById('m-spin-${uid}').style.display='none';" onError="this.style.display='none'; this.parentElement.innerHTML='<div class=text-xs>Visual rendering error.</div>'" /><div id="m-spin-${uid}" class="absolute inset-0 flex items-center justify-center bg-white/50"><div class="flex flex-col items-center gap-2"><svg class="animate-spin w-4 h-4 text-[var(--accent)]" viewBox="0 0 24 24" fill="none"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg><span class="text-[8px] font-bold uppercase tracking-widest text-[var(--text-tertiary)] animate-pulse">Rendering Diagram...</span></div></div></div></div>`;
-    finalHtml = finalHtml.replace(`%%MERMAID_${idx}%%`, visualHtml);
+    finalHtml = finalHtml.split(`%%MERMAID_${idx}%%`).join(visualHtml);
   });
 
   // 5. Restore pipe tables with KaTeX-rendered cells
   pipeTableBlocks.forEach((tableText, i) => {
-    finalHtml = finalHtml.replace(`%%PTABLE_${i}%%`, renderPipeTable(tableText));
-  });
-
-  // 5.5 Restore document blocks
-  documentBlocks.forEach((docHtml, i) => {
-    finalHtml = finalHtml.replace(`%%DOC_${i}%%`, docHtml);
+    finalHtml = finalHtml.split(`%%PTABLE_${i}%%`).join(renderPipeTable(tableText));
   });
 
   // 6. Final cleanup of AI artifacts (like triple quotes, code fences, or trailing backticks)
