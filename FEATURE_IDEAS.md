@@ -51,6 +51,45 @@ something already deferred to v1.1/v2 without flagging that explicitly.
    *Effort: small (1-2 days — a client-side comparison against already-fetched saved exams before
    the `/api/analyze` or `/api/generate` call, no new backend). Risk: low.*
 
+## Week of 2026-09-15 — from Antoine's chapter-coverage investigation (not the Friday loop)
+
+1. **Restore Per-Exercise Chapter Tagging + Canonical Chapter-ID Grounding for Generation.**
+   Investigating why "Second degré"/"Dérivation"/"Trigonométrie" show "!" on `/create/generate`'s
+   Chapter Coverage card (full writeup: `CURRICULUM_COVERAGE_STRATEGY.md`, dated 2026-09-15 section)
+   found a real regression, not a curriculum-data gap: commit `9515e8a` (2026-05-15) restructured
+   `src/lib/prompts/generate.ts`'s AI-facing JSON schema and silently dropped
+   `"chapterIds": string[]` (and `"estimatedMinutes": number`) from the per-exercise output spec —
+   the model is never asked to tag which chapter(s) an exercise covers, so the frontend's coverage
+   counter (`ex.chapterIds ?? []` in `create/generate/page.tsx`) sees nothing to count even when the
+   exercise content is fine. Two things make a one-line schema re-add insufficient on its own:
+   `buildChaptersSummary()` (`src/data/curricula/index.ts`) never shows the model a chapter's real
+   `id` string, only its display name, so the model would have to guess an ID that won't match; and
+   `src/app/api/generate/route.ts` never validates the AI's JSON output with Zod (a gap against
+   CLAUDE.md §10) — the missing field shipped silently for ~5 weeks with nothing to catch it. Full
+   fix: (a) restore both fields to the per-exercise schema in `buildGenerateSystemPrompt()`, (b)
+   pass canonical chapter `id`s (not just names) into the `<selected_chapters>` / chapter-coverage
+   prompt blocks so the model has real IDs to echo back instead of guessing, (c) add Zod validation
+   of the AI's exercise JSON in `api/generate/route.ts` so a future schema drift fails loudly
+   instead of silently. *Effort: small-medium (1-2 days — two focused prompt-builder edits in
+   `src/lib/prompts/generate.ts` plus one new Zod schema + parse call in `api/generate/route.ts`;
+   no new AI calls, no type/data-model changes since `Exercise.chapterIds`/`estimatedMinutes` are
+   already declared in `src/types/exam.ts`). Risk: low-medium — touches the live generation
+   endpoint, so needs a real end-to-end generation test (not just `tsc`) before merge, and the Zod
+   schema must be written permissively enough not to reject otherwise-good exercises over a minor
+   AI formatting slip.*
+
+   **Update — already built, same session:** Antoine's own message that triggered this
+   investigation explicitly asked for the underlying cause to be fixed, not just documented, so
+   this was implemented directly rather than left as an unbuilt proposal — PR:
+   `fix/restore-chapter-id-tagging`. tsc/build verified; no live end-to-end generation test was
+   possible (no API key in the build environment), so treat the "needs a real generation test
+   before merge" risk note above as still open until Antoine (or a routine with real secrets) runs
+   one. This is the one exception to this file's own approval gate this week — logged here rather
+   than silently, per this file's own norm of not deciding things quietly.
+
+**Nothing here gets built without Antoine's approval** — same as every other idea in this file,
+except the one entry above, marked explicitly.
+
 ## Shipped
 
 ### 2026-09-14 — Week of 2026-09-01 batch (all 3 approved and built in one session)
