@@ -14,14 +14,20 @@ const FEATURES_FREE = [
   "Version A/B generation",
 ];
 
-const FEATURES_PRO = [
-  "100 exams per month",
-  "All curricula & subjects",
-  "Corrigé included per exam",
-  "Word + PDF export",
-  "Saved exam library",
-  "Community exam library",
-];
+// Exam-count copy must match the limits actually enforced in
+// /api/generate/route.ts (MONTHLY_LIMITS.pro = 10, or 20 on the yearly
+// plan) — this page previously said "100 exams per month" for both,
+// which the backend has never allowed.
+function getFeaturesPro(yearly: boolean): string[] {
+  return [
+    `${yearly ? 20 : 10} exams per month`,
+    "All curricula & subjects",
+    "Corrigé included per exam",
+    "Word + PDF export",
+    "Saved exam library",
+    "Community exam library",
+  ];
+}
 
 const MONTHLY_PRICE = 5.99;
 const YEARLY_PRICE_PER_MONTH = 3.99;
@@ -155,7 +161,7 @@ export default function PricingPage() {
             )}
 
             <ul className={`space-y-3 flex-1 ${yearly ? "mb-6" : "mb-8"}`}>
-              {FEATURES_PRO.map((f) => (
+              {getFeaturesPro(yearly).map((f) => (
                 <li key={f} className="flex items-start gap-2.5 text-sm text-[var(--text-secondary)]">
                   <span className="w-4 h-4 rounded-full bg-[var(--accent)] text-white flex items-center justify-center text-xs flex-shrink-0 mt-0.5">
                     <Check size={10} />
