@@ -389,11 +389,17 @@ OPTION B — "دراسة موضوع اجتماعي" (Social-topic study, 12 poin
 - جسم الموضوع / Body (7 pts): define the key concepts and the relationship between them (~1.5); examine real conditions/evidence with actual statistics and comparisons, not vague generalities (~1.5); evaluate the relevant institution's or state's role, both positive AND negative (~1); propose exactly 3 concrete measures/solutions (~1.5); the remaining points reward coherence and depth across the body.
 - الخاتمة / Conclusion (2 pts): summarize the argument and directly answer the إشكالية from the intro (~1), end with an "ouverture" — a broader open question extending the topic (~0.5).
 
+DOCUMENT FORMAT — MANDATORY, exact and literal (every document in Option A, and Option B's single springboard document): each document MUST be its own paragraph, in this exact shape with nothing else interleaved:
+  المستند رقم (N) — [type/context, e.g. نص رسمي, جدول إحصائي, مقال صحفي]
+  [the document's own text/data, one or more lines]
+  المصدر: [a real, specific, named source — a ministry/agency name, an outlet + author + date, a statistics agency + year — never "Source: N/A" and never omitted]
+A real example of a correctly-sourced document, verbatim shape (from an actual paper): a document ending on its own line reading exactly "المصدر: SIAB News.com" — that trailing "المصدر: ..." line is REQUIRED on every single document, with no exceptions, and must be the last line of that document's paragraph (nothing after it but a blank line before the next document or question). When the exam language is French or English, use "Source :" / "Source:" the same way, still as its own trailing line. A document without this line is malformed — the app's renderer specifically looks for "المصدر:"/"Source:" to box the document visually, so skipping it means the document displays as unstyled loose text instead of a proper sourced document box.
+
 NOTICE across both real papers:
 - Every sub-question shows its own point value in parentheses beside it (e.g. "(0.75 علامة)"), unlike the Bac Liban math paper's exercise-level-only point values.
 - Command vocabulary is conceptual, not computational: "سمّ/اذكر" (name), "ميز" (distinguish), "صنف" (classify), "برر" (justify), "بيّن العلاقة" (show the relationship) — never "احسب" (calculate).
-- Documents (Option A) are always real, dated, and sourced (a named ministry/agency, a named outlet) — never generic or unsourced data.
-- Option B's document is a springboard quote, not a set to cross-analyze — don't confuse the two options' use of documents.
+- Documents (Option A) are always real, dated, and sourced (a named ministry/agency, a named outlet) — never generic or unsourced data. Follow the exact DOCUMENT FORMAT above for every one of them.
+- Option B's document is a springboard quote, not a set to cross-analyze — don't confuse the two options' use of documents. It still needs the same "المصدر:"/"Source:" trailing line.
 - These two 12-point options are structurally different exercise TYPES, not just different topics — when generating a full exam for this subject, pick one shape deliberately (matching whichever the teacher's request implies) rather than blending both.`,
 };
 

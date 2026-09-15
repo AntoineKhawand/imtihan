@@ -41,7 +41,7 @@ Rules:
 - difficultyMix values must sum to exactly 1.0. Default when not specified: { easy: 0.20, medium: 0.45, hard: 0.35 } — exams should skew medium-to-hard unless the teacher explicitly asks for something easier
 - duration is in minutes (e.g. 1h = 60, 2h = 120)
 - totalPoints: use 20 for Bac Libanais/Français, 100 for IB, best judgment for university
-- chapterIds: infer from the teacher's description using short kebab-case identifiers (e.g. "mecanique-newtonienne", "suites-numeriques", "guerre-froide"). If the teacher lists specific chapters, use those words kebab-cased. For university, always return [].
+- chapterIds: <curriculum_reference> lists real "CHAPTER_ID: ..." values for every subject that has defined chapters. When the resolved curriculum/level/subject has any listed, you MUST select chapterIds ONLY from those exact real CHAPTER_ID strings — match them to what the teacher described by meaning, never invent your own slug and never kebab-case the teacher's own wording (an id that doesn't appear verbatim in <curriculum_reference> is worse than an empty array). Only fall back to inferring a short kebab-case identifier from the teacher's description when NO CHAPTER_ID values are listed at all for that subject — and in that case, add a note to "warnings" saying chapter matching isn't backed by defined curriculum data yet. For university, always return [].
 - confidence: 0.0–1.0 reflecting how sure you are about the parsed context
 - warnings: array of strings describing anything you had to guess or that the teacher should verify
 - generateVersionB: true only if teacher explicitly asked for two versions
