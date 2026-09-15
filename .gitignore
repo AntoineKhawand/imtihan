@@ -55,3 +55,6 @@ tmp/
 *-result.txt
 scan-result.txt
 fix-git-lock.ps1
+
+# Claude Code local worktrees (subagent isolation) — never commit
+.claude/

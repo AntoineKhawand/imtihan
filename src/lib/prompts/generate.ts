@@ -5,7 +5,9 @@ import { buildChaptersSummary, getChapter } from "@/data/curricula";
 // Language instructions
 // ---------------------------------------------------------------------------
 
-const LANGUAGE_INSTRUCTIONS: Record<string, string> = {
+// Exported so other prompt builders (e.g. src/lib/prompts/translateExam.ts) can
+// reuse the exact same tone/convention phrasing instead of re-deriving it.
+export const LANGUAGE_INSTRUCTIONS: Record<string, string> = {
   french: `Write the entire exam in French.
 - Use French mathematical and scientific notation (m/s, N, J, mol/L, Ω, etc.).
 - Address students formally as "vous".

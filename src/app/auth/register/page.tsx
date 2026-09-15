@@ -59,20 +59,31 @@ function RegisterForm() {
     setLoading(true);
     setError(null);
     try {
-      const fp = await fpPromise.load();
-      const fpResult = await fp.get();
-      const fingerprint = fpResult.visitorId;
+      // Device fingerprinting is a soft anti-abuse check, not a hard requirement —
+      // some mobile browsers (privacy modes, in-app webviews) block canvas/audio
+      // fingerprinting outright. If it throws, skip the device check rather than
+      // failing the whole signup over it.
+      let fingerprint: string | null = null;
+      try {
+        const fp = await fpPromise.load();
+        const fpResult = await fp.get();
+        fingerprint = fpResult.visitorId;
+      } catch (fpErr) {
+        console.warn("[Register] Fingerprinting unavailable, skipping device check:", fpErr);
+      }
 
-      const checkRes = await fetch("/api/auth/check-device", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ fingerprint }),
-      });
-      const checkData = await checkRes.json();
-      
-      if (!checkRes.ok || !checkData.allowed) {
-        setError(checkData.error || "Registration blocked for this device.");
-        return;
+      if (fingerprint) {
+        const checkRes = await fetch("/api/auth/check-device", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ fingerprint }),
+        });
+        const checkData = await checkRes.json();
+
+        if (!checkRes.ok || !checkData.allowed) {
+          setError(checkData.error || "Registration blocked for this device.");
+          return;
+        }
       }
 
       const credential = await createUserWithEmailAndPassword(auth, email, password);
@@ -93,7 +104,7 @@ function RegisterForm() {
           country: "LB",
           examsGenerated: 0,
           subscription: { status: "none", tier: "free" },
-          fingerprint,
+          ...(fingerprint ? { fingerprint } : {}),
         });
       } catch (profileErr) {
         // Don't strand the account: the Firebase Auth user already exists at
@@ -106,6 +117,7 @@ function RegisterForm() {
       fetch("/api/auth/welcome", { method: "POST" }).catch(() => {});
       window.location.assign(explicitRedirect ?? "/dashboard");
     } catch (err: unknown) {
+      console.error("[Register] handleRegister failed:", err);
       const code = (err as { code?: string }).code ?? "";
       if (code === "auth/email-already-in-use") {
         setError("An account with this email already exists. Try signing in.");
@@ -113,6 +125,8 @@ function RegisterForm() {
         setError("Password must be at least 6 characters.");
       } else if (code === "auth/invalid-email") {
         setError("Invalid email address.");
+      } else if ((err as Error).message?.startsWith("session-failed")) {
+        setError("Account created, but we couldn't sign you in automatically. Please sign in.");
       } else {
         setError("Registration failed. Please try again.");
       }
@@ -130,21 +144,28 @@ function RegisterForm() {
       const credential = await signInWithPopup(auth, provider);
       const additionalInfo = getAdditionalUserInfo(credential);
       if (additionalInfo?.isNewUser) {
-        const fp = await fpPromise.load();
-        const fpResult = await fp.get();
-        const fingerprint = fpResult.visitorId;
+        let fingerprint: string | null = null;
+        try {
+          const fp = await fpPromise.load();
+          const fpResult = await fp.get();
+          fingerprint = fpResult.visitorId;
+        } catch (fpErr) {
+          console.warn("[Register] Fingerprinting unavailable, skipping device check:", fpErr);
+        }
 
-        const checkRes = await fetch("/api/auth/check-device", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ fingerprint }),
-        });
-        const checkData = await checkRes.json();
-        
-        if (!checkRes.ok || !checkData.allowed) {
-          await credential.user.delete();
-          setError(checkData.error || "Registration blocked for this device.");
-          return;
+        if (fingerprint) {
+          const checkRes = await fetch("/api/auth/check-device", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ fingerprint }),
+          });
+          const checkData = await checkRes.json();
+
+          if (!checkRes.ok || !checkData.allowed) {
+            await credential.user.delete();
+            setError(checkData.error || "Registration blocked for this device.");
+            return;
+          }
         }
 
         // Force a fresh ID token before the Firestore write (see handleRegister
@@ -160,13 +181,18 @@ function RegisterForm() {
             country: "LB",
             examsGenerated: 0,
             subscription: { status: "none", tier: "free" },
-            fingerprint,
+            ...(fingerprint ? { fingerprint } : {}),
           });
         } catch (profileErr) {
           // Don't strand the account — /api/auth/session's ensureUserProfile
           // creates the profile server-side as a fallback (see handleRegister).
           console.warn("[register] Client-side profile write failed, relying on server-side fallback:", profileErr);
         }
+        // NOTE: the welcome-email send for new Google users lives below, after
+        // setSessionCookie() — not here. /api/auth/welcome needs the __session
+        // cookie to identify the user, which doesn't exist yet at this point;
+        // an earlier version of this branch fired it here and it silently
+        // failed on every Google sign-up as a result.
       }
       await setSessionCookie(await credential.user.getIdToken());
       if (additionalInfo?.isNewUser) {
@@ -191,6 +217,7 @@ function RegisterForm() {
       } else if ((err as Error).message?.startsWith("session-failed")) {
         setError("Sign-up succeeded but session could not be created. Check your server configuration.");
       } else {
+        console.error("[Register] handleGoogle failed:", err);
         setError(`Google sign-up failed: ${code || "unknown error"}`);
       }
     } finally {

@@ -1,13 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { Plus, Clock, Award, Search, Sparkles, FileText, Copy, Trash2, ChevronRight, Zap, X, Users, CheckCircle2, XCircle } from "lucide-react";
+import { Plus, Clock, Award, Search, Sparkles, FileText, Copy, Trash2, ChevronRight, Zap, X, Users, CheckCircle2, XCircle, Languages } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/Button";
 import { SkeletonList } from "@/components/ui/Skeleton";
 import { DashboardSidebar } from "@/components/layout/DashboardSidebar";
 import { RenewalBanner } from "@/components/ui/RenewalBanner";
-import { cn, formatDate, FREE_EXAM_LIMIT, shortId } from "@/lib/utils";
+import { ChapterCoverageWidget } from "@/components/ui/ChapterCoverageWidget";
+import { cn, formatDate, FREE_EXAM_LIMIT, shortId, LANGUAGE_LABELS } from "@/lib/utils";
 import { isProActive, isInGracePeriod } from "@/lib/subscription";
 import { getSavedExams, deleteExam, saveExam, type SavedExam } from "@/lib/storage";
 import { useAuth } from "@/contexts/AuthContext";
@@ -15,6 +17,8 @@ import { UserNav } from "@/components/layout/UserNav";
 import { Logo } from "@/components/ui/Logo";
 import { db } from "@/lib/firebase";
 import { collection, query, where, getDocs, doc, getDoc } from "firebase/firestore";
+import type { Language } from "@/types/curriculum";
+import type { Exercise } from "@/types/exam";
 
 const SUBJECT_ICONS: Record<string, string> = {
   physics: "fa-solid fa-atom",
@@ -90,6 +94,50 @@ export default function DashboardPage() {
     const newExam = { ...exam, id: shortId(), title: `${exam.title} (Copy)`, createdAt: Date.now() };
     saveExam(newExam);
     setExams((prev) => [newExam, ...prev]);
+  }
+
+  // Cross-Language Exam Duplication — translates an already-generated exam's
+  // statements/solutions into another language via /api/exam/translate.
+  // This is a translation of finished content (numbers/structure/LaTeX stay
+  // identical), NOT a new curriculum-grounded generation — see the route
+  // handler and src/lib/prompts/translateExam.ts for the scope boundary.
+  async function handleTranslate(exam: SavedExam, targetLanguage: Language): Promise<boolean> {
+    try {
+      const token = await currentUser?.getIdToken();
+      const res = await fetch("/api/exam/translate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          context: exam.context,
+          header: exam.header,
+          exercises: exam.exercises,
+          targetLanguage,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.success) {
+        toast.error(data.error || "Failed to translate exam. Please try again.");
+        return false;
+      }
+
+      const newExam: SavedExam = {
+        ...exam,
+        id: shortId(),
+        title: `${exam.title} (${LANGUAGE_LABELS[targetLanguage] ?? targetLanguage})`,
+        context: { ...exam.context, language: targetLanguage },
+        exercises: data.exercises as Exercise[],
+        header: data.header ?? exam.header,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      };
+      saveExam(newExam);
+      setExams((prev) => [newExam, ...prev]);
+      toast.success(`Translated to ${LANGUAGE_LABELS[targetLanguage] ?? targetLanguage}.`);
+      return true;
+    } catch {
+      toast.error("Failed to translate exam. Please try again.");
+      return false;
+    }
   }
 
   const [requestingRenewal, setRequestingRenewal] = useState(false);
@@ -222,6 +270,9 @@ export default function DashboardPage() {
             </div>
           ))}
         </div>
+
+        {/* Chapter coverage insights */}
+        <ChapterCoverageWidget exams={exams} />
 
         {/* Subscription status */}
         <div className="card p-4 mb-6 flex items-center gap-4">
@@ -411,6 +462,7 @@ export default function DashboardPage() {
                 exam={exam}
                 onDelete={handleDelete}
                 onDuplicate={handleDuplicate}
+                onTranslate={handleTranslate}
               />
             ))}
           </div>
@@ -550,16 +602,42 @@ function ExamRow({
   exam,
   onDelete,
   onDuplicate,
+  onTranslate,
 }: {
   exam: SavedExam;
   onDelete: (id: string) => void;
   onDuplicate: (exam: SavedExam) => void;
+  onTranslate: (exam: SavedExam, targetLanguage: Language) => Promise<boolean>;
 }) {
   const [open, setOpen] = useState(false);
   const [downloading, setDownloading] = useState<"word" | "pdf" | null>(null);
   const [showStudentResults, setShowStudentResults] = useState(false);
   const [studentResults, setStudentResults] = useState<StudentResult[] | null>(null);
   const [loadingResults, setLoadingResults] = useState(false);
+  const [translateMenuOpen, setTranslateMenuOpen] = useState(false);
+  const [translating, setTranslating] = useState<Language | null>(null);
+  const translateMenuRef = useRef<HTMLDivElement>(null);
+
+  const ALL_LANGUAGES: Language[] = ["french", "english", "arabic"];
+  const translateTargets = ALL_LANGUAGES.filter((l) => l !== exam.context.language);
+
+  useEffect(() => {
+    if (!translateMenuOpen) return;
+    function handleClickOutside(e: MouseEvent) {
+      if (translateMenuRef.current && !translateMenuRef.current.contains(e.target as Node)) {
+        setTranslateMenuOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [translateMenuOpen]);
+
+  async function handleTranslateClick(targetLanguage: Language) {
+    setTranslateMenuOpen(false);
+    setTranslating(targetLanguage);
+    await onTranslate(exam, targetLanguage);
+    setTranslating(null);
+  }
 
   const diffCount = exam.exercises.reduce(
     (acc, e) => { acc[e.difficulty] = (acc[e.difficulty] ?? 0) + 1; return acc; },
@@ -694,6 +772,35 @@ function ExamRow({
             >
               <Copy size={11} /> Duplicate
             </button>
+            {translateTargets.length > 0 && (
+              <div className="relative" ref={translateMenuRef}>
+                <button
+                  onClick={() => setTranslateMenuOpen((v) => !v)}
+                  disabled={!!translating}
+                  className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)]/40 hover:text-[var(--accent)] hover:bg-[var(--accent-light)] active:scale-95 transition-all duration-200 disabled:opacity-50"
+                >
+                  {translating ? (
+                    <div className="w-3 h-3 rounded-full border border-current border-t-transparent animate-spin" />
+                  ) : (
+                    <Languages size={11} />
+                  )}
+                  {translating ? `Translating to ${LANGUAGE_LABELS[translating] ?? translating}…` : "Translate to…"}
+                </button>
+                {translateMenuOpen && (
+                  <div className="absolute z-10 mt-1 w-40 rounded-lg border border-[var(--border)] bg-[var(--surface)] shadow-lg overflow-hidden">
+                    {translateTargets.map((lang) => (
+                      <button
+                        key={lang}
+                        onClick={() => handleTranslateClick(lang)}
+                        className="w-full text-left text-xs px-3 py-2 text-[var(--text-secondary)] hover:bg-[var(--accent-light)] hover:text-[var(--accent)] transition-colors duration-150"
+                      >
+                        {LANGUAGE_LABELS[lang] ?? lang}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
             <button
               onClick={() => onDelete(exam.id)}
               className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border border-red-200 text-red-500 hover:bg-red-50 active:scale-95 transition-all duration-200 ml-auto"

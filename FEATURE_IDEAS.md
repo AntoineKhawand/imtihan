@@ -13,32 +13,7 @@ Ideas should be grounded in the actual codebase/data already collected, not gene
 lists — check `CLAUDE.md` §9 (MVP scope) and §8 (open decisions) first so proposals don't repeat
 something already deferred to v1.1/v2 without flagging that explicitly.
 
-## Week of 2026-09-01 — proposed, awaiting approval
-
-1. **Chapter Coverage Insights (dashboard widget).** Across a teacher's saved exams, surface
-   which curriculum chapters for their subject/level have never appeared in a generated exam
-   this term — a simple aggregation over `chapterIds` already stored on every `SavedExam`. No
-   new AI calls, no new data collection; purely a read over existing Firestore/localStorage data.
-   *Effort: small (1-2 days). Risk: low — additive dashboard card only.*
-
-2. **Performance-Aware Difficulty Calibration.** The dashboard already fetches
-   `student_attempts` (correct/incorrect per exercise) for the "Student Results" panel. Extend
-   this: when a teacher starts a new exam on a chapter they've tested before, show a small note
-   — "students scored 92% on medium-difficulty [chapter] questions last time; consider skewing
-   harder" — computed from data already being collected today, unused beyond the per-exam table.
-   *Effort: medium (3-4 days, needs a cross-exam aggregation query + UI). Risk: low-medium —
-   purely advisory, doesn't change generation automatically.*
-
-3. **Cross-Language Exam Duplication.** One-click "Generate an English/Arabic version of this
-   exam" on an already-generated exam, preserving structure, numbers, and diagrams while
-   translating statements/instructions — useful for bilingual sections and schools running
-   parallel-language classes. Reuses the existing generation pipeline with a translation-specific
-   prompt rather than a full new exam. *Effort: medium (needs a dedicated prompt in
-   `src/lib/prompts/`, plus UI entry point on the export or dashboard exam row). Risk: medium —
-   another AI call path to test/monitor for quality; should NOT touch Arabic support scope
-   already deferred to v1.1 (`CLAUDE.md` §8) if it exceeds structural translation — flag before
-   building if it starts to feel like full Arabic exam generation rather than translation of an
-   already-generated exam.*
+## Week of 2026-09-01 — shipped 2026-09-14 (see "Shipped" below)
 
 ## Week of 2026-09-04 — proposed, awaiting approval
 
@@ -78,7 +53,31 @@ something already deferred to v1.1/v2 without flagging that explicitly.
 
 ## Shipped
 
-*(none yet)*
+### 2026-09-14 — Week of 2026-09-01 batch (all 3 approved and built in one session)
+
+1. **Chapter Coverage Insights** — `src/components/ui/ChapterCoverageWidget.tsx`, wired into
+   `/dashboard`. Client-side only, as scoped — no new AI calls or backend queries.
+2. **Performance-Aware Difficulty Calibration** — new `POST /api/tools/chapter-performance`
+   (Admin SDK aggregation over `schoolBank` + `student_attempts`) plus an advisory card on
+   `/create/generate`, purely informational, never touches the generation request. **Needs a
+   Firestore composite index before it returns real data** — see `firestore.indexes.json`
+   (`schoolBank`: `curriculumId` ASC, `subject` ASC, `exercise.chapterIds` CONTAINS); not deployed
+   yet, run `firebase deploy --only firestore:indexes` or create it manually in the console.
+   Also required a small fix to `bank/page.tsx`'s `shareToSchoolBank()`, which wasn't writing
+   `curriculumId`/`chapterIds` at all — those are the two fields this feature joins on, so it
+   would have had zero matches without that fix.
+3. **Cross-Language Exam Duplication** — new `POST /api/exam/translate` +
+   `src/lib/prompts/translateExam.ts`, "Translate to…" action on each dashboard exam row. Verified
+   live end-to-end (real Claude call): numbers, IDs, `chapterIds`, and LaTeX/`\ce{}` preserved
+   exactly, only prose translated. Offers all three app languages (French/English/Arabic) since
+   this is translation of already-generated content, not new curriculum-grounded generation —
+   flagged explicitly per this file's own caveat, not a silent scope decision.
+
+Built by three parallel subagents (one per feature, isolated git worktrees), then merged,
+QA'd (type-check, full production build, live requests against both new API routes, code
+review of the client-only widget), and two real bugs fixed before merge: `sonner`'s `<Toaster/>`
+was never mounted anywhere in the app (silently swallowing toasts on several existing pages
+too, not just the new one), and the `schoolBank` write gap above.
 
 ## Approved — ready to build
 
