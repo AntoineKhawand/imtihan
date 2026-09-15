@@ -353,28 +353,48 @@ NOTICE in this example:
 - "/" shows alternative acceptable responses.
 - "Award [X] for correct final answer" allows full marks without intermediate steps.`,
 
-  // Source: Bac Liban — Sociologie, filière Sciences Sociales et Économiques,
-  // session ordinaire 2024 (4 juillet 2024), officiel CRDP —
-  // https://www.crdp.org/sites/default/files/SE_Socio_2024_1_Ar.pdf
-  // Extracted via pdftotext from the real published paper. Verified 2026-09-15.
-  "bac-libanais-sociology": `FORMAT EXAMPLE — modelled on the real Bac Liban Sociologie paper, 2024 régulière session (2.5h, 20 points):
+  // Sources (two independent real papers, cross-checked against each other —
+  // the second one caught real gaps the first alone had missed, notably a
+  // whole third exam option):
+  // 1. Bac Liban — Sociologie, filière Sciences Sociales et Économiques,
+  //    session ordinaire 2024 (4 juillet 2024), officiel CRDP —
+  //    https://www.crdp.org/sites/default/files/SE_Socio_2024_1_Ar.pdf
+  //    (extracted via pdftotext — see docs/DATA_SOURCING.md)
+  // 2. A real school trial exam, Ahliah School, Grade 12 Sociologie et
+  //    Économie, Trial 3, May 2026 (provided directly by the founder — a
+  //    teacher-written mock exam, not an official CRDP paper, but built to
+  //    match the real state exam's shape, and it did: it confirmed most of
+  //    what source 1 showed and additionally surfaced the full essay/
+  //    dissertation option that source 1's extraction had run past without
+  //    being caught the first time).
+  // Verified/reconciled 2026-09-15.
+  "bac-libanais-sociology": `FORMAT EXAMPLE — modelled on two real Bac Liban Sociologie papers (2024 official CRDP exam, 2.5h; and a real 2026 school trial exam built to the same shape), 20 points total:
 
-STRUCTURE: two "Majmou'a" (groups). The student picks freely between the two groups — this is NOT a menu of independent exercises like Math/Physics.
+STRUCTURE: ONE mandatory section, then a choice between TWO very differently-shaped 12-point alternatives. This is NOT a menu of independent exercises like Math/Physics — never generate "Exercice 1, 2, 3..." for this subject.
 
-المجموعة الأولى (First Group — 8 points): "استعمال مفاهيم وتقنيات" (Using concepts and techniques). Offers TWO alternative sections (القسم الاختياري الأول / الثاني) covering the same chapters from different angles — the student answers ONE ENTIRE section, never mixing sub-questions from both. Each section's question types, in this order:
-1. Term recall (~1.5 pts, 3 parts): "سمّ المفهوم أو المصطلح الاجتماعي المناسب لكل من العبارات الآتية" (Name the sociological concept/term that matches each statement) — 3 short descriptive statements, one concept-name answer each.
-2. Comparative classification (~1.5 pts, 2 parts): identify which criterion/type applies to two named social systems (e.g. "الطائفة المغلقة" closed caste vs. "الطبقي الحديث" modern class system), then justify.
-3. Odd-one-out + justify (~1.25 pts + sub-parts): "استخرج العنصر غير المناسب في كل من المجموعتين التاليتين، ثم برر إجابتك" (Extract the element that doesn't belong from each of the following groups, then justify) — 2 short lists of 4-5 related terms each.
-4. Relationship explanation (~1.5 pts, 2 parts): "بيّن العلاقة بين..." (Explain the relationship between: [concept A] and [concept B]) — always a paired concept prompt, never a single term.
-5. Applied research-methodology scenario (~2 pts, 3 parts): a short real-world social phenomenon is described (e.g. declining Arabic proficiency among students), then the student must: (a) name the correct research technique for a described data-collection step (e.g. direct classroom observation) and its matching analysis type; (b) design one multiple-choice questionnaire item for a target sample and name the question type used; (c) write one interview question for a relevant informant.
+SECTION 1 — MANDATORY (8 points): "استعمال مفاهيم وتقنيات" (Using concepts and techniques). The official exam offers two alternative phrasings of this same section (student picks one, never mixing); a school trial may give just one. Real question types seen, mix 4-6 of these per exam (points vary slightly by session, roughly as shown):
+1. Term recall (~1.5 pts, 3 parts): "سمّ/اذكر المفهوم أو المصطلح الاجتماعي المناسب لكل من العبارات الآتية" (Name the sociological concept/term matching each statement) — 3 short descriptive statements, one concept-name answer each.
+2. Distinguish-by-one-difference (~1 pt, 2 parts): "ميز بفارق واحد بين المفاهيم التالية" (Distinguish, with one difference, between the following concepts) — always a named pair (e.g. "المجتمع الأهلي" vs. "المجتمع السياسي").
+3. Classify-and-justify OR odd-one-out (~1.25-1.5 pts): either "صنف العبارات الآتية ضمن مجموعتين متجانستين ثم برر إجابتك" (Sort the following into two homogeneous groups, then justify) or "استخرج العنصر غير المناسب...ثم برر" (extract the one that doesn't belong, then justify) over a short list of 4-6 related terms — both real, interchangeable phrasings of the same underlying skill (categorization judgment); use either.
+4. Justify-a-statement (~1 pt, 1 part): "برر بفكرة واحدة صحة الجملة التالية" (Justify, with one idea, why the following statement is true) — a single short sociological claim.
+5. Relationship explanation (0.5-1.5 pts, 1-2 parts): "بيّن العلاقة بين..." (Show the relationship between: [concept A] and [concept B]) — always a paired-concept prompt, never a single term.
+6. Applied research-methodology scenario (~1.75-2 pts, 3 parts): a short real-world social phenomenon or local case is described (e.g. a popular weekly market, or declining Arabic proficiency among students), then the student must: (a) name the correct research technique for a described data-collection step (observation vs. survey) and justify it; (b) design one question per point under the matching technique's real constraints — if a questionnaire: 3 answer choices per question; if observation: 2 material + 2 human aspects to note; (c) write one interview question for a relevant informant.
 
-المجموعة الثانية (Second Group — 12 points, alternative to the first): "تحليل مستندات اجتماعية" (Social document analysis). 2-3 real documents are given — always a mix of a statistical figure/chart (e.g. a real national poverty-rate breakdown, explicitly sourced and dated, like "ESCWA, 2020") and a real short journalistic or expert-opinion excerpt (sourced with author/publication/date). The student writes an extended analytical response that must explicitly draw on BOTH documents plus course concepts — a commentary/synthesis format, not short-answer.
+Then the student picks ONE of these two 12-point alternatives:
 
-NOTICE in this real paper:
+OPTION A — "تحليل مستندات" (Document analysis, 12 points). 3 real documents, always a mix of: an official/government text (a real policy or law), a statistical table (real, sourced, often comparing two years — e.g. a literacy-rate table by region, "Ministry of Social Affairs" sourced), and a journalistic or opinion excerpt (sourced with outlet name). 5-6 short questions (0.5-1.5 pts each) ask the student to identify concepts/relationships within and across documents, compare data points, and explain causes — THEN a final synthesis sub-question (~4 pts) asks for an extended written response ("اكتب نصًا...") that still must draw on the documents plus outside course knowledge, naming a real policy direction and proposing concrete measures.
+
+OPTION B — "دراسة موضوع اجتماعي" (Social-topic study, 12 points) — a full French-methodology DISSERTATION, not document-analysis. One real document is given only as a springboard/quote, not for detailed analysis. Real point structure from an official answer key:
+- المقدمة / Introduction (3 pts): أهمية الموضوع — why the topic matters (~1.5), الإطار الزماني والمكاني — time/place framing (~0.25), الإشكالية — a clear problem question the essay will answer (~0.5), التصميم — a stated outline of the essay's plan (~0.75).
+- جسم الموضوع / Body (7 pts): define the key concepts and the relationship between them (~1.5); examine real conditions/evidence with actual statistics and comparisons, not vague generalities (~1.5); evaluate the relevant institution's or state's role, both positive AND negative (~1); propose exactly 3 concrete measures/solutions (~1.5); the remaining points reward coherence and depth across the body.
+- الخاتمة / Conclusion (2 pts): summarize the argument and directly answer the إشكالية from the intro (~1), end with an "ouverture" — a broader open question extending the topic (~0.5).
+
+NOTICE across both real papers:
 - Every sub-question shows its own point value in parentheses beside it (e.g. "(0.75 علامة)"), unlike the Bac Liban math paper's exercise-level-only point values.
-- Command vocabulary is conceptual, not computational: "سمّ" (name), "بيّن العلاقة" (show the relationship), "برر" (justify), "حلل" (analyze) — never "احسب" (calculate).
-- Documents in the analysis group are always real, dated, and sourced (a statistics agency, a named journalist, a named publication) — never generic or unsourced data.
-- The two groups are structurally different exercise TYPES (recall/relational vs. document commentary), not just different topics — when generating a full exam, produce one exercise matching each group's real shape rather than five variations on the same question type.`,
+- Command vocabulary is conceptual, not computational: "سمّ/اذكر" (name), "ميز" (distinguish), "صنف" (classify), "برر" (justify), "بيّن العلاقة" (show the relationship) — never "احسب" (calculate).
+- Documents (Option A) are always real, dated, and sourced (a named ministry/agency, a named outlet) — never generic or unsourced data.
+- Option B's document is a springboard quote, not a set to cross-analyze — don't confuse the two options' use of documents.
+- These two 12-point options are structurally different exercise TYPES, not just different topics — when generating a full exam for this subject, pick one shape deliberately (matching whichever the teacher's request implies) rather than blending both.`,
 };
 
 // ---------------------------------------------------------------------------
