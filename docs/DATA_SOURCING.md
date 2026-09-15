@@ -98,3 +98,26 @@ Grounding comes from two places instead:
 See `CURRICULUM_COVERAGE_STRATEGY.md` for the ongoing backlog that uses this doc as its
 methodology reference — chapter audits, past-exam-grounded objective checks, and the per-chapter
 exemplar bank all cite back to the sourcing rules above rather than re-deriving them.
+
+## Getting real text out of official CRDP exam PDFs (2026-09-15)
+
+CRDP's own past-exam archive (`crdp.org/official-exams-corrections-lebanon`, filterable by
+subject/branch/year/session) is real and complete back to 2006 — but `WebFetch` cannot read most
+of these PDFs directly: it reports "binary/compressed content" because it converts pages to
+Markdown via a renderer that doesn't handle these files' embedded fonts well, especially older
+scanned Arabic papers. Don't conclude the content is unextractable from that alone.
+
+**Working method:** call `WebFetch` on the PDF URL anyway — even though it can't read it, the tool
+saves the raw binary to a local path (shown at the end of its response), *and that copy is fully
+usable*. Run `pdftotext -layout -enc UTF-8 <saved-path> -` (via Bash; `pdftotext` is available in
+this environment at `/mingw64/bin/pdftotext`, no install needed) to get real, legible extracted
+text — this worked cleanly on a 2024 digitally-generated exam PDF (see the Sociology entry below)
+even though `WebFetch` itself failed on the same file. Older, more heavily scanned PDFs (tested:
+2006-2017 Sociology & Economics papers) extract as garbled/illegible text even via `pdftotext` —
+if that happens, look for a more recent session of the same subject/branch before giving up; recent
+CRDP papers tend to be digitally typeset, not scanned.
+
+**Verified example:** `src/lib/prompts/generate.ts`'s `bac-libanais-sociology` few-shot exemplar
+is built from the real text of the official Sociology exam, Sciences Sociales et Économiques
+branch, session ordinaire 2024 (4 juillet 2024) —
+`https://www.crdp.org/sites/default/files/SE_Socio_2024_1_Ar.pdf`, extracted via this exact method.

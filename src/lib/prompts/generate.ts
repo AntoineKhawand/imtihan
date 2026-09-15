@@ -352,6 +352,29 @@ NOTICE in this example:
 - M1 = method mark, A1 = answer mark.
 - "/" shows alternative acceptable responses.
 - "Award [X] for correct final answer" allows full marks without intermediate steps.`,
+
+  // Source: Bac Liban — Sociologie, filière Sciences Sociales et Économiques,
+  // session ordinaire 2024 (4 juillet 2024), officiel CRDP —
+  // https://www.crdp.org/sites/default/files/SE_Socio_2024_1_Ar.pdf
+  // Extracted via pdftotext from the real published paper. Verified 2026-09-15.
+  "bac-libanais-sociology": `FORMAT EXAMPLE — modelled on the real Bac Liban Sociologie paper, 2024 régulière session (2.5h, 20 points):
+
+STRUCTURE: two "Majmou'a" (groups). The student picks freely between the two groups — this is NOT a menu of independent exercises like Math/Physics.
+
+المجموعة الأولى (First Group — 8 points): "استعمال مفاهيم وتقنيات" (Using concepts and techniques). Offers TWO alternative sections (القسم الاختياري الأول / الثاني) covering the same chapters from different angles — the student answers ONE ENTIRE section, never mixing sub-questions from both. Each section's question types, in this order:
+1. Term recall (~1.5 pts, 3 parts): "سمّ المفهوم أو المصطلح الاجتماعي المناسب لكل من العبارات الآتية" (Name the sociological concept/term that matches each statement) — 3 short descriptive statements, one concept-name answer each.
+2. Comparative classification (~1.5 pts, 2 parts): identify which criterion/type applies to two named social systems (e.g. "الطائفة المغلقة" closed caste vs. "الطبقي الحديث" modern class system), then justify.
+3. Odd-one-out + justify (~1.25 pts + sub-parts): "استخرج العنصر غير المناسب في كل من المجموعتين التاليتين، ثم برر إجابتك" (Extract the element that doesn't belong from each of the following groups, then justify) — 2 short lists of 4-5 related terms each.
+4. Relationship explanation (~1.5 pts, 2 parts): "بيّن العلاقة بين..." (Explain the relationship between: [concept A] and [concept B]) — always a paired concept prompt, never a single term.
+5. Applied research-methodology scenario (~2 pts, 3 parts): a short real-world social phenomenon is described (e.g. declining Arabic proficiency among students), then the student must: (a) name the correct research technique for a described data-collection step (e.g. direct classroom observation) and its matching analysis type; (b) design one multiple-choice questionnaire item for a target sample and name the question type used; (c) write one interview question for a relevant informant.
+
+المجموعة الثانية (Second Group — 12 points, alternative to the first): "تحليل مستندات اجتماعية" (Social document analysis). 2-3 real documents are given — always a mix of a statistical figure/chart (e.g. a real national poverty-rate breakdown, explicitly sourced and dated, like "ESCWA, 2020") and a real short journalistic or expert-opinion excerpt (sourced with author/publication/date). The student writes an extended analytical response that must explicitly draw on BOTH documents plus course concepts — a commentary/synthesis format, not short-answer.
+
+NOTICE in this real paper:
+- Every sub-question shows its own point value in parentheses beside it (e.g. "(0.75 علامة)"), unlike the Bac Liban math paper's exercise-level-only point values.
+- Command vocabulary is conceptual, not computational: "سمّ" (name), "بيّن العلاقة" (show the relationship), "برر" (justify), "حلل" (analyze) — never "احسب" (calculate).
+- Documents in the analysis group are always real, dated, and sourced (a statistics agency, a named journalist, a named publication) — never generic or unsourced data.
+- The two groups are structurally different exercise TYPES (recall/relational vs. document commentary), not just different topics — when generating a full exam, produce one exercise matching each group's real shape rather than five variations on the same question type.`,
 };
 
 // ---------------------------------------------------------------------------
@@ -381,8 +404,15 @@ export function buildGenerateSystemPrompt(context: ExamContext): string {
   // Pick the right language instruction
   const languageInstruction = LANGUAGE_INSTRUCTIONS[langKey] ?? LANGUAGE_INSTRUCTIONS.english;
 
-  // Pick few-shot format example
-  const fewShotKey = currKey === "ib" ? "ib-english" : "bac-libanais-french";
+  // Pick few-shot format example — subject-aware where a real exemplar exists
+  // (sociology's real exam shape — two alternative concept sections plus a
+  // document-analysis alternative — is nothing like a math paper's numbered
+  // exercises, so falling back to the math example would actively mislead
+  // the model here rather than just being unhelpful).
+  const fewShotKey =
+    currKey === "ib" ? "ib-english"
+    : currKey === "bac-libanais" && context.subject === "sociology" ? "bac-libanais-sociology"
+    : "bac-libanais-french";
   const fewShotExample = FEW_SHOT_EXAMPLES[fewShotKey] ?? "";
 
   // Pick command terms: Arabic Bac Libanais has its own block
@@ -410,7 +440,13 @@ export function buildGenerateSystemPrompt(context: ExamContext): string {
 - Each exercise shows its point value in parentheses: "Exercice 2 (7 points)".
 - Always include a "Données :" block with all constants and given values.
 - Total must equal exactly 20 points.
-- Corrigé: use numbered steps per sub-question. Write "Barème :" at the end with point breakdown.`,
+- Corrigé: use numbered steps per sub-question. Write "Barème :" at the end with point breakdown.
+- EXCEPTION — Sociologie (and similarly-structured humanities tracks): if a
+  FORMAT REFERENCE example below describes a different real structure
+  (e.g. alternative sections the student chooses between, rather than a
+  sequential Exercice 1/2/3 list), follow that example instead — these
+  rules describe the math/science exam shape specifically, not every
+  Bac Libanais subject.`,
 
     "bac-francais": `STRUCTURE RULES (Bac Français):
 - Number exercises: "Exercice 1 (X points)" or use thematic titles ("Exercice — Mécanique (6 points)").
