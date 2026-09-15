@@ -5,9 +5,10 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { FREE_EXAM_LIMIT } from "@/lib/utils";
-import { RefreshCw, Search, Calendar, Clock, ShieldCheck, User, Zap, Sparkles, Plus, BarChart3, TrendingUp, FileText, ArrowRight, Mail, Send, CheckCircle2, XCircle, Check, RotateCcw } from "lucide-react";
+import { RefreshCw, Search, Calendar, Clock, ShieldCheck, User, Zap, Sparkles, Plus, BarChart3, TrendingUp, FileText, ArrowRight, Mail, Send, CheckCircle2, XCircle, Check, RotateCcw, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 
 const subjectMap: Record<string, string> = {
   mathematics: "Mathématiques", physics: "Physique", chemistry: "Chimie",
@@ -99,6 +100,8 @@ export default function AdminPage() {
   const [customHtml, setCustomHtml] = useState("");
   const [sendingEmails, setSendingEmails] = useState(false);
   const [emailResult, setEmailResult] = useState<{ sent: number; failed: number } | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<AdminUser | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   async function fetchData() {
     if (!user) return;
@@ -178,6 +181,32 @@ export default function AdminPage() {
       else { const d = await res.json(); toast.error(d.error || "Failed to reset"); }
     } catch { toast.error("Failed to reset trial"); }
     finally { setExtending(null); }
+  };
+
+  const handleDeleteUser = async () => {
+    if (!user || !deleteTarget) return;
+    setDeleting(true);
+    try {
+      const token = await user.getIdToken();
+      const res = await fetch("/api/admin/delete-user", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ targetUid: deleteTarget.uid }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        toast.success(`Deleted ${deleteTarget.email}`);
+        setSelectedUids((prev) => { const next = new Set(prev); next.delete(deleteTarget.uid); return next; });
+        setDeleteTarget(null);
+        fetchData();
+      } else {
+        toast.error(data.error || "Failed to delete user");
+      }
+    } catch {
+      toast.error("Failed to delete user");
+    } finally {
+      setDeleting(false);
+    }
   };
 
   const handleAutoGenerateBlog = async () => {
@@ -458,6 +487,11 @@ export default function AdminPage() {
                             <button onClick={() => handleResetTrial(u.uid)} disabled={!!extending}
                               className="h-8 px-2.5 bg-white border border-red-200 text-red-500 rounded-xl text-[10px] font-bold hover:bg-red-50 transition-colors whitespace-nowrap">
                               {extending === `${u.uid}-reset` ? <RotateCcw size={11} className="animate-spin" /> : "Reset"}
+                            </button>
+                            <button onClick={() => setDeleteTarget(u)} disabled={!!extending}
+                              title="Delete user" aria-label={`Delete ${u.email}`}
+                              className="h-8 w-8 flex items-center justify-center bg-white border border-gray-200 text-gray-400 rounded-xl hover:bg-red-50 hover:border-red-200 hover:text-red-500 transition-colors">
+                              <Trash2 size={12} />
                             </button>
                           </div>
                         </td>
@@ -787,11 +821,34 @@ export default function AdminPage() {
                   className="h-10 px-3 bg-white border border-red-200 text-red-500 rounded-xl text-[10px] font-bold disabled:opacity-50 flex items-center justify-center">
                   {extending === `${u.uid}-reset` ? <RotateCcw size={12} className="animate-spin" /> : "Reset"}
                 </button>
+                <button onClick={() => setDeleteTarget(u)} disabled={!!extending}
+                  aria-label={`Delete ${u.email}`}
+                  className="h-10 w-10 bg-white border border-gray-200 text-gray-400 rounded-xl disabled:opacity-50 flex items-center justify-center">
+                  <Trash2 size={13} />
+                </button>
               </div>
             </div>
           ))}
         </div>
       )}
+
+      <ConfirmDialog
+        open={!!deleteTarget}
+        tone="danger"
+        title="Delete this user?"
+        description={
+          deleteTarget && (
+            <>
+              This permanently deletes <span className="font-bold text-gray-700">{deleteTarget.email}</span> — their
+              account, saved exams, and profile. This can't be undone.
+            </>
+          )
+        }
+        confirmLabel="Delete permanently"
+        loading={deleting}
+        onConfirm={handleDeleteUser}
+        onCancel={() => !deleting && setDeleteTarget(null)}
+      />
     </div>
   );
 }
