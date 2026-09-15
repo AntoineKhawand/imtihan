@@ -13,7 +13,7 @@ const subjectMap: Record<string, string> = {
   mathematics: "Mathématiques", physics: "Physique", chemistry: "Chimie",
   biology: "Biologie", history: "Histoire", geography: "Géographie",
   philosophy: "Philosophie", arabic: "Arabe", french: "Français",
-  english: "Anglais", economics: "Économie", accounting: "Comptabilité",
+  english: "Anglais", economics: "Économie", accounting: "Comptabilité", sociology: "Sociologie",
   informatics: "Informatique", "visual-arts": "Arts Plastiques",
   svt: "SVT", nsi: "NSI",
 };

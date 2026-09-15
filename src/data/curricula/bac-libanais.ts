@@ -18,7 +18,7 @@ export const bacLibanais: Curriculum = {
     "mathematics", "physics", "chemistry", "biology", "svt",
     "arabic", "french", "english",
     "history-geography", "philosophy", "civic-education",
-    "economics", "accounting", "management",
+    "economics", "accounting", "management", "sociology",
     "informatics",
   ],
   levels: [
@@ -333,6 +333,56 @@ export const bacLibanais: Curriculum = {
               "Décrire le relief, le climat et les régions du Liban",
               "Analyser la démographie et l'urbanisation",
               "Étudier les ressources et l'économie nationale",
+            ],
+          },
+        ],
+        // Source: CRDP Lebanon, "Curriculum of Economics and Sociology" (First
+        // Year Secondary) — https://www.crdp.org/en_test_crd/curriculum-content_details/curriculum-economics-and-sociology/french
+        // 5 official topics, 30 periods/year. Verified 2026-09-15.
+        sociology: [
+          {
+            id: "sec-socio-society",
+            name: { fr: "La sociologie et la société", en: "Sociology and Society" },
+            objectives: [
+              "Définir l'objet d'étude de la sociologie",
+              "Distinguer idées reçues et réalité vécue face aux phénomènes sociaux",
+              "Observer et analyser un phénomène social simple",
+            ],
+          },
+          {
+            id: "sec-socio-evolution",
+            name: { fr: "Évolution et changement des sociétés", en: "Evolution and Change of Societies" },
+            objectives: [
+              "Comparer sociétés pré-industrielles, industrielles et technologiquement avancées",
+              "Identifier les facteurs de transformation d'une société",
+              "Situer la société libanaise dans cette évolution",
+            ],
+          },
+          {
+            id: "sec-socio-groups",
+            name: { fr: "Les groupes sociaux", en: "Social Groups" },
+            objectives: [
+              "Identifier les types de groupes sociaux (famille, groupe professionnel, politique, de jeunes, paroissial, sportif, scout, féminin)",
+              "Analyser la composition et le fonctionnement d'un groupe social",
+              "Étudier les interactions entre membres d'un même groupe",
+            ],
+          },
+          {
+            id: "sec-socio-structure",
+            name: { fr: "Structure sociale, stratification et leadership", en: "Social Structure, Stratification, and Leadership" },
+            objectives: [
+              "Distinguer structures sociales formelles et informelles",
+              "Décrire le rôle des institutions civiques",
+              "Expliquer la formation des élites et du leadership",
+            ],
+          },
+          {
+            id: "sec-socio-communication",
+            name: { fr: "La communication dans la société", en: "Communication in Society" },
+            objectives: [
+              "Distinguer communication orale, artistique et médiatique",
+              "Analyser le rôle des mass médias dans la société",
+              "Évaluer l'impact des nouvelles technologies sur la communication sociale",
             ],
           },
         ],
@@ -795,6 +845,85 @@ export const bacLibanais: Curriculum = {
               "Analyser les fonctions de l'entreprise",
               "Étudier les structures organisationnelles",
               "Comprendre la gestion des ressources humaines",
+            ],
+          },
+        ],
+        // Source: CRDP Lebanon, "Curriculum of Economics and Sociology" (Third
+        // Year Secondary, Sociology and Economics specialized series) —
+        // https://www.crdp.org/en_test_crd/curriculum-content_details/curriculum-economics-and-sociology/french
+        // 8 official topics, 120 periods/year — the full Terminale (Bac) year.
+        // Verified 2026-09-15.
+        sociology: [
+          {
+            id: "ter-es-socio-culture",
+            name: { fr: "Culture et société", en: "Culture and Society" },
+            objectives: [
+              "Définir les concepts de culture et de diversité culturelle",
+              "Distinguer conservatisme, innovation et acculturation",
+              "Analyser les rapports entre culture et société libanaise",
+            ],
+          },
+          {
+            id: "ter-es-socio-values",
+            name: { fr: "Valeurs sociales", en: "Social Values" },
+            objectives: [
+              "Expliquer la formation des valeurs sociales",
+              "Comparer les systèmes de valeurs dans les sociétés pré-industrielles et avancées",
+              "Étudier les mécanismes de transmission des valeurs",
+            ],
+          },
+          {
+            id: "ter-es-socio-inequality",
+            name: { fr: "Inégalités et mobilité sociale", en: "Inequality and Social Mobility" },
+            objectives: [
+              "Identifier les phénomènes d'inégalité sociale",
+              "Analyser les formes et facteurs de la mobilité sociale",
+              "Étudier la diversité sociale au Liban",
+            ],
+          },
+          {
+            id: "ter-es-socio-integration",
+            name: { fr: "Intégration et solidarité sociale", en: "Social Integration and Solidarity" },
+            objectives: [
+              "Définir les conditions de l'intégration sociale",
+              "Analyser les domaines et politiques d'intégration",
+              "Évaluer les mécanismes de solidarité dans la société",
+            ],
+          },
+          {
+            id: "ter-es-socio-change",
+            name: { fr: "Changement social", en: "Social Change" },
+            objectives: [
+              "Identifier les facteurs structurels du changement social",
+              "Distinguer forces internes/externes et subjectives/objectives du changement",
+              "Analyser les résistances au changement social",
+            ],
+          },
+          {
+            id: "ter-es-socio-policies",
+            name: { fr: "Politiques sociales", en: "Social Policies" },
+            objectives: [
+              "Classer les types de politiques sociales",
+              "Étudier les politiques d'éducation et d'urbanisation",
+              "Analyser des initiatives locales de développement social",
+            ],
+          },
+          {
+            id: "ter-es-socio-science",
+            name: { fr: "La sociologie comme science", en: "Sociology as Science" },
+            objectives: [
+              "Retracer les origines de la sociologie comme discipline",
+              "Décrire les méthodes de recherche sociologique",
+              "Appliquer des techniques d'enquête sociologique simples",
+            ],
+          },
+          {
+            id: "ter-es-socio-lebanon",
+            name: { fr: "La société libanaise", en: "Lebanese Society" },
+            objectives: [
+              "Décrire la diversité géographique et démographique du Liban",
+              "Analyser les rapports de genre et les modes de consommation au Liban",
+              "Étudier conservatisme et innovation dans l'habitat et la prise de décision",
             ],
           },
         ],
