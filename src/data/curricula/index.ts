@@ -64,7 +64,10 @@ export function buildChaptersSummary(
     .map((ch) => {
       const name = ch.name.fr ?? ch.name.en;
       const objectives = ch.objectives.map((o) => `  - ${o}`).join("\n");
-      return `### ${name}\n${objectives}`;
+      // The bracketed id is the exact machine-readable chapterId the model
+      // must copy into each exercise's "chapterIds" field — see the
+      // "CHAPTER COVERAGE" instructions in src/lib/prompts/generate.ts.
+      return `### ${name} [id: ${ch.id}]\n${objectives}`;
     })
     .join("\n\n");
 }

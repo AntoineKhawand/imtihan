@@ -482,7 +482,7 @@ STRICT MONOLINGUALISM (ZERO TOLERANCE FOR MIXED LANGUAGES):
 CRITICAL RULES:
 1. All calculations must be correct — verify every numerical answer before writing it.
 2. Numbers must be realistic: no negative masses, no speeds exceeding c, no impossible concentrations.
-3. Each exercise must stay within the selected chapters — no out-of-scope content. CHAPTER COVERAGE IS MANDATORY: the user prompt includes a per-exercise chapter assignment ("CHAPTER COVERAGE" block) — every selected chapter MUST appear in at least one exercise (or as a distinct sub-question when an exercise is assigned multiple chapters). Do not concentrate all exercises on only 1-2 chapters while ignoring others that were selected.
+3. Each exercise must stay within the selected chapters — no out-of-scope content. CHAPTER COVERAGE IS MANDATORY: the user prompt includes a per-exercise chapter assignment ("CHAPTER COVERAGE" block) — every selected chapter MUST appear in at least one exercise (or as a distinct sub-question when an exercise is assigned multiple chapters). Do not concentrate all exercises on only 1-2 chapters while ignoring others that were selected. Every exercise's "chapterIds" field MUST list the exact machine-readable chapter id(s) it covers — copy them verbatim from the "[id: ...]" tag shown next to each chapter in the <selected_chapters> block (also referenced in the CHAPTER COVERAGE block below). NEVER invent an id, translate it, or substitute the chapter's display name — an id that doesn't match one you were given is worse than an empty array. For university mode, where there is no <selected_chapters> block, return "chapterIds": [].
 4. MATH & CHEMISTRY NOTATION — JSON requires double-escaped backslashes: write \\\\frac, \\\\sqrt, \\\\alpha, \\\\vec, \\\\int. For chemical equations, you MUST wrap mhchem in dollar signs: $\\\\ce{CH4 + 2O2 -> CO2 + 2H2O}$. NEVER write \\\\ce without the surrounding $...$ and NEVER write \\\\ce without braces (e.g. \\\\ceCH4 is INVALID). Bare \\\\ce{} without $...$ will show as raw code text — always $\\\\ce{...}$. Single backslash is INVALID inside a JSON string and will crash the parser.
 5. SCIENTIFIC ACCURACY: We use a high-precision verification engine (Math.js) for all generated answers. Ensure all numerical values, unit conversions, and statistical results are mathematically exact.
 6. NOTATION & SPACING (CRITICAL — ZERO TOLERANCE FOR PLAIN TEXT MATH):
@@ -601,34 +601,37 @@ JSON schema for the output:
     {
       "id": string,
       "number": number,
-  "type": "multiple_choice" | "short_answer" | "problem_solving" | "proof" | "calculation" | "lab_analysis",
-  "difficulty": "easy" | "medium" | "hard",
-  "points": number,
-  "statement": string,
-  "options": [
-    { "label": "A", "text": string, "isCorrect": boolean },
-    { "label": "B", "text": string, "isCorrect": boolean },
-    { "label": "C", "text": string, "isCorrect": boolean },
-    { "label": "D", "text": string, "isCorrect": boolean }
-  ] | null,
-  "subQuestions": [
-    { "label": string, "statement": string, "points": number }
-  ] | null,
-  "solution": {
-    "finalAnswer": string,
-    "methodology": string,
-    "commonMistakes": string[],
-    "bareme": [
-      { "label": string, "points": number, "criterion": string }
-    ],
-    "microBareme": [
-      { "step": string, "points": number, "criterion": string }
-    ]
-  },
-    ]
-  }
+      "type": "multiple_choice" | "short_answer" | "problem_solving" | "proof" | "calculation" | "lab_analysis",
+      "difficulty": "easy" | "medium" | "hard",
+      "points": number,
+      "statement": string,
+      "options": [
+        { "label": "A", "text": string, "isCorrect": boolean },
+        { "label": "B", "text": string, "isCorrect": boolean },
+        { "label": "C", "text": string, "isCorrect": boolean },
+        { "label": "D", "text": string, "isCorrect": boolean }
+      ] | null,
+      "subQuestions": [
+        { "label": string, "statement": string, "points": number }
+      ] | null,
+      "solution": {
+        "finalAnswer": string,
+        "methodology": string,
+        "commonMistakes": string[],
+        "bareme": [
+          { "label": string, "points": number, "criterion": string }
+        ],
+        "microBareme": [
+          { "step": string, "points": number, "criterion": string }
+        ]
+      },
+      "chapterIds": string[],
+      "estimatedMinutes": number
+    }
+  ]
 }
-IMPORTANT: "options" must be a 4-element array when type is "multiple_choice", and null for all other types.`;
+IMPORTANT: "options" must be a 4-element array when type is "multiple_choice", and null for all other types.
+IMPORTANT: "chapterIds" must contain only the exact "[id: ...]" chapter id string(s) given to you in <selected_chapters> for the chapter(s) this exercise (or its sub-questions) actually covers — never a display name or an invented id. "estimatedMinutes" is your best estimate of how long a well-prepared student needs to fully answer this exercise.`;
 }
 
 /**
@@ -650,26 +653,31 @@ function buildChapterDistribution(context: ExamContext): string {
   const { chapterIds, exerciseCount, curriculumId, levelId, subject } = context;
   if (!chapterIds || chapterIds.length === 0 || exerciseCount < 1) return "";
 
-  const names = chapterIds.map((cid) => {
+  // Keep the display name AND the real machine-readable id together so this
+  // block can tell the model exactly which id string belongs in each
+  // exercise's "chapterIds" field — see src/data/curricula/index.ts's
+  // buildChaptersSummary(), which tags the same id onto <selected_chapters>.
+  const entries = chapterIds.map((cid) => {
     const ch = getChapter(curriculumId, levelId, subject, cid);
-    return ch ? (ch.name.fr ?? ch.name.en ?? cid) : cid;
+    const name = ch ? (ch.name.fr ?? ch.name.en ?? cid) : cid;
+    return { name, id: cid };
   });
 
-  const perExercise: string[][] = Array.from({ length: exerciseCount }, () => []);
-  names.forEach((name, idx) => {
-    perExercise[idx % exerciseCount].push(name);
+  const perExercise: Array<{ name: string; id: string }>[] = Array.from({ length: exerciseCount }, () => []);
+  entries.forEach((entry, idx) => {
+    perExercise[idx % exerciseCount].push(entry);
   });
   // If there are fewer chapters than exercises, cycle back through the
   // chapter list to fill the remaining exercise slots.
-  for (let i = names.length; i < exerciseCount; i++) {
-    perExercise[i].push(names[i % names.length]);
+  for (let i = entries.length; i < exerciseCount; i++) {
+    perExercise[i].push(entries[i % entries.length]);
   }
 
-  const lines = perExercise.map((chNames, i) =>
-    `- Exercise ${i + 1} → ${chNames.map((n) => `"${n}"`).join(" + ")}${chNames.length > 1 ? " (cover EACH as a distinct sub-question within this exercise — do not drop any of them)" : ""}`
+  const lines = perExercise.map((chEntries, i) =>
+    `- Exercise ${i + 1} → ${chEntries.map((e) => `"${e.name}" [id: ${e.id}]`).join(" + ")}${chEntries.length > 1 ? " (cover EACH as a distinct sub-question within this exercise, and include ALL of their ids in that exercise's \"chapterIds\" — do not drop any of them)" : " (put this id in that exercise's \"chapterIds\")"}`
   );
 
-  return `\nCHAPTER COVERAGE (MANDATORY — every chapter listed in <selected_chapters> must appear in at least one exercise; never silently skip a selected chapter):\n${lines.join("\n")}`;
+  return `\nCHAPTER COVERAGE (MANDATORY — every chapter listed in <selected_chapters> must appear in at least one exercise; never silently skip a selected chapter. Each exercise's "chapterIds" field must contain exactly the id(s) shown in [id: ...] below for the chapter(s) assigned to it — copy them verbatim, never the name):\n${lines.join("\n")}`;
 }
 
 // ---------------------------------------------------------------------------

@@ -66,6 +66,111 @@ const RequestSchema = z.object({
   isAdjustment: z.boolean().optional().default(false),
 });
 
+// ── AI response validation ──────────────────────────────────────────────
+// Everything below parses the exercise objects the AI returns. Per
+// CLAUDE.md §10 ("Zod at every boundary... parse anything coming from the
+// AI"), this was previously missing — parsed JSON flowed to the client
+// almost as-is. Mirrors ExamContextSchema's style (same z import, same
+// permissive/optional posture for fields the model may omit) rather than
+// introducing a new validation approach.
+const McqOptionAISchema = z.object({
+  label: z.string(),
+  text: z.string(),
+  isCorrect: z.boolean(),
+});
+
+const SubQuestionAISchema = z.object({
+  label: z.string(),
+  statement: z.string(),
+  points: z.number(),
+});
+
+const BaremeEntryAISchema = z.object({
+  label: z.string(),
+  points: z.number(),
+  criterion: z.string(),
+});
+
+const MicroBaremeEntryAISchema = z.object({
+  step: z.string(),
+  points: z.number(),
+  criterion: z.string(),
+});
+
+// "essay" is a valid Exercise type in src/types/exam.ts but is not part of
+// the AI-facing schema in src/lib/prompts/generate.ts — kept in sync with
+// that prompt's JSON schema block, not the broader app-level type.
+const AIExerciseSchema = z
+  .object({
+    id: z.string(),
+    number: z.number(),
+    type: z.enum([
+      "multiple_choice",
+      "short_answer",
+      "problem_solving",
+      "proof",
+      "calculation",
+      "lab_analysis",
+    ]),
+    difficulty: z.enum(["easy", "medium", "hard"]),
+    points: z.number(),
+    statement: z.string(),
+    options: z.array(McqOptionAISchema).nullable().optional(),
+    subQuestions: z.array(SubQuestionAISchema).nullable().optional(),
+    solution: z.object({
+      finalAnswer: z.string(),
+      methodology: z.string(),
+      commonMistakes: z.array(z.string()).optional(),
+      bareme: z.array(BaremeEntryAISchema).optional(),
+      microBareme: z.array(MicroBaremeEntryAISchema).optional(),
+    }),
+    // Regression fix (see CURRICULUM_COVERAGE_STRATEGY.md, 2026-09 entry):
+    // commit 9515e8a dropped these two fields from the prompt's JSON schema,
+    // so the AI stopped producing them and nothing back-filled them here —
+    // chapterIds stayed empty, silently breaking the "Chapter coverage" card
+    // on /create/generate. Optional/defaulted (not required) so one
+    // non-compliant AI response doesn't fail validation for the whole
+    // exercise — see sanitizeExercise() below for the chapterIds filtering.
+    chapterIds: z.array(z.string()).optional().default([]),
+    estimatedMinutes: z.number().optional(),
+    mathPlots: z.array(z.string()).optional(),
+  })
+  // Preserve any other field the model emits (e.g. future additions) rather
+  // than silently dropping it — the client consumes the exercise object
+  // close to as-is, same as before this fix.
+  .passthrough();
+
+/**
+ * Validate one AI-generated exercise object and filter its "chapterIds"
+ * down to ids the teacher actually selected for this request. Never throws:
+ * a malformed exercise is logged and passed through unvalidated rather than
+ * aborting the whole generation over one bad object (same non-fatal
+ * posture as robustParse's multiple fallback strategies above).
+ */
+function sanitizeExercise(raw: unknown, allowedChapterIds: Set<string>): unknown {
+  const result = AIExerciseSchema.safeParse(raw);
+  if (!result.success) {
+    console.warn(
+      "[/api/generate] Exercise failed response validation, passing through unvalidated:",
+      result.error.flatten()
+    );
+    return raw;
+  }
+
+  const exercise = result.data;
+  const filteredChapterIds = exercise.chapterIds.filter((cid) => {
+    const allowed = allowedChapterIds.has(cid);
+    if (!allowed) {
+      console.warn(
+        `[/api/generate] Dropping invented chapterId "${cid}" — not in the teacher's selected chapters for this request.`
+      );
+    }
+    return allowed;
+  });
+
+  return { ...exercise, chapterIds: filteredChapterIds };
+}
+
 /**
  * Extract the first JSON array or object from a string, string-aware so
  * brackets inside string literals don't throw off the depth counter.
@@ -425,6 +530,10 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // The real, teacher-selected chapter ids for this request — used to
+    // filter any chapterIds the AI invents (see sanitizeExercise()).
+    const allowedChapterIds = new Set(context.chapterIds ?? []);
+
     const encoder = new TextEncoder();
     const readable = new ReadableStream({
       async start(controller) {
@@ -461,7 +570,7 @@ export async function POST(request: NextRequest) {
                   const result = findNextCompleteObject(accumulated, pos);
                   if (!result) break;
                   try {
-                    const exercise = robustParse(result.json);
+                    const exercise = sanitizeExercise(robustParse(result.json), allowedChapterIds);
                     controller.enqueue(encoder.encode(`data: ${JSON.stringify({ exercise, index: progressiveCount })}\n\n`));
                     progressiveCount++;
                     exercisesSearchFrom = result.end;
@@ -502,6 +611,14 @@ export async function POST(request: NextRequest) {
           } else if (parsedData && typeof parsedData === 'object') {
             allExercises = [parsedData];
           }
+
+          // Validate/sanitize every exercise from the full-text parse too —
+          // this covers both exercises already streamed progressively above
+          // (re-parsed here from the complete accumulated text) and any the
+          // progressive parser missed, so both the fresh-generation and the
+          // single-exercise regenerate path (which reuses this same route)
+          // get the same response validation.
+          allExercises = allExercises.map((ex) => sanitizeExercise(ex, allowedChapterIds));
 
           // Only send exercises the progressive parser didn't already emit
           const remainingExercises = allExercises.slice(progressiveCount);
