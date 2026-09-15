@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { adminAuth } from "@/lib/firebase-admin";
+import { adminAuth, ensureUserProfile } from "@/lib/firebase-admin";
 import { sanitizeError, createSecurityHeaders } from "@/lib/security";
 
 /**
@@ -13,11 +13,18 @@ export async function POST(request: Request) {
     if (!token) return NextResponse.json({ error: "No token provided" }, { status: 400 });
 
     const decodedToken = await adminAuth.verifyIdToken(token);
-    
+
+    // Safety net: guarantee a Firestore profile exists for this uid. Fixes the
+    // case where the client-side setDoc() in the register flow raced and lost
+    // (see ensureUserProfile doc comment) — never blocks sign-in on failure.
+    await ensureUserProfile(decodedToken.uid).catch((e) =>
+      console.error("[auth/session] ensureUserProfile failed:", e)
+    );
+
     // Cookie expires when the ID token expires (max 14 days, but usually 1hr for ID tokens)
     // We'll set a 5-day expiration for the session cookie
     const expiresIn = 60 * 60 * 24 * 5 * 1000;
-    
+
     const sessionCookie = await adminAuth.createSessionCookie(token, { expiresIn });
 
     const response = NextResponse.json({ success: true }, { headers: createSecurityHeaders() });

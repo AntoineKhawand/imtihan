@@ -101,3 +101,42 @@ export async function verifyIdToken(request: Request): Promise<string | null> {
     return null;
   }
 }
+
+/**
+ * Ensures a Firestore users/{uid} profile document exists for a signed-in user.
+ *
+ * The client-side registration flow (src/app/auth/register/page.tsx) also writes
+ * this doc directly via the Firestore client SDK's `setDoc`, right after the
+ * Firebase Auth account is created. That client write can lose a race against
+ * Firestore's client-side auth-token propagation and fail with `permission-denied`
+ * — when it does, the whole sign-up flow aborts, the account is left with no
+ * profile, and the user becomes invisible to quota checks, /admin, etc.
+ *
+ * This is the server-side safety net: it runs on every session-cookie creation
+ * (see /api/auth/session) via the Admin SDK, which is not subject to Firestore
+ * security rules or client auth-token timing, so it cannot suffer the same race.
+ * Uses `create()` (fails with ALREADY_EXISTS if the doc is already there) so it
+ * never clobbers a profile that already exists or was just written concurrently.
+ */
+export async function ensureUserProfile(uid: string): Promise<void> {
+  const userRef = adminDb.collection("users").doc(uid);
+  try {
+    const authUser = await adminAuth.getUser(uid);
+    await userRef.create({
+      uid,
+      email: authUser.email ?? "",
+      displayName: authUser.displayName ?? "",
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      role: "teacher",
+      country: "LB",
+      examsGenerated: 0,
+      subscription: { status: "none", tier: "free" },
+    });
+  } catch (err) {
+    // ALREADY_EXISTS (code 6) is the expected outcome whenever the client-side
+    // write already succeeded — not an error.
+    const code = (err as { code?: number | string })?.code;
+    if (code === 6 || code === "already-exists") return;
+    console.error("[ensureUserProfile] Failed to create profile for", uid, err);
+  }
+}
