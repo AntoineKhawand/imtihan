@@ -34,6 +34,10 @@ export interface UserProfile {
   translationsToday?: number;
   /** Unix ms when the current 24h translation window started. */
   translationsPeriodStart?: number;
+  /** Fragment quick-edits (POST /api/exam/regenerate-fragment) used in the current 24h window. */
+  fragmentRegensToday?: number;
+  /** Unix ms when the current 24h fragment-regen window started. */
+  fragmentRegenPeriodStart?: number;
   subscription: {
     status: SubscriptionStatus;
     tier: SubscriptionTier;

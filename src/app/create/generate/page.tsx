@@ -706,9 +706,10 @@ export default function GeneratePage() {
         </div>
       </main>
 
-      {editingExercise && (
+      {editingExercise && context && (
         <ExerciseEditor
           exercise={editingExercise}
+          context={context}
           onSave={handleEditorSave}
           onClose={() => setEditingExercise(null)}
         />
