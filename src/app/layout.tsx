@@ -4,6 +4,7 @@ import { GeistMono } from "geist/font/mono";
 import { Fraunces, Nunito, DM_Sans } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import Script from "next/script";
+import { Toaster } from "sonner";
 import { ToastProvider } from "@/components/ui/Toast";
 import { AuthProvider } from "@/contexts/AuthContext";
 import "katex/dist/katex.min.css";
@@ -158,6 +159,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <AuthProvider>
           <ToastProvider>{children}</ToastProvider>
         </AuthProvider>
+        {/*
+          sonner's <Toaster/> was never mounted anywhere in the app, so every
+          `import { toast } from "sonner"` call across the codebase (admin,
+          bank, scanner, create/export, and the new dashboard translate
+          feature) rendered nothing. Positioned top-right, distinct from the
+          app's own bottom-right ToastProvider above, so the two never overlap.
+        */}
+        <Toaster position="top-right" richColors closeButton />
         <Analytics />
       </body>
     </html>

@@ -1,0 +1,14 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "schoolBank",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "curriculumId", "order": "ASCENDING" },
+        { "fieldPath": "subject", "order": "ASCENDING" },
+        { "fieldPath": "exercise.chapterIds", "arrayConfig": "CONTAINS" }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}

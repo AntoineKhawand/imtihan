@@ -30,6 +30,10 @@ export interface UserProfile {
   renewalRequested?: boolean;
   /** True if the user has requested a monthly reset in-app. */
   resetRequested?: boolean;
+  /** Exam translations (POST /api/exam/translate) used in the current 24h window. */
+  translationsToday?: number;
+  /** Unix ms when the current 24h translation window started. */
+  translationsPeriodStart?: number;
   subscription: {
     status: SubscriptionStatus;
     tier: SubscriptionTier;
