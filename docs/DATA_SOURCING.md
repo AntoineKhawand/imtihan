@@ -121,3 +121,35 @@ CRDP papers tend to be digitally typeset, not scanned.
 is built from the real text of the official Sociology exam, Sciences Sociales et Économiques
 branch, session ordinaire 2024 (4 juillet 2024) —
 `https://www.crdp.org/sites/default/files/SE_Socio_2024_1_Ar.pdf`, extracted via this exact method.
+
+## Getting real text out of a `.docx` file (2026-09-16)
+
+The founder sometimes has the exam paper and/or its official answer key ("معايير الاجابة" /
+barème) as a local `.docx` file rather than a PDF — `Read` refuses these outright ("cannot read
+binary files"). A `.docx` is a ZIP archive of OOXML: `word/document.xml` holds every text run,
+already in document order.
+
+**Working method:**
+1. `unzip -o "<path>.docx" -d <extract-dir>` (`unzip` is available in this environment, no install
+   needed) — this expands `word/document.xml` (plus styles/theme files you can ignore).
+2. Write a small Node script (a real `.js` file, not an inline `node -e "..."` — bash's own
+   quote-escaping inside a multi-line double-quoted `-e` string is unreliable enough to corrupt a
+   regex silently, e.g. stray `\"` sequences getting unescaped) that walks `document.xml` with a
+   single regex matching, in order: `<w:t(?:\s[^>]*)?>([\s\S]*?)<\/w:t>` (a real text run) or
+   `</w:p>` (paragraph break → newline) or `</w:tr>` (table row break — barème/exam tables are
+   almost always laid out as Word tables, so this boundary matters) or `<w:tab/>` (tab). Emit the
+   captured group for text-run matches, a fixed string for the others, and decode the handful of
+   XML entities (`&amp;`, `&lt;`, `&gt;`, `&quot;`, `&apos;`).
+3. **The one real bug hit doing this:** a naive `<w:t[^>]*>` also matches `<w:tcPr>`, `<w:tblPr>`,
+   `<w:trPr>`, `<w:tblGrid>`, `<w:tblBorders>`, `<w:tblLook>`, `<w:tblW>`, `<w:tcW>`,
+   `<w:tcBorders>` — every OOXML table/cell-property tag starts with the two characters "w:t", so
+   `[^>]*` after it greedily treats the whole tag as a `<w:t>` run and then hunts for the next real
+   `</w:t>`, swallowing large spans of raw XML as if they were text. Require "w:t" to be a complete
+   tag name instead: `<w:t(?:\s[^>]*)?>` (either `<w:t>` exactly, or `<w:t` followed by whitespace
+   then attributes) — this is the fix, and the tell that you have the bug is raw `<w:tcPr>`-style
+   fragments showing up inline with otherwise-correctly-extracted text.
+
+**Verified example:** the `bac-libanais-sociology` exemplar's mandatory-section and Option
+A/B point breakdowns were corrected and made exact (down to individual 0.25-point sub-items) using
+a real official exam paper + its official answer key, session 2 ("الاستثنائية"), 28 August 2025,
+Sociologie et Économie branch, both provided as local `.docx` files and extracted via this method.
