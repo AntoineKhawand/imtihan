@@ -40,27 +40,55 @@
 ## Team 1 — QA / Regression Testing
 
 **Cadence:** daily, 08:00 Beirut (05:00 UTC).
-**Mission:** Walk the real 5-step workflow (Describe → Confirm → Structure →
-Generate → Export) end to end, as both unit tests and integration checks —
-every button does what it says, every input validates correctly, every step
-transition preserves state. Grow a persistent Playwright/integration suite
-under `tests/` over time rather than starting from scratch each run.
+**Mission:** A real, mature Playwright suite already exists — don't build a
+new one under `tests/`. Read `e2e/phases/phase-1-*.spec.ts` through
+`phase-8-*.spec.ts` (8-phase rotation, driven by `scripts/run-daily-phase.mjs`
++ `e2e/phases/.state.json`, logged to `DAILY_LOG.md` and `summary.md`) plus
+the standalone `e2e/smoke.spec.ts`, `qcm.spec.ts`, `security.spec.ts`,
+`subscription.spec.ts`, `user-flows.spec.ts`, `wysiwyg.spec.ts` regression
+specs. This suite has been running since 2026-09-01, first as a separate
+unattended Windows Scheduled Task (constrained there by a needed
+computer-use/`.bat` workaround for git pushes and Playwright browser
+installs — see the "Operational notes" near the top of `DAILY_LOG.md` for
+that task's own environment quirks, which do NOT apply to a cloud routine
+running in its own clean checkout). Run the next phase in rotation
+(`node scripts/run-daily-phase.mjs`, no argument — it advances the pointer
+itself), investigate real failures (many past failures were stale test
+locators, not app bugs — check which before "fixing" anything), fix what's
+actually broken, and extend a phase spec's coverage where it's thin, rather
+than starting a parallel suite.
 
-**Standing priority #1 (until resolved):** `/print` (the PDF path) renders
-through `src/lib/renderContent.ts` — the same live web pipeline the browser
-shows. `src/app/api/export/route.ts`'s `generateWordDocument` independently
-rebuilds the document with the `docx` library's own `Paragraph` objects —
-a second, separate renderer for the same content. Audit every content
-feature (tables, KaTeX/math, mhchem, document source-citation boxes,
-Mermaid/visual blocks, RTL Arabic, bold/paragraph spacing, per-exercise
-point overrides) in both pipelines and file a `BUGS.md` entry for every
-place they diverge. This is expected to take several runs to fully cover —
-track progress as a checklist in the PR description each run.
+**Standing priority #1 — resolved 2026-09-16, but re-verify each run:**
+`/print` (the PDF path, via `src/lib/renderContent.ts`) and
+`src/app/api/export/route.ts`'s `generateWordDocument` (built independently
+with the `docx` library) are two separate renderers for the same content —
+they diverged on barème/corrigé table column order, proportions, RTL
+mirroring, and header shading, all now fixed and verified against a real
+official answer key's own table structure. One known remaining gap: the
+barème table's column-1 header always reads "Question", but a real essay-
+type exercise's official table instead reads "أجزاء الموضوع" (parts of the
+topic, since its rows are labeled المقدمة/صلب الموضوع/الخاتمة, not question
+numbers) — worth fixing once there's a reliable way to detect an
+essay/dissertation-type exercise from the data model. Otherwise keep
+auditing every other content feature (KaTeX/math, mhchem, document
+source-citation boxes, Mermaid/visual blocks, bold/paragraph spacing,
+per-exercise point overrides) in both pipelines for the same kind of drift.
+
+**Standing priority #2 — found 2026-09-16, needs the founder, don't
+guess-fix:** authenticated users' Firestore *client-SDK* reads of their own
+profile document are being denied ("Missing or insufficient permissions"),
+confirmed NOT caused by a change in this repo (`firestore.rules` unchanged
+since 07-31, and the exact same test passed as recently as 09-13) — almost
+certainly the *deployed* Firestore rules on the live project have drifted
+from what's in `firestore.rules`. See `DAILY_LOG.md`'s 2026-09-16 entry for
+the full diagnostic. Report it, don't run `firebase deploy --only
+firestore:rules` unprompted — that changes live security config.
 
 **Output:** `BUGS.md` entries for anything broken, PR with fixes (once a fix
 is safe and verified — never a PR that only reports without attempting a fix
-when the fix is small and clear), PR with new/expanded test coverage under
-`tests/`. Daily email to the founder: pass/fail summary + new bugs found.
+when the fix is small and clear), PR with expanded coverage in the relevant
+`e2e/phases/phase-N-*.spec.ts` file. Daily email to the founder: pass/fail
+summary + new bugs found.
 
 ---
 

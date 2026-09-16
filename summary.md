@@ -90,11 +90,13 @@ a fresh dev server can occasionally outlast a flat timeout.
 | 5 | Dashboard & Bank | Exam rows (expand/duplicate/delete/download), quota states, bundle modal, sidebar; Bank tabs, BankCard actions, Invite Colleagues modal | 2026-09-13 21:46 UTC | ❌ Failing | 12 passed, 3 failed |
 | 6 | Community | Sign-in gate, free-tier blur, HowToShare, search/sort, Like/Preview/Download/Remix, preview modal | 2026-09-13 19:33 UTC | ❌ Failing | 9 passed, 1 failed |
 | 7 | Admin panel | Non-admin redirect (see Phase 1), tab switcher, user row actions (scoped to test user only), email tab UI (never sends), blog tab UI (never publishes) | 2026-09-14 11:51 UTC | ❌ Failing | 4 passed, 4 failed |
-| 8 | Pricing/Upgrade/Scanner/Contact | Authenticated pricing CTAs, upgrade form + WhatsApp path, Pro-gated scanner + real digitization call, contact form | 2026-09-13 21:51 UTC | ❌ Failing | 10 passed, 2 failed |
+| 8 | Pricing/Upgrade/Scanner/Contact | Authenticated pricing CTAs, upgrade form + WhatsApp path, Pro-gated scanner + real digitization call, contact form | 2026-09-16 21:54 UTC | ❌ Failing | 8 passed, 4 failed |
 
 ## Run Log
 
 *(newest first — appended automatically by `scripts/run-daily-phase.mjs`)*
+
+- 2026-09-16 21:54 UTC — Phase 8 (pricing upgrade misc): ❌ 8 passed, 4 failed (199.8s)
 
 - 2026-09-14 11:51 UTC — Phase 7 (admin): ❌ 4 passed, 4 failed (202.3s)
 
