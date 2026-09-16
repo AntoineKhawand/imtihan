@@ -1,16 +1,182 @@
 "use client";
 
 import { useState, useRef, useCallback } from "react";
-import { Columns, Eye, Edit3, X, Plus, Trash2, Save, LineChart, Pencil } from "lucide-react";
+import { Columns, Eye, Edit3, X, Plus, Trash2, Save, LineChart, Pencil, Wand2, Gauge, TrendingUp, Hash, MessageSquarePlus, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { Exercise, McqOption } from "@/types/exam";
+import type { Exercise, McqOption, ExamContext } from "@/types/exam";
 import { renderContent } from "@/lib/renderContent";
 import { MathPlot } from "./MathPlot";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface ExerciseEditorProps {
   exercise: Exercise;
+  context: ExamContext;
   onSave: (updated: Exercise) => void;
   onClose: () => void;
+}
+
+// ── Select a fragment, ask the AI to rewrite just that piece ───────────────
+// A teacher can already retype anything by hand in these fields; this adds a
+// guided shortcut — highlight a phrase or a number, pick "rephrase" /
+// "simplify" / "harder" / "change the numbers" (or type a custom
+// instruction), and only that selection gets replaced. Operates directly on
+// the live contentEditable DOM (delete the selected Range, insert the
+// replacement as a text node, then re-run the same extractMarkdownFromHtml
+// already used on blur) rather than string-matching against the field's raw
+// markdown value — selected *rendered* text (e.g. the content of a
+// **bold** span) doesn't literally appear in the raw markdown, which still
+// has the "**" markers, so a text search would miss it.
+interface PendingSelection {
+  range: Range;
+  text: string;
+  rect: DOMRect;
+}
+
+const FRAGMENT_PRESETS: Array<{ id: "rephrase" | "simplify" | "harder" | "change-numbers"; label: string; icon: React.ReactNode }> = [
+  { id: "rephrase", label: "Rephrase", icon: <Wand2 size={12} /> },
+  { id: "simplify", label: "Simplify", icon: <Gauge size={12} /> },
+  { id: "harder", label: "Harder", icon: <TrendingUp size={12} /> },
+  { id: "change-numbers", label: "Change numbers", icon: <Hash size={12} /> },
+];
+
+function useFragmentRegenerate(
+  divRef: React.RefObject<HTMLDivElement | null>,
+  context: ExamContext,
+  getFullText: () => string,
+  onReplaced: (newMarkdown: string) => void,
+) {
+  const { user } = useAuth();
+  const [pending, setPending] = useState<PendingSelection | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [showCustom, setShowCustom] = useState(false);
+  const [customText, setCustomText] = useState("");
+  const [error, setError] = useState<string | null>(null);
+
+  const handleSelect = useCallback(() => {
+    const sel = window.getSelection();
+    if (!sel || sel.isCollapsed || sel.rangeCount === 0) return;
+    const range = sel.getRangeAt(0);
+    if (!divRef.current || !divRef.current.contains(range.commonAncestorContainer)) return;
+    const text = sel.toString().trim();
+    if (!text || text.length > 400) return;
+    setError(null);
+    setPending({ range: range.cloneRange(), text, rect: range.getBoundingClientRect() });
+  }, [divRef]);
+
+  function clear() {
+    setPending(null);
+    setShowCustom(false);
+    setCustomText("");
+    setError(null);
+  }
+
+  async function run(instruction: "rephrase" | "simplify" | "harder" | "change-numbers" | "custom") {
+    if (!pending || !user || busy) return;
+    if (instruction === "custom" && !customText.trim()) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const token = await user.getIdToken();
+      const res = await fetch("/api/exam/regenerate-fragment", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          context,
+          fullText: getFullText(),
+          selection: pending.text,
+          instruction,
+          ...(instruction === "custom" ? { customInstruction: customText.trim() } : {}),
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) throw new Error(data.error || data.errors?.[0] || "Failed to regenerate.");
+
+      pending.range.deleteContents();
+      pending.range.insertNode(document.createTextNode(data.replacement));
+      if (divRef.current) {
+        const newMarkdown = extractMarkdownFromHtml(divRef.current).replace(/\n{3,}/g, "\n\n").trim();
+        onReplaced(newMarkdown);
+      }
+      clear();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to regenerate selection.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return { pending, busy, error, showCustom, setShowCustom, customText, setCustomText, handleSelect, run, clear };
+}
+
+function FragmentToolbar({ state }: { state: ReturnType<typeof useFragmentRegenerate> }) {
+  const { pending, busy, error, showCustom, setShowCustom, customText, setCustomText, run, clear } = state;
+  if (!pending) return null;
+
+  return (
+    <div
+      className="fixed z-[70] flex flex-col gap-1.5"
+      style={{ top: pending.rect.top - 8, left: pending.rect.left + pending.rect.width / 2 }}
+      onMouseDown={(e) => e.preventDefault()} // don't steal focus/selection from the field
+    >
+      <div className="-translate-x-1/2 -translate-y-full flex flex-col gap-1.5 items-center">
+        {!showCustom ? (
+          <div className="flex items-center gap-0.5 p-1 rounded-xl bg-[var(--text)] shadow-xl">
+            {FRAGMENT_PRESETS.map((p) => (
+              <button
+                key={p.id}
+                type="button"
+                disabled={busy}
+                onClick={() => run(p.id)}
+                title={p.label}
+                className="flex items-center gap-1 px-2 py-1.5 rounded-lg text-[10px] font-semibold text-white/90 hover:bg-white/15 disabled:opacity-50 transition-colors whitespace-nowrap"
+              >
+                {busy ? <Loader2 size={12} className="animate-spin" /> : p.icon}
+                {p.label}
+              </button>
+            ))}
+            <div className="w-px h-4 bg-white/20 mx-0.5" />
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => setShowCustom(true)}
+              title="Custom instruction"
+              className="flex items-center px-2 py-1.5 rounded-lg text-white/90 hover:bg-white/15 disabled:opacity-50 transition-colors"
+            >
+              <MessageSquarePlus size={13} />
+            </button>
+            <button type="button" onClick={clear} title="Cancel" className="flex items-center px-2 py-1.5 rounded-lg text-white/60 hover:bg-white/15 transition-colors">
+              <X size={13} />
+            </button>
+          </div>
+        ) : (
+          <div className="flex items-center gap-1.5 p-1.5 rounded-xl bg-[var(--text)] shadow-xl w-64">
+            <input
+              autoFocus
+              value={customText}
+              onChange={(e) => setCustomText(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") run("custom"); if (e.key === "Escape") clear(); }}
+              placeholder="e.g. use a different country as example…"
+              className="flex-1 min-w-0 bg-white/10 text-white placeholder:text-white/40 text-xs rounded-lg px-2.5 py-1.5 outline-none"
+            />
+            <button
+              type="button"
+              disabled={busy || !customText.trim()}
+              onClick={() => run("custom")}
+              className="flex-shrink-0 flex items-center justify-center w-7 h-7 rounded-lg bg-[var(--accent)] text-white disabled:opacity-40 transition-colors"
+            >
+              {busy ? <Loader2 size={12} className="animate-spin" /> : <Wand2 size={12} />}
+            </button>
+          </div>
+        )}
+        {error && (
+          <div className="px-2.5 py-1.5 rounded-lg bg-red-50 border border-red-200 text-red-600 text-[10px] max-w-64 shadow-sm">
+            {error}
+          </div>
+        )}
+        <div className="w-2 h-2 bg-[var(--text)] rotate-45 -mt-1" />
+      </div>
+    </div>
+  );
 }
 
 function extractMarkdownFromHtml(node: Node): string {
@@ -45,15 +211,18 @@ function RichField({
   rows = 4,
   placeholder = "Click to edit...",
   mono = false,
+  context,
 }: {
   value: string;
   onChange: (v: string) => void;
   rows?: number;
   placeholder?: string;
   mono?: boolean;
+  context: ExamContext;
 }) {
   const [focused, setFocused] = useState(false);
   const divRef = useRef<HTMLDivElement>(null);
+  const fragState = useFragmentRegenerate(divRef, context, () => value, onChange);
 
   const handleFocus = useCallback((e: React.FocusEvent<HTMLDivElement>) => {
     setFocused(true);
@@ -105,6 +274,8 @@ function RichField({
         onFocus={handleFocus}
         onBlur={handleBlur}
         onDoubleClick={handleDoubleClick}
+        onMouseUp={fragState.handleSelect}
+        onKeyUp={(e) => { if (e.shiftKey) fragState.handleSelect(); }}
         className={cn(
           "w-full px-4 py-3 bg-[var(--bg-subtle)] text-sm text-[var(--text)] leading-relaxed rounded-xl prose-clean overflow-y-auto outline-none",
           mono && "font-mono"
@@ -112,6 +283,7 @@ function RichField({
         style={{ minHeight: `${rows * 1.6 + 1.5}rem`, maxHeight: '300px' }}
         dangerouslySetInnerHTML={{ __html: rendered }}
       />
+      <FragmentToolbar state={fragState} />
       {!focused && value && (
         <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
           <div className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-white/80 border border-[var(--border)] text-[9px] font-bold text-[var(--text-tertiary)] uppercase tracking-wider shadow-sm">
@@ -128,13 +300,16 @@ function RichFieldInline({
   value,
   onChange,
   placeholder = "Sub-question text...",
+  context,
 }: {
   value: string;
   onChange: (v: string) => void;
   placeholder?: string;
+  context: ExamContext;
 }) {
   const [focused, setFocused] = useState(false);
   const divRef = useRef<HTMLDivElement>(null);
+  const fragState = useFragmentRegenerate(divRef, context, () => value, onChange);
 
   const handleFocus = useCallback((e: React.FocusEvent<HTMLDivElement>) => {
     setFocused(true);
@@ -186,9 +361,12 @@ function RichFieldInline({
         onFocus={handleFocus}
         onBlur={handleBlur}
         onDoubleClick={handleDoubleClick}
+        onMouseUp={fragState.handleSelect}
+        onKeyUp={(e) => { if (e.shiftKey) fragState.handleSelect(); }}
         className="w-full px-3 py-2 bg-[var(--surface)] text-sm text-[var(--text)] leading-relaxed rounded-lg prose-clean min-h-[2.75rem] overflow-hidden outline-none"
         dangerouslySetInnerHTML={{ __html: rendered }}
       />
+      <FragmentToolbar state={fragState} />
       {!focused && value && (
         <div className="absolute top-1.5 right-1.5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
           <div className="flex items-center gap-0.5 px-1 py-0.5 rounded bg-white/80 border border-[var(--border)] text-[8px] font-bold text-[var(--text-tertiary)] uppercase tracking-wider shadow-sm">
@@ -200,7 +378,7 @@ function RichFieldInline({
   );
 }
 
-export function ExerciseEditor({ exercise, onSave, onClose }: ExerciseEditorProps) {
+export function ExerciseEditor({ exercise, context, onSave, onClose }: ExerciseEditorProps) {
   const [statement, setStatement] = useState(exercise.statement);
   const [points, setPoints] = useState(exercise.points);
   const [difficulty, setDifficulty] = useState(exercise.difficulty);
@@ -380,6 +558,7 @@ export function ExerciseEditor({ exercise, onSave, onClose }: ExerciseEditorProp
                   onChange={setStatement}
                   rows={viewMode === "split" ? 10 : 5}
                   placeholder="Enter the main question text here..."
+                  context={context}
                 />
                 <p className="mt-2 text-[10px] text-[var(--text-tertiary)] italic">Supports KaTeX ($x^2$), Mermaid charts, and AI image tags ([IMAGE: ...])</p>
               </div>
@@ -420,6 +599,7 @@ export function ExerciseEditor({ exercise, onSave, onClose }: ExerciseEditorProp
                             value={opt.text}
                             onChange={v => updateOptionText(opt.label, v)}
                             placeholder={`Option ${opt.label}…`}
+                            context={context}
                           />
                         </div>
                       </div>
@@ -451,6 +631,7 @@ export function ExerciseEditor({ exercise, onSave, onClose }: ExerciseEditorProp
                         <RichFieldInline
                           value={sq.statement}
                           onChange={v => updateSubQuestion(i, "statement", v)}
+                          context={context}
                         />
                         <div className="flex items-center gap-2">
                           <input
@@ -483,6 +664,7 @@ export function ExerciseEditor({ exercise, onSave, onClose }: ExerciseEditorProp
                     onChange={setFinalAnswer}
                     rows={2}
                     placeholder="The short, final result..."
+                    context={context}
                   />
                 </div>
 
@@ -493,6 +675,7 @@ export function ExerciseEditor({ exercise, onSave, onClose }: ExerciseEditorProp
                     onChange={setMethodology}
                     rows={6}
                     placeholder="Explain the solution steps..."
+                    context={context}
                   />
                 </div>
               </div>

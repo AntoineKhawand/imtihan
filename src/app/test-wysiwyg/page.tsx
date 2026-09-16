@@ -1,7 +1,20 @@
 "use client";
 import { useState } from "react";
 import { ExerciseEditor } from "@/components/ui/ExerciseEditor";
-import { Exercise } from "@/types/exam";
+import { Exercise, ExamContext } from "@/types/exam";
+
+const dummyContext: ExamContext = {
+  curriculumId: "bac-libanais",
+  levelId: "terminale-s",
+  subject: "mathematics",
+  chapterIds: [],
+  language: "french",
+  examType: "practice",
+  duration: 60,
+  exerciseCount: 1,
+  totalPoints: 20,
+  difficultyMix: { easy: 0.3, medium: 0.4, hard: 0.3 },
+};
 
 const dummyExercise: Exercise = {
   id: "test1",
@@ -28,10 +41,11 @@ export default function TestWysiwyg() {
       <button id="open-editor" onClick={() => setOpen(true)}>Open Editor</button>
       <div id="result" data-testid="result-data">{JSON.stringify(ex)}</div>
       {open && (
-        <ExerciseEditor 
-          exercise={ex} 
-          onSave={(updated) => { setEx(updated); setOpen(false); }} 
-          onClose={() => setOpen(false)} 
+        <ExerciseEditor
+          exercise={ex}
+          context={dummyContext}
+          onSave={(updated) => { setEx(updated); setOpen(false); }}
+          onClose={() => setOpen(false)}
         />
       )}
     </div>
