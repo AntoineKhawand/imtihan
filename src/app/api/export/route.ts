@@ -67,6 +67,7 @@ async function processContentBlocks(
           rows,
           width: { size: 100, type: WidthType.PERCENTAGE },
           margins: { top: 40, bottom: 40, left: 100, right: 100 },
+          visuallyRightToLeft: baseOptions.bidirectional,
         }));
       }
       currentTableLines = [];
@@ -500,6 +501,7 @@ export async function generateWordDocument(
     children.push(new Table({
       width: { size: 100, type: WidthType.PERCENTAGE },
       borders: TableBorders.NONE,
+      visuallyRightToLeft: isArabic,
       rows: [
         new TableRow({
           children: [
@@ -540,6 +542,7 @@ export async function generateWordDocument(
   children.push(new Table({
     width: { size: 100, type: WidthType.PERCENTAGE },
     margins: { top: 120, bottom: 120, left: 120, right: 120 },
+    visuallyRightToLeft: isArabic,
     rows: [
       new TableRow({
         children: [
@@ -616,6 +619,7 @@ export async function generateWordDocument(
       children.push(new Table({
         width: { size: 100, type: WidthType.PERCENTAGE },
         margins: { top: 60, bottom: 60, left: 120, right: 120 },
+        visuallyRightToLeft: isArabic,
         rows: ex.options.map(opt => new TableRow({
           children: [
             new TableCell({
@@ -731,29 +735,37 @@ export async function generateWordDocument(
         bidirectional: isArabic,
         alignment: isArabic ? AlignmentType.RIGHT : undefined,
       }));
+      // Column order and proportions (label ~8% / criterion ~85% / points ~7%)
+      // and the plain, unshaded, bold-header, full-grid look match a real
+      // official Bac Libanais answer key ("معايير الاجابة") table exactly —
+      // verified against an actual exam's barème .docx. visuallyRightToLeft
+      // mirrors this correctly for Arabic without reordering the columns
+      // themselves (Word's own RTL table handling, same as the source doc's
+      // own bidiVisual table property).
       children.push(new Table({
         width: { size: 100, type: WidthType.PERCENTAGE },
+        visuallyRightToLeft: isArabic,
         rows: [
           new TableRow({
             tableHeader: true,
             children: [
-              new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: lang === "fr" ? "Question" : lang === "ar" ? "السؤال" : "Question", bold: true, size: 18, color: primaryColor })] })], width: { size: 15, type: WidthType.PERCENTAGE }, shading: { fill: subtleBg } }),
-              new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: lang === "fr" ? "Points" : lang === "ar" ? "النقاط" : "Points", bold: true, size: 18, color: primaryColor })] })], width: { size: 12, type: WidthType.PERCENTAGE }, shading: { fill: subtleBg } }),
-              new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: lang === "fr" ? "Critère d'attribution" : lang === "ar" ? "معيار التصحيح" : "Criterion", bold: true, size: 18, color: primaryColor })] })], width: { size: 73, type: WidthType.PERCENTAGE }, shading: { fill: subtleBg } }),
+              new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: lang === "fr" ? "Question" : lang === "ar" ? "السؤال" : "Question", bold: true, size: 20, color: primaryColor })], alignment: AlignmentType.CENTER })], width: { size: 8, type: WidthType.PERCENTAGE }, verticalAlign: AlignmentType.CENTER }),
+              new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: lang === "fr" ? "Critère d'attribution" : lang === "ar" ? "معيار التصحيح" : "Criterion", bold: true, size: 20, color: primaryColor })], alignment: isArabic ? AlignmentType.RIGHT : undefined, bidirectional: isArabic })], width: { size: 85, type: WidthType.PERCENTAGE }, verticalAlign: AlignmentType.CENTER }),
+              new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: lang === "fr" ? "Points" : lang === "ar" ? "العلامة" : "Points", bold: true, size: 20, color: primaryColor })], alignment: AlignmentType.CENTER })], width: { size: 7, type: WidthType.PERCENTAGE }, verticalAlign: AlignmentType.CENTER }),
             ],
           }),
           ...ex.solution.bareme.map((b) => new TableRow({
             children: [
-              new TableCell({ 
-                children: [new Paragraph({ children: [new TextRun({ text: b.label, bold: true, size: 18, font: fontBody })], spacing: { before: 40, after: 40 } })],
+              new TableCell({
+                children: [new Paragraph({ children: [new TextRun({ text: b.label, bold: true, size: 20, font: fontBody, rightToLeft: isArabic })], alignment: AlignmentType.CENTER, spacing: { before: 40, after: 40 } })],
                 verticalAlign: AlignmentType.CENTER
               }),
-              new TableCell({ 
-                children: [new Paragraph({ children: [new TextRun({ text: String(b.points), size: 18, font: fontBody })], alignment: AlignmentType.CENTER, spacing: { before: 40, after: 40 } })],
+              new TableCell({
+                children: [new Paragraph({ children: createFormattedTextRuns(b.criterion, { size: 20, font: fontBody, color: textColor, bidirectional: isArabic }), spacing: { before: 40, after: 40 }, bidirectional: isArabic, alignment: isArabic ? AlignmentType.RIGHT : undefined })],
                 verticalAlign: AlignmentType.CENTER
               }),
-              new TableCell({ 
-                children: [new Paragraph({ children: createFormattedTextRuns(b.criterion, { size: 18, font: fontBody, color: textColor, bidirectional: isArabic }), spacing: { before: 40, after: 40 }, bidirectional: isArabic })],
+              new TableCell({
+                children: [new Paragraph({ children: [new TextRun({ text: String(b.points), bold: true, size: 20, font: fontBody })], alignment: AlignmentType.CENTER, spacing: { before: 40, after: 40 } })],
                 verticalAlign: AlignmentType.CENTER
               }),
             ],
@@ -770,6 +782,7 @@ export async function generateWordDocument(
         const correctLabel = lang === "fr" ? "Bonne réponse" : lang === "ar" ? "الإجابة الصحيحة" : "Correct answer";
         children.push(new Table({
           width: { size: 100, type: WidthType.PERCENTAGE },
+          visuallyRightToLeft: isArabic,
           rows: [new TableRow({
             children: [
               new TableCell({
@@ -806,27 +819,28 @@ export async function generateWordDocument(
       }));
       children.push(new Table({
         width: { size: 100, type: WidthType.PERCENTAGE },
+        visuallyRightToLeft: isArabic,
         rows: [
           new TableRow({
             tableHeader: true,
             children: [
-              new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: lang === "fr" ? "Étape" : lang === "ar" ? "الخطوة" : "Step", bold: true, size: 18, color: primaryColor })] })], width: { size: 18, type: WidthType.PERCENTAGE } }),
-              new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: "Pts", bold: true, size: 18, color: primaryColor })] })], width: { size: 10, type: WidthType.PERCENTAGE } }),
-              new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: lang === "fr" ? "Critère observable" : lang === "ar" ? "المعيار الملاحظ" : "Observable criterion", bold: true, size: 18, color: primaryColor })] })], width: { size: 72, type: WidthType.PERCENTAGE } }),
+              new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: lang === "fr" ? "Étape" : lang === "ar" ? "الخطوة" : "Step", bold: true, size: 20, color: primaryColor })], alignment: AlignmentType.CENTER })], width: { size: 8, type: WidthType.PERCENTAGE }, verticalAlign: AlignmentType.CENTER }),
+              new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: lang === "fr" ? "Critère observable" : lang === "ar" ? "المعيار الملاحظ" : "Observable criterion", bold: true, size: 20, color: primaryColor })], alignment: isArabic ? AlignmentType.RIGHT : undefined, bidirectional: isArabic })], width: { size: 85, type: WidthType.PERCENTAGE }, verticalAlign: AlignmentType.CENTER }),
+              new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: lang === "ar" ? "العلامة" : "Pts", bold: true, size: 20, color: primaryColor })], alignment: AlignmentType.CENTER })], width: { size: 7, type: WidthType.PERCENTAGE }, verticalAlign: AlignmentType.CENTER }),
             ],
           }),
           ...ex.solution.microBareme.map((mb) => new TableRow({
             children: [
-              new TableCell({ 
-                children: [new Paragraph({ children: [new TextRun({ text: mb.step, bold: true, size: 18, font: fontBody })], spacing: { before: 40, after: 40 } })],
+              new TableCell({
+                children: [new Paragraph({ children: [new TextRun({ text: mb.step, bold: true, size: 20, font: fontBody, rightToLeft: isArabic })], alignment: AlignmentType.CENTER, spacing: { before: 40, after: 40 } })],
                 verticalAlign: AlignmentType.CENTER
               }),
-              new TableCell({ 
-                children: [new Paragraph({ children: [new TextRun({ text: String(mb.points), size: 18, font: fontBody })], alignment: AlignmentType.CENTER, spacing: { before: 40, after: 40 } })],
+              new TableCell({
+                children: [new Paragraph({ children: createFormattedTextRuns(mb.criterion, { size: 20, font: fontBody, color: textColor, bidirectional: isArabic }), spacing: { before: 40, after: 40 }, bidirectional: isArabic, alignment: isArabic ? AlignmentType.RIGHT : undefined })],
                 verticalAlign: AlignmentType.CENTER
               }),
-              new TableCell({ 
-                children: [new Paragraph({ children: createFormattedTextRuns(mb.criterion, { size: 18, font: fontBody, color: textColor, bidirectional: isArabic }), spacing: { before: 40, after: 40 }, bidirectional: isArabic })],
+              new TableCell({
+                children: [new Paragraph({ children: [new TextRun({ text: String(mb.points), bold: true, size: 20, font: fontBody })], alignment: AlignmentType.CENTER, spacing: { before: 40, after: 40 } })],
                 verticalAlign: AlignmentType.CENTER
               }),
             ],

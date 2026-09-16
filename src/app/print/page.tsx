@@ -82,10 +82,19 @@ export default function PrintPage() {
         table.score-table th, table.score-table td { border: 1px solid #d1d5db; padding: 6px 10px; text-align: center; }
         table.score-table th { background: #effaf4; font-weight: 700; }
         table.score-table .bg-subtle { background: #f3f0e8; }
+        /* Plain, unshaded, bold-header, full-grid layout — matches a real
+           official Bac Libanais answer key ("معايير الاجابة") table exactly,
+           verified against an actual exam's barème .docx: no header fill,
+           just bold text and single-line borders. Column order (label /
+           criterion / points, ~8%/85%/7%) mirrors correctly under the
+           page's own dir="rtl" wrapper — no extra logic needed here, unlike
+           the Word export where visuallyRightToLeft must be set explicitly. */
         table.bareme-table { width: 100%; border-collapse: collapse; margin: 8px 0 16px 0; font-size: 11px; }
-        table.bareme-table th { padding: 5px 8px; text-align: left; background: #f3f0e8; font-weight: 700; border: 1px solid #d1d5db; }
-        table.bareme-table td { padding: 5px 8px; border: 1px solid #d1d5db; vertical-align: top; }
+        table.bareme-table th { padding: 5px 8px; text-align: center; background: #fff; font-weight: 700; border: 1px solid #d1d5db; }
+        table.bareme-table td { padding: 5px 8px; border: 1px solid #d1d5db; vertical-align: top; text-align: center; }
+        table.bareme-table th.crit, table.bareme-table td.crit { text-align: start; }
         table.bareme-table td.pts { text-align: center; font-weight: 700; }
+        table.bareme-table td.label { font-weight: 700; }
         .step-badge { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 4px; color: white; font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; }
       `}} />
 
@@ -191,17 +200,17 @@ export default function PrintPage() {
                 <table className="bareme-table">
                   <thead>
                     <tr>
-                      <th style={{ width: "15%" }}>{lang === "ar" ? "السؤال" : "Question"}</th>
-                      <th style={{ width: "10%", textAlign: "center" }}>{lang === "ar" ? "النقاط" : "Points"}</th>
-                      <th style={{ width: "75%" }}>{lang === "ar" ? "معيار التصحيح" : "Critère"}</th>
+                      <th style={{ width: "8%" }}>{lang === "ar" ? "السؤال" : "Question"}</th>
+                      <th className="crit" style={{ width: "85%" }}>{lang === "ar" ? "معيار التصحيح" : "Critère"}</th>
+                      <th style={{ width: "7%" }}>{lang === "ar" ? "العلامة" : "Points"}</th>
                     </tr>
                   </thead>
                   <tbody>
                     {ex.solution.bareme.map((b, bIdx) => (
                       <tr key={bIdx}>
-                        <td style={{ fontWeight: 700, width: "15%" }}>{b.label}</td>
-                        <td className="pts" style={{ width: "10%" }}>{b.points}</td>
-                        <td style={{ width: "75%" }} dangerouslySetInnerHTML={{ __html: renderContent(b.criterion) }} />
+                        <td className="label" style={{ width: "8%" }}>{b.label}</td>
+                        <td className="crit" style={{ width: "85%" }} dangerouslySetInnerHTML={{ __html: renderContent(b.criterion) }} />
+                        <td className="pts" style={{ width: "7%" }}>{b.points}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -235,17 +244,17 @@ export default function PrintPage() {
                 <table className="bareme-table">
                   <thead>
                     <tr>
-                      <th style={{ width: "18%" }}>{stepLabel}</th>
-                      <th style={{ width: "10%", textAlign: "center" }}>Pts</th>
-                      <th style={{ width: "72%" }}>{lang === "ar" ? "المعيار الملاحظ" : "Critère observable"}</th>
+                      <th style={{ width: "8%" }}>{stepLabel}</th>
+                      <th className="crit" style={{ width: "85%" }}>{lang === "ar" ? "المعيار الملاحظ" : "Critère observable"}</th>
+                      <th style={{ width: "7%" }}>{lang === "ar" ? "العلامة" : "Pts"}</th>
                     </tr>
                   </thead>
                   <tbody>
                     {ex.solution.microBareme.map((mb, mIdx) => (
                       <tr key={mIdx}>
-                        <td style={{ fontWeight: 700, width: "18%" }}>{mb.step}</td>
-                        <td className="pts" style={{ width: "10%" }}>{mb.points}</td>
-                        <td style={{ width: "72%" }} dangerouslySetInnerHTML={{ __html: renderContent(mb.criterion) }} />
+                        <td className="label" style={{ width: "8%" }}>{mb.step}</td>
+                        <td className="crit" style={{ width: "85%" }} dangerouslySetInnerHTML={{ __html: renderContent(mb.criterion) }} />
+                        <td className="pts" style={{ width: "7%" }}>{mb.points}</td>
                       </tr>
                     ))}
                   </tbody>
