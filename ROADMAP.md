@@ -156,3 +156,6 @@
 | 2026-07 | Math rendering overhaul: subscripts, Greek letters, \\text{}, \\frac{}{}, unclosed $ |
 | 2026-07 | Fix: includeAnswerKey toggle now respected in Word + email export |
 | 2026-07 | Fix: export page step indicator corrected to Step 5 of 5 |
+| 2026-09 | Sociology curriculum (Bac Libanais), document sourcing/borders, per-exercise point overrides, fragment-level AI regeneration |
+| 2026-09 | Fix: renderContent %%PTABLE%% leak, dropped paragraphs, RTL list indent |
+| 2026-09 | Fix: /admin loading skeleton on initial fetch |

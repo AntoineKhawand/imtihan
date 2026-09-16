@@ -272,6 +272,41 @@ export default function AdminPage() {
     );
   }
 
+  // Initial load only — an action-triggered refetch (extend, delete, etc.)
+  // also flips `loading`, but the page should keep showing current data
+  // with per-row buttons disabled then, not blank out into a skeleton.
+  if (isAuthorized === null && loading) {
+    return (
+      <div className="min-h-screen bg-[#FDFDFC] pb-20">
+        <div className="bg-white border-b border-gray-100 px-4 sm:px-6 py-4">
+          <div className="max-w-7xl mx-auto w-full flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-gray-100 animate-pulse" />
+            <div className="space-y-1.5">
+              <div className="h-4 w-32 bg-gray-100 rounded animate-pulse" />
+              <div className="h-2.5 w-20 bg-gray-100 rounded animate-pulse" />
+            </div>
+          </div>
+        </div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-8">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            {[0, 1, 2, 3].map((i) => (
+              <div key={i} className="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm">
+                <div className="h-2.5 w-20 bg-gray-100 rounded animate-pulse mb-3" />
+                <div className="h-6 w-12 bg-gray-100 rounded animate-pulse" />
+              </div>
+            ))}
+          </div>
+          <div className="h-[220px] bg-gray-100 rounded-[40px] animate-pulse mb-8" />
+          <div className="bg-white rounded-[32px] border border-gray-100 shadow-sm p-5 space-y-4">
+            {[0, 1, 2, 3, 4].map((i) => (
+              <div key={i} className="h-12 bg-gray-50 rounded-2xl animate-pulse" />
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   const filtered = users.filter(u => {
     const matchesSearch = u.email.toLowerCase().includes(search.toLowerCase()) || (u.displayName || "").toLowerCase().includes(search.toLowerCase());
     const matchesFilter = filterType === "requests" ? (u.renewalRequested || u.resetRequested) : true;
