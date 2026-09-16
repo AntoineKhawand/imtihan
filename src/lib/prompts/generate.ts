@@ -353,9 +353,9 @@ NOTICE in this example:
 - "/" shows alternative acceptable responses.
 - "Award [X] for correct final answer" allows full marks without intermediate steps.`,
 
-  // Sources (two independent real papers, cross-checked against each other —
-  // the second one caught real gaps the first alone had missed, notably a
-  // whole third exam option):
+  // Sources (three independent real papers/keys, cross-checked against each
+  // other — each caught real gaps or over-generalizations the others alone
+  // had missed):
   // 1. Bac Liban — Sociologie, filière Sciences Sociales et Économiques,
   //    session ordinaire 2024 (4 juillet 2024), officiel CRDP —
   //    https://www.crdp.org/sites/default/files/SE_Socio_2024_1_Ar.pdf
@@ -363,43 +363,55 @@ NOTICE in this example:
   // 2. A real school trial exam, Ahliah School, Grade 12 Sociologie et
   //    Économie, Trial 3, May 2026 (provided directly by the founder — a
   //    teacher-written mock exam, not an official CRDP paper, but built to
-  //    match the real state exam's shape, and it did: it confirmed most of
-  //    what source 1 showed and additionally surfaced the full essay/
-  //    dissertation option that source 1's extraction had run past without
-  //    being caught the first time).
-  // Verified/reconciled 2026-09-15.
-  "bac-libanais-sociology": `FORMAT EXAMPLE — modelled on two real Bac Liban Sociologie papers (2024 official CRDP exam, 2.5h; and a real 2026 school trial exam built to the same shape), 20 points total:
+  //    match the real state exam's shape; it surfaced the full essay/
+  //    dissertation option source 1's extraction had run past uncaught).
+  // 3. Official CRDP exam PAPER + its official ANSWER KEY (معايير الاجابة /
+  //    "بريم"), session 2 ("الاستثنائية"), 28 August 2025, filière Sociologie
+  //    et Économie — provided directly by the founder as two real .docx
+  //    files (extracted via unzip + a small XML-text extractor script, since
+  //    .docx is a zip of OOXML — see docs/DATA_SOURCING.md). This is the
+  //    most granular source: the answer key gives the exact point value of
+  //    every single sub-element (down to 0.25), not just each question,
+  //    which corrected several approximate point splits below and confirmed
+  //    the exact shape of the mandatory section's closing methodology
+  //    question (a real survey/questionnaire + interview + research-steps
+  //    task, not a technique-choice justification as earlier drafts guessed).
+  // Verified/reconciled 2026-09-16.
+  "bac-libanais-sociology": `FORMAT EXAMPLE — modelled on three real Bac Liban Sociologie sources (two official CRDP exam+answer-key pairs, one real school trial exam), 20 points total:
 
-STRUCTURE: ONE mandatory section, then a choice between TWO very differently-shaped 12-point alternatives. This is NOT a menu of independent exercises like Math/Physics — never generate "Exercice 1, 2, 3..." for this subject.
+STRUCTURE: ONE mandatory section, then a choice between TWO very differently-shaped 12-point alternatives. This is NOT a menu of independent exercises like Math/Physics — never generate "Exercice 1, 2, 3..." for this subject. Include the literal instruction line "اختر واحدة من المجموعتين الآتيتين:" (Choose ONE of the following two groups) — in French/English exams, its equivalent — between the mandatory section and the two options; it is real exam boilerplate, not paraphrasable.
 
-SECTION 1 — MANDATORY (8 points): "استعمال مفاهيم وتقنيات" (Using concepts and techniques). The official exam offers two alternative phrasings of this same section (student picks one, never mixing); a school trial may give just one. Real question types seen, mix 4-6 of these per exam (points vary slightly by session, roughly as shown):
-1. Term recall (~1.5 pts, 3 parts): "سمّ/اذكر المفهوم أو المصطلح الاجتماعي المناسب لكل من العبارات الآتية" (Name the sociological concept/term matching each statement) — 3 short descriptive statements, one concept-name answer each.
-2. Distinguish-by-one-difference (~1 pt, 2 parts): "ميز بفارق واحد بين المفاهيم التالية" (Distinguish, with one difference, between the following concepts) — always a named pair (e.g. "المجتمع الأهلي" vs. "المجتمع السياسي").
-3. Classify-and-justify OR odd-one-out (~1.25-1.5 pts): either "صنف العبارات الآتية ضمن مجموعتين متجانستين ثم برر إجابتك" (Sort the following into two homogeneous groups, then justify) or "استخرج العنصر غير المناسب...ثم برر" (extract the one that doesn't belong, then justify) over a short list of 4-6 related terms — both real, interchangeable phrasings of the same underlying skill (categorization judgment); use either.
-4. Justify-a-statement (~1 pt, 1 part): "برر بفكرة واحدة صحة الجملة التالية" (Justify, with one idea, why the following statement is true) — a single short sociological claim.
-5. Relationship explanation (0.5-1.5 pts, 1-2 parts): "بيّن العلاقة بين..." (Show the relationship between: [concept A] and [concept B]) — always a paired-concept prompt, never a single term.
-6. Applied research-methodology scenario (~1.75-2 pts, 3 parts): a short real-world social phenomenon or local case is described (e.g. a popular weekly market, or declining Arabic proficiency among students), then the student must: (a) name the correct research technique for a described data-collection step (observation vs. survey) and justify it; (b) design one question per point under the matching technique's real constraints — if a questionnaire: 3 answer choices per question; if observation: 2 material + 2 human aspects to note; (c) write one interview question for a relevant informant.
+SECTION 1 — MANDATORY (8 points, titled "المجموعة الأولى إلزاميّة: استعمال مفاهيم وتقنيّات" — "Using concepts and techniques"): a real 2025 official paper's answer key gives this exact 6-question, 8-point shape — use it as the primary template (points can shift slightly by session, but the six question TYPES and their order are stable):
+1. Term recall (2 pts, 4 parts, 0.5 each): "سمّ المفهوم أو المصطلح الاجتماعي لكل من العبارات الآتية" (Name the sociological concept/term for each of the following statements) — 4 short descriptive definitions, one concept-name answer each.
+2. Classify-and-justify (1 pt): "صنّف العناصر التالية إلى مجموعتين متجانستين، ثم برّر إجابتك" (Sort the following elements into two homogeneous groups, then justify) — a short list of 6 related terms/phrases split into exactly two coherent categories; graded per-correctly-placed-item (e.g. 0.25 × 4 groupings).
+3. Odd-one-out (0.5 pt): "استخرج العنصر غير المناسب من المجموعة التالية، ثم برّر إجابتك" (Extract the element that doesn't belong from the following group, then justify) — over a different short list of 4-5 related terms. NOTE: this is a SEPARATE mandatory question from #2, not an alternative phrasing of it — a real exam includes BOTH classify-and-justify AND odd-one-out as distinct questions.
+4. Justify-two-statements (1 pt, 2 parts, 0.5 each): "برّر بفكرة واحدة صحة كل من الجملتين الآتيتين" (Justify, with one idea, the truth of each of the following TWO sentences) — always two separate short sociological claims, each justified independently, not one.
+5. Relationship explanation (1 pt, 2 parts, 0.5 each): "فسّر العلاقة بين..." (Explain the relationship between: [concept A] and [concept B]) — two separate paired-concept prompts.
+6. Applied research-methodology scenario (2.5 pts, 3 parts) — a short real-world social phenomenon affecting Lebanon/students is described (e.g. bullying, smoking, unemployment, migration — any real, describable social issue), framing that the student is participating in a study about it. Then, precisely:
+   (a) [1 pt] Design a "استمارة" (questionnaire/survey form) directed at a named sample population, covering exactly two named sub-topics about the phenomenon (e.g. its causes, and its effects on a specific group) — the student must write ONE three-option question ("سؤال ذو ثلاثة احتمالات") per sub-topic, so two questions total.
+   (b) [0.5 pt] Design a "مقابلة موجّهة" (guided/structured interview) with one named relevant official or specialist — the student writes ONE interview question about a specific angle of the phenomenon.
+   (c) [1 pt] State two concrete research steps taken BEFORE fieldwork (e.g. defining the topic, choosing the technique and sample, setting hypotheses) and two taken AFTER data collection (e.g. sorting the data, analysis, writing the final report) — four short items total, ~0.25 each.
+This exact questionnaire+interview+steps shape is the REAL, confirmed pattern for question 6 — do not substitute a generic "choose observation vs. survey and justify" task; that is not what the official key shows.
 
 Then the student picks ONE of these two 12-point alternatives:
 
-OPTION A — "تحليل مستندات" (Document analysis, 12 points). 3 real documents, always a mix of: an official/government text (a real policy or law), a statistical table (real, sourced, often comparing two years — e.g. a literacy-rate table by region, "Ministry of Social Affairs" sourced), and a journalistic or opinion excerpt (sourced with outlet name). 5-6 short questions (0.5-1.5 pts each) ask the student to identify concepts/relationships within and across documents, compare data points, and explain causes — THEN a final synthesis sub-question (~4 pts) asks for an extended written response ("اكتب نصًا...") that still must draw on the documents plus outside course knowledge, naming a real policy direction and proposing concrete measures.
+OPTION A — "تحليل مستندات اجتماعية" (Analysis of social documents, 12 points). 3 real, substantial documents (several sentences to a full paragraph each) — real observed document types include an academic/textbook excerpt, a dated news article or analysis piece (real outlet + date, e.g. an economics/labor-market piece), and a newspaper interview or investigative excerpt (real outlet + journalist + date) — a statistical table is also a valid document type but not the only expected one; do not force one into every exam. Then 7-8 short sub-questions (0.5-1 pt each, a few with two lettered parts) reference specific documents by number and use precise conceptual verbs: "استخرج" (extract [named information] from document N), "قدّم دلالة" (give a textual indicator/piece of evidence from document N supporting X), "استنتج" (deduce/infer [a named concept] from document N), "حدّد" (identify [named elements] per document N), "ميّز" (distinguish between two named roles/types), "أوضح العلاقة" (clarify the relationship between documents N-M and an outside theme). A real key's exact point pattern across 8 such questions: 1, 1.5, 0.5, 2, 0.5, 1.5, 1 — summing to 8 pts, THEN a final synthesis question (4 pts) asks for an extended written response ("أكتب نصًّا...") with an explicit multi-clause instruction (e.g. "mention two problems the documents raise, two real progress/regression criteria, position Lebanon specifically, propose two concrete measures the state should take, and state the expected outcome if they succeed") — each clause worth ~0.5, summing to 4. Total: 8 + 4 = 12.
 
-OPTION B — "دراسة موضوع اجتماعي" (Social-topic study, 12 points) — a full French-methodology DISSERTATION, not document-analysis. One real document is given only as a springboard/quote, not for detailed analysis. Real point structure from an official answer key:
-- المقدمة / Introduction (3 pts): أهمية الموضوع — why the topic matters (~1.5), الإطار الزماني والمكاني — time/place framing (~0.25), الإشكالية — a clear problem question the essay will answer (~0.5), التصميم — a stated outline of the essay's plan (~0.75).
-- جسم الموضوع / Body (7 pts): define the key concepts and the relationship between them (~1.5); examine real conditions/evidence with actual statistics and comparisons, not vague generalities (~1.5); evaluate the relevant institution's or state's role, both positive AND negative (~1); propose exactly 3 concrete measures/solutions (~1.5); the remaining points reward coherence and depth across the body.
-- الخاتمة / Conclusion (2 pts): summarize the argument and directly answer the إشكالية from the intro (~1), end with an "ouverture" — a broader open question extending the topic (~0.5).
+OPTION B — "دراسة موضوع اجتماعي" (Social-topic study, 12 points) — a full French-methodology DISSERTATION, not document-analysis. 1-2 real documents are given only as springboards/quotes (each still needs a real citation and the same DOCUMENT FORMAT below), not for detailed analysis. A real official answer key's exact point structure — note that "المنهجية" (methodology/structural compliance) is graded SEPARATELY in all three parts and sums to 4 of the 12 points on its own, independent of content quality:
+- المقدمة / Introduction (3 pts total): المنهجية — methodology (1.5), أهمية الموضوع — why the topic matters now (0.5), الإطار الزماني والمكاني — time/place framing (0.25), الإشكالية — a clear problem question the essay will answer (0.5), التصميم — a stated outline naming the axes the body will cover (0.25).
+- صلب الموضوع / Body (7 pts total): المنهجية — methodology (2), then content addressing each axis named in the intro's outline — typically 5-6 axes (e.g. define the key concept(s) and their elements; define the central phenomenon, its causes, and its pace/pattern; describe people's/society's attitudes toward it; the local/Lebanese specificity of the issue; the challenges it raises today; propose exactly 2 concrete measures institutions/the state should take) — each axis worth ~0.5, with the "propose 2 measures" axis worth 1.
+- الخاتمة / Conclusion (2 pts total): المنهجية — methodology (0.5), summarize the argument and directly answer the إشكالية from the intro (1), end with an "ouverture" — a broader open question extending the topic (0.5).
 
-DOCUMENT FORMAT — MANDATORY, exact and literal (every document in Option A, and Option B's single springboard document): each document MUST be its own paragraph, in this exact shape with nothing else interleaved:
-  المستند رقم (N) — [type/context, e.g. نص رسمي, جدول إحصائي, مقال صحفي]
-  [the document's own text/data, one or more lines]
-  المصدر: [a real, specific, named source — a ministry/agency name, an outlet + author + date, a statistics agency + year — never "Source: N/A" and never omitted]
-A real example of a correctly-sourced document, verbatim shape (from an actual paper): a document ending on its own line reading exactly "المصدر: SIAB News.com" — that trailing "المصدر: ..." line is REQUIRED on every single document, with no exceptions, and must be the last line of that document's paragraph (nothing after it but a blank line before the next document or question). When the exam language is French or English, use "Source :" / "Source:" the same way, still as its own trailing line. A document without this line is malformed — the app's renderer specifically looks for "المصدر:"/"Source:" to box the document visually, so skipping it means the document displays as unstyled loose text instead of a proper sourced document box.
+DOCUMENT FORMAT — MANDATORY, exact and literal (every document in Option A, and Option B's springboard document(s)): each document MUST be its own paragraph, in this exact shape with nothing else interleaved:
+  المستند رقم (N)
+  [the document's own text — a real-feeling multi-sentence excerpt, not a one-liner]
+  المصدر: [a real-feeling, specific, named source — a book/thesis title + institution + page, a named outlet + date (+ URL for online sources), a named journalist + outlet + date — never "Source: N/A" and never omitted]
+Real sourcing patterns actually observed across official papers (use this level of specificity, not generic placeholders): "المصدر: مدخل إلى التربية، الجامعة العربية المفتوحة، الكويت، ص 225" (book + institution + page), "المصدر: 28 أيار 2025، https://www.skynewsarabia.com/business/[id]" (dated news URL), "المصدر: جريدة الأخبار، [journalist name]، [day] [month] [year]" (newspaper + byline + date), and simpler forms like "المصدر: SIAB News.com" — the trailing "المصدر:"/"Source:" line is REQUIRED on every single document, with no exceptions, and must be the last line of that document's paragraph (nothing after it but a blank line before the next document or question). A document without this line is malformed — the app's renderer specifically looks for "المصدر:"/"Source:" to box the document visually, so skipping it means the document displays as unstyled loose text instead of a proper sourced document box.
 
-NOTICE across both real papers:
-- Every sub-question shows its own point value in parentheses beside it (e.g. "(0.75 علامة)"), unlike the Bac Liban math paper's exercise-level-only point values.
-- Command vocabulary is conceptual, not computational: "سمّ/اذكر" (name), "ميز" (distinguish), "صنف" (classify), "برر" (justify), "بيّن العلاقة" (show the relationship) — never "احسب" (calculate).
-- Documents (Option A) are always real, dated, and sourced (a named ministry/agency, a named outlet) — never generic or unsourced data. Follow the exact DOCUMENT FORMAT above for every one of them.
-- Option B's document is a springboard quote, not a set to cross-analyze — don't confuse the two options' use of documents. It still needs the same "المصدر:"/"Source:" trailing line.
+NOTICE across all sources:
+- Every sub-question shows its own point value in parentheses beside it (e.g. "(0.75 علامة)" or "(0.50 علامة)"), unlike the Bac Liban math paper's exercise-level-only point values. Fractional values (0.25, 0.5, 0.75) are normal and expected — do not round to whole numbers.
+- Command vocabulary is conceptual, not computational: "سمّ" (name), "صنّف" (classify), "استخرج" (extract), "برّر" (justify), "فسّر"/"أوضح" (explain/clarify), "ميّز" (distinguish), "استنتج" (deduce), "قدّم دلالة" (give a textual indicator) — never "احسب" (calculate).
+- Documents are always real-feeling, dated, and sourced (a named institution, book, or outlet) — never generic or unsourced. Follow the exact DOCUMENT FORMAT above for every one of them, in both options.
 - These two 12-point options are structurally different exercise TYPES, not just different topics — when generating a full exam for this subject, pick one shape deliberately (matching whichever the teacher's request implies) rather than blending both.`,
 };
 
