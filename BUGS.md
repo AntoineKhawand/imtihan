@@ -58,6 +58,20 @@ These are intentional constraints in MVP — document here to avoid re-opening a
 
 ---
 
+## BUG-010: Dashboard "Download PDF" produces a corrupt, unopenable file
+
+**Status:** Fixed
+**Severity:** Critical
+**Area:** Export
+**Reported:** 2026-09-16
+**Fixed:** 2026-09-16
+
+**Description:** From a saved exam's card on `/dashboard`, clicking "Download PDF" downloaded a file named `<title>.pdf` that no PDF viewer could open. `/create/export`'s own PDF option was unaffected — it opens `/print` (browser print-to-PDF), a completely separate code path.
+**Root cause:** `src/app/api/export/route.ts`'s `POST` handler treats `format: "word"` and `format: "pdf"` identically — both call `generateWordDocument()`, which only ever builds real `.docx` (OOXML/ZIP) bytes via the `docx` library. The `format === "pdf"` branch just swaps the response's `Content-Type` to `application/pdf` and the filename extension to `.pdf` without changing the actual bytes, so the downloaded file is DOCX binary data mislabeled as a PDF. `/create/export`'s PDF button never hit this endpoint at all (it opens `/print`, which renders through `src/lib/renderContent.ts`, the live web pipeline, and uses the real browser print dialog) — only `/dashboard`'s "Download PDF" button (`handleDownload("pdf")` in `src/app/dashboard/page.tsx`) called `/api/export` with `format: "pdf"`, so the bug was isolated to that one entry point.
+**Fix:** `/dashboard`'s `handleDownload("pdf")` now writes the saved exam's `context`/`exercises`/`templateId` into the same `sessionStorage` keys `/print` reads (`imtihan_context`, `imtihan_exercises`, `imtihan_templateId`) and opens `/print` in a new tab, reusing the already-correct browser-print path instead of the broken server endpoint. `/api/export`'s `format: "pdf"` branch itself is untouched and still exists — a real server-side PDF renderer (`@react-pdf/renderer`, per `CLAUDE.md`'s tech stack table) is still not built; nothing currently calls that branch after this fix, but it should not be wired to a new caller until it actually generates PDF bytes.
+
+---
+
 ## BUG-008: \boxed{} final answers with stray internal $ delimiters render as raw LaTeX
 **Status:** Fixed
 **Severity:** High

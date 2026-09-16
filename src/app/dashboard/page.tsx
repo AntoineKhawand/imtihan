@@ -660,6 +660,18 @@ function ExamRow({
   }
 
   async function handleDownload(format: "word" | "pdf") {
+    if (format === "pdf") {
+      // /api/export has no real PDF renderer — it only ever builds a .docx
+      // buffer, so requesting format:"pdf" there downloads a file with a
+      // .pdf extension that's actually DOCX bytes and fails to open in any
+      // PDF viewer. Reuse the same browser-print path /create/export uses
+      // instead, which renders through the live renderContent.ts pipeline.
+      sessionStorage.setItem("imtihan_context", JSON.stringify(exam.context));
+      sessionStorage.setItem("imtihan_exercises", JSON.stringify(exam.exercises));
+      sessionStorage.setItem("imtihan_templateId", exam.templateId ?? "classic");
+      window.open("/print", "_blank");
+      return;
+    }
     setDownloading(format);
     try {
       const res = await fetch("/api/export", {
@@ -678,7 +690,7 @@ function ExamRow({
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `${exam.title}.${format === "word" ? "docx" : "pdf"}`;
+      a.download = `${exam.title}.docx`;
       a.click();
       URL.revokeObjectURL(url);
     } finally {

@@ -359,15 +359,25 @@ export async function POST(request: NextRequest) {
 
     const { context, templateId, exercises, format, header, includeAnswerKey } = parsed.data;
 
-    if (format === "word" || format === "pdf") {
+    // There is no real PDF renderer here — generateWordDocument() only ever
+    // produces .docx (OOXML) bytes. A format:"pdf" caller used to get those
+    // same bytes back mislabeled as application/pdf, downloading a file no
+    // PDF viewer could open (see BUGS.md BUG-010). The actual PDF path is
+    // the browser print dialog at /print (renders through renderContent.ts)
+    // — route new PDF entry points there instead of here.
+    if (format === "pdf") {
+      return NextResponse.json(
+        { error: "PDF export isn't available from this endpoint. Use the print/PDF option, which opens /print." },
+        { status: 400 }
+      );
+    }
+
+    if (format === "word") {
       const buffer = await generateWordDocument(context, templateId, exercises, header ?? {}, includeAnswerKey);
-      const isPdf = format === "pdf";
       return new NextResponse(new Uint8Array(buffer), {
         headers: {
-          "Content-Type": isPdf
-            ? "application/pdf"
-            : "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-          "Content-Disposition": `attachment; filename="Imtihan_${context.subject}_${context.levelId}.${isPdf ? "pdf" : "docx"}"`,
+          "Content-Type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "Content-Disposition": `attachment; filename="Imtihan_${context.subject}_${context.levelId}.docx"`,
         },
       });
     }
