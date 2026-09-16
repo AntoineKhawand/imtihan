@@ -25,7 +25,7 @@ interface UploadedFile {
 }
 
 const EXAMPLE_PROMPTS = [
-  { label: "Sociologie · Terminale ES", text: "Sociology exam for Terminale ES Bac Libanais, social integration/solidarity and inequality/mobility chapters, 2 exercises, 2h30min, 20 points total, in Arabic" },
+  { label: "Sociologie · Terminale ES", text: "Sociology exam for Terminale ES Bac Libanais, with the document-analysis option, social integration/solidarity and inequality/mobility chapters, 2 exercises, 3 hours, 20 points total, in Arabic" },
   { label: "Physics · Terminale S", text: "Physics exam for Terminale S Bac Libanais, mechanics and electromagnetism chapters, 2 exercises, 2 hours, 20 points total, in French" },
   { label: "IB Chemistry HL", text: "IB Chemistry HL exam on organic chemistry and equilibria, 3 questions, 90 minutes, in English" },
   { label: "Math Quiz · Première", text: "Math quiz for Première Bac Français, derivatives and functions, 30 minutes, medium difficulty, in French" },
