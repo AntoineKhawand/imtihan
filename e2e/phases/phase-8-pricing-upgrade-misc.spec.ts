@@ -63,7 +63,7 @@ test.describe("/upgrade", () => {
   test("contact preference switches the live preview mockup", async ({ page }) => {
     await page.goto(BASE_URL + "/upgrade");
     await expect(page.getByText("Email preview — what you'll receive")).toBeVisible();
-    await page.getByRole("button", { name: "WhatsApp", exact: true }).click();
+    await page.getByRole("button", { name: /WhatsApp/ }).click();
     await expect(page.getByText("WhatsApp preview")).toBeVisible();
   });
 
@@ -83,7 +83,7 @@ test.describe("/upgrade", () => {
     await page.goto(BASE_URL + "/upgrade");
     await page.getByPlaceholder("e.g. Jean-Paul Mansour").fill("E2E Tester");
     await page.getByPlaceholder("jp.mansour@imtihan.live").fill("e2e@test.imtihan.live");
-    await page.getByRole("button", { name: "WhatsApp", exact: true }).click();
+    await page.getByRole("button", { name: /WhatsApp/ }).click();
 
     const [popup] = await Promise.all([
       context.waitForEvent("page"),
