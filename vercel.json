@@ -21,6 +21,10 @@
       "schedule": "0 11 * * 1"
     },
     {
+      "path": "/api/cron/newsletter-checklist-backfill",
+      "schedule": "30 7 * * *"
+    },
+    {
       "path": "/api/cron/sync-styles",
       "schedule": "0 3 * * 0"
     }

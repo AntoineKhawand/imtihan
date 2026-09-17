@@ -5,7 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { FREE_EXAM_LIMIT } from "@/lib/utils";
-import { RefreshCw, Search, Calendar, Clock, ShieldCheck, User, Zap, Sparkles, Plus, BarChart3, TrendingUp, FileText, ArrowRight, Mail, Send, CheckCircle2, XCircle, Check, RotateCcw, Trash2 } from "lucide-react";
+import { RefreshCw, Search, Calendar, Clock, ShieldCheck, User, Users, Zap, Sparkles, Plus, BarChart3, TrendingUp, FileText, ArrowRight, Mail, Send, CheckCircle2, XCircle, Check, RotateCcw, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
@@ -32,6 +32,14 @@ interface AdminUser {
   examsGenerated: number;
   monthlyExamsGenerated?: number;
   extraExamsQuota?: number;
+}
+
+interface NewsletterSubscriber {
+  id: string;
+  email: string;
+  source: string;
+  createdAt: number;
+  checklistSentAt: number | null;
 }
 
 function formatDate(ts: number | null): string {
@@ -83,7 +91,7 @@ const EMAIL_TEMPLATES = [
 export default function AdminPage() {
   const { user } = useAuth();
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<"users" | "email" | "blog">("users");
+  const [activeTab, setActiveTab] = useState<"users" | "email" | "blog" | "subscribers">("users");
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [statsData, setStatsData] = useState<{ subjects: Record<string, number>; lastUpdated: number }>({ subjects: {}, lastUpdated: Date.now() });
   const [loading, setLoading] = useState(true);
@@ -102,6 +110,10 @@ export default function AdminPage() {
   const [emailResult, setEmailResult] = useState<{ sent: number; failed: number } | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<AdminUser | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [subscribers, setSubscribers] = useState<NewsletterSubscriber[]>([]);
+  const [loadingSubscribers, setLoadingSubscribers] = useState(false);
+  const [subscribersLoaded, setSubscribersLoaded] = useState(false);
+  const [resendingChecklists, setResendingChecklists] = useState(false);
 
   async function fetchData() {
     if (!user) return;
@@ -130,6 +142,47 @@ export default function AdminPage() {
   }
 
   useEffect(() => { fetchData(); }, [user]);
+
+  async function fetchSubscribers() {
+    if (!user) return;
+    setLoadingSubscribers(true);
+    try {
+      const token = await user.getIdToken();
+      const res = await fetch("/api/admin/newsletter-subscribers", { headers: { Authorization: `Bearer ${token}` }, cache: "no-store" });
+      const data = await res.json();
+      if (res.ok) setSubscribers(data.subscribers);
+      else toast.error(data.error || "Failed to load subscribers");
+    } catch {
+      toast.error("Failed to load subscribers");
+    } finally {
+      setLoadingSubscribers(false);
+      setSubscribersLoaded(true);
+    }
+  }
+
+  useEffect(() => {
+    if (activeTab === "subscribers" && !subscribersLoaded) fetchSubscribers();
+  }, [activeTab, subscribersLoaded, user]);
+
+  async function handleResendChecklists() {
+    if (!user) return;
+    setResendingChecklists(true);
+    try {
+      const token = await user.getIdToken();
+      const res = await fetch("/api/cron/newsletter-checklist-backfill", { headers: { Authorization: `Bearer ${token}` } });
+      const data = await res.json();
+      if (res.ok) {
+        toast.success(`Resent ${data.sent} checklist${data.sent !== 1 ? "s" : ""}${data.errors > 0 ? `, ${data.errors} still failing` : ""}`);
+        fetchSubscribers();
+      } else {
+        toast.error(data.error || "Failed to resend");
+      }
+    } catch {
+      toast.error("Failed to resend");
+    } finally {
+      setResendingChecklists(false);
+    }
+  }
 
   const handleExtend = async (uid: string, days: number) => {
     if (!user) return;
@@ -339,7 +392,7 @@ export default function AdminPage() {
           </div>
 
           <div className="flex items-center gap-1.5 bg-gray-50 p-1 rounded-2xl border border-gray-100 w-full sm:w-auto">
-            {(["users", "email", "blog"] as const).map((tab) => (
+            {(["users", "email", "blog", "subscribers"] as const).map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
@@ -351,6 +404,7 @@ export default function AdminPage() {
                 {tab === "users" && <User size={13} />}
                 {tab === "email" && <Mail size={13} />}
                 {tab === "blog" && <FileText size={13} />}
+                {tab === "subscribers" && <Users size={13} />}
                 {tab}
               </button>
             ))}
@@ -771,6 +825,79 @@ export default function AdminPage() {
               <Link href="/blog" className="h-12 px-8 bg-emerald-600 text-white rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-600/20">
                 Go to Blog Index <ArrowRight size={18} />
               </Link>
+            </div>
+          </div>
+        )}
+
+        {/* ── SUBSCRIBERS TAB ── */}
+        {activeTab === "subscribers" && (
+          <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm">
+                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Total Subscribers</p>
+                <h3 className="text-2xl font-black text-gray-900">{subscribers.length}</h3>
+              </div>
+              <div className="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm">
+                <p className="text-[10px] font-black text-emerald-500 uppercase tracking-widest mb-1">Checklist Delivered</p>
+                <h3 className="text-2xl font-black text-emerald-600">{subscribers.filter(s => s.checklistSentAt).length}</h3>
+              </div>
+              <div className="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm hidden lg:block">
+                <p className="text-[10px] font-black text-amber-500 uppercase tracking-widest mb-1">Send Failed / Pending</p>
+                <h3 className="text-2xl font-black text-amber-600">{subscribers.filter(s => !s.checklistSentAt).length}</h3>
+              </div>
+            </div>
+
+            {subscribers.some(s => !s.checklistSentAt) && (
+              <div className="bg-amber-50 border border-amber-100 rounded-3xl p-5 flex flex-wrap items-center justify-between gap-4">
+                <div>
+                  <p className="font-bold text-amber-900 text-sm">{subscribers.filter(s => !s.checklistSentAt).length} subscriber(s) never got their checklist email</p>
+                  <p className="text-xs text-amber-700 mt-0.5">Runs automatically every night — or trigger it now.</p>
+                </div>
+                <button onClick={handleResendChecklists} disabled={resendingChecklists}
+                  className="h-10 px-5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-bold flex items-center gap-2 disabled:opacity-50 transition-all shrink-0">
+                  {resendingChecklists ? <RefreshCw size={13} className="animate-spin" /> : <RotateCcw size={13} />}
+                  Resend failed
+                </button>
+              </div>
+            )}
+
+            <div className="bg-white rounded-[32px] border border-gray-100 shadow-sm overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="bg-gray-50/50 border-b border-gray-50">
+                      <th className="px-6 py-5 text-[10px] font-black text-gray-400 uppercase tracking-widest">Email</th>
+                      <th className="px-4 py-5 text-[10px] font-black text-gray-400 uppercase tracking-widest">Source</th>
+                      <th className="px-4 py-5 text-[10px] font-black text-gray-400 uppercase tracking-widest">Signed Up</th>
+                      <th className="px-6 py-5 text-right text-[10px] font-black text-gray-400 uppercase tracking-widest">Checklist</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-50">
+                    {loadingSubscribers ? (
+                      <tr><td colSpan={4} className="px-6 py-10 text-center text-sm text-gray-400 font-medium">Loading…</td></tr>
+                    ) : subscribers.length === 0 ? (
+                      <tr><td colSpan={4} className="px-6 py-10 text-center text-sm text-gray-400 font-medium">No subscribers yet</td></tr>
+                    ) : subscribers.map((s) => (
+                      <tr key={s.id} className="hover:bg-gray-50/30 transition-colors">
+                        <td className="px-6 py-4 text-sm font-bold text-gray-900">{s.email}</td>
+                        <td className="px-4 py-4 text-xs text-gray-400 font-medium">{s.source || "—"}</td>
+                        <td className="px-4 py-4 text-xs text-gray-400 font-medium">{formatDate(s.createdAt)}</td>
+                        <td className="px-6 py-4 text-right">
+                          {s.checklistSentAt ? (
+                            <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">
+                              <CheckCircle2 size={11} /> Sent
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-100">
+                              <XCircle size={11} /> Pending
+                            </span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         )}
