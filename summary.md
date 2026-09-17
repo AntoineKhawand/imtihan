@@ -84,8 +84,8 @@ a fresh dev server can occasionally outlast a flat timeout.
 | # | Phase | Covers | Last Run | Status | Result |
 |---|-------|--------|----------|--------|--------|
 | 1 | Auth & Navigation | Landing/footer/404, pricing toggle, login/register/forgot forms, UserNav hover menu + sign out, auth gates on dashboard/community/admin | 2026-09-17 11:45 UTC | ❌ Failing | 30 passed, 3 failed |
-| 2 | Exam Creation (Describe + Confirm) | `/create` textarea, example chips, class profiles, arXiv search, dropzone, free-limit gate, real Analyze call; `/create/confirm` dropdowns, chapter chips, geographic context, blueprint inputs, template picker, Version B toggle | 2026-09-13 21:37 UTC | ❌ Failing | 17 passed, 2 failed |
-| 3 | Generation & Exercise Editor | `/create/generate` exercise rendering, chapter coverage, action menu, Corrigé + calculators, ExerciseEditor modal (tabs, difficulty, MCQ correctness, sub-questions, plots, save/cancel), one real golden-path generation | 2026-09-13 21:41 UTC | ❌ Failing | 17 passed, 2 failed |
+| 2 | Exam Creation (Describe + Confirm) | `/create` textarea, example chips, class profiles, arXiv search, dropzone, free-limit gate, real Analyze call; `/create/confirm` dropdowns, chapter chips, geographic context, blueprint inputs, template picker, Version B toggle | 2026-09-17 14:08 UTC | ❌ Failing | 18 passed, 1 failed |
+| 3 | Generation & Exercise Editor | `/create/generate` exercise rendering, chapter coverage, action menu, Corrigé + calculators, ExerciseEditor modal (tabs, difficulty, MCQ correctness, sub-questions, plots, save/cancel), one real golden-path generation | 2026-09-17 14:18 UTC | ❌ Failing | 15 passed, 4 failed |
 | 4 | Export | `/create/export` header fields, Pro-gated logo upload, template/variant toggles, real Word download, PDF new-tab, save to library, real email send | 2026-09-13 21:43 UTC | ❌ Failing | 11 passed, 1 failed |
 | 5 | Dashboard & Bank | Exam rows (expand/duplicate/delete/download), quota states, bundle modal, sidebar; Bank tabs, BankCard actions, Invite Colleagues modal | 2026-09-13 21:46 UTC | ❌ Failing | 12 passed, 3 failed |
 | 6 | Community | Sign-in gate, free-tier blur, HowToShare, search/sort, Like/Preview/Download/Remix, preview modal | 2026-09-13 19:33 UTC | ❌ Failing | 9 passed, 1 failed |
@@ -95,6 +95,10 @@ a fresh dev server can occasionally outlast a flat timeout.
 ## Run Log
 
 *(newest first — appended automatically by `scripts/run-daily-phase.mjs`)*
+
+- 2026-09-17 14:18 UTC — Phase 3 (generation editor): ❌ 15 passed, 4 failed (337.3s)
+
+- 2026-09-17 14:08 UTC — Phase 2 (exam creation): ❌ 18 passed, 1 failed (245.9s)
 
 - 2026-09-17 11:45 UTC — Phase 1 (auth navigation): ❌ 30 passed, 3 failed (484.0s)
 
