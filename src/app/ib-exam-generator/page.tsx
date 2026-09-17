@@ -12,7 +12,7 @@ export const metadata = {
   openGraph: {
     title: "IB Exam Generator Chemistry & Physics — Imtihan",
     description: "The professional assessment tool for IB science teachers. Draft curriculum-aligned worksheets and full mark schemes instantly.",
-    url: "https://imtihan.live/ib-exam-generator",
+    url: "https://www.imtihan.live/ib-exam-generator",
   },
 };
 
@@ -71,7 +71,7 @@ export default function IbLandingPage() {
             "@context": "https://schema.org",
             "@type": "WebApplication",
             "name": "Imtihan — IB Chemistry & Physics Exam Generator",
-            "url": "https://imtihan.live/ib-exam-generator",
+            "url": "https://www.imtihan.live/ib-exam-generator",
             "description": "Create IB Diploma Programme (DP) and MYP Chemistry & Physics exams in seconds. Automatically generate detailed mark schemes matching IB Command Terms and rubrics.",
             "applicationCategory": "EducationalApplication",
             "operatingSystem": "All",
@@ -87,14 +87,14 @@ export default function IbLandingPage() {
                 "alignmentType": "educationalSubject",
                 "educationalFramework": "International Baccalaureate (IB DP / MYP)",
                 "targetName": "IB DP Chemistry (SL/HL)",
-                "targetUrl": "https://imtihan.live/ib-exam-generator"
+                "targetUrl": "https://www.imtihan.live/ib-exam-generator"
               },
               {
                 "@type": "AlignmentObject",
                 "alignmentType": "educationalSubject",
                 "educationalFramework": "International Baccalaureate (IB DP / MYP)",
                 "targetName": "IB DP Physics (SL/HL)",
-                "targetUrl": "https://imtihan.live/ib-exam-generator"
+                "targetUrl": "https://www.imtihan.live/ib-exam-generator"
               }
             ]
           },

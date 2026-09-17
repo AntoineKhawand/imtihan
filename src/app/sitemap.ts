@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
 import { adminDb } from "@/lib/firebase-admin";
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://imtihan.live";
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://www.imtihan.live";
 
 // The static seed posts also hardcoded as STATIC_ARTICLES in src/app/blog/page.tsx.
 // Kept as a fixed list here (not queried) since they aren't Firestore documents.

@@ -89,7 +89,7 @@ export async function generateMetadata({ params }: BlogPostProps): Promise<Metad
       title: post.title,
       description: post.description,
       type: "article",
-      url: `https://imtihan.live/blog/${slug}`,
+      url: `https://www.imtihan.live/blog/${slug}`,
     }
   };
 }
@@ -100,7 +100,7 @@ export default async function DynamicBlogPostPage({ params }: BlogPostProps) {
 
   if (!post) notFound();
 
-  const url = `https://imtihan.live/blog/${post.slug}`;
+  const url = `https://www.imtihan.live/blog/${post.slug}`;
 
   return (
     <div className="min-h-screen bg-[var(--bg)] flex flex-col">
@@ -124,7 +124,7 @@ export default async function DynamicBlogPostPage({ params }: BlogPostProps) {
               "name": "Imtihan",
               "logo": {
                 "@type": "ImageObject",
-                "url": "https://imtihan.live/logo.png"
+                "url": "https://www.imtihan.live/logo.png"
               }
             }
           })
