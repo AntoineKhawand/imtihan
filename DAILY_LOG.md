@@ -79,6 +79,12 @@ changed that day — that's the "daily testing for everything added" requirement
 
 *(newest first)*
 
+- **2026-09-18 (Fri, interactive, continued) — QA: ran Phase 4, fixed 1 stale strict-mode locator. Also: cleared a corrupted `.next` Turbopack cache that was crashing the dev server under low system memory (66 Chrome processes from the user's own browser session, ~7GB — unrelated to Imtihan, not touched).**
+  **Phase 4: 11 passed, 1 failed** on first run (after the cache-clear detour below).
+  1. **First attempt failed before any test ran**: the dev server's Turbopack compiler panicked repeatedly (`FATAL: An unexpected Turbopack error... node process exited ... 0xc0000142`) trying to process `globals.css`, timing out the whole run. Checked system memory: ~2.9GB free of 16GB, with the user's own Chrome browser (66 processes, ~7GB) accounting for the pressure — confirmed via command-line inspection that these were real browser tabs/extensions/renderers, not orphaned test processes, so left them alone. Cleared the 1.2GB `.next` build cache (safe, regenerable) instead, which resolved it — the dev server built and served cleanly afterward. Also killed one genuinely stale `next dev` process still holding port 3005 from an earlier interrupted run.
+  2. **Fixed: "pro tier: email flow" strict-mode violation.** `getByRole("button", { name: "Send" })` (non-exact) also matched the already-clicked "Send to my email" toggle button, which stays in the DOM. Scoped to `exact: true` to isolate the real Send button, matching the pattern established in earlier phases' locator fixes.
+  Verified with a full re-run of the spec file after the fix: 12/12 pass.
+
 - **2026-09-18 (Fri, interactive, continued) — QA: ran Phase 3, found and fixed a real double-click bug in the exercise editor (not just stale tests) plus 2 stale locator/assertion bugs; logged as BUG-012.**
   **Phase 3: 17 passed, 4 failed** on the first full run.
   1. **Fixed (test-only): chapter-coverage assertion used stale copy.** `getByText("Some chapters have no exercise")` no longer exists — the real current copy (`src/app/create/generate/page.tsx`) reads "Click a missing chapter above to generate one question for it." Updated the assertion; no app change.

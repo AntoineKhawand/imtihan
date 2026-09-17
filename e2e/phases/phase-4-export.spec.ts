@@ -213,7 +213,9 @@ test.describe("/create/export", () => {
     const emailInput = page.getByPlaceholder("teacher@school.edu.lb");
     await expect(emailInput).toBeVisible();
 
-    const sendBtn = page.getByRole("button", { name: "Send" });
+    // exact: true — "Send to my email" (the toggle button clicked above) is
+    // still in the DOM and also matches a non-exact "Send" role query.
+    const sendBtn = page.getByRole("button", { name: "Send", exact: true });
     await expect(sendBtn).toBeDisabled();
     await emailInput.fill(`${TEST_PRO_UID}@test.imtihan.live`);
     await expect(sendBtn).toBeEnabled();
