@@ -8,6 +8,14 @@
         { "fieldPath": "subject", "order": "ASCENDING" },
         { "fieldPath": "exercise.chapterIds", "arrayConfig": "CONTAINS" }
       ]
+    },
+    {
+      "collectionGroup": "schoolBank",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "schoolSlug", "order": "ASCENDING" },
+        { "fieldPath": "sharedAt", "order": "DESCENDING" }
+      ]
     }
   ],
   "fieldOverrides": []

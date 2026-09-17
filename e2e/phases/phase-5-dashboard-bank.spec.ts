@@ -8,6 +8,11 @@
 import { test, expect, type Page } from "@playwright/test";
 import { signInAs, setupTestUser, TEST_FREE_UID, TEST_PRO_UID } from "../helpers/auth";
 
+// Chromium denies navigator.clipboard.writeText without an explicit grant in
+// a test context — same root cause and fix as phase-6-community.spec.ts's
+// "Copy" test (see DAILY_LOG.md's 2026-09-13 entry).
+test.use({ permissions: ["clipboard-read", "clipboard-write"] });
+
 const BASE_URL = "http://localhost:3005";
 
 function exam(overrides: Partial<Record<string, unknown>> = {}) {
@@ -172,7 +177,10 @@ test.describe("/dashboard", () => {
       context.waitForEvent("page"),
       page.getByRole("button", { name: "Purchase via WHISH" }).click(),
     ]);
-    expect(popup.url()).toMatch(/wa\.me/);
+    // WHISH now links via api.whatsapp.com/send (not the old wa.me short
+    // domain) — real behavior, flagged as a known stale assumption in
+    // DAILY_LOG.md's 2026-09-14 entry but never actually fixed until now.
+    expect(popup.url()).toMatch(/api\.whatsapp\.com\/send/);
     await popup.close();
   });
 
@@ -293,7 +301,10 @@ test.describe("/bank", () => {
     await expect(page.getByText(/School set to/)).toBeVisible({ timeout: 15_000 });
     // Profile updates propagate via the Firestore onSnapshot listener — the
     // "no school set" card should be replaced by the school bank view.
-    await expect(page.getByText("E2E Inline School")).toBeVisible({ timeout: 15_000 });
+    // exact: true — the school name also appears inside the "0 shared
+    // exercises from ..." caption and the "School set to ..." toast, both
+    // of which also match a non-exact getByText for the same substring.
+    await expect(page.getByText("E2E Inline School", { exact: true })).toBeVisible({ timeout: 15_000 });
   });
 
   test("My School tab: pro tier with a school set can open Invite Colleagues and copy the link", async ({ page, request }) => {
@@ -303,10 +314,14 @@ test.describe("/bank", () => {
     await page.goto(BASE_URL + "/bank");
 
     await page.getByRole("button", { name: "My School" }).click();
-    await expect(page.getByText("E2E Test School")).toBeVisible({ timeout: 20_000 });
+    // exact: true — same "shared exercises from ..." caption ambiguity as
+    // the inline-save test above.
+    await expect(page.getByText("E2E Test School", { exact: true })).toBeVisible({ timeout: 20_000 });
 
     await page.getByRole("button", { name: "Invite Colleagues" }).click();
-    await expect(page.getByText("Invite Colleagues")).toBeVisible();
+    // The button that opened the modal (still in the DOM) also matches a
+    // plain getByText for its own label — scope to the modal's heading.
+    await expect(page.getByRole("heading", { name: "Invite Colleagues" })).toBeVisible();
     await expect(page.getByText(/join\/e2e-test-school/)).toBeVisible();
 
     await page.locator("button.h-11.w-11.rounded-xl").click();
