@@ -10,7 +10,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import "katex/dist/katex.min.css";
 import "./globals.css";
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://imtihan.live";
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://www.imtihan.live";
 
 const fraunces = Fraunces({
   subsets: ["latin"],

@@ -12,7 +12,7 @@ export const metadata = {
   openGraph: {
     title: "Générateur de Devoir Bac Français — Imtihan",
     description: "Élaborez des contrôles et des grilles de correction conformes aux programmes officiels de l'Éducation Nationale française (AEFE).",
-    url: "https://imtihan.live/bac-francais-exam-generator",
+    url: "https://www.imtihan.live/bac-francais-exam-generator",
   },
 };
 
@@ -71,7 +71,7 @@ export default function FrenchBacLandingPage() {
             "@context": "https://schema.org",
             "@type": "WebApplication",
             "name": "Imtihan — Générateur de devoir Bac Français",
-            "url": "https://imtihan.live/bac-francais-exam-generator",
+            "url": "https://www.imtihan.live/bac-francais-exam-generator",
             "description": "Générateur intelligent de devoirs surveillés (DS) et bacs blancs conformes aux programmes officiels français (Lycée de la Seconde à la Terminale Spécialité).",
             "applicationCategory": "EducationalApplication",
             "operatingSystem": "All",
@@ -87,7 +87,7 @@ export default function FrenchBacLandingPage() {
                 "alignmentType": "educationalSubject",
                 "educationalFramework": "Ministère de l'Éducation Nationale française (AEFE)",
                 "targetName": "Baccalauréat Français (Lycée Seconde, Première, Terminale Spécialité)",
-                "targetUrl": "https://imtihan.live/bac-francais-exam-generator"
+                "targetUrl": "https://www.imtihan.live/bac-francais-exam-generator"
               }
             ]
           },

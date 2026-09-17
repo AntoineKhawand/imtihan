@@ -43,7 +43,7 @@ function buildAdminEmail(data: z.infer<typeof BodySchema>): { subject: string; h
       <table cellpadding="0" cellspacing="0" border="0">
         <tr>
           <td style="vertical-align:middle">
-            <img src="https://imtihan.live/Imtihan-logo.png" width="40" height="40" style="border-radius:10px;display:block;box-shadow:0 4px 12px rgba(0,0,0,0.2)" alt="Imtihan" />
+            <img src="https://www.imtihan.live/Imtihan-logo.png" width="40" height="40" style="border-radius:10px;display:block;box-shadow:0 4px 12px rgba(0,0,0,0.2)" alt="Imtihan" />
           </td>
           <td style="vertical-align:middle;padding-left:14px">
             <strong style="font-size:18px;color:#fff">Imtihan — New Upgrade Request</strong>
@@ -120,7 +120,7 @@ function buildConfirmationEmail(data: z.infer<typeof BodySchema>): { subject: st
     <!-- Header -->
     <div style="background:linear-gradient(135deg,#0d3d27 0%,#1a5e3f 100%);padding:36px;position:relative;overflow:hidden">
       <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
-        <img src="https://imtihan.live/Imtihan-logo.png" width="36" height="36" style="border-radius:10px;display:block;box-shadow:0 4px 12px rgba(0,0,0,0.2)" alt="Imtihan" />
+        <img src="https://www.imtihan.live/Imtihan-logo.png" width="36" height="36" style="border-radius:10px;display:block;box-shadow:0 4px 12px rgba(0,0,0,0.2)" alt="Imtihan" />
         <strong style="font-size:20px;color:#fff">Imtihan</strong>
       </div>
       <div style="background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);border-radius:100px;display:inline-block;padding:6px 14px">

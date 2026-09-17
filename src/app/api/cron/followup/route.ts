@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://www.imtihan.live";
 const WHATSAPP = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? "96170542238";
-const IMAGE_BASE_URL = APP_URL.includes("localhost") ? "https://imtihan.live" : APP_URL;
+const IMAGE_BASE_URL = APP_URL.includes("localhost") ? "https://www.imtihan.live" : APP_URL;
 const tw = (code: string) => `https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/${code}.png`;
 
 // ─── Premium Follow-up Templates ─────────────────────────────────────────────
