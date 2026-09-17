@@ -13,6 +13,7 @@ import { BlogRelated } from "@/components/blog/BlogRelated";
 export const metadata: Metadata = {
   title: "Is Your Child Ready for the Brevet? Mock Exams at Home | Imtihan Blog",
   description: "How Lebanese parents can use AI to create curriculum-aligned mock exams for their kids.",
+  alternates: { canonical: "/blog/guide-for-parents" },
 };
 
 export default function ParentsBlogPage() {

@@ -40,6 +40,14 @@ keep each change reviewable and low-risk for an unattended push.
       entity credibility for GEO.
 
 ### Technical SEO
+- [x] **2026-09-18** — Fixed a real bug found by the new internal SEO audit tool
+      (`npm run audit:seo`, see "Tooling" below): every blog post (all 9 static pages, the
+      `/blog` index, and every dynamic post) had no `alternates.canonical` of its own, so each
+      one inherited the root layout's canonical — the homepage — telling search engines every
+      single post was a duplicate of `/`. Added a proper self-referencing canonical to all of
+      them (`src/app/blog/page.tsx`, `src/app/blog/[slug]/page.tsx`, and each of the 9 static
+      `src/app/blog/*/page.tsx` files). `/blog` also had zero metadata at all before this (no
+      title, description, or Open Graph), now fixed too.
 - [x] **2026-09-01** — Hardened `robots.ts`: `/admin`, `/scanner`, `/print`, `/analytics`,
       `/test-auth`, `/test-wysiwyg`, `/account`, `/teacher/` were crawlable by default (no
       denylist entry). All now disallowed.
@@ -56,6 +64,27 @@ keep each change reviewable and low-risk for an unattended push.
 - [x] **2026-09-01** — Added `FAQPage` JSON-LD + visible Q&A (`LandingFAQ`) to all 4 curricula
       landing pages (previously zero FAQ content/schema outside the homepage).
 - [x] **2026-09-08** — Added `LandingFAQ` + `FAQPage` JSON-LD to `/pricing`, `/about`, `/upgrade`.
+
+## Tooling
+
+Two internal audit scripts (no paid API needed — run against the live sitemap.xml, requested as
+a lightweight, self-hosted equivalent to every-app/open-seo and GEO-optim/GEO's approaches
+rather than adopting either directly, since one needs a paid DataForSEO key and the other is an
+academic benchmark pipeline, not a tool):
+
+- **`npm run audit:seo [baseUrl]`** (`scripts/seo-audit.mjs`) — on-page SEO basics for every URL
+  in `sitemap.xml`: title/meta-description presence and length, canonical tags (self-referencing,
+  not just present), single-`<h1>`, Open Graph tags, image alt text, duplicate titles across
+  pages, and broken internal links. Writes `SEO_AUDIT_REPORT.md` (gitignored — regenerate, don't
+  trust a stale copy) and exits non-zero on any FAIL-severity issue or broken link.
+- **`npm run audit:geo [baseUrl]`** (`scripts/geo-audit.mjs`) — scores every blog post against
+  signals GEO-optim/GEO's research found actually correlate with generative-engine visibility
+  (citing external sources, statistics, quotations, scannable structure, FAQ schema). Writes
+  `GEO_AUDIT_REPORT.md`, weakest posts first, plus a "site-wide gaps" section for anything every
+  single post is missing (worth a template-level fix rather than post-by-post).
+
+Both default to `https://www.imtihan.live`; pass `http://localhost:3000` (matching whatever port
+`NEXT_PUBLIC_APP_URL` in `.env.local` currently points at) to audit a local dev server instead.
 
 ## Noted while working (not fixed today — out of Tuesday's scope)
 

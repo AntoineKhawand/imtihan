@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { adminDb } from "@/lib/firebase-admin";
 import Link from "next/link";
 import { ArrowRight, Clock, ChevronLeft, ChevronRight, FileText } from "lucide-react";
@@ -7,6 +8,20 @@ import { PublicFooter } from "@/components/layout/PublicFooter";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 300;
+
+// Previously had no metadata at all, so it inherited the root layout's
+// canonical (the homepage) — telling search engines /blog was a duplicate
+// of "/". Found via scripts/seo-audit.mjs.
+export const metadata: Metadata = {
+  title: "Blog",
+  description: "Guides and insights on exam creation, curriculum coverage, and teaching in Lebanon — from the Imtihan team.",
+  alternates: { canonical: "/blog" },
+  openGraph: {
+    title: "Imtihan Blog",
+    description: "Guides and insights on exam creation, curriculum coverage, and teaching in Lebanon.",
+    url: "/blog",
+  },
+};
 
 interface BlogPost {
   id: string;

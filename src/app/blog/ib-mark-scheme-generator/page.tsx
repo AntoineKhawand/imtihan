@@ -13,6 +13,7 @@ import { BlogRelated } from "@/components/blog/BlogRelated";
 export const metadata: Metadata = {
   title: "IB Mark Scheme Generator: Free Tool for IB Teachers | Imtihan Blog",
   description: "Find out how to automatically generate detailed IB-compliant mark schemes for DP Physics and Chemistry using Imtihan's free AI tool.",
+  alternates: { canonical: "/blog/ib-mark-scheme-generator" },
 };
 
 export default function IbMarkSchemeBlogPage() {

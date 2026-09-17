@@ -13,6 +13,7 @@ import { BlogRelated } from "@/components/blog/BlogRelated";
 export const metadata: Metadata = {
   title: "Générateur de Devoir Bac Français : Physique-Chimie | Imtihan Blog",
   description: "Découvrez comment concevoir des Devoirs Surveillés (DS) de spécialité Physique-Chimie conformes au Baccalauréat Français (AEFE) en 5 minutes grâce à l'IA.",
+  alternates: { canonical: "/blog/generate-bac-francais-devoir" },
 };
 
 export default function FrenchBacDevoirBlogPage() {

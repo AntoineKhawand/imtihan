@@ -13,6 +13,7 @@ import { BlogRelated } from "@/components/blog/BlogRelated";
 export const metadata: Metadata = {
   title: "Reclaiming Your Sundays: 5 Ways Imtihan Automates Tasks | Imtihan Blog",
   description: "Learn how generative AI can save Lebanese teachers 10+ hours a week by automating exam creation.",
+  alternates: { canonical: "/blog/save-time-teaching" },
 };
 
 export default function ProductivityBlogPage() {
