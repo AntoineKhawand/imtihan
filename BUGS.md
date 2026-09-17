@@ -58,6 +58,18 @@ These are intentional constraints in MVP — document here to avoid re-opening a
 
 ---
 
+## BUG-013: "My School" bank silently shows empty — missing Firestore composite index for `schoolBank` queries
+
+**Status:** Fix on disk, not yet deployed
+**Severity:** High
+**Area:** Data / Bank
+**Reported:** 2026-09-18
+**Fixed:** Not yet — needs `firebase deploy --only firestore:indexes` or a manual Firebase Console index creation, blocked by the same Claude Code "Production Deploy" guardrail as BUG-011
+
+**Description:** Every Pro teacher who sets a school and opens `/bank`'s "My School" tab silently sees an empty shared-exercises list instead of their colleagues' real contributions, with no error shown to the user — `getSchoolBankExercises()` (`src/app/bank/page.tsx`) catches the failure and returns `[]`. Surfaced via the dev server's own console output while re-running a Phase 5 e2e test (`FirebaseError: The query requires an index`), not via any user report — this is a genuinely broken feature, not a test artifact.
+**Root cause:** The query is `where("schoolSlug", "==", slug).orderBy("sharedAt", "desc")` on the `schoolBank` collection — Firestore requires a composite index for a query that combines an equality filter with an `orderBy` on a different field, and `firestore.indexes.json` only defined a *different* composite index for this collection (`curriculumId` + `subject` + `exercise.chapterIds`, used by a separate cross-school lookup), never one covering `schoolSlug` + `sharedAt`. Same class of issue as BUG-011: the deployed Firestore config silently doesn't match what the app's own queries need, masked here by the query's own try/catch swallowing the error into an empty array instead of surfacing it.
+**Fix:** Added the missing composite index (`schoolSlug` ASC, `sharedAt` DESC) to `firestore.indexes.json`. **Not yet deployed** — same guardrail that blocked `firebase deploy` for BUG-011 blocks it here too. Antoine needs to run `firebase deploy --only firestore:indexes` himself (or open the direct Firebase Console link the error message itself provides — check the browser dev console on `/bank` with "My School" open and a school with real shared exercises — and click "Create Index" there), then confirm by reloading `/bank`'s My School tab.
+
 ## BUG-012: Double-click-to-edit-raw-LaTeX never worked in Chromium for math nodes (and any other atomic contenteditable block)
 
 **Status:** Fixed

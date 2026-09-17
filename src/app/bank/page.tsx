@@ -170,6 +170,8 @@ export default function BankPage() {
     navigator.clipboard.writeText(inviteLink).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
+    }).catch(() => {
+      toast.error("Could not copy the link — copy it manually instead.");
     });
   }
 
