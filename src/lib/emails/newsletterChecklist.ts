@@ -11,6 +11,7 @@ export const CHECKLIST_HTML = `
 <body style="font-family:system-ui,sans-serif;font-size:15px;color:#111;padding:24px;max-width:560px;margin:0 auto;background:#f8fafc">
   <div style="background:#ffffff;border-radius:20px;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,0.06);border:1px solid #eef2f6">
     <div style="background:linear-gradient(135deg,#0d3d27 0%,#1a5e3f 100%);padding:32px;text-align:center">
+      <img src="https://www.imtihan.live/Imtihan-logo.png" alt="Imtihan" width="40" height="40" style="display:block;margin:0 auto 12px;border-radius:10px;" />
       <p style="color:#fff;font-size:20px;font-weight:700;margin:0">Imtihan</p>
     </div>
     <div style="padding:32px">
