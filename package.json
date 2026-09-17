@@ -14,7 +14,9 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
-    "test:e2e:daily": "node scripts/run-daily-phase.mjs"
+    "test:e2e:daily": "node scripts/run-daily-phase.mjs",
+    "audit:seo": "node scripts/seo-audit.mjs",
+    "audit:geo": "node scripts/geo-audit.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.90.0",

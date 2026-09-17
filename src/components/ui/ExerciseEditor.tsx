@@ -57,6 +57,25 @@ function useFragmentRegenerate(
     if (!sel || sel.isCollapsed || sel.rangeCount === 0) return;
     const range = sel.getRangeAt(0);
     if (!divRef.current || !divRef.current.contains(range.commonAncestorContainer)) return;
+    // Chromium selects an entire atomic contenteditable="false" island (a
+    // KaTeX math node, table, or image/document block) as a single unit on
+    // click — as a *sibling* the range brackets (start/endContainer is the
+    // shared parent, not a descendant of the island), not as text inside it,
+    // so a closest() from the container never sees it. That selection isn't
+    // meaningful to send for regeneration, and popping the toolbar re-renders
+    // this field, which tears down and rebuilds the DOM subtree — breaking
+    // double-click-to-reveal-raw-LaTeX on the same node.
+    const isAtomicChild = (node: Node | null): boolean =>
+      !!node && node.nodeType === Node.ELEMENT_NODE &&
+      (node as Element).getAttribute('contenteditable') === 'false' &&
+      (node as Element).hasAttribute('data-raw');
+    if (
+      range.startContainer === range.endContainer &&
+      range.endOffset === range.startOffset + 1 &&
+      isAtomicChild(range.startContainer.childNodes[range.startOffset] ?? null)
+    ) {
+      return;
+    }
     const text = sel.toString().trim();
     if (!text || text.length > 400) return;
     setError(null);
@@ -179,6 +198,58 @@ function FragmentToolbar({ state }: { state: ReturnType<typeof useFragmentRegene
   );
 }
 
+// Reveals a [data-raw] node's raw markdown source on double-click. Driven off
+// "mousedown" position/timing rather than the native "dblclick" event or
+// object identity: Chromium does not reliably synthesize "click"/"dblclick"
+// for contenteditable="false" atomic islands (KaTeX math nodes, tables,
+// document/image blocks) nested inside a contenteditable="true" ancestor, so
+// a plain onDoubleClick handler silently never fires for those. And the first
+// click's own focus/selection side effects can re-render this field before
+// the second click lands, replacing the clicked element with an equivalent
+// one — so identity can't be compared across clicks either; only screen
+// position and timing survive that re-render.
+function useRawReveal() {
+  const lastRef = useRef<{ x: number; y: number; time: number } | null>(null);
+  return useCallback((e: React.MouseEvent) => {
+    const target = e.target as HTMLElement;
+    const rawNode = target.closest('[data-raw]');
+    if (!rawNode) {
+      lastRef.current = null;
+      return;
+    }
+    const now = Date.now();
+    const last = lastRef.current;
+    const isDoubleClick =
+      !!last && now - last.time < 500 && Math.abs(e.clientX - last.x) < 8 && Math.abs(e.clientY - last.y) < 8;
+    if (isDoubleClick) {
+      lastRef.current = null;
+      if (rawNode.parentNode) {
+        const rawText = rawNode.getAttribute('data-raw');
+        if (rawText) {
+          // The browser still finalizes its own double-click "select word"
+          // behavior on the upcoming "mouseup" — left alone, once the atomic
+          // node is gone it lands on ordinary text and selects a word of it,
+          // popping the fragment-regenerate toolbar, whose re-render then
+          // stomps this manual DOM edit back to the original rendering.
+          // preventDefault() on this mousedown stops that native selection
+          // from ever starting.
+          e.preventDefault();
+          const textNode = document.createTextNode(rawText);
+          rawNode.parentNode.replaceChild(textNode, rawNode);
+          const sel = window.getSelection();
+          sel?.removeAllRanges();
+          const caretRange = document.createRange();
+          caretRange.setStart(textNode, 0);
+          caretRange.collapse(true);
+          sel?.addRange(caretRange);
+        }
+      }
+    } else {
+      lastRef.current = { x: e.clientX, y: e.clientY, time: now };
+    }
+  }, []);
+}
+
 function extractMarkdownFromHtml(node: Node): string {
   let text = "";
   for (const child of Array.from(node.childNodes)) {
@@ -242,17 +313,7 @@ function RichField({
     }
   };
 
-  const handleDoubleClick = (e: React.MouseEvent) => {
-    const target = e.target as HTMLElement;
-    const rawNode = target.closest('[data-raw]');
-    if (rawNode && rawNode.parentNode) {
-      const rawText = rawNode.getAttribute('data-raw');
-      if (rawText) {
-        const textNode = document.createTextNode(rawText);
-        rawNode.parentNode.replaceChild(textNode, rawNode);
-      }
-    }
-  };
+  const handleRawReveal = useRawReveal();
 
   const rendered = value
     ? renderContent(value)
@@ -273,7 +334,7 @@ function RichField({
         suppressContentEditableWarning
         onFocus={handleFocus}
         onBlur={handleBlur}
-        onDoubleClick={handleDoubleClick}
+        onMouseDown={handleRawReveal}
         onMouseUp={fragState.handleSelect}
         onKeyUp={(e) => { if (e.shiftKey) fragState.handleSelect(); }}
         className={cn(
@@ -329,17 +390,7 @@ function RichFieldInline({
     }
   };
 
-  const handleDoubleClick = (e: React.MouseEvent) => {
-    const target = e.target as HTMLElement;
-    const rawNode = target.closest('[data-raw]');
-    if (rawNode && rawNode.parentNode) {
-      const rawText = rawNode.getAttribute('data-raw');
-      if (rawText) {
-        const textNode = document.createTextNode(rawText);
-        rawNode.parentNode.replaceChild(textNode, rawNode);
-      }
-    }
-  };
+  const handleRawReveal = useRawReveal();
 
   const rendered = value
     ? renderContent(value)
@@ -360,7 +411,7 @@ function RichFieldInline({
         suppressContentEditableWarning
         onFocus={handleFocus}
         onBlur={handleBlur}
-        onDoubleClick={handleDoubleClick}
+        onMouseDown={handleRawReveal}
         onMouseUp={fragState.handleSelect}
         onKeyUp={(e) => { if (e.shiftKey) fragState.handleSelect(); }}
         className="w-full px-3 py-2 bg-[var(--surface)] text-sm text-[var(--text)] leading-relaxed rounded-lg prose-clean min-h-[2.75rem] overflow-hidden outline-none"

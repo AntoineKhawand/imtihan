@@ -13,6 +13,7 @@ import { BlogRelated } from "@/components/blog/BlogRelated";
 export const metadata: Metadata = {
   title: "Reclaiming Your Evenings: AI Exam Generators in Lebanon | Imtihan Blog",
   description: "Explore how Lebanese educators are overcoming preparation fatigue and grading overhead using local-curriculum AI assessment tools.",
+  alternates: { canonical: "/blog/lebanese-teachers-ai-exam-generator" },
 };
 
 export default function LebaneseTeachersBlogPage() {

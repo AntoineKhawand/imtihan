@@ -114,7 +114,7 @@ test.describe("Generate page — exercises, chapter coverage, summary bar", () =
     await expect(covered).toBeVisible();
     const missing = page.getByTitle("No exercise covers this chapter yet");
     await expect(missing).toBeVisible();
-    await expect(page.getByText("Some chapters have no exercise")).toBeVisible();
+    await expect(page.getByText("Click a missing chapter above to generate one question for it.")).toBeVisible();
   });
 
   test("summary bar shows correct total points and difficulty split", async ({ page }) => {
@@ -220,7 +220,14 @@ test.describe("ExerciseCard — Corrigé panel & calculators", () => {
     await page.getByRole("button", { name: "Corrigé" }).click();
     await expect(page.getByText("Barème de correction")).toBeVisible();
     await expect(page.getByText("B — 2x")).toBeVisible();
-    await expect(page.getByText(/Étape 1: appliquer la règle/)).toBeVisible();
+    // renderContent.ts's applyMarkdown() deliberately converts "Étape N:" into
+    // its own standalone styled badge (colon stripped, no longer joined to the
+    // following text) — check the badge and the step content as two separate
+    // assertions instead of one combined string that can no longer exist.
+    // ".first()": the micro-barème table below also has its own "Étape 1" row
+    // label, a second, unrelated match for the same exact text.
+    await expect(page.getByText("Étape 1", { exact: true }).first()).toBeVisible();
+    await expect(page.getByText(/appliquer la règle de puissance/)).toBeVisible();
     await expect(page.getByText("Mark Scheme").or(page.getByText("Micro-barème"))).toBeVisible();
     await expect(page.getByText("Common mistakes")).toBeVisible();
     await expect(page.getByText("Oublier de multiplier par l'exposant initial.")).toBeVisible();
@@ -304,7 +311,12 @@ test.describe("ExerciseEditor modal", () => {
 
   test("double-clicking the math node in the statement reveals raw LaTeX for editing", async ({ page }) => {
     await openEditor(page);
-    const statementField = page.locator("[contenteditable]").first();
+    // "[contenteditable]" is no longer specific to the statement field alone —
+    // ExerciseEditor now wraps individual option/barème cells in their own
+    // contenteditable spans too (for fragment-level regeneration), so
+    // ".first()" can resolve to any of those instead of the real statement
+    // field. Scope to the one containing the exercise's own statement text.
+    const statementField = page.locator("[contenteditable]", { hasText: "Quelle est la dérivée de" });
     const mathSpan = statementField.locator("span.math-node").first();
     await expect(mathSpan).toBeVisible();
     await mathSpan.dblclick();

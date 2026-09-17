@@ -58,6 +58,35 @@ These are intentional constraints in MVP — document here to avoid re-opening a
 
 ---
 
+## BUG-013: "My School" bank silently shows empty — missing Firestore composite index for `schoolBank` queries
+
+**Status:** Fix on disk, not yet deployed
+**Severity:** High
+**Area:** Data / Bank
+**Reported:** 2026-09-18
+**Fixed:** Not yet — needs `firebase deploy --only firestore:indexes` or a manual Firebase Console index creation, blocked by the same Claude Code "Production Deploy" guardrail as BUG-011
+
+**Description:** Every Pro teacher who sets a school and opens `/bank`'s "My School" tab silently sees an empty shared-exercises list instead of their colleagues' real contributions, with no error shown to the user — `getSchoolBankExercises()` (`src/app/bank/page.tsx`) catches the failure and returns `[]`. Surfaced via the dev server's own console output while re-running a Phase 5 e2e test (`FirebaseError: The query requires an index`), not via any user report — this is a genuinely broken feature, not a test artifact.
+**Root cause:** The query is `where("schoolSlug", "==", slug).orderBy("sharedAt", "desc")` on the `schoolBank` collection — Firestore requires a composite index for a query that combines an equality filter with an `orderBy` on a different field, and `firestore.indexes.json` only defined a *different* composite index for this collection (`curriculumId` + `subject` + `exercise.chapterIds`, used by a separate cross-school lookup), never one covering `schoolSlug` + `sharedAt`. Same class of issue as BUG-011: the deployed Firestore config silently doesn't match what the app's own queries need, masked here by the query's own try/catch swallowing the error into an empty array instead of surfacing it.
+**Fix:** Added the missing composite index (`schoolSlug` ASC, `sharedAt` DESC) to `firestore.indexes.json`. **Not yet deployed** — same guardrail that blocked `firebase deploy` for BUG-011 blocks it here too. Antoine needs to run `firebase deploy --only firestore:indexes` himself (or open the direct Firebase Console link the error message itself provides — check the browser dev console on `/bank` with "My School" open and a school with real shared exercises — and click "Create Index" there), then confirm by reloading `/bank`'s My School tab.
+
+## BUG-012: Double-click-to-edit-raw-LaTeX never worked in Chromium for math nodes (and any other atomic contenteditable block)
+
+**Status:** Fixed
+**Severity:** Medium
+**Area:** UI / Generation (ExerciseEditor)
+**Reported:** 2026-09-18
+**Fixed:** 2026-09-18
+
+**Description:** In the exercise editor, double-clicking a KaTeX-rendered math expression (or any other `[data-raw][contenteditable="false"]` atomic block — tables, image/document blocks, "Étape N" step badges) inside a `contenteditable="true"` field was supposed to swap it for its raw markdown/LaTeX source so a teacher could hand-edit it. It never actually worked, in real Chrome/Chromium as well as Playwright — a genuine, reproducible app bug, not a test artifact (confirmed by driving raw `mousedown`/`mouseup` events and by manually mutating the DOM outside any event handler, which worked and stuck).
+**Root cause (three compounding issues, all in `ExerciseEditor.tsx`):**
+1. Chromium does not reliably synthesize `click`/`dblclick` DOM events for a `contenteditable="false"` island nested inside a `contenteditable="true"` ancestor — `onDoubleClick` silently never fired for these nodes at all (confirmed by capturing every mouse event at the document level: `mousedown`/`mouseup` fired consistently, `click`/`dblclick` did not).
+2. Chromium selects such an atomic island as a whole unit on a single click. The field's existing `onMouseUp={fragState.handleSelect}` (for the unrelated "select text, ask AI to rewrite this fragment" feature) treated that as a normal text selection and popped the fragment-regenerate toolbar, and `handleSelect`'s ancestor-based check for this case didn't fire either — Chromium represents the selection's start/end container as the *shared parent*, bracketing the atomic node as a sibling, not as a descendant of it. Every re-render this toolbar triggered replaced the whole `dangerouslySetInnerHTML` subtree with an equivalent-but-different DOM node, so nothing that compared node identity across the two clicks of a double-click could ever match.
+3. Once (1) and (2) were fixed and the raw text was actually swapped in during the second `mousedown`, the browser still finalized its own native double-click "select word" behavior on the following `mouseup` — now landing on ordinary text instead of an atomic node — which selected a word of the freshly revealed LaTeX and popped the fragment toolbar again, whose re-render stomped the edit right back to the original KaTeX rendering before Playwright (or a real user) ever saw it.
+**Fix:** Replaced the native `onDoubleClick` handler in both `RichField` and `RichFieldInline` with a `useRawReveal()` hook driven off `onMouseDown` click position + timing (two mousedowns on a `[data-raw]` node within 500ms and 8px count as a double-click), since `mousedown` fires reliably where `click`/`dblclick` do not. Guarded `handleSelect` to ignore a selection that exactly brackets a single atomic `[data-raw][contenteditable="false"]` sibling, so it no longer pops the fragment toolbar for these nodes. Added `e.preventDefault()` on the double-click-triggering `mousedown` plus an explicit collapsed-caret selection on the newly inserted text node, so the browser's own native selection algorithm never gets a chance to re-select and re-trigger the toolbar afterward. Verified with 3 consecutive clean runs of the previously-flaky-to-broken test (`phase-3-generation-editor.spec.ts`, "double-clicking the math node in the statement reveals raw LaTeX for editing").
+
+---
+
 ## BUG-011: Firestore client reads denied project-wide since 2026-05-20 — Firebase project was still on its auto-generated test-mode rule
 
 **Status:** Fixed

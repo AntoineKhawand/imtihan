@@ -85,6 +85,10 @@ export async function generateMetadata({ params }: BlogPostProps): Promise<Metad
   return {
     title: `${post.title} | Imtihan Blog`,
     description: post.description,
+    // Previously unset, so every dynamic post inherited the root layout's
+    // canonical (the homepage) instead of pointing at itself — found via
+    // scripts/seo-audit.mjs.
+    alternates: { canonical: `/blog/${slug}` },
     openGraph: {
       title: post.title,
       description: post.description,
