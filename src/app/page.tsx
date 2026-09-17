@@ -32,6 +32,7 @@ import { MotionHero, MotionStats, MotionHowItWorks, MotionStreamingPreview } fro
 import { LandingPricing } from "@/components/landing/LandingPricing";
 import { LandingNav } from "@/components/landing/LandingNav";
 import { VisitorCounter } from "@/components/landing/VisitorCounter";
+import { NewsletterSignup } from "@/components/landing/NewsletterSignup";
 import { PublicFooter } from "@/components/layout/PublicFooter";
 
 const STATS = [
@@ -468,6 +469,8 @@ export default async function LandingPage() {
           </div>
         </div>
       </section>
+
+      <NewsletterSignup />
 
       <PublicFooter />
     </div>
