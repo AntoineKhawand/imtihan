@@ -280,9 +280,13 @@ test.describe("UserNav — signed in", () => {
     // compile cost on top of the Firestore profile read.
     await expect(page.getByText(/free tier/i).first()).toBeVisible({ timeout: 30_000 });
 
-    // The dashboard's top bar is a <nav>, not a <header> — UserNav's avatar
-    // button is the last button inside it, and its dropdown opens on hover.
-    const avatarButton = page.locator("nav button").last();
+    // UserNav's dropdown (including the "Sign out" button) is always in the
+    // DOM, just CSS-hidden via group-hover until the trigger is hovered —
+    // so "last button in nav" actually resolves to the hidden Sign-out
+    // button, not the avatar trigger. The avatar button is a direct child
+    // of the ".group" wrapper div; Sign-out is nested one level deeper
+    // inside the dropdown, so this scopes to the trigger specifically.
+    const avatarButton = page.locator("nav .group > button").first();
     await avatarButton.hover();
 
     await expect(page.getByRole("link", { name: "Dashboard" }).last()).toBeVisible({ timeout: 3_000 });
@@ -320,14 +324,14 @@ test.describe("Auth gates", () => {
     await page.goto(BASE_URL + "/dashboard");
     await expect(page).toHaveURL(/\/auth\/login/);
     const redirectCookie = (await page.context().cookies()).find((c) => c.name === "__redirect");
-    expect(redirectCookie?.value).toBe("/dashboard");
+    expect(decodeURIComponent(redirectCookie?.value ?? "")).toBe("/dashboard");
   });
 
   test("/community without a session redirects server-side to /auth/login", async ({ page }) => {
     await page.goto(BASE_URL + "/community");
     await expect(page).toHaveURL(/\/auth\/login/);
     const redirectCookie = (await page.context().cookies()).find((c) => c.name === "__redirect");
-    expect(redirectCookie?.value).toBe("/community");
+    expect(decodeURIComponent(redirectCookie?.value ?? "")).toBe("/community");
   });
 
   test("/admin as a non-admin user shows Access Denied and redirects to dashboard", async ({ page }) => {
