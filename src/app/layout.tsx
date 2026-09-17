@@ -156,19 +156,18 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             gtag('config', 'G-7DZ1T3P599');
           `}
         </Script>
-        {/*
-          Plausible — privacy-friendly, cookieless analytics, alongside GA4
-          rather than replacing it. Requires a Plausible account (plausible.io,
-          or a self-hosted instance) with www.imtihan.live added as a site —
-          this script alone won't report anywhere without that; nothing here
-          creates the account, that's a manual sign-up step.
-        */}
+        {/* Privacy-friendly analytics by Plausible — real embed from the imtihan.live Plausible account */}
         <Script
-          defer
-          data-domain="www.imtihan.live"
-          src="https://plausible.io/js/script.js"
+          async
+          src="https://plausible.io/js/pa-h5uHdOrIPNH5TEW_uzfof.js"
           strategy="afterInteractive"
         />
+        <Script id="plausible-init" strategy="afterInteractive">
+          {`
+            window.plausible=window.plausible||function(){(plausible.q=plausible.q||[]).push(arguments)},plausible.init=plausible.init||function(i){plausible.o=i||{}};
+            plausible.init()
+          `}
+        </Script>
         <AuthProvider>
           <ToastProvider>{children}</ToastProvider>
         </AuthProvider>
