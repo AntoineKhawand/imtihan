@@ -13,6 +13,7 @@ import { BlogRelated } from "@/components/blog/BlogRelated";
 export const metadata: Metadata = {
   title: "Are Your Students Bored of the Same Recycled Exams? | Imtihan Blog",
   description: "Why using past papers (Dawrat) is hurting your students' engagement in Lebanon, and how AI can instantly solve the problem with fresh, unique exercises.",
+  alternates: { canonical: "/blog/stop-recycled-exams" },
 };
 
 export default function BlogPostPage() {

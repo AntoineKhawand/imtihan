@@ -13,6 +13,7 @@ import { BlogRelated } from "@/components/blog/BlogRelated";
 export const metadata: Metadata = {
   title: "The Coordinator’s Secret: Standardizing Exam Quality | Imtihan Blog",
   description: "How educational coordinators in Lebanon can use AI to ensure consistent, high-quality assessments.",
+  alternates: { canonical: "/blog/exam-standardization" },
 };
 
 export default function CoordinatorsBlogPage() {

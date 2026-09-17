@@ -13,6 +13,7 @@ import { BlogRelated } from "@/components/blog/BlogRelated";
 export const metadata: Metadata = {
   title: "Complex Assessments Simplified: AI for University Exams | Imtihan Blog",
   description: "How university professors in Lebanon can streamline the creation of high-level assessments.",
+  alternates: { canonical: "/blog/university-assessment-ai" },
 };
 
 export default function UniversityBlogPage() {

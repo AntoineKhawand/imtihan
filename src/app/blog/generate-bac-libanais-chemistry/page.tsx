@@ -13,6 +13,7 @@ import { BlogRelated } from "@/components/blog/BlogRelated";
 export const metadata: Metadata = {
   title: "How to generate a Bac Libanais chemistry exam in 5 minutes | Imtihan Blog",
   description: "Learn how chemistry teachers in Lebanon can write comprehensive, curriculum-aligned Bac Libanais exam drafts and step-by-step correction keys using AI.",
+  alternates: { canonical: "/blog/generate-bac-libanais-chemistry" },
 };
 
 export default function BacLibanaisChemistryBlogPage() {
