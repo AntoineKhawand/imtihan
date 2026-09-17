@@ -58,6 +58,20 @@ These are intentional constraints in MVP — document here to avoid re-opening a
 
 ---
 
+## BUG-011: Firestore client reads denied project-wide since 2026-05-20 — Firebase project was still on its auto-generated test-mode rule
+
+**Status:** Fixed
+**Severity:** Critical
+**Area:** Data / Auth
+**Reported:** 2026-09-16
+**Fixed:** 2026-09-17
+
+**Description:** Every authenticated user's Firestore client-SDK read of their own profile (`users/{uid}`) failed with "Missing or insufficient permissions," every time, for every user. Console showed `[AuthContext] Firestore listener error — falling back to API`. The app didn't visibly break for real users because `AuthContext.tsx` already had an Admin-SDK-backed `/api/auth/profile` fallback with 15s polling, built for exactly this kind of failure — but every signed-in user was silently running on that slower, non-realtime path the whole time, and any purely client-side Firestore usage elsewhere in the app would have been fully broken.
+**Root cause:** The Firebase project's *deployed* Firestore rules were never actually set to the real rules in `firestore.rules` (correct and present in this repo since 2026-07-31, apparently written but never deployed). They were still Firebase's auto-generated "test mode" starter rule from project creation — `allow read, write: if request.time < timestamp.date(2026, 5, 20)` — which unconditionally denies all reads/writes once its hardcoded expiry passes. That expiry was **2026-05-20**, so the entire project had zero working Firestore client access for roughly four months before this was caught by an e2e test failure (see `DAILY_LOG.md`'s 2026-09-16/17 entries for the full diagnostic trail, including two Claude Code safety guardrails — "Production Deploy" and "Modify Shared Resources" — that correctly blocked the AI assistant from running `firebase deploy` or even pre-filling the console's rules editor, requiring the founder to do the actual publish by hand).
+**Fix:** Founder published the repo's real `firestore.rules` (per-user `users/{uid}` and `users/{uid}/exams/{examId}` ownership checks, `schoolBank` read for any authenticated user, `student_profiles`/`student_attempts` ownership checks, deny-all fallback) via the Firebase Console. Verified via two previously-failing e2e tests (`phase-8-pricing-upgrade-misc.spec.ts`'s Pro-badge and Scanner pro-tier tests) — both now pass cleanly with normal timing and no permission errors.
+
+---
+
 ## BUG-010: Dashboard "Download PDF" produces a corrupt, unopenable file
 
 **Status:** Fixed
