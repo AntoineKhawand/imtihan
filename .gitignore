@@ -61,5 +61,9 @@ tmp/
 scan-result.txt
 fix-git-lock.ps1
 
-# Claude Code local worktrees (subagent isolation) — never commit
-.claude/
+# Claude Code local-only state — never commit (subagent worktrees, machine-specific
+# permission overrides). .claude/agents/ and .claude/workflows/ are NOT listed here:
+# those are the shared team-subagent/workflow definitions referenced from CLAUDE.md
+# and must be tracked so anyone cloning the repo gets the same team setup.
+.claude/worktrees/
+.claude/settings.local.json

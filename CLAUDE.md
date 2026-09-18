@@ -213,3 +213,20 @@ If a request implies scope creep, flag it and point back to this section.
 - [ ] Mobile-responsive (breakpoint test at 375px, 768px, 1440px)
 - [ ] No console errors, no TypeScript errors (`npm run type-check`)
 - [ ] CLAUDE.md, ROADMAP.md, or BUGS.md updated if scope or state changed
+
+## 15. Multi-Agent Team Structure
+
+Work on this repo is split across four named subagents (`.claude/agents/*.md`), each with its own tool access and a fixed domain doc it reads/writes:
+
+| Team | Owns | Domain doc | Tools |
+|---|---|---|---|
+| `engineering` | App code, API routes, product features/bugs | `ROADMAP.md`, `BUGS.md` | Read/Edit/Write/Bash/Grep/Glob/WebSearch |
+| `seo-growth` | Technical SEO, GEO/AEO, indexing, Search Console data | `SEO_STRATEGY.md` | same + all `gsc` + `chrome-devtools` MCP tools |
+| `content-curriculum` | Blog content quality, curriculum data accuracy (`src/data/curricula/`) | `SEO_STRATEGY.md` (AEO/GEO sections) | Read/Edit/Write/Bash/Grep/Glob/WebSearch |
+| `qa` | Runs and verifies the e2e suite; never fixes what it finds | none (reports back to `engineering`) | Read/Bash/Grep/Glob |
+
+**Invoke one team directly** for single-domain work: the Agent tool's `subagent_type` field takes the team name (e.g. `subagent_type: "seo-growth"`).
+
+**For work that needs more than one team's input or a joint decision**, run the `team-sync` workflow (`.claude/workflows/team-sync.js`) instead of guessing which team owns it or asking teams to "discuss" informally — subagents don't have a standing chat with each other; `team-sync` is what makes cross-team coordination real: each named team investigates independently in parallel, then a coordinator agent synthesizes agreement, conflicts, and next steps. Pass `args: { task: "<the question>", teams: [...] }` (teams defaults to all four). The coordinator is instructed to flag — never fabricate — anything that's actually a business call (pricing, scope, launch timing) rather than a technical one; those still come back to the founder.
+
+Each team also has standing cross-team boundaries written into its own file (e.g. `engineering` won't silently override an SEO metadata decision `seo-growth` already made) — read a team's `.md` file before assuming what it will or won't touch.
