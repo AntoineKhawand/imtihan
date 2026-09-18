@@ -230,7 +230,7 @@ export default function ScannerPage() {
               <div className="lg:col-span-7">
                 <div className="h-full">
                   {loading ? (
-                    <div className="card h-full p-12 flex flex-col items-center justify-center text-center bg-white border-none shadow-2xl shadow-black/5 relative overflow-hidden">
+                    <div className="card h-full p-12 flex flex-col items-center justify-center text-center border-none shadow-2xl shadow-black/5 relative overflow-hidden">
                       {/* Background Gradients */}
                       <div className="absolute -top-24 -right-24 w-64 h-64 bg-amber-100/50 rounded-full blur-3xl animate-pulse" />
                       <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-indigo-100/50 rounded-full blur-3xl animate-pulse" />

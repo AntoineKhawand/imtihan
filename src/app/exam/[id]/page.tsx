@@ -203,12 +203,12 @@ export default function StudentExamPage() {
   return (
     <div className="min-h-screen bg-[var(--bg)] flex flex-col select-none" onContextMenu={(e) => e.preventDefault()}>
       {/* Header */}
-      <nav className="sticky top-0 z-50 h-16 bg-white/80 backdrop-blur-md border-b border-[var(--border)] px-6 flex items-center justify-between">
+      <nav className="sticky top-0 z-50 h-16 bg-[var(--surface)]/80 backdrop-blur-md border-b border-[var(--border)] px-6 flex items-center justify-between">
         <Logo size={24} />
         <div className="flex items-center gap-4">
           <div className={cn(
             "flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold tabular-nums transition-colors",
-            timeLeft < 300 ? "bg-red-50 text-red-600 animate-pulse" : "bg-gray-100 text-gray-700"
+            timeLeft < 300 ? "bg-red-50 text-red-600 animate-pulse" : "bg-[var(--bg-subtle)] text-[var(--text-secondary)]"
           )}>
             <Clock size={16} />
             {Math.floor(timeLeft / 60)}:{String(timeLeft % 60).padStart(2, '0')}
@@ -260,7 +260,7 @@ export default function StudentExamPage() {
               <h2 className="serif text-2xl text-[var(--text)]">Exercise {idx + 1}</h2>
               <span className="text-xs font-bold text-[var(--text-tertiary)] uppercase tracking-widest">{ex.points} Points</span>
             </div>
-            <div className="prose prose-imtihan max-w-none text-[var(--text)] bg-white p-8 rounded-3xl border border-[var(--border)] shadow-sm">
+            <div className="prose prose-imtihan max-w-none text-[var(--text)] bg-[var(--surface)] p-8 rounded-3xl border border-[var(--border)] shadow-sm">
               <div dangerouslySetInnerHTML={{ __html: renderContent(ex.statement) }} />
               
               {ex.subQuestions && ex.subQuestions.length > 0 && (

@@ -260,7 +260,7 @@ export default function AnalyticsPage() {
               </motion.div>
 
               {/* Distribution Graph */}
-              <div className="lg:col-span-8 card p-10 bg-white border-none shadow-2xl shadow-black/5 rounded-[2.5rem]">
+              <div className="lg:col-span-8 card p-10 border-none shadow-2xl shadow-black/5 rounded-[2.5rem]">
                 <div className="flex items-center justify-between mb-10">
                   <div>
                     <h3 className="serif text-2xl text-[var(--text)] mb-1">Difficulty Trends</h3>
@@ -315,7 +315,7 @@ export default function AnalyticsPage() {
             </div>
 
             {/* Detailed Breakdown */}
-            <div className="card overflow-hidden bg-white border-none shadow-2xl shadow-black/5 rounded-[2.5rem]">
+            <div className="card overflow-hidden border-none shadow-2xl shadow-black/5 rounded-[2.5rem]">
               <div className="p-8 border-b border-[var(--border)] flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gradient-to-r from-emerald-50/30 to-white">
                 <div>
                   <h3 className="serif text-2xl text-[var(--text)] mb-1 flex items-center gap-3">
