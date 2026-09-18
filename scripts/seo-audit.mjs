@@ -7,7 +7,7 @@
  * structure, Open Graph tags, image alt text, and internal links that 404.
  *
  * Usage: node scripts/seo-audit.mjs [baseUrl]
- *   Defaults to https://www.imtihan.live. Pass http://localhost:3005 to
+ *   Defaults to https://imtihan.live. Pass http://localhost:3005 to
  *   audit a local dev server instead.
  *
  * Writes SEO_AUDIT_REPORT.md (overwritten each run) and exits non-zero if

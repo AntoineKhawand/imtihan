@@ -11,7 +11,7 @@
  * structural signals we can actually act on).
  *
  * Usage: node scripts/geo-audit.mjs [baseUrl]
- *   Defaults to https://www.imtihan.live. Pass http://localhost:3005 to
+ *   Defaults to https://imtihan.live. Pass http://localhost:3005 to
  *   audit a local dev server instead.
  *
  * Writes GEO_AUDIT_REPORT.md (overwritten each run), weakest posts first.
@@ -82,7 +82,7 @@ function scoreArticle(document) {
   const text = textOf(article);
   const wordCount = text ? text.split(/\s+/).filter(Boolean).length : 0;
 
-  const origin = new URL(document.baseURI ?? "https://www.imtihan.live").origin;
+  const origin = new URL(document.baseURI ?? "https://imtihan.live").origin;
   const links = [...article.querySelectorAll("a[href]")];
   const externalLinks = links.filter((a) => {
     try {

@@ -4,7 +4,7 @@
 // what a browser or crawler would actually see.
 import { JSDOM } from "jsdom";
 
-export const DEFAULT_BASE_URL = "https://www.imtihan.live";
+export const DEFAULT_BASE_URL = "https://imtihan.live";
 
 /**
  * Reads the live sitemap.xml and returns every <loc> URL in it. This is the

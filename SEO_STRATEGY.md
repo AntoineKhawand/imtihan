@@ -74,7 +74,40 @@ keep each change reviewable and low-risk for an unattended push.
       Vercel's production env is set to `https://imtihan.live` (not `www`), since that env var
       overrides the code fallback.
 - [ ] Add `og:image` / `twitter:image` metadata to the 4 curricula landing pages — currently only
-      the homepage (`page.tsx`) has an explicit `openGraph.images` entry.
+      the homepage (`page.tsx`) has an explicit `openGraph.images` entry. **Update 2026-09-18:**
+      today's production `audit:seo` run shows this gap is wider than "4 curricula pages" —
+      35 of 48 sitemap URLs are missing `og:image` (every blog post plus `/pricing`, `/about`,
+      `/generateur-examen-bac-libanais`, etc.). Worth a template-level default `og:image` fallback
+      rather than a per-page fix.
+- [x] **2026-09-18** — Fixed stale `www` defaults left over from the apex migration
+      (`7c6032c`): `scripts/lib/site-pages.mjs`'s `DEFAULT_BASE_URL`, `scripts/geo-audit.mjs`'s
+      header comment + internal `document.baseURI` fallback, and `scripts/seo-audit.mjs`'s header
+      comment all still said `https://www.imtihan.live`. Until fixed, `npm run audit:seo` would
+      request `www`, follow Vercel's now-clean 308 to apex, then compare the *apex* page's
+      `<link rel="canonical">` against the *www* URL it originally requested — a guaranteed
+      canonical-mismatch false positive on every single page. All three now default to
+      `https://imtihan.live`.
+- [x] **2026-09-18** — Re-ran both audits against the live production apex (not localhost) after
+      the founder fixed Vercel's dashboard domain settings (apex is now Production, `www` does a
+      single clean 308). `npm run audit:seo`: 48/48 sitemap URLs fetched successfully, **0
+      FAIL-severity issues, 0 broken internal links, and — critically — 0 canonical-mismatch
+      warnings across all 48 pages** (this is the check the stale `www` default was silently
+      breaking; confirms canonical tags render correctly against the real domain now). Only
+      warn/info-level findings remain: meta-description length on `/about` (183 chars, over the
+      165 ideal) and the pre-existing `og:image` gap noted above. `npm run audit:geo`: all 36 blog
+      posts scored successfully (no fetch failures), average 44/100 — unchanged from what's
+      expected given no blog-body content changes; confirms the domain fix didn't break anything
+      GEO-side either. Full reports regenerated at `SEO_AUDIT_REPORT.md` / `GEO_AUDIT_REPORT.md`
+      (both gitignored, not committed).
+- [ ] **GSC follow-up on the 2026-09-18 www→apex domain fix — not completed this run.** This
+      session's tool access did not include the `gsc` MCP tools needed to run URL Inspection /
+      request re-crawl or pull the Coverage report, so the following from the founder's brief is
+      still outstanding and should be picked up by a run with `gsc` tool access: (1) URL-inspect
+      and request re-crawl on the homepage and the 3 newly-linked curricula pages
+      (`/ib-exam-generator`, `/bac-francais-exam-generator`, `/generateur-examen-bac-libanais`);
+      (2) check GSC Coverage for a "Redirect error" spike on 2026-09-18 (the hours the www/apex
+      redirect loop was live) so it reads as a resolved transient blip, not an ongoing issue, in
+      any future audit of this data.
 
 ### AEO / GEO — done
 - [x] **2026-09-01** — Added `FAQPage` JSON-LD + visible Q&A (`LandingFAQ`) to all 4 curricula
@@ -99,8 +132,9 @@ academic benchmark pipeline, not a tool):
   `GEO_AUDIT_REPORT.md`, weakest posts first, plus a "site-wide gaps" section for anything every
   single post is missing (worth a template-level fix rather than post-by-post).
 
-Both default to `https://www.imtihan.live`; pass `http://localhost:3000` (matching whatever port
-`NEXT_PUBLIC_APP_URL` in `.env.local` currently points at) to audit a local dev server instead.
+Both default to `https://imtihan.live` (the apex — canonical since 2026-09-18); pass
+`http://localhost:3000` (matching whatever port `NEXT_PUBLIC_APP_URL` in `.env.local` currently
+points at) to audit a local dev server instead.
 
 ## Noted while working (not fixed today — out of Tuesday's scope)
 
