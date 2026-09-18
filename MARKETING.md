@@ -72,3 +72,163 @@
   3. **A tiered structure** (e.g., a distinct "100/mo" tier priced above the current $5.99–3.99 Pro tier, keeping 10/20 as the entry Pro tier) — resolves the mismatch by making both numbers real, but is the most product/pricing work of the three options.
 
   Marketing's position: whichever number is chosen, we'll make all six surfaces (2 page bodies, 2 metadata objects, 2 FAQ blocks — one of each per page) say the same thing before this is closed out — but the number itself needs the founder's sign-off first.
+
+  **READY-TO-SHIP DIFFS — drafted 2026-09-19, NOT applied, no option picked.** All three resolution paths from the options memo above, pre-written so whichever one the founder signs off on ships same-day. Apply only the block matching the chosen option; discard the other two. Every `old_string`/`new_string` pair below is copy-paste-ready for the `Edit` tool against the current file contents (verified against the repo on 2026-09-19).
+
+  ---
+
+  ### Option 1 — Confirm 10/20 is final, sweep the remaining "100" instances to match
+
+  Smallest diff. Both page bodies and `/upgrade`'s FAQ already say 10/20 and match the enforced backend limit (`MONTHLY_LIMITS.pro = 10`, `proLimit = yearly ? 20 : 10` in `src/app/api/generate/route.ts` — untouched in this option). Only 3 stale "100" spots need fixing:
+
+  **File: `src/app/pricing/layout.tsx`**
+  ```
+  old_string:
+    description: "Imtihan Pro à partir de $5.99/mois. 100 examens par mois, toutes les matières, corrigé inclus. Paiement via WhatsApp. Commencez gratuitement avec 1 examen.",
+  new_string:
+    description: "Imtihan Pro à partir de $5.99/mois. 10 examens par mois (20 avec l'abonnement annuel), toutes les matières, corrigé inclus. Paiement via WhatsApp. Commencez gratuitement avec 1 examen.",
+  ```
+  ```
+  old_string:
+    description: "$5.99/mois ou $47.88/an pour générer 100 examens par mois. Sans carte bancaire, paiement WhatsApp.",
+  new_string:
+    description: "$5.99/mois pour générer 10 examens par mois, ou $47.88/an pour 20 examens par mois. Sans carte bancaire, paiement WhatsApp.",
+  ```
+
+  **File: `src/app/pricing/page.tsx`** (`PRICING_FAQ_ITEMS[1]`)
+  ```
+  old_string:
+    a: "$5.99 per month, or $3.99 per month billed yearly ($47.88/year). Both plans include 100 exams per month with corrigés included.",
+  new_string:
+    a: "$5.99 per month for 10 exams per month, or $3.99 per month billed yearly ($47.88/year) for 20 exams per month. Corrigés included on both plans.",
+  ```
+
+  **File: `src/app/upgrade/layout.tsx`**
+  ```
+  old_string:
+    description: "Unlock 100 exams per month. Pay via WHISH Money in Lebanon. Instant activation for Bac Libanais, Brevet, and school exams.",
+  new_string:
+    description: "Unlock 10 exams per month, or 20 with the yearly plan. Pay via WHISH Money in Lebanon. Instant activation for Bac Libanais, Brevet, and school exams.",
+  ```
+
+  No other files touched in this option — `/upgrade`'s FAQ, both page bodies, and the backend limit are already correct.
+
+  ---
+
+  ### Option 2 — Raise the real enforced limit to 100/month, update all copy to match
+
+  This is a backend/unit-economics change (`src/app/api/generate/route.ts`), not just copy — flagging again that the number itself is the founder's call, not marketing's. Drafted here only so the copy side is ready the same day engineering flips the backend constant. **One sub-decision this option doesn't resolve on its own: the pre-existing stale "100" copy never differentiated monthly vs. yearly (it said "100" for both) — the diff below preserves that as the smallest-change assumption. If the founder wants the yearly plan to keep a bonus above 100 (e.g. 100/150), the backend `proLimit` line and the copy below both need a second pass — flagging, not deciding.**
+
+  **File: `src/app/api/generate/route.ts`** (engineering's file — included here only so the copy change has a paired backend reference; marketing is not applying this)
+  ```
+  old_string:
+    const MONTHLY_LIMITS = { free: 1, pro: 10 } as const;
+  new_string:
+    const MONTHLY_LIMITS = { free: 1, pro: 100 } as const;
+  ```
+  ```
+  old_string:
+    const proLimit = userData.planType === "yearly" ? 20 : MONTHLY_LIMITS.pro;
+  new_string:
+    const proLimit = MONTHLY_LIMITS.pro; // yearly no longer gets a separate bonus limit — both plans are 100/mo. Revisit if founder wants a yearly-only bump instead.
+  ```
+
+  **File: `src/app/pricing/page.tsx`**
+  ```
+  old_string:
+  // Exam-count copy must match the limits actually enforced in
+  // /api/generate/route.ts (MONTHLY_LIMITS.pro = 10, or 20 on the yearly
+  // plan) — this page previously said "100 exams per month" for both,
+  // which the backend has never allowed.
+  function getFeaturesPro(yearly: boolean): string[] {
+    return [
+      `${yearly ? 20 : 10} exams per month`,
+  new_string:
+  // Exam-count copy must match the limit actually enforced in
+  // /api/generate/route.ts (MONTHLY_LIMITS.pro = 100, same on monthly
+  // and yearly billing — raised from 10/20 on <date applied>, founder call).
+  function getFeaturesPro(yearly: boolean): string[] {
+    return [
+      `100 exams per month`,
+  ```
+  (the `yearly` parameter becomes unused for this string once both plans match — leave the parameter in place since other parts of the component still branch on it for price display; don't strip it just to silence an unused-var-in-string smell)
+
+  **File: `src/app/pricing/layout.tsx`** — no change needed; the stale "100 examens par mois" copy already matches the new real number. Leave as-is (but re-verify after applying, in case wording elsewhere on the page still implies a monthly/yearly split).
+
+  **File: `src/app/pricing/page.tsx`** (`PRICING_FAQ_ITEMS[1]`) — no change needed; already says "100 exams per month."
+
+  **File: `src/app/upgrade/page.tsx`**
+  ```
+  old_string:
+    "10 exams/mo · 20 with yearly plan",
+  new_string:
+    "100 exams per month",
+  ```
+  ```
+  old_string:
+    10 exams/month (20 with yearly plan). Pay via WHISH Money, get instant access. No auto-renewals.
+  new_string:
+    100 exams/month, both plans. Pay via WHISH Money, get instant access. No auto-renewals.
+  ```
+
+  **File: `src/app/upgrade/layout.tsx`** — no change needed; the stale "Unlock 100 exams per month" copy already matches. Leave as-is.
+
+  **File: `src/app/upgrade/layout.tsx`** (`UPGRADE_FAQ_ITEMS[1]`)
+  ```
+  old_string:
+    a: "10 exams per month on the monthly plan, or 20 exams per month on the yearly plan — each with its corrigé included.",
+  new_string:
+    a: "100 exams per month on both the monthly and yearly plans — each with its corrigé included.",
+  ```
+
+  ---
+
+  ### Option 3 — Tiered structure (new higher tier alongside the current 10/20 Pro tier)
+
+  This is the one option that genuinely cannot ship as a same-day copy diff — it requires a new pricing card, a new plan identifier in the backend/Stripe-or-WHISH flow, and a name + price for the new tier, none of which exist in code today. What follows is a copy *skeleton* only, so the wording is ready the moment product/engineering defines the missing pieces (tier name, price, exact limit — none of which marketing is deciding here).
+
+  **Undetermined inputs this option needs before the skeleton below can become a real diff:** tier name (placeholder `[TIER NAME]` used below), tier price (placeholder `[PRICE]`), and confirmation that 100/mo is still the right number for it (memo assumed so, not re-litigated here).
+
+  Skeleton FAQ addition (for `PRICING_FAQ_ITEMS` and/or `UPGRADE_FAQ_ITEMS`, wherever the new tier is surfaced):
+  ```
+  {
+    q: "Is there a higher-volume plan than Pro?",
+    a: "Yes — [TIER NAME] includes 100 exams per month for [PRICE], for teachers or departments generating at high volume. Pro remains 10 exams per month (20 with the yearly plan) at $5.99/$3.99.",
+  },
+  ```
+  Skeleton pricing-card blurb (for wherever `getFeaturesPro()` / `PRO_FEATURES` render — a third card, not a rewrite of the existing Pro card):
+  ```
+  const FEATURES_[TIER_NAME] = [
+    "100 exams per month",
+    "All curricula & subjects",
+    "Corrigé included per exam",
+    "Word + PDF export",
+    "Saved exam library",
+    "Community exam library",
+    "Priority [whatever differentiates this tier — TBD]",
+  ];
+  ```
+  Existing Pro-tier copy (both pages, all surfaces) is untouched in this option — it stays correctly at 10/20, which is already true today. Only new surfaces are added.
+
+  ---
+
+  Log: this drafting pass touched no files — MARKETING.md only. No option applied, no number picked. Whoever the founder assigns to execute should re-verify each `old_string` against the live file first (`Edit` will fail loudly if the file has drifted since 2026-09-19), then run `npm run type-check` after applying.
+
+- **2026-09-19 (marketing team, team-sync EOD check-in)**: Found and fixed one fabricated-usage claim the 2026-09-18 sweep missed because it lives inside a `content-curriculum`-owned route (`src/app/blog/[slug]/page.tsx`) rather than a marketing-owned page — but the specific block is the shared "Get Started Free" sidebar CTA card, which `CLAUDE.md` §15 / this file's scope note explicitly carves out as marketing's regardless of which team owns the surrounding page. The card read "Join Lebanese teachers using AI to create professional assessments in minutes" — same category as the already-fixed "Join 1,000+ Lebanese teachers" and "Join thousands of educators" claims (implies an existing user base pre-launch). Changed to "Describe your exam, get a polished Word and PDF exam plus corrigé in minutes." — same CTA strength, zero borrowed social proof. Grepped for the same `Join (Lebanese|thousands|hundreds|\d)` / "teachers already/currently using" pattern site-wide afterward — no further instances found. `npm run type-check` not re-run for this single-string change (no logic touched, same as prior single-string fixes in this log).
+
+- **2026-09-19 (marketing team, shared blog-component audit — prompted by the unsupervised `blog-auto-publish` cron)**: Read every component under `src/components/blog/` (`BlogAuthor`, `BlogRelated`, `BlogShare`, `BlogProgressBar`, `BlogCalculator`, `BlogTableOfContents`, `BlogCallout`, `BlogFAQ`) plus every call site under `src/app/blog/` and the cron route itself (`src/app/api/cron/blog-auto-publish/route.ts`), looking for the same category of fabricated/unverifiable claim as the 2026-09-18 sweep.
+
+  **Found and fixed (component-level, in scope for this team — applies to every past and future post automatically):**
+  - `src/components/blog/BlogAuthor.tsx` — every byline unconditionally rendered a blue "VERIFIED EDUCATOR" badge with a checkmark icon, regardless of who was passed in. There is no verification process anywhere in this pre-launch product, so the badge was false on every single post that has ever used this component — including the cron-generated ones, which `src/app/api/cron/blog-auto-publish/route.ts:96` always attributes to `"Imtihan AI Assistant"` (an AI is not an educator, verified or otherwise; the badge was self-contradictory nonsense on those posts specifically). This is the clearest instance of the risk described in tonight's task: a fabricated trust signal baked into a shared component, multiplying across every future post nobody manually reviews. Removed the badge entirely (and the now-unused `CheckCircle2` import); byline still shows name, role, and bio, just without the fake credential stamp. Verified with `npm run type-check`, clean.
+
+  **Found, NOT fixed — flagging for `content-curriculum` (out of this team's file scope, same fabrication category):**
+  - Every static post under `src/app/blog/*/page.tsx` (9 files: `save-time-teaching`, `generate-bac-francais-devoir`, `stop-recycled-exams`, `ib-mark-scheme-generator`, `generate-bac-libanais-chemistry`, `university-assessment-ai`, `lebanese-teachers-ai-exam-generator`, `exam-standardization`, `guide-for-parents`) passes `BlogAuthor` a fully invented named persona with a fabricated professional biography — e.g. "Samer Haddad, Mathematics Teacher... 10 years of experience," "Dr. Karim Zein, University Professor... Lebanon's top universities for over a decade," "Rania El-Khoury, Chemistry Department Head... 15 years," "Jean-Pierre Saadeh, Director of Academics... 20 years" (reused verbatim on two different posts), plus five more. None of these people exist; pre-launch, there is no one at Imtihan these bios could correspond to. Same category as the already-fixed "Prof. Khalil" testimonials from the 2026-09-18 sweep, just as an author byline instead of a pull-quote. Several of these posts also use `BlogCallout` (a "Teacher's Tip" / "Coordinator's Tip" / "Parent's Tip" block, rendered in a semantic `<blockquote>` specifically so it reads as a real first-person quotation — see the component's own code comment) with fabricated first-person anecdotes ("I used to spend my entire Sunday morning...", "I implemented Imtihan for all Grade 12 sections...") that, again, nobody pre-launch actually said.
+  - **Why not fixed directly:** `BlogCallout.tsx` and the persona names/bios live inside `src/app/blog/*/page.tsx` — page *content*, which `CLAUDE.md` §15 and this file's own "Out of scope" section assign to `content-curriculum`, not marketing. Tonight's task scope was explicitly the shared components under `src/components/blog/`; the `BlogAuthor.tsx` fix above is squarely that. The fictional personas and callout quotes are the same violation *category* but live in files outside that boundary, so flagging rather than editing, per this team's standing cross-team rule (don't touch another team's owned files without a `team-sync`).
+  - Posted to `TEAM_CHAT.md` for `content-curriculum`'s attention.
+
+  **Checked, no issue found (same standard, nothing to report):**
+  - `BlogRelated.tsx` — hardcoded list of real, existing post slugs/titles/categories; no counts or claims, just internal navigation. Clean.
+  - `BlogShare.tsx` — share/copy-link buttons only, no copy claims. Clean.
+  - `BlogProgressBar.tsx`, `BlogTableOfContents.tsx` — pure UI/scroll utilities, no copy at all. Clean.
+  - `BlogFAQ.tsx` — a generic Q&A renderer; the component itself makes no claims (content is supplied per-post via `items` prop and wasn't in scope tonight since it's page content, not component content).
+  - `BlogCalculator.tsx` — an interactive "time saved" estimator with clearly-named, code-commented assumption variables (`hoursPerExam = 3 // Estimated manual time per exam`, `timeWithImtihan = 0.5`). This computes a projection from a user-adjustable input, not a fabricated fixed stat presented as fact — judged not to be the same violation category as a fake user count or testimonial. Flagging only for transparency, not treated as a violation, consistent with how the 2026-09-18 sweep treated ordinary puffery/estimates it chose not to touch.
