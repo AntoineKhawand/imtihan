@@ -16,7 +16,7 @@ const ABOUT_FAQ_ITEMS = [
   },
   {
     q: "Which curricula and languages does Imtihan support?",
-    a: "Bac Libanais (aligned with CRDP), Bac Français (the French Lycée / AEFE system), and the International Baccalaureate (IB DP/MYP). Teachers can describe what they need in French, English, or Arabic.",
+    a: "Bac Libanais (aligned with CRDP), Bac Français (the French Lycée / AEFE system), and the International Baccalaureate (IB DP/MYP). Teachers can describe what they need in French or English.",
   },
   {
     q: "Does the AI replace a teacher's professional judgment?",
@@ -80,7 +80,7 @@ export default function AboutPage() {
               Traditional workflows often involve manually scouring decades of past papers (known in Lebanon as *Dawrat*), copying text, translating physical curriculum handouts, and hand-writing full correction guides. If a coordinator rejects an exercise, or if a teacher wants to make Version A and Version B to prevent student cheating, the cycle starts all over again.
             </p>
             <p>
-              We built Imtihan to bridge this gap. By utilizing advanced, curriculum-aligned artificial intelligence, Imtihan allows teachers to describe what they want in plain French, English, or Arabic. The system generates high-fidelity questions, formatted matrices, and step-by-step marking schemes (*corrigés*) in under 30 seconds.
+              We built Imtihan to bridge this gap. By utilizing advanced, curriculum-aligned artificial intelligence, Imtihan allows teachers to describe what they want in plain French or English. The system generates high-fidelity questions, formatted matrices, and step-by-step marking schemes (*corrigés*) in under 30 seconds.
             </p>
           </div>
 
@@ -124,7 +124,7 @@ export default function AboutPage() {
                 </div>
                 <h3 className="font-semibold text-[var(--text)] text-sm">Lebanese Rooted</h3>
                 <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
-                  Specifically tailored to support the unique constraints of Lebanese schools, local subjects, trilingual demands, and offline printing requirements.
+                  Specifically tailored to support the unique constraints of Lebanese schools, local curricula, bilingual (French/English) demands, and offline printing requirements.
                 </p>
               </div>
             </div>
@@ -132,7 +132,7 @@ export default function AboutPage() {
 
           {/* Quick CTA */}
           <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-subtle)] p-8 text-center space-y-5">
-            <h3 className="serif text-xl text-[var(--text)] font-semibold">Join thousands of educators transforming their workload</h3>
+            <h3 className="serif text-xl text-[var(--text)] font-semibold">Be among the first to transform your workload</h3>
             <p className="text-xs text-[var(--text-secondary)] max-w-md mx-auto">
               Register for free today, generate your first fully-structured exam with its correction key, and export it directly to Word.
             </p>

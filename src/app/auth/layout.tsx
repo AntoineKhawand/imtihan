@@ -42,7 +42,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
           <div className="space-y-4">
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/[0.06] border border-white/[0.1] text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-400">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              Trusted by Lebanese educators
+              Built for Lebanese educators
             </div>
             <h2 className="serif text-4xl xl:text-5xl font-normal text-white leading-[1.1] tracking-tight">
               Generate exams<br />
@@ -73,26 +73,20 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
           </div>
         </div>
 
-        {/* Bottom: Testimonial */}
+        {/* Bottom: Founder note */}
         <div className="relative z-10">
           <div className="p-6 rounded-2xl bg-white/[0.04] border border-white/[0.08] backdrop-blur-sm">
-            <div className="flex gap-0.5 mb-3">
-              {[0, 1, 2, 3, 4].map((i) => (
-                <svg key={i} viewBox="0 0 12 12" className="w-3 h-3 text-amber-400 fill-amber-400">
-                  <path d="M6 1l1.3 2.7 3 .4-2.2 2.1.5 3L6 7.8 3.4 9.2l.5-3L1.7 4.1l3-.4z" />
-                </svg>
-              ))}
-            </div>
             <p className="text-[13px] text-white/60 leading-relaxed italic mb-4">
-              "Imtihan saved me hours every week. The questions match exactly what my students need for the Bac."
+              "I built Imtihan to give teachers back the hours they lose formatting exams and writing
+              corrigés by hand — grounded in real curriculum data, not a generic AI wrapper."
             </p>
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-full bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-bold text-[10px]">
-                PK
+                IM
               </div>
               <div>
-                <p className="text-[12px] font-semibold text-white/80">Prof. Khalil</p>
-                <p className="text-[11px] text-white/30">Lycée Français de Beyrouth</p>
+                <p className="text-[12px] font-semibold text-white/80">The Imtihan team</p>
+                <p className="text-[11px] text-white/30">Bsabba, Lebanon</p>
               </div>
             </div>
           </div>

@@ -71,7 +71,7 @@ export function LandingPricing({ isAuthenticated }: { isAuthenticated?: boolean 
         </div>
 
         {/* Cards */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 items-stretch">
+        <div className="grid md:grid-cols-2 gap-8 items-stretch max-w-3xl mx-auto">
           {/* Free Tier */}
           <div className="group relative flex flex-col p-8 md:p-10 rounded-[2rem] bg-[var(--surface)] border border-[var(--border)] hover:border-[var(--border-strong)] transition-all duration-500 hover:shadow-[0_20px_50px_-20px_rgba(0,0,0,0.08)]">
             <div className="mb-8">
@@ -154,44 +154,6 @@ export function LandingPricing({ isAuthenticated }: { isAuthenticated?: boolean 
               className="w-full flex items-center justify-center gap-2 h-12 rounded-2xl bg-[var(--accent)] text-white text-sm font-bold hover:bg-[var(--accent)]/90 hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 shadow-lg shadow-[var(--accent)]/20"
             >
               Get Pro Access <ArrowRight size={16} />
-            </Link>
-          </div>
-
-          {/* School Tier */}
-          <div className="group relative flex flex-col p-8 md:p-10 rounded-[2rem] bg-[var(--surface)] border border-[var(--border)] hover:border-[var(--border-strong)] transition-all duration-500 hover:shadow-[0_20px_50px_-20px_rgba(0,0,0,0.08)]">
-            <div className="mb-8">
-              <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--text-tertiary)] mb-4 block">Institutions</span>
-              <div className="flex items-baseline gap-2">
-                <span className="text-sm font-medium text-[var(--text-tertiary)]">From</span>
-                <span className="serif text-5xl font-normal text-[var(--text)]">$3.99</span>
-                <span className="text-sm text-[var(--text-secondary)]">/teacher/mo</span>
-              </div>
-              <p className="text-xs text-[var(--text-tertiary)] mt-1">Typically $40–$120/mo for 10–30 teachers</p>
-              <p className="text-sm text-[var(--text-secondary)] mt-2">Tailored for entire schools</p>
-            </div>
-
-            <ul className="space-y-4 mb-10 flex-1">
-              {[
-                "Bulk teacher licenses",
-                "Centralized administration",
-                "Custom school headers",
-                "Shared question database",
-                "Onboarding & training",
-              ].map((f) => (
-                <li key={f} className="flex items-start gap-3 text-sm text-[var(--text-secondary)]">
-                  <div className="mt-1 w-4 h-4 rounded-full bg-[var(--bg-subtle)] border border-[var(--border)] text-[var(--text-tertiary)] flex items-center justify-center flex-shrink-0">
-                    <Check size={10} strokeWidth={3} />
-                  </div>
-                  {f}
-                </li>
-              ))}
-            </ul>
-
-            <Link
-              href="/contact"
-              className="w-full flex items-center justify-center gap-2 h-12 rounded-2xl border border-[var(--border)] text-sm font-semibold text-[var(--text)] hover:bg-[var(--bg-subtle)] hover:border-[var(--border-strong)] active:scale-[0.98] transition-all duration-300"
-            >
-              Contact Sales
             </Link>
           </div>
         </div>

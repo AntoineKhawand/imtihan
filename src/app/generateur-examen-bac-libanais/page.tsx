@@ -26,12 +26,12 @@ const FEATURES = [
   {
     icon: GraduationCap,
     title: "Toutes les Sections Libanaises",
-    body: "Prise en charge complète du Brevet (EB9) et des quatre branches du Baccalauréat Libanais (Terminale SG, SV, SE et LH). Sciences, maths, histoire-géo, philosophie..."
+    body: "Prise en charge du Brevet (EB9) et des quatre branches du Baccalauréat Libanais (Terminale SG, SV, SE et LH), avec un focus sur les mathématiques, la physique et la chimie."
   },
   {
     icon: BookOpen,
-    title: "Soutien du Français, Anglais et Arabe",
-    body: "Concevez vos exercices en français ou en anglais pour les sciences (Maths, Physique, Chimie, SVT) et en arabe littéraire pour les matières littéraires et d'histoire-géographie."
+    title: "Soutien du Français et de l'Anglais",
+    body: "Concevez vos exercices de Mathématiques, Physique et Chimie en français ou en anglais, selon la langue d'enseignement de votre classe."
   },
   {
     icon: Printer,
@@ -47,7 +47,7 @@ const BAC_LIBANAIS_FAQ_ITEMS = [
   },
   {
     q: "Dans quelles langues puis-je générer mes examens ?",
-    a: "Vous pouvez générer vos exercices en français ou en anglais pour les matières scientifiques (Mathématiques, Physique, Chimie, SVT), et en arabe littéraire pour l'histoire-géographie et les matières littéraires.",
+    a: "Vous pouvez générer vos exercices en français ou en anglais pour les matières scientifiques : Mathématiques, Physique et Chimie.",
   },
   {
     q: "Le corrigé est-il inclus automatiquement ?",
@@ -128,7 +128,7 @@ export default function BacLibanaisLanding() {
             </h1>
 
             <p className="text-base text-[var(--text-secondary)] max-w-xl mx-auto leading-relaxed">
-              Dites adieu aux heures passées à recopier d'anciennes Dawrat. Rédigez votre consigne ou déposez vos cours, et Imtihan crée des exercices de physique, chimie, SVT ou mathématiques conformes aux exigences officielles libanaises.
+              Dites adieu aux heures passées à recopier d'anciennes Dawrat. Rédigez votre consigne ou déposez vos cours, et Imtihan crée des exercices de mathématiques, physique ou chimie conformes aux exigences officielles libanaises.
             </p>
 
             <div className="pt-4 flex flex-col sm:flex-row justify-center gap-3">
@@ -177,19 +177,19 @@ export default function BacLibanaisLanding() {
             <div className="border border-[var(--border)] rounded-2xl p-6 bg-[var(--surface)] space-y-3">
               <h3 className="font-serif text-lg font-bold text-[var(--accent)]">Terminale SG / SV</h3>
               <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
-                Génération de problèmes complexes en Analyse, Géométrie, Mécanique Newtonienne, Électricité, Chimie Organique, Génétique et SVT.
+                Génération de problèmes complexes en Analyse, Géométrie, Mécanique Newtonienne, Électricité et Chimie Organique.
               </p>
             </div>
             <div className="border border-[var(--border)] rounded-2xl p-6 bg-[var(--surface)] space-y-3">
               <h3 className="font-serif text-lg font-bold text-[var(--accent)]">Terminale SE / LH</h3>
               <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
-                Exercices adaptés en Statistiques, Probabilités simples, Économie de marché libanaise, Sociologie et philosophie libanaise officielle.
+                Exercices adaptés en Statistiques et Probabilités simples — la partie mathématique du programme SE / LH.
               </p>
             </div>
             <div className="border border-[var(--border)] rounded-2xl p-6 bg-[var(--surface)] space-y-3">
               <h3 className="font-serif text-lg font-bold text-[var(--accent)]">Brevet Libanais (EB9)</h3>
               <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
-                Questions d'entraînements classiques en Algèbre, Théorème de Thalès/Pythagore, Physique (Optique/Forces), Chimie des solutions et SVT.
+                Questions d'entraînements classiques en Algèbre, Théorème de Thalès/Pythagore, Physique (Optique/Forces) et Chimie des solutions.
               </p>
             </div>
           </div>

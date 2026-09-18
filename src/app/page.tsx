@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   alternates: { canonical: "/" },
   openGraph: {
     title: "Imtihan — AI Exam Generator for Teachers in Lebanon",
-    description: "Describe your exam in French, English, or Arabic. Imtihan generates questions and a full corrigé in seconds. Bac Libanais · Bac Français · IB · University.",
+    description: "Describe your exam in French or English. Imtihan generates questions and a full corrigé in seconds. Bac Libanais · Bac Français · IB · University.",
     url: "https://imtihan.live",
     images: [{ url: "/opengraph-image", width: 1200, height: 630, alt: "Imtihan — AI Exam Generator" }],
   },
@@ -23,10 +23,6 @@ import {
   ChevronRight,
   Star,
   FlaskConical,
-  BookMarked,
-  TrendingUp,
-  GraduationCap,
-  Sparkles,
 } from "lucide-react";
 import { MotionHero, MotionStats, MotionHowItWorks, MotionStreamingPreview } from "@/components/landing/LandingMotion";
 import { LandingPricing } from "@/components/landing/LandingPricing";
@@ -37,8 +33,8 @@ import { PublicFooter } from "@/components/layout/PublicFooter";
 
 const STATS = [
   { value: "4",   label: "Curricula",  sub: "Bac Libanais · Bac Français · IB · Université" },
-  { value: "32",  label: "Subjects",   sub: "Sciences · Humanités · Langues · Gestion" },
-  { value: "3",   label: "Languages",  sub: "Français · English · العربية" },
+  { value: "3",   label: "Subjects",   sub: "Math · Physics · Chemistry" },
+  { value: "2",   label: "Languages",  sub: "Français · English" },
   { value: "∞",   label: "Exercises",  sub: "Each one verified & unique" },
 ];
 
@@ -47,25 +43,7 @@ const SUBJECT_CATEGORIES = [
     Icon: FlaskConical,
     label: "Sciences",
     color: "text-emerald-600 bg-emerald-50",
-    subjects: ["Mathématiques", "Physique", "Chimie", "Biologie", "SVT", "Informatique", "NSI", "Environnement"],
-  },
-  {
-    Icon: BookMarked,
-    label: "Humanités & Langues",
-    color: "text-violet-600 bg-violet-50",
-    subjects: ["Histoire-Géo", "Philosophie", "Arabe", "Français", "Anglais", "Espagnol", "Allemand"],
-  },
-  {
-    Icon: TrendingUp,
-    label: "Sciences sociales",
-    color: "text-amber-600 bg-amber-50",
-    subjects: ["Économie", "SES", "Psychologie", "Sociologie", "Droit", "Politique mondiale"],
-  },
-  {
-    Icon: GraduationCap,
-    label: "Université & Gestion",
-    color: "text-sky-600 bg-sky-50",
-    subjects: ["Comptabilité", "Management", "Commerce", "Médecine", "Ingénierie", "Architecture"],
+    subjects: ["Mathématiques", "Physique", "Chimie"],
   },
 ];
 
@@ -77,36 +55,18 @@ const FEATURES = [
   },
   {
     icon: BookOpen,
-    title: "32 subjects across all curricula",
-    body: "Sciences, humanities, languages, economics, philosophy — every subject from Bac Libanais, Bac Français, IB, and University is covered. No hallucinated content outside your syllabus.",
+    title: "Math, Physics & Chemistry — done right",
+    body: "Every exercise is grounded in real curriculum data for Bac Libanais, Bac Français, IB, and University. No hallucinated content outside your syllabus.",
   },
   {
     icon: Globe2,
-    title: "French, English & Arabic",
-    body: "The exam language follows the course. Physics in French for Terminale S, Economics in English for IB, Arabic grammar for Bac Libanais Littéraire. All three handled natively.",
+    title: "French & English, natively",
+    body: "The exam language follows the course. Physics in French for Terminale S, Chemistry in English for IB — both handled natively, not machine-translated.",
   },
   {
     icon: Shield,
     title: "Corrigé with full methodology",
     body: "Not just the final answer — every step, every formula, every common student mistake flagged. Grading is part of teaching.",
-  },
-];
-
-const TESTIMONIALS = [
-  {
-    quote: "J'ai généré un contrôle complet de Physique-Chimie Terminale en 4 minutes. Le corrigé était aussi rigoureux que ce que j'aurais écrit moi-même — les étapes, les formules, les erreurs courantes.",
-    name: "Professeur de Physique-Chimie",
-    school: "Terminale S · Bac Libanais · 14 ans d'expérience",
-  },
-  {
-    quote: "The Version A/B anti-cheating feature alone is worth it. I generate two parallel versions in one click — students in adjacent seats get completely different numbers. No more copying.",
-    name: "Mathematics Teacher",
-    school: "IB HL & SL · 9 years in international schools",
-  },
-  {
-    quote: "أخيراً أداة تفهم المنهج اللبناني بشكل صحيح. الأسئلة دقيقة ومطابقة للمستوى، والمصطلحات العلمية بالعربية الفصحى المعتمدة في الكتاب المدرسي.",
-    name: "أستاذة رياضيات",
-    school: "الصف الثالث ثانوي · الباك اللبناني · 11 سنة خبرة",
   },
 ];
 
@@ -199,7 +159,7 @@ export default async function LandingPage() {
       "@type": "ContactPoint",
       "contactType": "Customer Support",
       "email": "contact@imtihan.live",
-      "availableLanguage": ["French", "English", "Arabic"]
+      "availableLanguage": ["French", "English"]
     }
   };
 
@@ -216,13 +176,6 @@ export default async function LandingPage() {
       { "@type": "AlignmentObject", "alignmentType": "educationalFramework", "educationalFramework": "IB Diploma" },
       { "@type": "AlignmentObject", "alignmentType": "educationalLevel", "educationalFramework": "University" }
     ],
-    "aggregateRating": {
-      "@type": "AggregateRating",
-      "ratingValue": "4.9",
-      "ratingCount": "154",
-      "bestRating": "5",
-      "worstRating": "1"
-    },
     "offers": {
       "@type": "Offer",
       "price": "0",
@@ -340,11 +293,11 @@ export default async function LandingPage() {
           <div className="mb-12">
             <p className="text-xs uppercase tracking-widest text-[var(--accent)] font-medium mb-4">What you can generate</p>
             <h2 className="serif text-display-lg text-[var(--text)] text-balance">
-              Every subject.<br />Every curriculum.
+              Math, Physics & Chemistry.<br />Every curriculum.
             </h2>
           </div>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid gap-4 max-w-sm">
             {SUBJECT_CATEGORIES.map((cat) => (
               <div key={cat.label} className="card p-5 flex flex-col gap-4 bg-[var(--surface)] hover:-translate-y-1.5 hover:shadow-[0_16px_48px_rgba(26,94,63,0.10)] transition-all duration-300 cursor-default">
                 <div className="flex items-center gap-2.5">
@@ -373,7 +326,7 @@ export default async function LandingPage() {
       <section id="features" className="px-6 md:px-10 py-24 border-t border-[var(--border)]">
         <div className="max-w-5xl mx-auto">
           <div className="mb-16">
-            <p className="text-xs uppercase tracking-widest text-[var(--accent)] font-medium mb-4">Why Imtihan</p>
+            <p className="text-xs uppercase tracking-widest text-[var(--accent)] font-medium mb-4">How it helps</p>
             <h2 className="serif text-display-lg text-[var(--text)] text-balance">
               Built for how Lebanese<br />teachers actually work
             </h2>
@@ -435,28 +388,19 @@ export default async function LandingPage() {
         </div>
       </section>
 
-      {/* ── TESTIMONIALS ─────────────────────────────────────────────── */}
-      <section id="testimonials" className="px-6 md:px-10 py-24 bg-[var(--bg-subtle)] border-t border-b border-[var(--border)]">
-        <div className="max-w-5xl mx-auto">
-          <p className="text-xs uppercase tracking-widest text-[var(--accent)] font-medium mb-12">What teachers say</p>
-          <div className="grid md:grid-cols-3 gap-5">
-            {TESTIMONIALS.map((t) => (
-              <div key={t.name} className="card bg-[var(--surface)] p-7 flex flex-col justify-between gap-5 hover:-translate-y-1.5 hover:shadow-[0_16px_48px_rgba(26,94,63,0.10)] transition-all duration-300">
-                <div>
-                  <div className="flex gap-0.5 mb-4">
-                    {[...Array(5)].map((_, i) => (
-                      <Star key={i} size={12} className="text-[var(--accent)] fill-[var(--accent)]" />
-                    ))}
-                  </div>
-                  <p className="text-sm text-[var(--text)] leading-relaxed text-pretty">&ldquo;{t.quote}&rdquo;</p>
-                </div>
-                <div className="pt-4 border-t border-[var(--border)]">
-                  <p className="text-xs font-semibold text-[var(--text)]">{t.name}</p>
-                  <p className="text-xs text-[var(--text-tertiary)] mt-0.5">{t.school}</p>
-                </div>
-              </div>
-            ))}
-          </div>
+      {/* ── WHY IMTIHAN ─────────────────────────────────────────────── */}
+      <section id="why" className="px-6 md:px-10 py-24 bg-[var(--bg-subtle)] border-t border-b border-[var(--border)]">
+        <div className="max-w-3xl mx-auto text-center">
+          <p className="text-xs uppercase tracking-widest text-[var(--accent)] font-medium mb-6">Why Imtihan</p>
+          <h2 className="serif text-display-lg text-[var(--text)] mb-6 text-balance">
+            Built in Lebanon, for the exams<br />Lebanese teachers actually write.
+          </h2>
+          <p className="text-[var(--text-secondary)] leading-relaxed text-pretty">
+            Imtihan is a new tool, built to cut the hours teachers lose formatting exams and writing
+            corrigés by hand — grounded in real Bac Libanais, Bac Français, IB, and University
+            curriculum data, not a generic AI wrapper. We&apos;re just getting started, which is exactly
+            why your first exam is free.
+          </p>
         </div>
       </section>
 

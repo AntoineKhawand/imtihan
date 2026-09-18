@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import {
   Check, MessageCircle, Zap, ShieldCheck, ArrowRight,
-  ArrowLeft, Clock, Star, Mail, Phone, User, CheckCircle2,
+  ArrowLeft, Clock, Mail, Phone, User, CheckCircle2,
 } from "lucide-react";
 import Image from "next/image";
 import { useAuth } from "@/contexts/AuthContext";
@@ -193,9 +193,9 @@ export default function UpgradePage() {
               </div>
 
               <div className="bg-[var(--bg-subtle)] rounded-xl p-4 border border-[var(--border)]">
-                <div className="flex gap-0.5 mb-2">{[0,1,2,3,4].map(i => <Star key={i} size={10} className="text-amber-400 fill-amber-400" />)}</div>
-                <p className="text-[11px] text-[var(--text-secondary)] italic leading-relaxed">"Generated a full Terminale Physics exam in under 3 minutes. Worth every cent."</p>
-                <p className="text-[10px] text-[var(--text-tertiary)] mt-1.5 font-medium">— Prof. Khalil · Coordinateur pédagogique</p>
+                <p className="text-[11px] text-[var(--text-secondary)] leading-relaxed">
+                  Generate a full exam with corrigé in under a minute — Pro unlocks up to 20 a month.
+                </p>
               </div>
             </div>
 

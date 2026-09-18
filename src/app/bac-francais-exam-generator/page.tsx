@@ -7,7 +7,7 @@ import { LandingFAQ, buildFaqSchema } from "@/components/landing/LandingFAQ";
 
 export const metadata = {
   title: "Générateur de Devoir Bac Français | Imtihan",
-  description: "Le générateur de devoir Bac Français le plus avancé pour enseignants. Créez des Devoirs Surveillés (DS) et examens blancs (Physique-Chimie, SVT, Maths, SES) de la Seconde à la Terminale.",
+  description: "Le générateur de devoir Bac Français pour enseignants. Créez des Devoirs Surveillés (DS) et examens blancs (Mathématiques, Physique-Chimie) de la Seconde à la Terminale.",
   alternates: { canonical: "/bac-francais-exam-generator" },
   openGraph: {
     title: "Générateur de Devoir Bac Français — Imtihan",
@@ -21,7 +21,7 @@ const FRENCH_FEATURES = [
   {
     icon: GraduationCap,
     title: "Spécialités Terminale & Tronc Commun",
-    body: "Couverture intégrale des enseignements de spécialité de la voie générale : Mathématiques, Physique-Chimie, SVT, SES, ainsi que le tronc commun de la Seconde à la Terminale."
+    body: "Couverture des enseignements de spécialité Mathématiques et Physique-Chimie de la voie générale, ainsi que le tronc commun correspondant de la Seconde à la Terminale."
   },
   {
     icon: Star,
@@ -43,7 +43,7 @@ const FRENCH_FEATURES = [
 const BAC_FRANCAIS_FAQ_ITEMS = [
   {
     q: "Le générateur suit-il les programmes officiels de l'Éducation Nationale ?",
-    a: "Oui. Les devoirs générés couvrent les enseignements de spécialité (Mathématiques, Physique-Chimie, SVT, SES) et le tronc commun, de la Seconde à la Terminale, conformément aux programmes AEFE.",
+    a: "Oui. Les devoirs générés couvrent les enseignements de spécialité Mathématiques et Physique-Chimie, ainsi que le tronc commun correspondant, de la Seconde à la Terminale, conformément aux programmes AEFE.",
   },
   {
     q: "Les consignes respectent-elles les compétences évaluées au Bac ?",
@@ -166,23 +166,17 @@ export default function FrenchBacLandingPage() {
             </p>
           </div>
 
-          <div className="grid sm:grid-cols-3 gap-6 text-center">
+          <div className="grid sm:grid-cols-2 gap-6 text-center max-w-2xl mx-auto">
             <div className="border border-[var(--border)] rounded-2xl p-6 bg-[var(--surface)] space-y-3">
-              <h3 className="font-serif text-lg font-bold text-[var(--accent)]">Physique-Chimie / SVT</h3>
+              <h3 className="font-serif text-lg font-bold text-[var(--accent)]">Physique-Chimie</h3>
               <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
-                Mécanique, thermodynamique, synthèse organique, ondes, génétique, géologie, évolution. Questions de type I (synthèse) et type II (raisonnement scientifique).
+                Mécanique, thermodynamique, synthèse organique, ondes, électricité, réactions chimiques. Questions de type I (synthèse) et type II (raisonnement scientifique).
               </p>
             </div>
             <div className="border border-[var(--border)] rounded-2xl p-6 bg-[var(--surface)] space-y-3">
               <h3 className="font-serif text-lg font-bold text-[var(--accent)]">Mathématiques</h3>
               <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
                 Suites, fonctions, limites, dérivation, probabilités discrètes, géométrie dans l'espace. Exercices complets et QCM d'entraînement.
-              </p>
-            </div>
-            <div className="border border-[var(--border)] rounded-2xl p-6 bg-[var(--surface)] space-y-3">
-              <h3 className="font-serif text-lg font-bold text-[var(--accent)]">SES & Humanités</h3>
-              <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
-                Économie de marché, commerce international, structure sociale, politique publique, questions problématisées de philosophie et d'histoire.
               </p>
             </div>
           </div>

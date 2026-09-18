@@ -11,10 +11,10 @@ interface LandingNavProps {
 }
 
 const NAV_LINKS = [
-  { href: "#how",          label: "How it works" },
-  { href: "#subjects",     label: "Subjects"      },
-  { href: "#testimonials", label: "Reviews"       },
-  { href: "#pricing",      label: "Pricing"       },
+  { href: "#how",       label: "How it works" },
+  { href: "#subjects",  label: "Subjects"      },
+  { href: "#why",       label: "Why Imtihan"   },
+  { href: "#pricing",   label: "Pricing"       },
 ];
 
 export function LandingNav({ isAuthenticated }: LandingNavProps) {

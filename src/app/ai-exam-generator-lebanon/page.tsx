@@ -11,7 +11,7 @@ export const metadata = {
   alternates: { canonical: "/ai-exam-generator-lebanon" },
   openGraph: {
     title: "AI Exam Generator Lebanon — Imtihan",
-    description: "Create customized exams in English, French, or Arabic aligned to Lebanese, French, and IB standards. Perfect for Lebanese schools and tutors.",
+    description: "Create customized exams in English or French, aligned to Lebanese, French, and IB standards. Perfect for Lebanese schools and tutors.",
     url: "https://imtihan.live/ai-exam-generator-lebanon",
     images: [{ url: "/opengraph-image", width: 1200, height: 630, alt: "Imtihan — AI Exam Generator" }],
   },
@@ -21,7 +21,7 @@ const BENEFITS = [
   {
     icon: Sparkles,
     title: "Designed for Lebanon's Education System",
-    body: "Unlike generic AI models, Imtihan understands the trilingual and multi-curriculum demands of schools in Lebanon. Whether you teach in Arabic, French, or English, it adapts perfectly."
+    body: "Unlike generic AI models, Imtihan understands the bilingual, multi-curriculum demands of schools in Lebanon. Whether you teach Math, Physics, or Chemistry in French or English, it adapts to your syllabus."
   },
   {
     icon: Clock,
@@ -43,11 +43,11 @@ const BENEFITS = [
 const LEBANON_FAQ_ITEMS = [
   {
     q: "What makes this AI exam generator different for Lebanon specifically?",
-    a: "Imtihan understands Lebanon's trilingual, multi-curriculum reality natively — Bac Libanais, Bac Français, and IB — and generates exams in Arabic, French, or English depending on what you teach, not a generic translation of one template.",
+    a: "Imtihan understands Lebanon's bilingual, multi-curriculum reality natively — Bac Libanais, Bac Français, and IB — and generates exams in French or English depending on what you teach, not a generic translation of one template.",
   },
   {
     q: "How much time does it actually save teachers?",
-    a: "Most teachers report saving 10+ hours a week. Drafting questions, formatting diagrams, and writing a full step-by-step corrigé — work that normally takes an evening — takes under 30 seconds.",
+    a: "Drafting questions, formatting diagrams, and writing a full step-by-step corrigé by hand can take an evening. With Imtihan, generating that same exam and its corrigé takes under 30 seconds.",
   },
   {
     q: "What is Version A/B and how does it prevent cheating?",

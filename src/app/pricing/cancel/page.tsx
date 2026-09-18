@@ -16,7 +16,7 @@ export default function PricingCancelPage() {
         <div className="max-w-md text-center">
           <h1 className="serif text-display-md text-[var(--text)] mb-4">No worries!</h1>
           <p className="text-[var(--text-secondary)] mb-8 leading-relaxed">
-            Your upgrade was canceled. You can still use your free exams. When you&apos;re ready, you can upgrade anytime from your dashboard.
+            Your upgrade was canceled. You can still use your free exam. When you&apos;re ready, you can upgrade anytime from your dashboard.
           </p>
 
           <Link href="/dashboard">
