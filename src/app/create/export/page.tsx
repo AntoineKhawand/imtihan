@@ -29,8 +29,18 @@ export default function ExportPage() {
   const [context, setContext] = useState<ExamContext | null>(null);
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [templateId, setTemplateId] = useState("classic");
-  const { profile } = useAuth();
-  const isFreeTier = !isProActive(profile);
+  const { user, profile, loading } = useAuth();
+  // AuthContext flips `loading` to false as soon as Firebase Auth resolves,
+  // without waiting for the Firestore profile onSnapshot to deliver its
+  // first payload (see AuthContext.subscribeToProfile). This page is reached
+  // via a full page.goto-style navigation from /create, which remounts
+  // AuthContext from scratch, so the gap is wide open on every load — in
+  // that window `user` is set but `profile` is still null, and treating
+  // that as "free tier" would wrongly hide Pro-only controls (e.g. the
+  // logo "Remove" button) for a genuinely-Pro user. Keep waiting instead of
+  // guessing (mirrors ProGuard/DashboardSidebar).
+  const profileResolving = loading || (!!user && !profile);
+  const isFreeTier = !profileResolving && !isProActive(profile);
 
   // Header fields — pre-filled from saved school settings
   const [schoolName, setSchoolName] = useState("");

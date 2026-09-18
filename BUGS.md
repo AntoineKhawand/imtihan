@@ -67,6 +67,36 @@ These are intentional constraints in MVP — document here to avoid re-opening a
 
 ---
 
+## BUG-024: Export page "Remove" logo button never appears for a signed-in Pro user (4th instance of the profile-load race)
+**Status:** Fixed
+**Severity:** Medium
+**Area:** UI / Auth guard / Export
+**Reported:** 2026-09-18
+**Fixed:** 2026-09-18
+
+**Description:** QA's `e2e/phases/phase-4-export.spec.ts:107` ("pro tier: logo upload works and Remove clears it") failed: after uploading a logo, the test expected a "Remove" button (to clear it) but only "Change Logo" was present in the accessible tree.
+**Investigation:** Read `src/app/create/export/page.tsx`. It computed `const { profile } = useAuth(); const isFreeTier = !isProActive(profile);` with no guard against the same `AuthContext.subscribeToProfile` race documented in BUG-021/022/023 (`loading` flips to `false` before the Firestore profile listener delivers its first snapshot, leaving a window where `user` is set but `profile` is still `null`). `isProActive(null)` is `false`, so `isFreeTier` was wrongly `true` for a genuinely-Pro user during that window — hiding the "Remove" button (`{schoolLogo && !isFreeTier && ...}`) and, more broadly, every other Pro-gated control on the page (modern template, Version B, email send). This page is reached via a full `page.goto("/create/export")`-style navigation from the test (not a client-side route change), which remounts `AuthContext` from scratch on every load, so — unlike some other pages — the race window reopens on every visit rather than only on first sign-in, making this reliably reproducible rather than a rare flake.
+**Root cause:** Same root cause as BUG-021/BUG-022/BUG-023 — `AuthContext`'s `loading` flips to `false` before the Firestore profile listener's first snapshot arrives, and `/create/export`'s page component had no guard against reading `profile` as "definitely free tier" during that gap.
+**Fix:** `src/app/create/export/page.tsx` — added `user` and `loading` to the `useAuth()` destructure and a `profileResolving = loading || (!!user && !profile)` check; `isFreeTier` is now `!profileResolving && !isProActive(profile)`, so every Pro-gated control on the page (logo upload/Remove, modern template, Version B, email send) waits for the real profile instead of defaulting to "free" while it's still in flight — same "wait instead of guess" pattern as `ProGuard`/`DashboardSidebar`/`UserNav`.
+**Verification:** `npx playwright test e2e/phases/phase-4-export.spec.ts` run in isolation against a freshly-booted dev server (stale server on port 3005 killed, `.next` cleared first) — 12/12 passed, including the previously-failing "Remove clears it" test. `npm run type-check` clean.
+
+---
+
+## BUG-023: UserNav tier label ("Free"/"Pro tier") wrong or missing for signed-in users during profile load (3rd instance of the profile-load race)
+**Status:** Fixed
+**Severity:** Medium
+**Area:** UI / Auth guard / Layout
+**Reported:** 2026-09-18
+**Fixed:** 2026-09-18
+
+**Description:** QA flagged two failures in `e2e/phases/phase-1-auth-navigation.spec.ts`: `:277` ("shows Free tier label, hover reveals menu, Sign out returns to login") and `:302` ("Pro tier label shows for a pro test user") — both timed out waiting for the tier label text to appear.
+**Investigation:** Read `src/components/layout/UserNav.tsx` in full and confirmed it had the same unguarded gap already fixed in `ProGuard` (BUG-021) and `DashboardSidebar` (BUG-022): it destructured `loading` but computed `isProActive(profile) ? "Pro" : "Free"` with no check for the `user && !profile` window described in `AuthContext.subscribeToProfile` (`loading` flips to `false` as soon as the Firestore profile `onSnapshot` listener *attaches*, not once it delivers its first payload). During that window a genuinely-Pro (or Free) user's tier label would render off a `null` profile, i.e. always compute as "Free" — matching the observed timeouts on both the Free-tier assertion (transient, so usually masked) and, more visibly, the Pro-tier assertion (`isProActive(null)` is always `false`, so a real Pro user briefly shows "Free tier" before flipping).
+**Root cause:** Same root cause as BUG-021/BUG-022 — `AuthContext`'s `loading` flips to `false` before the Firestore profile listener's first snapshot arrives, and `UserNav` had no guard against reading `profile` as "definitely not Pro" during that gap.
+**Fix:** `src/components/layout/UserNav.tsx` — added `user` to the `useAuth()` destructure and a `profileResolving = loading || (!!user && !profile)` check, mirroring `ProGuard`/`DashboardSidebar`'s comment/pattern. Chose a different resolving-state UI than those two: `UserNav` is the persistent header nav (confirmed via grep — mounted in `LandingNav` and directly on `/dashboard`, `/create`, `/bank`, `/create/export`, `/community`, `/scanner`, `/analytics`, `teacher/layout.tsx`), so it stays fully mounted and usable (name, avatar initials, dropdown, sign out) through the resolving window rather than returning `null` like `ProGuard` — only the tier label itself, which is the one value that can't be known yet, is replaced with a small pulsing skeleton bar (`w-10 h-2.5 ... animate-pulse`) instead of guessing "Free".
+**Verification:** Killed a stale `next dev` process still bound to port 3005 and cleared `.next` to force a genuinely fresh server (per the BUG-022 lesson about stale Turbopack cache), then ran `npx playwright test e2e/phases/phase-1-auth-navigation.spec.ts` in isolation — all 33 tests passed, including both previously-failing tests (line 277 and line 302). `npm run type-check` clean.
+
+---
+
 ## BUG-022: Dashboard sidebar shows "Upgrade to Pro" (and "Pro" nav badges) for signed-in Pro users during profile load
 **Status:** Fixed
 **Severity:** Medium

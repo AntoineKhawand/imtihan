@@ -14,6 +14,17 @@ export function UserNav() {
 
   const isProtectedPath = ["/dashboard", "/create", "/bank", "/library", "/account", "/community"].some(p => pathname.startsWith(p));
 
+  // AuthContext flips `loading` to false as soon as Firebase Auth resolves,
+  // without waiting for the Firestore profile onSnapshot to deliver its
+  // first payload (see AuthContext.subscribeToProfile). In that window,
+  // `user` is set but `profile` is still null — treating that as "not pro"
+  // would flash the wrong tier label for a genuinely-Pro user before the
+  // real profile arrives. Keep waiting instead of guessing (mirrors
+  // ProGuard/DashboardSidebar). Unlike those, UserNav is the persistent
+  // header nav — it stays mounted and usable (avatar, dropdown, sign out)
+  // through this window; only the tier label itself needs to wait.
+  const profileResolving = loading || (!!user && !profile);
+
   if (loading || (isProtectedPath && !user)) {
     return (
       <div className="flex items-center gap-2">
@@ -62,7 +73,11 @@ export function UserNav() {
     <div className="flex items-center gap-4">
       <div className="flex flex-col items-end hidden sm:flex">
         <span className="text-xs font-semibold text-[var(--text)]">{profile?.displayName || user.email?.split("@")[0]}</span>
-        <span className="text-[10px] text-[var(--text-tertiary)] uppercase tracking-wider">{isProActive(profile) ? "Pro" : "Free"} tier</span>
+        {profileResolving ? (
+          <span className="w-10 h-2.5 mt-0.5 rounded bg-[var(--bg-subtle)] animate-pulse" aria-hidden="true" />
+        ) : (
+          <span className="text-[10px] text-[var(--text-tertiary)] uppercase tracking-wider">{isProActive(profile) ? "Pro" : "Free"} tier</span>
+        )}
       </div>
       <div className="relative group">
         <button className="w-9 h-9 rounded-full bg-[var(--accent)] flex items-center justify-center text-white text-sm font-bold shadow-sm hover:opacity-90 transition-opacity">
