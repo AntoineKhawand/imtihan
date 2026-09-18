@@ -14,9 +14,13 @@ export function BlogCallout({ title, content }: BlogCalloutProps) {
       <h4 className="font-bold text-[var(--text)] mb-2 flex items-center gap-2">
         {title}
       </h4>
-      <p className="text-sm text-[var(--text-secondary)] leading-relaxed italic">
+      {/* Semantic <blockquote> (not just a styled <p>) so this quoted
+          testimonial is machine-readable as a quotation — AI answer engines
+          and the GEO audit both look for real <blockquote> markup, not just
+          italic text, per scripts/geo-audit.mjs's "quotations" signal. */}
+      <blockquote className="text-sm text-[var(--text-secondary)] leading-relaxed italic m-0 p-0 border-0">
         &ldquo;{content}&rdquo;
-      </p>
+      </blockquote>
     </div>
   );
 }

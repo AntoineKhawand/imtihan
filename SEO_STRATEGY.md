@@ -153,6 +153,39 @@ keep each change reviewable and low-risk for an unattended push.
 - [x] **2026-09-01** — Added `FAQPage` JSON-LD + visible Q&A (`LandingFAQ`) to all 4 curricula
       landing pages (previously zero FAQ content/schema outside the homepage).
 - [x] **2026-09-08** — Added `LandingFAQ` + `FAQPage` JSON-LD to `/pricing`, `/about`, `/upgrade`.
+- [x] **2026-09-18** (`content-curriculum`) — Re-ran `npm run audit:geo` (re-verified, not
+      trusted from an earlier same-day run by `seo-growth`): confirmed 36/36 posts, average
+      44/100, same two site-wide gaps as before (`quotations` and `faq-schema` at 0/36).
+      Root-caused `quotations`: `BlogCallout` (used on all 9 static `/blog/*` posts) rendered its
+      testimonial as a styled `<p>`, not a semantic `<blockquote>` — fixed once at the template
+      level (`src/components/blog/BlogCallout.tsx`), which alone lifted 4 untouched static posts
+      (`exam-standardization`, `ib-mark-scheme-generator`, `generate-bac-libanais-chemistry`,
+      `generate-bac-francais-devoir`) by 15 pts each with no content edits. Built a new
+      `src/components/blog/BlogFAQ.tsx` (visible in-article Q&A, paired with `buildFaqSchema`
+      from `src/components/landing/LandingFAQ.tsx` + `<SchemaOrg>` for `FAQPage` JSON-LD) and
+      rewrote the 5 lowest-scoring posts — `university-assessment-ai` (10→100),
+      `lebanese-teachers-ai-exam-generator` (10→100), `stop-recycled-exams` (25→100),
+      `save-time-teaching` (25→100), `guide-for-parents` (25→100) — adding a direct-answer
+      opening paragraph, 600+ words of expanded but factually-grounded copy (no invented
+      curriculum chapters, subjects, or user-count stats — stayed inside Math/Physics/Chemistry,
+      French/English, and the free-form University model per `CLAUDE.md` §9 and
+      `docs/DATA_SOURCING.md`), a real bullet/numbered list, a real external citation per post
+      (OECD's 2024 TALIS report on teacher workload, Roediger & Karpicke's testing-effect
+      research via retrievalpractice.org, CRDP's official Lebanese exam archive, and Biggs'
+      1996 constructive-alignment paper — all verified via WebSearch before citing, not assumed),
+      and a 3-item FAQ (visible + JSON-LD) per post. Verified locally (`npm run audit:geo
+      http://localhost:3000` — production hasn't been deployed with this change yet, so
+      `https://imtihan.live` still shows the pre-fix 44/100 average until the next deploy): all 5
+      target posts now 100/100, the 4 BlogCallout-only posts at 40/40/55/55 (up from 25/25/40/40),
+      and all 27 untouched dynamic (Firestore) posts scored identically to the pre-fix baseline —
+      **local average across all 36 posts: 57/100, up from 44/100, with zero regressions.**
+      `npx tsc --noEmit --skipLibCheck` clean. **Not done, flagged for a future pass:** the 27
+      Firestore-backed dynamic posts (`src/app/blog/[slug]/page.tsx`) still render zero
+      blockquotes and no FAQ schema — `BlogCallout`/`BlogFAQ` aren't used in the Markdown-rendered
+      dynamic template, so this fix doesn't reach them; the 4 posts above only got the
+      `quotations` signal free from the template fix and still lack `citations`, `lists`, and
+      `faq-schema` — same treatment (real citation + FAQ) would need per-post content work, not
+      another template fix, since their bodies are still very thin (89–309 words).
 
 ## Tooling
 
