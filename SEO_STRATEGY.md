@@ -99,15 +99,21 @@ keep each change reviewable and low-risk for an unattended push.
       expected given no blog-body content changes; confirms the domain fix didn't break anything
       GEO-side either. Full reports regenerated at `SEO_AUDIT_REPORT.md` / `GEO_AUDIT_REPORT.md`
       (both gitignored, not committed).
-- [ ] **GSC follow-up on the 2026-09-18 www→apex domain fix — not completed this run.** This
-      session's tool access did not include the `gsc` MCP tools needed to run URL Inspection /
-      request re-crawl or pull the Coverage report, so the following from the founder's brief is
-      still outstanding and should be picked up by a run with `gsc` tool access: (1) URL-inspect
-      and request re-crawl on the homepage and the 3 newly-linked curricula pages
-      (`/ib-exam-generator`, `/bac-francais-exam-generator`, `/generateur-examen-bac-libanais`);
-      (2) check GSC Coverage for a "Redirect error" spike on 2026-09-18 (the hours the www/apex
-      redirect loop was live) so it reads as a resolved transient blip, not an ongoing issue, in
-      any future audit of this data.
+- [ ] **GSC follow-up on the 2026-09-18 www→apex domain fix — still not completed; two attempts
+      now, both blocked on tool access, not data.** First attempt (earlier 2026-09-18 run) had no
+      `gsc` MCP tools. This second attempt (later same day, after being told to retry) checked
+      again: the tool list available in this session is still Read/Edit/Write/Bash/Grep/Glob/
+      WebSearch/SubagentHandback only — no `gsc`-prefixed tools and no `chrome-devtools` tools
+      present, so URL Inspection, re-crawl requests, and the Coverage report are still
+      unreachable. Per the "ground every claim in data, not assumption" rule, no GSC numbers are
+      reported here — none were pulled. Still outstanding, needs a run where the `gsc` MCP server
+      is actually attached to the session (this looks like an environment/config gap upstream of
+      the agent, not something fixable by retrying the same steps): (1) URL-inspect and request
+      re-crawl on the homepage and the 3 newly-linked curricula pages (`/ib-exam-generator`,
+      `/bac-francais-exam-generator`, `/generateur-examen-bac-libanais`); (2) check GSC Coverage
+      for a "Redirect error" spike on 2026-09-18 (the hours the www/apex redirect loop was live)
+      so it reads as a resolved transient blip, not an ongoing issue, in any future audit of this
+      data.
 
 ### AEO / GEO — done
 - [x] **2026-09-01** — Added `FAQPage` JSON-LD + visible Q&A (`LandingFAQ`) to all 4 curricula
