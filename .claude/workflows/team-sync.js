@@ -7,7 +7,7 @@ export const meta = {
   ],
 }
 
-const ALL_TEAMS = ['engineering', 'seo-growth', 'content-curriculum', 'qa']
+const ALL_TEAMS = ['engineering', 'seo-growth', 'content-curriculum', 'qa', 'design', 'marketing', 'database']
 
 const FINDING_SCHEMA = {
   type: 'object',
