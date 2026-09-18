@@ -190,9 +190,9 @@ export default function LebanonAiLanding() {
           {/* Call to Action banner */}
           <div className="card p-8 border-[var(--accent)]/40 border bg-[var(--accent-light)] flex flex-col md:flex-row items-center justify-between gap-6 shadow-md shadow-[var(--accent)]/5 rounded-3xl mt-12">
             <div className="space-y-2">
-              <h3 className="serif text-xl text-[var(--text)] font-semibold">Join 1,000+ Lebanese teachers</h3>
+              <h3 className="serif text-xl text-[var(--text)] font-semibold">Built for Lebanese teachers</h3>
               <p className="text-xs text-[var(--text-secondary)] max-w-sm">
-                Get started today and draft custom exams in English, French, or Arabic in seconds.
+                Get started today and draft custom exams in English or French in seconds.
               </p>
             </div>
             <Link href="/auth/register" className="inline-flex items-center gap-1.5 h-11 px-6 rounded-xl bg-[var(--accent)] text-white text-xs font-semibold hover:opacity-95 shadow-sm whitespace-nowrap self-stretch md:self-auto justify-center">

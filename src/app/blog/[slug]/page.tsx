@@ -212,7 +212,7 @@ export default async function DynamicBlogPostPage({ params }: BlogPostProps) {
             <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 blur-2xl rounded-full -translate-y-1/2 translate-x-1/2 group-hover:scale-150 transition-transform duration-700" />
             <h4 className="text-xl font-bold text-white mb-3 serif leading-tight relative z-10">Level Up Your Exams</h4>
             <p className="text-sm text-emerald-100/80 mb-8 leading-relaxed relative z-10">
-              Join 1,000+ Lebanese teachers using AI to create professional assessments in minutes.
+              Join Lebanese teachers using AI to create professional assessments in minutes.
             </p>
             <Link href="/create" className="flex items-center justify-center gap-2 h-12 w-full rounded-xl bg-white text-[var(--accent)] font-bold hover:bg-emerald-50 transition-all shadow-lg relative z-10">
               Get Started Free <ArrowRight size={18} />
