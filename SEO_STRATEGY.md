@@ -73,12 +73,46 @@ keep each change reviewable and low-risk for an unattended push.
       redirect in `next.config.ts` as a backstop. Still needed: confirm `NEXT_PUBLIC_APP_URL` in
       Vercel's production env is set to `https://imtihan.live` (not `www`), since that env var
       overrides the code fallback.
-- [ ] Add `og:image` / `twitter:image` metadata to the 4 curricula landing pages — currently only
-      the homepage (`page.tsx`) has an explicit `openGraph.images` entry. **Update 2026-09-18:**
-      today's production `audit:seo` run shows this gap is wider than "4 curricula pages" —
-      35 of 48 sitemap URLs are missing `og:image` (every blog post plus `/pricing`, `/about`,
-      `/generateur-examen-bac-libanais`, etc.). Worth a template-level default `og:image` fallback
-      rather than a per-page fix.
+- [x] **2026-09-18** — Fixed the `/about` meta description length flagged by `npm run audit:seo`
+      (183 chars, over the ~165-char ideal, getting truncated in Google search results). Rewrote
+      `src/app/about/page.tsx`'s `metadata.description` to 162 chars — kept the same message
+      (story/mission, "empower Lebanese and international educators," the Bac Libanais/Bac
+      Français/IB curricula list, "save hours of prep time") but trimmed the redundant "story and
+      mission" / "Discover" opener rather than truncating mid-sentence. Did not touch `og:image`
+      (separate item below, being handled in parallel by `engineering`).
+- [x] **2026-09-18** (`engineering`) — Fixed the 35/48-page `og:image` gap noted above.
+      **Root cause** (verified with a local dev server + curl against rendered `<head>` output,
+      not assumption): the root layout (`src/app/layout.tsx`) already declared a fallback
+      `openGraph.images` pointing at the existing `src/app/opengraph-image.tsx`
+      (`ImageResponse`-based, already on-brand — Fraunces-style serif headline, `#1a5e3f` emerald,
+      cream `#faf8f3` background), but Next's metadata resolution does **not** deep-merge
+      `openGraph` across route segments — a child route's own `metadata.openGraph` object fully
+      *replaces* the parent's, not just the fields it sets. Every page that defined its own
+      `openGraph` (for a custom per-page title/description) but didn't repeat `images` therefore
+      rendered zero `og:image` tag at all, confirmed by curling `/about`, `/pricing`, `/contact`
+      before the fix (no `og:image` meta in the response) — pages that omitted `openGraph`
+      entirely (the 9 static `/blog/*` pages) were unaffected, since they inherit the parent's
+      object untouched. Fixed by adding `images: [{ url: "/opengraph-image", width: 1200, height:
+      630, alt: ... }]` to the 8 affected single-page route files (`about`, `pricing/layout`,
+      `contact`, `ib-exam-generator`, `bac-francais-exam-generator`,
+      `generateur-examen-bac-libanais`, `ai-exam-generator-lebanon`, `blog/page.tsx`). For
+      `/blog/[slug]` (the ~27 Firestore-backed dynamic posts — the bulk of the gap), built a true
+      per-post image instead of the shared fallback: `src/app/blog/[slug]/opengraph-image.tsx`
+      uses the file-convention `ImageResponse` idiom, reuses the page's own `getPost(slug)` (now
+      exported from `page.tsx`) to render the post's actual title + category on the same branded
+      card, with a plain-fallback render if the Firestore lookup throws. Verified end-to-end
+      against a local dev server: `npm run audit:seo -- http://localhost:3000` — **before: 35/48
+      pages missing `og:image`; after: 0/48**, confirmed by grepping the regenerated
+      `SEO_AUDIT_REPORT.md` for any `image` finding (none) and by curling both a static page
+      (`/about` → `http://localhost:3000/opengraph-image`) and a live Firestore post
+      (`/blog/rentre-2026-…-70s5/opengraph-image` → `200 image/png`, title rendered correctly in
+      the PNG). `npm run type-check` clean. **Not done:** a per-post image for the 9 *static*
+      `/blog/*/page.tsx` files (`exam-standardization`, `stop-recycled-exams`, etc.) — they
+      already inherit the shared branded fallback correctly (confirmed, not missing), so this is a
+      nice-to-have polish item, not a gap-closer; flagging here rather than doing it silently. QA
+      should still verify this in the e2e suite before treating the social-share preview as fully
+      confirmed in production (local dev + audit script only, not a real Twitter/LinkedIn/WhatsApp
+      unfurl test).
 - [x] **2026-09-18** — Fixed stale `www` defaults left over from the apex migration
       (`7c6032c`): `scripts/lib/site-pages.mjs`'s `DEFAULT_BASE_URL`, `scripts/geo-audit.mjs`'s
       header comment + internal `document.baseURI` fallback, and `scripts/seo-audit.mjs`'s header

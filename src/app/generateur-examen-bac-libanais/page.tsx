@@ -13,6 +13,7 @@ export const metadata = {
     title: "Générateur d'Examen Bac Libanais avec IA — Imtihan",
     description: "Concevez des devoirs et contrôles conformes aux exigences officielles du Ministère de l'Éducation libanais (Dawrat, Brevet, Terminale).",
     url: "https://imtihan.live/generateur-examen-bac-libanais",
+    images: [{ url: "/opengraph-image", width: 1200, height: 630, alt: "Imtihan — AI Exam Generator" }],
   },
 };
 

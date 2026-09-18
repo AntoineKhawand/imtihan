@@ -29,7 +29,7 @@ interface BlogPost {
   createdAt: any;
 }
 
-async function getPost(slug: string): Promise<BlogPost | null> {
+export async function getPost(slug: string): Promise<BlogPost | null> {
   // Fallback for initial articles
   if (slug === "stop-recycled-exams" || slug === "save-time-teaching") {
     const isRecycled = slug === "stop-recycled-exams";
@@ -94,6 +94,7 @@ export async function generateMetadata({ params }: BlogPostProps): Promise<Metad
       description: post.description,
       type: "article",
       url: `https://imtihan.live/blog/${slug}`,
+      images: [{ url: `/blog/${slug}/opengraph-image`, width: 1200, height: 630, alt: post.title }],
     }
   };
 }

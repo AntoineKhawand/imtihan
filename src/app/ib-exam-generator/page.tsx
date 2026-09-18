@@ -13,6 +13,7 @@ export const metadata = {
     title: "IB Exam Generator Chemistry & Physics — Imtihan",
     description: "The professional assessment tool for IB science teachers. Draft curriculum-aligned worksheets and full mark schemes instantly.",
     url: "https://imtihan.live/ib-exam-generator",
+    images: [{ url: "/opengraph-image", width: 1200, height: 630, alt: "Imtihan — AI Exam Generator" }],
   },
 };
 

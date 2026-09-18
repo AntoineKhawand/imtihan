@@ -11,6 +11,7 @@ export const metadata = {
     title: "Contacter Imtihan — WhatsApp & Email",
     description: "Joignez l'équipe Imtihan sur WhatsApp pour une réponse rapide, ou par email pour les demandes formelles.",
     url: "https://imtihan.live/contact",
+    images: [{ url: "/opengraph-image", width: 1200, height: 630, alt: "Imtihan — AI Exam Generator" }],
   },
 };
 
