@@ -49,7 +49,7 @@ function formatDate(ts: number | null): string {
 }
 
 function ProBadge({ expiresAt }: { expiresAt: number | null }) {
-  if (!expiresAt) return <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-gray-100 text-gray-500 uppercase tracking-wider">Free</span>;
+  if (!expiresAt) return <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-[var(--bg-subtle)] text-[var(--text-secondary)] uppercase tracking-wider">Free</span>;
   const active = expiresAt > Date.now();
   const expDate = new Date(expiresAt).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
   const daysLeft = Math.ceil((expiresAt - Date.now()) / 86400000);
@@ -62,7 +62,7 @@ function ProBadge({ expiresAt }: { expiresAt: number | null }) {
         <div className={cn("w-1.5 h-1.5 rounded-full", active ? "bg-emerald-500 animate-pulse" : "bg-red-500")} />
         {active ? `Pro · ${daysLeft}d left` : "Expired"}
       </span>
-      <span className="text-[9px] text-gray-400 pl-1">{active ? `Until ${expDate}` : `Expired ${expDate}`}</span>
+      <span className="text-[9px] text-[var(--text-tertiary)] pl-1">{active ? `Until ${expDate}` : `Expired ${expDate}`}</span>
     </div>
   );
 }
@@ -74,7 +74,7 @@ function Checkbox({ checked, onChange }: { checked: boolean; onChange: () => voi
       onClick={e => { e.stopPropagation(); onChange(); }}
       className={cn(
         "w-5 h-5 rounded-[5px] border-2 flex items-center justify-center transition-all shrink-0 cursor-pointer",
-        checked ? "bg-emerald-600 border-emerald-600 shadow-sm" : "bg-white border-gray-300 hover:border-emerald-400"
+        checked ? "bg-emerald-600 border-emerald-600 shadow-sm" : "bg-[var(--surface)] border-[var(--border-strong)] hover:border-emerald-400"
       )}
     >
       {checked && <Check size={11} strokeWidth={3} className="text-white" />}
@@ -407,10 +407,10 @@ export default function AdminPage() {
 
   if (isAuthorized === false) {
     return (
-      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-6 text-center">
+      <div className="min-h-screen bg-[var(--bg)] flex flex-col items-center justify-center p-6 text-center">
         <ShieldCheck size={48} className="text-red-500 mb-4" />
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">Access Denied</h1>
-        <p className="text-gray-500 max-w-sm">This area is restricted to Imtihan administrators. Redirecting...</p>
+        <h1 className="text-2xl font-bold text-[var(--text)] mb-2">Access Denied</h1>
+        <p className="text-[var(--text-secondary)] max-w-sm">This area is restricted to Imtihan administrators. Redirecting...</p>
       </div>
     );
   }
@@ -420,29 +420,29 @@ export default function AdminPage() {
   // with per-row buttons disabled then, not blank out into a skeleton.
   if (isAuthorized === null && loading) {
     return (
-      <div className="min-h-screen bg-[#FDFDFC] pb-20">
-        <div className="bg-white border-b border-gray-100 px-4 sm:px-6 py-4">
+      <div className="min-h-screen bg-[var(--bg)] pb-20">
+        <div className="bg-[var(--surface)] border-b border-[var(--border)] px-4 sm:px-6 py-4">
           <div className="max-w-7xl mx-auto w-full flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-gray-100 animate-pulse" />
+            <div className="w-10 h-10 rounded-2xl bg-[var(--bg-subtle)] animate-pulse" />
             <div className="space-y-1.5">
-              <div className="h-4 w-32 bg-gray-100 rounded animate-pulse" />
-              <div className="h-2.5 w-20 bg-gray-100 rounded animate-pulse" />
+              <div className="h-4 w-32 bg-[var(--bg-subtle)] rounded animate-pulse" />
+              <div className="h-2.5 w-20 bg-[var(--bg-subtle)] rounded animate-pulse" />
             </div>
           </div>
         </div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-8">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
             {[0, 1, 2, 3].map((i) => (
-              <div key={i} className="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm">
-                <div className="h-2.5 w-20 bg-gray-100 rounded animate-pulse mb-3" />
-                <div className="h-6 w-12 bg-gray-100 rounded animate-pulse" />
+              <div key={i} className="bg-[var(--surface)] p-5 rounded-3xl border border-[var(--border)] shadow-sm">
+                <div className="h-2.5 w-20 bg-[var(--bg-subtle)] rounded animate-pulse mb-3" />
+                <div className="h-6 w-12 bg-[var(--bg-subtle)] rounded animate-pulse" />
               </div>
             ))}
           </div>
-          <div className="h-[220px] bg-gray-100 rounded-[40px] animate-pulse mb-8" />
-          <div className="bg-white rounded-[32px] border border-gray-100 shadow-sm p-5 space-y-4">
+          <div className="h-[220px] bg-[var(--bg-subtle)] rounded-[40px] animate-pulse mb-8" />
+          <div className="bg-[var(--surface)] rounded-[32px] border border-[var(--border)] shadow-sm p-5 space-y-4">
             {[0, 1, 2, 3, 4].map((i) => (
-              <div key={i} className="h-12 bg-gray-50 rounded-2xl animate-pulse" />
+              <div key={i} className="h-12 bg-[var(--bg-subtle)] rounded-2xl animate-pulse" />
             ))}
           </div>
         </div>
@@ -472,28 +472,28 @@ export default function AdminPage() {
   const topSubjects = Object.entries(statsData.subjects || {}).sort(([, a], [, b]) => b - a).slice(0, 5);
 
   return (
-    <div className="min-h-screen bg-[#FDFDFC] text-gray-900 pb-20">
+    <div className="min-h-screen bg-[var(--bg)] text-[var(--text)] pb-20">
       {/* Header */}
-      <div className="bg-white border-b border-gray-100 sticky top-0 z-30 px-4 sm:px-6 py-4">
+      <div className="bg-[var(--surface)] border-b border-[var(--border)] sticky top-0 z-30 px-4 sm:px-6 py-4">
         <div className="max-w-7xl mx-auto w-full flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-2xl bg-emerald-600 text-white flex items-center justify-center shadow-lg shadow-emerald-600/20">
               <ShieldCheck size={20} />
             </div>
             <div>
-              <h1 className="text-xl font-black tracking-tight text-gray-900">Admin Console</h1>
+              <h1 className="text-xl font-black tracking-tight text-[var(--text)]">Admin Console</h1>
               <p className="text-[10px] text-emerald-600 font-bold uppercase tracking-widest">Imtihan Intelligence</p>
             </div>
           </div>
 
-          <div className="flex items-center gap-1.5 bg-gray-50 p-1 rounded-2xl border border-gray-100 w-full sm:w-auto">
+          <div className="flex items-center gap-1.5 bg-[var(--bg-subtle)] p-1 rounded-2xl border border-[var(--border)] w-full sm:w-auto">
             {(["users", "email", "blog", "subscribers"] as const).map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
                 className={cn(
                   "h-9 px-4 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 flex-1 sm:flex-none capitalize",
-                  activeTab === tab ? "bg-white text-emerald-600 shadow-sm border border-gray-100" : "text-gray-400 hover:text-gray-600"
+                  activeTab === tab ? "bg-[var(--surface)] text-emerald-600 shadow-sm border border-[var(--border)]" : "text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]"
                 )}
               >
                 {tab === "users" && <User size={13} />}
@@ -513,19 +513,19 @@ export default function AdminPage() {
         {activeTab === "users" && (
           <>
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-              <div className="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm">
-                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Total Educators</p>
-                <h3 className="text-2xl font-black text-gray-900">{users.length}</h3>
+              <div className="bg-[var(--surface)] p-5 rounded-3xl border border-[var(--border)] shadow-sm">
+                <p className="text-[10px] font-black text-[var(--text-tertiary)] uppercase tracking-widest mb-1">Total Educators</p>
+                <h3 className="text-2xl font-black text-[var(--text)]">{users.length}</h3>
               </div>
-              <div className="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm">
+              <div className="bg-[var(--surface)] p-5 rounded-3xl border border-[var(--border)] shadow-sm">
                 <p className="text-[10px] font-black text-emerald-500 uppercase tracking-widest mb-1">Active Pro</p>
                 <h3 className="text-2xl font-black text-emerald-600">{users.filter(u => u.proExpiresAt && u.proExpiresAt > Date.now()).length}</h3>
               </div>
-              <div className="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm">
+              <div className="bg-[var(--surface)] p-5 rounded-3xl border border-[var(--border)] shadow-sm">
                 <p className="text-[10px] font-black text-amber-500 uppercase tracking-widest mb-1">Requests</p>
                 <h3 className="text-2xl font-black text-amber-600">{users.filter(u => u.renewalRequested || u.resetRequested).length}</h3>
               </div>
-              <div className="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm hidden lg:block">
+              <div className="bg-[var(--surface)] p-5 rounded-3xl border border-[var(--border)] shadow-sm hidden lg:block">
                 <p className="text-[10px] font-black text-blue-500 uppercase tracking-widest mb-1">Yearly Plans</p>
                 <h3 className="text-2xl font-black text-blue-600">{users.filter(u => u.planType === "yearly").length}</h3>
               </div>
@@ -563,30 +563,30 @@ export default function AdminPage() {
 
             <div className="flex flex-col md:flex-row gap-4 mb-6 items-center justify-between">
               <div className="flex items-center gap-2 overflow-x-auto w-full md:w-auto pb-2 md:pb-0">
-                <button onClick={() => setFilterType("all")} className={cn("h-10 px-5 rounded-2xl text-xs font-bold transition-all border shrink-0", filterType === "all" ? "bg-emerald-600 text-white border-emerald-500 shadow-lg shadow-emerald-600/20" : "bg-white text-gray-500 border-gray-100 hover:border-gray-200")}>
+                <button onClick={() => setFilterType("all")} className={cn("h-10 px-5 rounded-2xl text-xs font-bold transition-all border shrink-0", filterType === "all" ? "bg-emerald-600 text-white border-emerald-500 shadow-lg shadow-emerald-600/20" : "bg-[var(--surface)] text-[var(--text-secondary)] border-[var(--border)] hover:border-[var(--border-strong)]")}>
                   All Users
                 </button>
-                <button onClick={() => setFilterType(filterType === "requests" ? "all" : "requests")} className={cn("h-10 px-5 rounded-2xl text-xs font-bold transition-all border shrink-0 flex items-center gap-2", filterType === "requests" ? "bg-amber-500 text-white border-amber-400 shadow-lg shadow-amber-500/20" : "bg-white text-gray-500 border-gray-100 hover:border-gray-200")}>
+                <button onClick={() => setFilterType(filterType === "requests" ? "all" : "requests")} className={cn("h-10 px-5 rounded-2xl text-xs font-bold transition-all border shrink-0 flex items-center gap-2", filterType === "requests" ? "bg-amber-500 text-white border-amber-400 shadow-lg shadow-amber-500/20" : "bg-[var(--surface)] text-[var(--text-secondary)] border-[var(--border)] hover:border-[var(--border-strong)]")}>
                   {filterType === "requests" && <ShieldCheck size={14} />} Pending Requests
                 </button>
-                <div className="w-px h-6 bg-gray-200 mx-1" />
-                <button onClick={() => setShowYearly(!showYearly)} className={cn("h-10 px-5 rounded-2xl text-xs font-bold transition-all border shrink-0 flex items-center gap-2", showYearly ? "bg-purple-600 text-white border-purple-500 shadow-lg shadow-purple-600/20" : "bg-white text-gray-500 border-gray-100 hover:border-gray-200")}>
+                <div className="w-px h-6 bg-[var(--border-strong)] mx-1" />
+                <button onClick={() => setShowYearly(!showYearly)} className={cn("h-10 px-5 rounded-2xl text-xs font-bold transition-all border shrink-0 flex items-center gap-2", showYearly ? "bg-purple-600 text-white border-purple-500 shadow-lg shadow-purple-600/20" : "bg-[var(--surface)] text-[var(--text-secondary)] border-[var(--border)] hover:border-[var(--border-strong)]")}>
                   <Zap size={14} /> Yearly Only
                 </button>
               </div>
               <div className="relative w-full md:w-[320px]">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)]" size={16} />
                 <input type="text" placeholder="Search email or name..." value={search} onChange={e => setSearch(e.target.value)}
-                  className="w-full h-11 pl-11 pr-4 bg-white border border-gray-100 rounded-2xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-emerald-600/10 focus:border-emerald-600 transition-all" />
+                  className="w-full h-11 pl-11 pr-4 bg-[var(--surface)] border border-[var(--border)] rounded-2xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-emerald-600/10 focus:border-emerald-600 transition-all" />
               </div>
             </div>
 
             {/* Desktop Table */}
-            <div className="bg-white rounded-[32px] border border-gray-100 shadow-sm overflow-hidden hidden md:block">
+            <div className="bg-[var(--surface)] rounded-[32px] border border-[var(--border)] shadow-sm overflow-hidden hidden md:block">
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                   <thead>
-                    <tr className="bg-gray-50/50 border-b border-gray-50">
+                    <tr className="bg-[var(--bg-subtle)]/50 border-b border-[var(--border)]">
                       <th className="px-5 py-5 w-10">
                         <Checkbox
                           checked={allFilteredSelected}
@@ -596,21 +596,21 @@ export default function AdminPage() {
                           }}
                         />
                       </th>
-                      <th className="px-4 py-5 text-[10px] font-black text-gray-400 uppercase tracking-widest">User Profile</th>
-                      <th className="px-4 py-5 text-[10px] font-black text-gray-400 uppercase tracking-widest">Status</th>
-                      <th className="px-4 py-5 text-[10px] font-black text-gray-400 uppercase tracking-widest">Plan</th>
-                      <th className="px-4 py-5 text-[10px] font-black text-gray-400 uppercase tracking-widest">Activity</th>
-                      <th className="px-4 py-5 text-center text-[10px] font-black text-gray-400 uppercase tracking-widest">Usage</th>
-                      <th className="px-4 py-5 text-center text-[10px] font-black text-gray-400 uppercase tracking-widest">Quota</th>
-                      <th className="px-6 py-5 text-right text-[10px] font-black text-gray-400 uppercase tracking-widest">Actions</th>
+                      <th className="px-4 py-5 text-[10px] font-black text-[var(--text-tertiary)] uppercase tracking-widest">User Profile</th>
+                      <th className="px-4 py-5 text-[10px] font-black text-[var(--text-tertiary)] uppercase tracking-widest">Status</th>
+                      <th className="px-4 py-5 text-[10px] font-black text-[var(--text-tertiary)] uppercase tracking-widest">Plan</th>
+                      <th className="px-4 py-5 text-[10px] font-black text-[var(--text-tertiary)] uppercase tracking-widest">Activity</th>
+                      <th className="px-4 py-5 text-center text-[10px] font-black text-[var(--text-tertiary)] uppercase tracking-widest">Usage</th>
+                      <th className="px-4 py-5 text-center text-[10px] font-black text-[var(--text-tertiary)] uppercase tracking-widest">Quota</th>
+                      <th className="px-6 py-5 text-right text-[10px] font-black text-[var(--text-tertiary)] uppercase tracking-widest">Actions</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-50">
+                  <tbody className="divide-y divide-[var(--border)]">
                     {filtered.map((u) => (
                       <tr
                         key={u.uid}
                         onClick={() => toggleSelect(u.uid)}
-                        className={cn("group transition-colors cursor-pointer", selectedUids.has(u.uid) ? "bg-emerald-50/40" : "hover:bg-gray-50/30")}
+                        className={cn("group transition-colors cursor-pointer", selectedUids.has(u.uid) ? "bg-emerald-50/40" : "hover:bg-[var(--bg-subtle)]/30")}
                       >
                         <td className="px-5 py-5">
                           <Checkbox checked={selectedUids.has(u.uid)} onChange={() => toggleSelect(u.uid)} />
@@ -622,10 +622,10 @@ export default function AdminPage() {
                             </div>
                             <div>
                               <div className="flex items-center gap-1.5">
-                                <span className="text-sm font-bold text-gray-900">{u.email}</span>
+                                <span className="text-sm font-bold text-[var(--text)]">{u.email}</span>
                                 {u.resetRequested && <span className="text-[8px] font-black bg-blue-500 text-white px-1.5 py-0.5 rounded uppercase tracking-tighter">RESET</span>}
                               </div>
-                              <p className="text-xs text-gray-400 font-medium">{u.displayName || "Anonymized Educator"}</p>
+                              <p className="text-xs text-[var(--text-tertiary)] font-medium">{u.displayName || "Anonymized Educator"}</p>
                             </div>
                           </div>
                         </td>
@@ -636,15 +636,15 @@ export default function AdminPage() {
                           </span>
                         </td>
                         <td className="px-4 py-5">
-                          <div className="text-[11px] text-gray-400 flex flex-col gap-1 font-medium">
-                            <span className="flex items-center gap-1.5"><Calendar size={11} className="text-gray-300" /> {formatDate(u.createdAt)}</span>
-                            <span className="flex items-center gap-1.5"><Clock size={11} className="text-gray-300" /> {formatDate(u.lastLoginAt)}</span>
+                          <div className="text-[11px] text-[var(--text-tertiary)] flex flex-col gap-1 font-medium">
+                            <span className="flex items-center gap-1.5"><Calendar size={11} className="text-[var(--text-tertiary)]" /> {formatDate(u.createdAt)}</span>
+                            <span className="flex items-center gap-1.5"><Clock size={11} className="text-[var(--text-tertiary)]" /> {formatDate(u.lastLoginAt)}</span>
                           </div>
                         </td>
                         <td className="px-4 py-5 text-center" onClick={e => e.stopPropagation()}>
                           <div className="inline-flex flex-col items-center">
-                            <span className="text-sm font-bold text-gray-900">{u.monthlyExamsGenerated || 0}</span>
-                            <div className="h-1 w-8 bg-gray-100 rounded-full mt-1 overflow-hidden">
+                            <span className="text-sm font-bold text-[var(--text)]">{u.monthlyExamsGenerated || 0}</span>
+                            <div className="h-1 w-8 bg-[var(--bg-subtle)] rounded-full mt-1 overflow-hidden">
                               <div className="h-full bg-emerald-500" style={{ width: `${Math.min(100, ((u.monthlyExamsGenerated || 0) / (u.proExpiresAt ? (u.planType === "yearly" ? 20 : 10) : FREE_EXAM_LIMIT)) * 100)}%` }} />
                             </div>
                           </div>
@@ -665,16 +665,16 @@ export default function AdminPage() {
                               {extending === `${u.uid}-365` ? <RefreshCw size={11} className="animate-spin" /> : "+1Y"}
                             </button>
                             <button onClick={() => handleAddQuota(u.uid, 10)} disabled={!!extending}
-                              className="h-8 px-2.5 bg-white border border-gray-200 text-blue-600 rounded-xl text-[10px] font-bold hover:bg-blue-50 transition-colors whitespace-nowrap">
+                              className="h-8 px-2.5 bg-[var(--surface)] border border-[var(--border)] text-blue-600 rounded-xl text-[10px] font-bold hover:bg-blue-50 transition-colors whitespace-nowrap">
                               {extending === `${u.uid}-q10` ? "..." : "+10Q"}
                             </button>
                             <button onClick={() => handleResetTrial(u.uid)} disabled={!!extending}
-                              className="h-8 px-2.5 bg-white border border-red-200 text-red-500 rounded-xl text-[10px] font-bold hover:bg-red-50 transition-colors whitespace-nowrap">
+                              className="h-8 px-2.5 bg-[var(--surface)] border border-red-200 text-red-500 rounded-xl text-[10px] font-bold hover:bg-red-50 transition-colors whitespace-nowrap">
                               {extending === `${u.uid}-reset` ? <RotateCcw size={11} className="animate-spin" /> : "Reset"}
                             </button>
                             <button onClick={() => setDeleteTarget(u)} disabled={!!extending}
                               title="Delete user" aria-label={`Delete ${u.email}`}
-                              className="h-8 w-8 flex items-center justify-center bg-white border border-gray-200 text-gray-400 rounded-xl hover:bg-red-50 hover:border-red-200 hover:text-red-500 transition-colors">
+                              className="h-8 w-8 flex items-center justify-center bg-[var(--surface)] border border-[var(--border)] text-[var(--text-tertiary)] rounded-xl hover:bg-red-50 hover:border-red-200 hover:text-red-500 transition-colors">
                               <Trash2 size={12} />
                             </button>
                           </div>
@@ -688,13 +688,13 @@ export default function AdminPage() {
 
             {/* Email Result (Users Tab) */}
             {emailResult && (
-              <div className="mt-6 bg-white p-5 rounded-3xl border border-gray-100 shadow-sm flex items-center gap-4">
+              <div className="mt-6 bg-[var(--surface)] p-5 rounded-3xl border border-[var(--border)] shadow-sm flex items-center gap-4">
                 <CheckCircle2 size={22} className="text-emerald-500 shrink-0" />
                 <div className="flex-1">
-                  <p className="font-bold text-gray-900">{emailResult.sent} email{emailResult.sent !== 1 ? "s" : ""} sent</p>
+                  <p className="font-bold text-[var(--text)]">{emailResult.sent} email{emailResult.sent !== 1 ? "s" : ""} sent</p>
                   {emailResult.failed > 0 && <p className="text-sm text-red-500">{emailResult.failed} failed</p>}
                 </div>
-                <button onClick={() => setEmailResult(null)} className="text-gray-400 hover:text-gray-600"><XCircle size={18} /></button>
+                <button onClick={() => setEmailResult(null)} className="text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]"><XCircle size={18} /></button>
               </div>
             )}
           </>
@@ -925,23 +925,23 @@ export default function AdminPage() {
             {/* Manage Existing Posts — edit title/description/content/category on any
                 blog_posts doc by id (static or cron-generated). Scoped edit path, not a
                 full CMS: no create/delete/publish-toggle here. */}
-            <div className="bg-white rounded-[32px] border border-gray-100 shadow-sm overflow-hidden">
-              <div className="p-5 border-b border-gray-50 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="bg-[var(--surface)] rounded-[32px] border border-[var(--border)] shadow-sm overflow-hidden">
+              <div className="p-5 border-b border-[var(--border)] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
-                  <p className="font-black text-gray-900">Manage Existing Posts</p>
-                  <p className="text-xs text-gray-400 font-medium mt-0.5">
+                  <p className="font-black text-[var(--text)]">Manage Existing Posts</p>
+                  <p className="text-xs text-[var(--text-tertiary)] font-medium mt-0.5">
                     {blogPosts.length} post{blogPosts.length !== 1 ? "s" : ""} in blog_posts
                   </p>
                 </div>
                 {!editingPostId && (
                   <div className="relative w-full sm:w-[280px]">
-                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
+                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)]" size={14} />
                     <input
                       type="text"
                       placeholder="Filter by title or slug..."
                       value={blogSearch}
                       onChange={(e) => setBlogSearch(e.target.value)}
-                      className="w-full h-10 pl-9 pr-4 bg-gray-50 border border-gray-100 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-emerald-600/10 focus:border-emerald-600 transition-all"
+                      className="w-full h-10 pl-9 pr-4 bg-[var(--bg-subtle)] border border-[var(--border)] rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-emerald-600/10 focus:border-emerald-600 transition-all"
                     />
                   </div>
                 )}
@@ -950,59 +950,59 @@ export default function AdminPage() {
               {editingPostId ? (
                 <div className="p-5 sm:p-6 space-y-4">
                   {loadingPostDetail || !editingPost ? (
-                    <p className="text-sm text-gray-400 font-medium py-10 text-center">Loading post…</p>
+                    <p className="text-sm text-[var(--text-tertiary)] font-medium py-10 text-center">Loading post…</p>
                   ) : (
                     <>
                       <div className="flex items-center justify-between">
-                        <p className="text-xs font-bold text-gray-400 uppercase tracking-widest truncate">
+                        <p className="text-xs font-bold text-[var(--text-tertiary)] uppercase tracking-widest truncate">
                           Editing: /{editingPost.slug}
                         </p>
                         <button
                           onClick={closeEditPost}
                           disabled={savingPost}
-                          className="text-xs font-bold text-gray-400 hover:text-gray-600 shrink-0 disabled:opacity-50"
+                          className="text-xs font-bold text-[var(--text-tertiary)] hover:text-[var(--text-secondary)] shrink-0 disabled:opacity-50"
                         >
                           ← Back to list
                         </button>
                       </div>
 
                       <div>
-                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5 block">Title</label>
+                        <label className="text-[10px] font-black text-[var(--text-tertiary)] uppercase tracking-widest mb-1.5 block">Title</label>
                         <input
                           type="text"
                           value={editForm.title}
                           onChange={(e) => setEditForm((f) => ({ ...f, title: e.target.value }))}
-                          className="w-full h-11 px-4 border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-emerald-600/10 focus:border-emerald-600"
+                          className="w-full h-11 px-4 border border-[var(--border)] rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-emerald-600/10 focus:border-emerald-600 bg-[var(--surface)] text-[var(--text)]"
                         />
                       </div>
 
                       <div>
-                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5 block">Category</label>
+                        <label className="text-[10px] font-black text-[var(--text-tertiary)] uppercase tracking-widest mb-1.5 block">Category</label>
                         <input
                           type="text"
                           value={editForm.category}
                           onChange={(e) => setEditForm((f) => ({ ...f, category: e.target.value }))}
-                          className="w-full h-11 px-4 border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-emerald-600/10 focus:border-emerald-600"
+                          className="w-full h-11 px-4 border border-[var(--border)] rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-emerald-600/10 focus:border-emerald-600 bg-[var(--surface)] text-[var(--text)]"
                         />
                       </div>
 
                       <div>
-                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5 block">Description</label>
+                        <label className="text-[10px] font-black text-[var(--text-tertiary)] uppercase tracking-widest mb-1.5 block">Description</label>
                         <textarea
                           value={editForm.description}
                           onChange={(e) => setEditForm((f) => ({ ...f, description: e.target.value }))}
                           rows={2}
-                          className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-emerald-600/10 focus:border-emerald-600 resize-y"
+                          className="w-full px-4 py-3 border border-[var(--border)] rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-emerald-600/10 focus:border-emerald-600 resize-y bg-[var(--surface)] text-[var(--text)]"
                         />
                       </div>
 
                       <div>
-                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5 block">Content (Markdown)</label>
+                        <label className="text-[10px] font-black text-[var(--text-tertiary)] uppercase tracking-widest mb-1.5 block">Content (Markdown)</label>
                         <textarea
                           value={editForm.content}
                           onChange={(e) => setEditForm((f) => ({ ...f, content: e.target.value }))}
                           rows={16}
-                          className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm font-mono focus:outline-none focus:ring-2 focus:ring-emerald-600/10 focus:border-emerald-600 resize-y"
+                          className="w-full px-4 py-3 border border-[var(--border)] rounded-xl text-sm font-mono focus:outline-none focus:ring-2 focus:ring-emerald-600/10 focus:border-emerald-600 resize-y bg-[var(--surface)] text-[var(--text)]"
                         />
                       </div>
 
@@ -1010,7 +1010,7 @@ export default function AdminPage() {
                         <button
                           onClick={closeEditPost}
                           disabled={savingPost}
-                          className="h-11 px-5 rounded-xl text-sm font-bold text-gray-500 hover:bg-gray-50 transition-colors disabled:opacity-50"
+                          className="h-11 px-5 rounded-xl text-sm font-bold text-[var(--text-secondary)] hover:bg-[var(--bg-subtle)] transition-colors disabled:opacity-50"
                         >
                           Cancel
                         </button>
@@ -1027,23 +1027,23 @@ export default function AdminPage() {
                   )}
                 </div>
               ) : (
-                <div className="divide-y divide-gray-50 max-h-[420px] overflow-y-auto">
+                <div className="divide-y divide-[var(--border)] max-h-[420px] overflow-y-auto">
                   {blogPostsLoading ? (
-                    <p className="px-5 py-8 text-center text-sm text-gray-400 font-medium">Loading…</p>
+                    <p className="px-5 py-8 text-center text-sm text-[var(--text-tertiary)] font-medium">Loading…</p>
                   ) : filteredBlogPosts.length === 0 ? (
-                    <p className="px-5 py-8 text-center text-sm text-gray-400 font-medium">No posts found</p>
+                    <p className="px-5 py-8 text-center text-sm text-[var(--text-tertiary)] font-medium">No posts found</p>
                   ) : (
                     filteredBlogPosts.map((p) => (
-                      <div key={p.id} className="flex items-center justify-between gap-4 px-5 py-4 hover:bg-gray-50/60 transition-colors">
+                      <div key={p.id} className="flex items-center justify-between gap-4 px-5 py-4 hover:bg-[var(--bg-subtle)]/60 transition-colors">
                         <div className="min-w-0">
-                          <p className="text-sm font-bold text-gray-900 truncate">{p.title}</p>
-                          <p className="text-xs text-gray-400 font-medium truncate">
+                          <p className="text-sm font-bold text-[var(--text)] truncate">{p.title}</p>
+                          <p className="text-xs text-[var(--text-tertiary)] font-medium truncate">
                             /{p.slug} · {p.category || "Uncategorized"} · {p.published ? "Published" : "Draft"}
                           </p>
                         </div>
                         <button
                           onClick={() => openEditPost(p.id)}
-                          className="h-9 px-4 rounded-xl text-xs font-bold bg-white border border-gray-200 text-emerald-700 hover:bg-emerald-50 hover:border-emerald-200 transition-colors shrink-0"
+                          className="h-9 px-4 rounded-xl text-xs font-bold bg-[var(--surface)] border border-[var(--border)] text-emerald-700 hover:bg-emerald-50 hover:border-emerald-200 transition-colors shrink-0"
                         >
                           Edit
                         </button>
@@ -1162,17 +1162,17 @@ export default function AdminPage() {
             <div key={u.uid}
               onClick={() => toggleSelect(u.uid)}
               className={cn(
-                "bg-white p-5 rounded-3xl border shadow-sm cursor-pointer transition-colors",
-                selectedUids.has(u.uid) ? "border-emerald-200 bg-emerald-50/30" : u.renewalRequested ? "border-amber-200 bg-amber-50/20" : "border-gray-100"
+                "bg-[var(--surface)] p-5 rounded-3xl border shadow-sm cursor-pointer transition-colors",
+                selectedUids.has(u.uid) ? "border-emerald-200 bg-emerald-50/30" : u.renewalRequested ? "border-amber-200 bg-amber-50/20" : "border-[var(--border)]"
               )}
             >
               <div className="flex justify-between items-start mb-4">
                 <div className="flex gap-3">
-                  <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold border shrink-0", u.renewalRequested ? "bg-amber-100 text-amber-700 border-amber-200" : "bg-gray-50 text-gray-500 border-gray-100")}>
+                  <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold border shrink-0", u.renewalRequested ? "bg-amber-100 text-amber-700 border-amber-200" : "bg-[var(--bg-subtle)] text-[var(--text-secondary)] border-[var(--border)]")}>
                     {u.displayName?.[0] || u.email[0].toUpperCase()}
                   </div>
                   <div className="min-w-0">
-                    <p className="font-bold text-sm text-gray-900 truncate max-w-[180px]">{u.email}</p>
+                    <p className="font-bold text-sm text-[var(--text)] truncate max-w-[180px]">{u.email}</p>
                     <ProBadge expiresAt={u.proExpiresAt} />
                   </div>
                 </div>
@@ -1183,9 +1183,9 @@ export default function AdminPage() {
               </div>
 
               <div className="grid grid-cols-2 gap-3 mb-4">
-                <div className="bg-gray-50 p-3 rounded-2xl">
-                  <p className="text-[10px] text-gray-400 uppercase font-bold mb-1">Monthly Usage</p>
-                  <p className="text-sm font-bold text-gray-900">{u.monthlyExamsGenerated || 0} / {u.proExpiresAt ? (u.planType === "yearly" ? "20" : "10") : "1"}</p>
+                <div className="bg-[var(--bg-subtle)] p-3 rounded-2xl">
+                  <p className="text-[10px] text-[var(--text-tertiary)] uppercase font-bold mb-1">Monthly Usage</p>
+                  <p className="text-sm font-bold text-[var(--text)]">{u.monthlyExamsGenerated || 0} / {u.proExpiresAt ? (u.planType === "yearly" ? "20" : "10") : "1"}</p>
                 </div>
                 <div className="bg-blue-50 p-3 rounded-2xl">
                   <p className="text-[10px] text-blue-400 uppercase font-bold mb-1">Bonus Quota</p>
@@ -1203,16 +1203,16 @@ export default function AdminPage() {
                   {extending === `${u.uid}-365` ? <RefreshCw size={12} className="animate-spin" /> : "+1 Year"}
                 </button>
                 <button onClick={() => handleAddQuota(u.uid, 10)} disabled={!!extending}
-                  className="h-10 px-4 bg-gray-100 text-gray-600 rounded-xl text-[10px] font-bold disabled:opacity-50">
+                  className="h-10 px-4 bg-[var(--bg-subtle)] text-[var(--text-secondary)] rounded-xl text-[10px] font-bold disabled:opacity-50">
                   {extending === `${u.uid}-q10` ? "..." : "+10Q"}
                 </button>
                 <button onClick={() => handleResetTrial(u.uid)} disabled={!!extending}
-                  className="h-10 px-3 bg-white border border-red-200 text-red-500 rounded-xl text-[10px] font-bold disabled:opacity-50 flex items-center justify-center">
+                  className="h-10 px-3 bg-[var(--surface)] border border-red-200 text-red-500 rounded-xl text-[10px] font-bold disabled:opacity-50 flex items-center justify-center">
                   {extending === `${u.uid}-reset` ? <RotateCcw size={12} className="animate-spin" /> : "Reset"}
                 </button>
                 <button onClick={() => setDeleteTarget(u)} disabled={!!extending}
                   aria-label={`Delete ${u.email}`}
-                  className="h-10 w-10 bg-white border border-gray-200 text-gray-400 rounded-xl disabled:opacity-50 flex items-center justify-center">
+                  className="h-10 w-10 bg-[var(--surface)] border border-[var(--border)] text-[var(--text-tertiary)] rounded-xl disabled:opacity-50 flex items-center justify-center">
                   <Trash2 size={13} />
                 </button>
               </div>
@@ -1228,7 +1228,7 @@ export default function AdminPage() {
         description={
           deleteTarget && (
             <>
-              This permanently deletes <span className="font-bold text-gray-700">{deleteTarget.email}</span> — their
+              This permanently deletes <span className="font-bold text-[var(--text)]">{deleteTarget.email}</span> — their
               account, saved exams, and profile. This can't be undone.
             </>
           )
