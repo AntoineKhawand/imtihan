@@ -27,17 +27,27 @@ keep each change reviewable and low-risk for an unattended push.
       supports it without forcing it.
 
 ### GEO
-- [ ] Expand `public/llms.txt` — add the `/pricing` and `/upgrade` pages (currently only listed
-      under "About & Pricing" as `/upgrade`; `/pricing` itself is missing), and add a one-line
-      "Key facts" section (free tier terms, supported languages, curricula) so an LLM summarizing
-      Imtihan from `llms.txt` alone gets the specifics right instead of inferring them.
-- [ ] Check whether `robots.ts` needs to explicitly allow known AI crawlers (GPTBot,
-      PerplexityBot, ClaudeBot, Google-Extended) — currently covered by the wildcard `userAgent:
-      "*"` rule, which is fine, but worth a dedicated pass to confirm none of these are
-      inadvertently caught by a future disallow rule as the site grows.
-- [ ] `organizationSchema` (homepage) lists Facebook + LinkedIn under `sameAs` — verify these
-      profiles actually exist and are live before Q3 launch; a dead `sameAs` link undermines
-      entity credibility for GEO.
+- [x] **2026-09-19** — `public/llms.txt` had 2 false Arabic-support claims left over from
+      yesterday's marketing-copy sweep (`b07e82a` didn't touch this file): the header said "in
+      English, French, and Arabic" and the `/generateur-examen-bac-libanais` entry said "Supports
+      French, English, and Arabic." Removed both — Arabic is explicitly deferred to v1.1 per
+      `CLAUDE.md` §8/§9. Also added the missing `/pricing` entry under "About & Pricing" (was
+      `/upgrade`-only) and a new "Key Facts" section stating the real free-tier terms (1 free exam
+      lifetime, not monthly), supported languages (French/English only), curricula (Bac Libanais,
+      Bac Français, IB, University), and subjects (Math, Physics, Chemistry) — deliberately
+      phrased quota-free given the still-open `/pricing` vs `/upgrade` monthly-quota mismatch
+      noted below, so this file doesn't assert a number that contradicts either page.
+- [x] **2026-09-19** — Checked whether `robots.ts` needs to explicitly allow known AI crawlers
+      (GPTBot, PerplexityBot, ClaudeBot, Google-Extended). Confirmed: the existing wildcard
+      `userAgent: "*"` rule (with no crawler-specific disallow anywhere in the file) already
+      covers all of them — no code change needed. Closing this backlog item.
+- [x] **2026-09-19** — `organizationSchema` (homepage, `src/app/page.tsx`) listed
+      `https://www.facebook.com/imtihan.live` and `https://www.linkedin.com/company/imtihan-lebanon`
+      under `sameAs`. Verified via WebSearch before touching anything: neither URL surfaces for
+      "imtihan.live facebook page" or "imtihan-lebanon imtihan.live linkedin company" — no
+      evidence either profile exists. Removed both from the `sameAs` array; a dead `sameAs`
+      undermines entity credibility for AI Overviews/GEO more than having none at all. If/when
+      real Facebook/LinkedIn pages go live before Q3 launch, re-add them then.
 - [ ] **Blocked on a decision, not a technical fix:** the 27 Firestore-backed dynamic blog posts
       (14 of them at 40/100) need the same `BlogCallout`/`BlogFAQ` treatment the 5 rewritten
       static posts got, but there's no update path for existing Firestore `blog_posts` docs
@@ -143,16 +153,19 @@ keep each change reviewable and low-risk for an unattended push.
       expected given no blog-body content changes; confirms the domain fix didn't break anything
       GEO-side either. Full reports regenerated at `SEO_AUDIT_REPORT.md` / `GEO_AUDIT_REPORT.md`
       (both gitignored, not committed).
-- [ ] **GSC follow-up on the 2026-09-18 www→apex domain fix — still not completed; two attempts
-      now, both blocked on tool access, not data.** First attempt (earlier 2026-09-18 run) had no
-      `gsc` MCP tools. This second attempt (later same day, after being told to retry) checked
-      again: the tool list available in this session is still Read/Edit/Write/Bash/Grep/Glob/
-      WebSearch/SubagentHandback only — no `gsc`-prefixed tools and no `chrome-devtools` tools
-      present, so URL Inspection, re-crawl requests, and the Coverage report are still
-      unreachable. Per the "ground every claim in data, not assumption" rule, no GSC numbers are
-      reported here — none were pulled. Still outstanding, needs a run where the `gsc` MCP server
-      is actually attached to the session (this looks like an environment/config gap upstream of
-      the agent, not something fixable by retrying the same steps): (1) URL-inspect and request
+- [ ] **GSC follow-up on the 2026-09-18 www→apex domain fix — still not completed; now 4 runs
+      blocked on tool access, not data. Stop retrying — this needs the `gsc` MCP server actually
+      attached to the session, not another same-step retry.** 2026-09-18 (run 1): no `gsc` tools.
+      2026-09-18 (run 2, after being told to retry): checked again, still absent. An unlogged run
+      3 also found it absent (per the orchestrator's count going into tonight). 2026-09-19 (run 4,
+      this run, checked first thing as instructed): tool list available this session is still
+      Read/Edit/Write/Bash/Grep/Glob/WebSearch/SubagentHandback only — no `gsc`-prefixed tools and
+      no `chrome-devtools` tools present, so URL Inspection, re-crawl requests, and the Coverage
+      report are still unreachable. Per the "ground every claim in data, not assumption" rule, no
+      GSC numbers are reported here — none were pulled, and no fix in tonight's 3 items relied on
+      GSC data (llms.txt/sameAs/robots were verifiable via repo state + WebSearch alone). This is
+      an environment/config gap upstream of the agent — needs someone to fix the tool attachment
+      before the next run, not another retry. Once connected: (1) URL-inspect and request
       re-crawl on the homepage and the 3 newly-linked curricula pages (`/ib-exam-generator`,
       `/bac-francais-exam-generator`, `/generateur-examen-bac-libanais`); (2) check GSC Coverage
       for a "Redirect error" spike on 2026-09-18 (the hours the www/apex redirect loop was live)

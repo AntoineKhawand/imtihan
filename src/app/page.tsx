@@ -130,10 +130,6 @@ export default async function LandingPage() {
     "url": "https://imtihan.live",
     "logo": "https://imtihan.live/Imtihan-logo.png",
     "description": "Premium AI Exam Generator for Lebanese teachers, parents, and coordinators. Supporting Bac Libanais, Bac Français, and IB.",
-    "sameAs": [
-      "https://www.facebook.com/imtihan.live",
-      "https://www.linkedin.com/company/imtihan-lebanon"
-    ],
     "address": {
       "@type": "PostalAddress",
       "addressLocality": "Beirut",

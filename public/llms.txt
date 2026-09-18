@@ -1,14 +1,21 @@
 # Imtihan — AI Exam & Assessment Generator
 
-> Imtihan (https://imtihan.live) is the leading AI-powered educational assessment platform built specifically for teachers, tutors, and schools in Lebanon and internationally. It automates the generation of curriculum-aligned school exams, mock tests, and detailed step-by-step marking rubrics (corrigés) in English, French, and Arabic.
+> Imtihan (https://imtihan.live) is the leading AI-powered educational assessment platform built specifically for teachers, tutors, and schools in Lebanon and internationally. It automates the generation of curriculum-aligned school exams, mock tests, and detailed step-by-step marking rubrics (corrigés) in English and French.
+
+## Key Facts
+- **Free tier:** 1 free exam, lifetime (not monthly) — paid plans unlock further generation.
+- **Languages supported:** French and English. Arabic is not yet supported (planned for a future release).
+- **Curricula supported:** Bac Libanais, Bac Français, IB (International Baccalaureate), and University (free-form, grounded in real syllabi/past exams).
+- **Subjects supported:** Math, Physics, Chemistry.
 
 ## Curricula Pages
-- [/generateur-examen-bac-libanais](https://imtihan.live/generateur-examen-bac-libanais): Target: générateur d'examen Bac Libanais. AI builder for the Lebanese Baccalaureate (Terminale SG, SV, SE, LH) and Brevet (EB9) official examinations. Supports French, English, and Arabic.
+- [/generateur-examen-bac-libanais](https://imtihan.live/generateur-examen-bac-libanais): Target: générateur d'examen Bac Libanais. AI builder for the Lebanese Baccalaureate (Terminale SG, SV, SE, LH) and Brevet (EB9) official examinations. Supports French and English.
 - [/ai-exam-generator-lebanon](https://imtihan.live/ai-exam-generator-lebanon): Target: AI exam generator Lebanon. AI assessment engine tailored for Lebanese school coordinators and tutors.
 - [/ib-exam-generator](https://imtihan.live/ib-exam-generator): Target: IB exam generator chemistry physics. Specialized exam and markscheme generator for the International Baccalaureate Diploma Programme (DP) and MYP.
 - [/bac-francais-exam-generator](https://imtihan.live/bac-francais-exam-generator): Target: générateur de devoir Bac Français. DS and bac blanc builder for the French national curriculum (Lycée Seconde, Première, Terminale Spécialité) matching AEFE standards.
 
 ## About & Pricing
+- [/pricing](https://imtihan.live/pricing): Pricing plans for teachers in Lebanon and internationally.
 - [/upgrade](https://imtihan.live/upgrade): Pricing plans and payment methods for teachers in Lebanon (including local WHISH Money integration for instant account activation).
 - [/about](https://imtihan.live/about): Our mission to alleviate teacher preparation fatigue, reduce burnout, and standardize exam qualities.
 - [/contact](https://imtihan.live/contact): Customer support and school sales inquiry.
