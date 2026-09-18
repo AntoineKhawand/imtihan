@@ -89,7 +89,11 @@ test.describe("/upgrade", () => {
       context.waitForEvent("page"),
       page.getByRole("button", { name: "Continue on WhatsApp" }).click(),
     ]);
-    expect(popup.url()).toMatch(/wa\.me/);
+    // wa.me is a redirect shortlink that can resolve to api.whatsapp.com/send —
+    // give it a short window to land, but don't block on a full page load since
+    // the redirect target is a real external domain (BUG-019).
+    await popup.waitForURL(/api\.whatsapp\.com\/send|wa\.me/, { timeout: 8_000 }).catch(() => {});
+    expect(popup.url()).toMatch(/api\.whatsapp\.com\/send|wa\.me/);
     await popup.close();
 
     await expect(page.getByRole("heading", { name: "WhatsApp is open!" })).toBeVisible();

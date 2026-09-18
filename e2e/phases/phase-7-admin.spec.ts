@@ -116,7 +116,9 @@ test.describe("/admin", () => {
     await expect(page.locator("table").first()).toBeVisible({ timeout: 15_000 });
     await page.getByRole("button", { name: "email", exact: true }).click();
 
-    await expect(page.getByText("Newsletter")).toBeVisible();
+    // Scoped to the template picker button — "Newsletter" also appears inside the
+    // "Template: newsletter" summary label lower on the page (BUG-018).
+    await expect(page.getByRole("button", { name: "Newsletter" })).toBeVisible();
     await page.getByRole("button", { name: /Custom HTML/ }).click();
     await expect(page.getByPlaceholder("Email subject...")).toBeVisible();
     await expect(page.getByPlaceholder("Email HTML content...")).toBeVisible();

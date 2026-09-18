@@ -5,7 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { FREE_EXAM_LIMIT } from "@/lib/utils";
-import { RefreshCw, Search, Calendar, Clock, ShieldCheck, User, Users, Zap, Sparkles, Plus, BarChart3, TrendingUp, FileText, ArrowRight, Mail, Send, CheckCircle2, XCircle, Check, RotateCcw, Trash2 } from "lucide-react";
+import { RefreshCw, Search, Calendar, Clock, ShieldCheck, User, Users, Zap, Sparkles, BarChart3, TrendingUp, FileText, ArrowRight, Mail, Send, CheckCircle2, XCircle, Check, RotateCcw, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
@@ -471,7 +471,7 @@ export default function AdminPage() {
                 <button onClick={() => setFilterType("all")} className={cn("h-10 px-5 rounded-2xl text-xs font-bold transition-all border shrink-0", filterType === "all" ? "bg-emerald-600 text-white border-emerald-500 shadow-lg shadow-emerald-600/20" : "bg-white text-gray-500 border-gray-100 hover:border-gray-200")}>
                   All Users
                 </button>
-                <button onClick={() => setFilterType("requests")} className={cn("h-10 px-5 rounded-2xl text-xs font-bold transition-all border shrink-0 flex items-center gap-2", filterType === "requests" ? "bg-amber-500 text-white border-amber-400 shadow-lg shadow-amber-500/20" : "bg-white text-gray-500 border-gray-100 hover:border-gray-200")}>
+                <button onClick={() => setFilterType(filterType === "requests" ? "all" : "requests")} className={cn("h-10 px-5 rounded-2xl text-xs font-bold transition-all border shrink-0 flex items-center gap-2", filterType === "requests" ? "bg-amber-500 text-white border-amber-400 shadow-lg shadow-amber-500/20" : "bg-white text-gray-500 border-gray-100 hover:border-gray-200")}>
                   {filterType === "requests" && <ShieldCheck size={14} />} Pending Requests
                 </button>
                 <div className="w-px h-6 bg-gray-200 mx-1" />
@@ -556,7 +556,7 @@ export default function AdminPage() {
                         </td>
                         <td className="px-4 py-5 text-center" onClick={e => e.stopPropagation()}>
                           <span className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-blue-50 text-blue-700 rounded-xl font-bold text-[11px] border border-blue-100">
-                            <Plus size={10} />{u.extraExamsQuota || 0}
+                            +{u.extraExamsQuota || 0}
                           </span>
                         </td>
                         <td className="px-6 py-5 text-right" onClick={e => e.stopPropagation()}>
