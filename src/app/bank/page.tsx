@@ -88,7 +88,12 @@ async function shareToSchoolBank(
 // ── Page ───────────────────────────────────────────────────────────────────────
 
 export default function BankPage() {
-  const { user, profile } = useAuth();
+  const { user, profile, loading } = useAuth();
+  // AuthContext's `loading` flips to false as soon as the Firestore profile
+  // listener attaches, not once it delivers its first snapshot — leaving a
+  // window where `user` is set but `profile` is still null. Guard against
+  // treating that window as "definitely free tier" (see BUG-021..024).
+  const profileResolving = loading || (!!user && !profile);
   const isPro = isProActive(profile);
 
   const [entries, setEntries]           = useState<BankExercise[]>([]);
@@ -260,7 +265,7 @@ export default function BankPage() {
               )}
             >
               <Building2 size={12} /> My School
-              {!isPro && (
+              {!profileResolving && !isPro && (
                 <span className="absolute -top-2 -right-2 w-4 h-4 rounded-full bg-amber-400 flex items-center justify-center">
                   <Zap size={8} className="text-white fill-white" />
                 </span>
@@ -298,7 +303,7 @@ export default function BankPage() {
                       key={entry.id}
                       entry={entry}
                       onRemove={handleRemove}
-                      onShare={isPro ? () => handleShare(entry) : undefined}
+                      onShare={!profileResolving && isPro ? () => handleShare(entry) : undefined}
                       isSchool={false}
                     />
                   ))}
@@ -312,7 +317,12 @@ export default function BankPage() {
         {tab === "school" && (
           <>
             {/* Pro gate */}
-            {!isPro ? (
+            {profileResolving ? (
+              <div className="py-20 flex flex-col items-center gap-4 opacity-40">
+                <div className="w-6 h-6 rounded-full border-2 border-emerald-600 border-t-transparent animate-spin" />
+                <p className="text-xs font-medium">Loading your account…</p>
+              </div>
+            ) : !isPro ? (
               <div className="card p-10 text-center space-y-4">
                 <div className="w-14 h-14 rounded-2xl bg-amber-50 border border-amber-100 flex items-center justify-center mx-auto">
                   <Building2 size={24} className="text-amber-500" />

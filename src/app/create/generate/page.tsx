@@ -58,7 +58,7 @@ function perfSuggestion(pct: number): string {
 export default function GeneratePage() {
   const router = useRouter();
   const { showToast } = useToast();
-  const { profile } = useAuth();
+  const { user: authUser, profile, loading: authLoading } = useAuth();
   const [context, setContext] = useState<ExamContext | null>(null);
   const [templateId, setTemplateId] = useState("classic");
   const [exercises, setExercises] = useState<ExerciseWithStatus[]>([]);
@@ -69,7 +69,13 @@ export default function GeneratePage() {
   const [addingChapterId, setAddingChapterId] = useState<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
 
-  const isFreeTier = !isProActive(profile);
+  // AuthContext's `loading` flips to false as soon as the Firestore profile
+  // listener attaches, not once it delivers its first snapshot — leaving a
+  // window where `user` is set but `profile` is still null (see
+  // BUG-021..024). Assume not-free while resolving so a genuinely-Pro user
+  // never briefly sees the "Upgrade to Pro" priority-generation hint.
+  const profileResolving = authLoading || (!!authUser && !profile);
+  const isFreeTier = !profileResolving && !isProActive(profile);
 
   const [editingExercise, setEditingExercise] = useState<Exercise | null>(null);
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());

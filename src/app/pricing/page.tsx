@@ -35,9 +35,15 @@ const YEARLY_TOTAL = +(YEARLY_PRICE_PER_MONTH * 12).toFixed(2);
 const YEARLY_SAVING_PCT = Math.round((1 - YEARLY_PRICE_PER_MONTH / MONTHLY_PRICE) * 100);
 
 export default function PricingPage() {
-  const { user, profile } = useAuth();
+  const { user, profile, loading } = useAuth();
   const [yearly, setYearly] = useState(false);
 
+  // AuthContext's `loading` flips to false as soon as the Firestore profile
+  // listener attaches, not once it delivers its first snapshot — leaving a
+  // window where `user` is set but `profile` is still null (see
+  // BUG-021..024). Without this, a genuinely-Pro user briefly sees the
+  // "Upgrade to Pro" CTA instead of "Active — Pro plan".
+  const profileResolving = loading || (!!user && !profile);
   const isPro = isProActive(profile);
 
   function handleUpgrade() {
@@ -171,7 +177,9 @@ export default function PricingPage() {
               ))}
             </ul>
 
-            {isPro ? (
+            {profileResolving ? (
+              <div className="h-10 rounded-xl bg-[var(--bg-subtle)] animate-pulse" />
+            ) : isPro ? (
               <div className="h-10 rounded-xl bg-[var(--accent)]/20 text-[var(--accent)] text-sm font-medium flex items-center justify-center gap-2">
                 <Zap size={14} /> Active — Pro plan
               </div>

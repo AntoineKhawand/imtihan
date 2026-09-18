@@ -162,6 +162,18 @@ export default function CommunityPage() {
     </div>
   );
 
+  // AuthContext's `loading` flips to false as soon as the Firestore profile
+  // listener attaches, not once it delivers its first snapshot — leaving a
+  // window where `user` is set but `profile` is still null. Wait for the
+  // real profile instead of guessing "free" (briefly gates a real Pro user)
+  // or "pro" (briefly leaks the gated library to a real free user) — see
+  // BUG-021..024.
+  if (!profile) return (
+    <div className="min-h-screen bg-[var(--bg)] flex items-center justify-center">
+      <div className="w-8 h-8 rounded-full border-2 border-[var(--accent)] border-t-transparent animate-spin" />
+    </div>
+  );
+
   const isFree = !isProActive(profile);
 
   return (

@@ -177,8 +177,15 @@ function StudentCard({ row }: { row: StudentRow }) {
 // ── Page ───────────────────────────────────────────────────────────────────────
 
 export default function StudentsPage() {
-  const { profile } = useAuth();
+  const { user: authUser, profile, loading: authLoading } = useAuth();
   const teacherSchool = profile?.school ?? "";
+  // AuthContext's `loading` flips to false as soon as the Firestore profile
+  // listener attaches, not once it delivers its first snapshot — leaving a
+  // window where `authUser` is set but `profile` is still null (see
+  // BUG-021..024). Without this guard, `teacherSchool` reads as "" during
+  // that window and the fetch below drops its school filter, briefly
+  // showing every school's students instead of just this teacher's.
+  const profileResolving = authLoading || (!!authUser && !profile);
 
   const [rows, setRows] = useState<StudentRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -190,7 +197,7 @@ export default function StudentsPage() {
   }, []);
 
   useEffect(() => {
-    if (!mounted) return;
+    if (!mounted || profileResolving) return;
 
     async function load() {
       setLoading(true);
@@ -226,7 +233,7 @@ export default function StudentsPage() {
     }
 
     load();
-  }, [mounted, teacherSchool]);
+  }, [mounted, profileResolving, teacherSchool]);
 
   const filtered = searchQuery.trim()
     ? rows.filter((r) => {

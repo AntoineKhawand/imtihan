@@ -42,8 +42,15 @@ export default function ConfirmPage() {
   const [loading, setLoading] = useState(true);
   const [dismissedWarnings, setDismissedWarnings] = useState<number[]>([]);
   const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
-  const { profile } = useAuth();
-  const isFreeTier = !isProActive(profile);
+  const { user: authUser, profile, loading: authLoading } = useAuth();
+  // AuthContext's `loading` flips to false as soon as the Firestore profile
+  // listener attaches, not once it delivers its first snapshot — leaving a
+  // window where `user` is set but `profile` is still null. Don't lock a
+  // genuinely-Pro user's Version B toggle while that resolves (see
+  // BUG-021..024) — mirror DashboardSidebar's "assume unlocked while
+  // resolving" tradeoff rather than guessing "free."
+  const profileResolving = authLoading || (!!authUser && !profile);
+  const isFreeTier = !profileResolving && !isProActive(profile);
 
   useEffect(() => {
     const raw = sessionStorage.getItem("imtihan_context");

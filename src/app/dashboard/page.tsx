@@ -57,8 +57,14 @@ export default function DashboardPage() {
   const [exams, setExams] = useState<SavedExam[]>([]);
   const [query, setQuery] = useState("");
   const [mounted, setMounted] = useState(false);
-  const { user: currentUser, profile } = useAuth();
+  const { user: currentUser, profile, loading: authLoading } = useAuth();
 
+  // AuthContext's `loading` flips to false as soon as the Firestore profile
+  // listener attaches, not once it delivers its first snapshot — leaving a
+  // window where `currentUser` is set but `profile` is still null (see
+  // BUG-021..024). Without this, a genuinely-Pro user briefly sees the
+  // "Free plan — Upgrade to Pro" subscription-status card.
+  const profileResolving = authLoading || (!!currentUser && !profile);
   const isPro = isProActive(profile) || isInGracePeriod(profile);
   const quotaUsed = isPro ? (profile?.monthlyExamsGenerated ?? 0) : (profile?.examsGenerated ?? 0);
   const extraQuota = profile?.extraExamsQuota ?? 0;
@@ -276,7 +282,9 @@ export default function DashboardPage() {
 
         {/* Subscription status */}
         <div className="card p-4 mb-6 flex items-center gap-4">
-          {isPro ? (
+          {profileResolving ? (
+            <div className="flex-1 h-10 rounded-lg bg-[var(--bg-subtle)] animate-pulse" />
+          ) : isPro ? (
             <>
               <div className="w-10 h-10 rounded-xl bg-[var(--accent)] flex items-center justify-center flex-shrink-0">
                 <Zap size={18} className="text-white" />
