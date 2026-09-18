@@ -14,10 +14,18 @@ interface ProGuardProps {
 }
 
 export function ProGuard({ children, featureName, featureDescription }: ProGuardProps) {
-  const { profile, loading } = useAuth();
+  const { user, profile, loading } = useAuth();
   const isPro = isProActive(profile) || isInGracePeriod(profile);
 
   if (loading) return null;
+
+  // AuthContext flips `loading` to false as soon as Firebase Auth resolves,
+  // without waiting for the Firestore profile onSnapshot to deliver its
+  // first payload (see AuthContext.subscribeToProfile). In that window,
+  // `user` is set but `profile` is still null — treating that as "not pro"
+  // would flash the full paywall for a genuinely-Pro user before the real
+  // profile arrives. Keep waiting instead of guessing.
+  if (user && !profile) return null;
 
   if (isPro) return <>{children}</>;
 
