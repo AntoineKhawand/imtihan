@@ -99,3 +99,17 @@ export function formatDate(timestamp: number): string {
 export function shortId(): string {
   return Math.random().toString(36).slice(2, 9);
 }
+
+/**
+ * Turn a title into a URL-safe slug, transliterating accented Latin
+ * characters (é→e, è→e, à→a, ç→c, etc.) instead of silently dropping them.
+ * Example: "Générateur d'Examens Bac Français" → "generateur-dexamens-bac-francais"
+ */
+export function slugify(text: string): string {
+  return text
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "") // strip combining diacritical marks left by NFD
+    .toLowerCase()
+    .replace(/[^\w ]+/g, "")
+    .replace(/ +/g, "-");
+}

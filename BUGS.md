@@ -19,6 +19,17 @@ Track issues here during development. Format:
 
 ## Open Issues
 
+## BUG-027: Blog auto-publish cron slugified titles by dropping accented characters instead of transliterating them
+**Status:** Fixed
+**Severity:** Low
+**Area:** API / SEO
+**Reported:** 2026-09-18
+**Fixed:** 2026-09-18
+
+**Description:** `src/app/api/cron/blog-auto-publish/route.ts`'s slug generation ran `.toLowerCase().replace(/[^\w ]+/g, "")` directly, which strips any character outside `[\w ]` — including accented Latin letters. A French title like "Générateur d'Examens Bac Français" produced a mangled slug ("gnrateur-dexamens-bac-franais") instead of a readable, SEO-friendly one. Found by `content-curriculum` while investigating the cron job.
+**Root cause:** No diacritic-stripping pass before the existing strip-symbols regex, so é/è/à/ç/etc. were deleted outright rather than transliterated to their base letter.
+**Fix:** Added a shared `slugify()` helper in `src/lib/utils.ts` that runs `.normalize("NFD").replace(/[̀-ͯ]/g, "")` (Unicode decompose + strip combining diacritics, which also correctly collapses ç → c via its NFD cedilla mark) before the existing lowercase/strip-symbols/collapse-spaces logic, and pointed the cron route at it. Verified manually: `slugify("Générateur d'Examens Bac Français")` → `"generateur-dexamens-bac-francais"`. `npm run type-check` clean. Scope was kept narrow — this only changes slug generation for *future* cron-created posts; no existing published post's slug was touched, renamed, or migrated, so no URLs/backlinks are affected. Note: an unrelated, less robust local `slugify()` already existed in `src/app/student/practice/page.tsx` (drops non-`[a-z0-9-]` chars, no transliteration) — left untouched since consolidating it was out of scope for this fix.
+
 ## BUG-020: `/scanner` free-tier Pro-guard test — `signInAs()` timed out waiting for redirect off `/test-auth`
 **Status:** Open (not reproduced — likely flaky, low test margin)
 **Severity:** Low

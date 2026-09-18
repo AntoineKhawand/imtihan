@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminDb, adminAuth } from "@/lib/firebase-admin";
 import { getGeminiModel, withRetryAndFallback } from "@/lib/gemini";
-import { shortId } from "@/lib/utils";
+import { shortId, slugify } from "@/lib/utils";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -86,10 +86,7 @@ export async function GET(request: NextRequest) {
     }
 
     // 3. Generate Slug & Save
-    const slug = postData.title
-      .toLowerCase()
-      .replace(/[^\w ]+/g, "")
-      .replace(/ +/g, "-") + "-" + shortId().slice(0, 4);
+    const slug = slugify(postData.title) + "-" + shortId().slice(0, 4);
 
     const post = {
       ...postData,
