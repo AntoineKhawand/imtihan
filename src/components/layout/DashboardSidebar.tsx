@@ -31,8 +31,18 @@ const NAV_ITEMS = [
 
 export function DashboardSidebar() {
   const pathname = usePathname();
-  const { profile } = useAuth();
+  const { user, profile, loading } = useAuth();
   const isPro = isProActive(profile) || isInGracePeriod(profile);
+
+  // AuthContext flips `loading` to false as soon as Firebase Auth resolves,
+  // without waiting for the Firestore profile onSnapshot to deliver its
+  // first payload (see AuthContext.subscribeToProfile). In that window,
+  // `user` is set but `profile` is still null — treating that as "not pro"
+  // would flash the "Upgrade to Pro" CTA for a genuinely-Pro user before the
+  // real profile arrives. Keep waiting instead of guessing (mirrors ProGuard).
+  const profileResolving = loading || (!!user && !profile);
+  const showUpgradeCta = !profileResolving && !isPro;
+  const showProBadge = (item: { pro?: boolean }) => !profileResolving && item.pro && !isPro;
 
   return (
     <aside className="hidden lg:flex flex-col w-64 border-r border-[var(--border)] bg-[var(--surface)] h-[calc(100vh-64px)] sticky top-16 z-30">
@@ -61,7 +71,7 @@ export function DashboardSidebar() {
                 )} />
                 {item.label}
               </div>
-              {item.pro && !isActive && !isPro && (
+              {!isActive && showProBadge(item) && (
                 <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-amber-100 text-amber-700 uppercase tracking-wider">
                   Pro
                 </span>
@@ -74,7 +84,7 @@ export function DashboardSidebar() {
         })}
       </div>
 
-      {!isPro && (
+      {showUpgradeCta && (
         <div className="p-4 border-t border-[var(--border)]">
           <Link
             href="/upgrade"

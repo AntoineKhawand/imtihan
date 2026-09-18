@@ -67,6 +67,21 @@ These are intentional constraints in MVP — document here to avoid re-opening a
 
 ---
 
+## BUG-022: Dashboard sidebar shows "Upgrade to Pro" (and "Pro" nav badges) for signed-in Pro users during profile load
+**Status:** Fixed
+**Severity:** Medium
+**Area:** UI / Auth guard / Dashboard
+**Reported:** 2026-09-18
+**Fixed:** 2026-09-18
+
+**Description:** QA flagged a one-off failure of `e2e/phases/phase-5-dashboard-bank.spec.ts:187` ("desktop sidebar shows all 6 nav links...") on `expect(sidebar.getByRole("link", {name: "Upgrade to Pro"})).toBeHidden()` for a signed-in Pro-tier test user, then couldn't reproduce it on an isolated re-run. QA correctly flagged this as matching the shape of BUG-021 (commit `7836fd5`), fixed earlier the same day in `ProGuard`.
+**Investigation:** Read `src/components/layout/DashboardSidebar.tsx` and confirmed it has the *exact same* unguarded gap `ProGuard` had before BUG-021: it called `const { profile } = useAuth()` and computed `isPro = isProActive(profile) || isInGracePeriod(profile)` without checking `user` or `loading` first. `AuthContext` sets `loading = false` as soon as the Firestore profile `onSnapshot` listener *attaches*, not once its first payload arrives (`AuthContext.subscribeToProfile`) — so there's a real window where `user` is set but `profile` is still `null` for an already-authenticated, genuinely-Pro user. During that window `isProActive(null)` is `false`, so the sidebar rendered "Upgrade to Pro" and the "Pro" nav badges on `/scanner` and `/analytics` for a Pro user until the real profile arrived. This is a real, reproducible race (same root cause as BUG-021), just usually too brief to catch — confirmed by code inspection, not by reproducing the flake itself.
+**Root cause:** Same as BUG-021 — `AuthContext`'s `loading` flips to `false` before the Firestore profile listener delivers its first snapshot, and `DashboardSidebar` (unlike the already-fixed `ProGuard`) had no guard against reading `profile` as "definitely not Pro" during that gap.
+**Fix:** `src/components/layout/DashboardSidebar.tsx` — added `user` and `loading` to the `useAuth()` destructure and a `profileResolving = loading || (!!user && !profile)` check, mirroring `ProGuard`'s comment/pattern. Both the "Upgrade to Pro" CTA and the per-item "Pro" nav badges (`AI Scanner`, `Analytics`) now stay hidden while `profileResolving` is true, instead of defaulting to "not Pro," so a genuinely-Pro user never sees the upsell flash while their profile is still loading. Note: this fix hides the CTA/badges during the resolving window (loading-safe default for a Pro user) rather than showing them — the tradeoff is a free-tier user's genuine "Upgrade to Pro" CTA/badges may also be invisible for that same brief window before their profile confirms they're free-tier, which is consistent with `ProGuard`'s existing choice to prefer "wait" over "guess" in this state.
+**Verification:** First run of `npx playwright test e2e/phases/phase-5-dashboard-bank.spec.ts` had all 9 `/dashboard`-hitting tests fail on `page.goto` timeout — traced to an unrelated leftover `next dev` process (PID from an earlier session) still running on port 3000 against the same `.next` build cache that had just been cleared for `type-check`, corrupting the Turbopack cache the Playwright-spawned server on port 3005 shared. Killed the stale process, cleared `.next` again, and reran: **15/15 passed**, including test 9 (the exact sidebar test QA flagged) — `Upgrade to Pro` correctly hidden for the Pro test user. `npm run type-check` clean both before and after killing the stale process.
+
+---
+
 ## BUG-021: `/scanner` pro-tier test — "AI Exam Scanner" heading and "Unlock AI Exam Scanner" upsell heading both visible simultaneously
 **Status:** Fixed
 **Severity:** Medium
