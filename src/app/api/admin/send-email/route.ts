@@ -3,7 +3,7 @@ import { adminDb, verifyIdToken } from "@/lib/firebase-admin";
 import { isAdmin } from "@/lib/admin";
 import { sendEmail } from "@/lib/brevo";
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://www.imtihan.live";
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://imtihan.live";
 const WHATSAPP = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? "96170542238";
 const LOGO_URL = `${APP_URL}/Imtihan-logo.png`;
 const tw = (code: string, _alt?: string, _size = 22) => `https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/${code}.png`;

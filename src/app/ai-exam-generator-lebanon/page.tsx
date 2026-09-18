@@ -12,7 +12,7 @@ export const metadata = {
   openGraph: {
     title: "AI Exam Generator Lebanon — Imtihan",
     description: "Create customized exams in English, French, or Arabic aligned to Lebanese, French, and IB standards. Perfect for Lebanese schools and tutors.",
-    url: "https://www.imtihan.live/ai-exam-generator-lebanon",
+    url: "https://imtihan.live/ai-exam-generator-lebanon",
   },
 };
 
@@ -71,7 +71,7 @@ export default function LebanonAiLanding() {
             "@context": "https://schema.org",
             "@type": "WebApplication",
             "name": "Imtihan — AI Exam Generator Lebanon",
-            "url": "https://www.imtihan.live/ai-exam-generator-lebanon",
+            "url": "https://imtihan.live/ai-exam-generator-lebanon",
             "description": "The leading AI exam generator tailored for teachers and schools in Lebanon. Generate curriculum-aligned exams, Brevet / Bac mock tests, and full corrigés in seconds.",
             "applicationCategory": "EducationalApplication",
             "operatingSystem": "All",
@@ -87,7 +87,7 @@ export default function LebanonAiLanding() {
                 "alignmentType": "educationalSubject",
                 "educationalFramework": "Lebanese Educational System",
                 "targetName": "Lebanese School Curriculum",
-                "targetUrl": "https://www.imtihan.live/ai-exam-generator-lebanon"
+                "targetUrl": "https://imtihan.live/ai-exam-generator-lebanon"
               }
             ]
           },

@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 const REMINDER_WINDOW_DAYS = 5;
 const WHATSAPP_NUMBER = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? "96170542238";
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://www.imtihan.live";
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://imtihan.live";
 
 // ─── Email builder ────────────────────────────────────────────────────────────
 function buildReminderEmail(

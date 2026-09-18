@@ -35,7 +35,7 @@ export const metadata = {
   openGraph: {
     title: "About Imtihan — Empowering Teachers with AI",
     description: "Learn how Imtihan is solving teacher burnout in Lebanon by automating curriculum-aligned exam drafts and marking keys.",
-    url: "https://www.imtihan.live/about",
+    url: "https://imtihan.live/about",
   },
 };
 

@@ -18,7 +18,7 @@ export const metadata: Metadata = {
 
 export default function ProductivityBlogPage() {
   const title = "Reclaiming Your Sundays: 5 Ways Imtihan Automates Tasks";
-  const url = "https://www.imtihan.live/blog/save-time-teaching";
+  const url = "https://imtihan.live/blog/save-time-teaching";
 
   return (
     <div className="min-h-screen bg-[var(--bg)] flex flex-col">

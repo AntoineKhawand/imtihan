@@ -18,7 +18,7 @@ export const metadata: Metadata = {
 
 export default function BacLibanaisChemistryBlogPage() {
   const title = "How to generate a Bac Libanais chemistry exam in 5 minutes";
-  const url = "https://www.imtihan.live/blog/generate-bac-libanais-chemistry";
+  const url = "https://imtihan.live/blog/generate-bac-libanais-chemistry";
 
   return (
     <div className="min-h-screen bg-[var(--bg)] flex flex-col">

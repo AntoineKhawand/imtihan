@@ -18,7 +18,7 @@ export const metadata: Metadata = {
 
 export default function CoordinatorsBlogPage() {
   const title = "The Coordinator’s Secret: Standardizing Exam Quality";
-  const url = "https://www.imtihan.live/blog/exam-standardization";
+  const url = "https://imtihan.live/blog/exam-standardization";
 
   return (
     <div className="min-h-screen bg-[var(--bg)] flex flex-col">

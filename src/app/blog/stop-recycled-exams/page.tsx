@@ -18,7 +18,7 @@ export const metadata: Metadata = {
 
 export default function BlogPostPage() {
   const title = "Are Your Students Bored of the Same Recycled Exams?";
-  const url = "https://www.imtihan.live/blog/stop-recycled-exams";
+  const url = "https://imtihan.live/blog/stop-recycled-exams";
 
   return (
     <div className="min-h-screen bg-[var(--bg)] flex flex-col">

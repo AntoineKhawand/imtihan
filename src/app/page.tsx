@@ -9,7 +9,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Imtihan — AI Exam Generator for Teachers in Lebanon",
     description: "Describe your exam in French, English, or Arabic. Imtihan generates questions and a full corrigé in seconds. Bac Libanais · Bac Français · IB · University.",
-    url: "https://www.imtihan.live",
+    url: "https://imtihan.live",
     images: [{ url: "/opengraph-image", width: 1200, height: 630, alt: "Imtihan — AI Exam Generator" }],
   },
 };
@@ -167,8 +167,8 @@ export default async function LandingPage() {
     "@context": "https://schema.org",
     "@type": "EducationalOrganization",
     "name": "Imtihan",
-    "url": "https://www.imtihan.live",
-    "logo": "https://www.imtihan.live/Imtihan-logo.png",
+    "url": "https://imtihan.live",
+    "logo": "https://imtihan.live/Imtihan-logo.png",
     "description": "Premium AI Exam Generator for Lebanese teachers, parents, and coordinators. Supporting Bac Libanais, Bac Français, and IB.",
     "sameAs": [
       "https://www.facebook.com/imtihan.live",
@@ -409,16 +409,28 @@ export default async function LandingPage() {
           </div>
           <div className="relative z-10 grid grid-cols-2 sm:grid-cols-4 gap-3 w-full md:w-auto">
             {[
-              { name: "Bac Libanais", sub: "EB9 → Terminale · 3 tracks" },
-              { name: "Bac Français", sub: "Seconde → Terminale" },
-              { name: "IB Diploma", sub: "MYP5 · DP SL / HL" },
-              { name: "Université", sub: "L1 → M2 · All majors" },
-            ].map((c) => (
-              <div key={c.name} className="rounded-xl border border-white/20 bg-white/10 backdrop-blur-sm px-4 py-3 hover:bg-white/20 transition-colors duration-300 cursor-default">
-                <p className="text-white text-sm font-semibold leading-snug">{c.name}</p>
-                <p className="text-emerald-200 text-xs mt-0.5 leading-relaxed">{c.sub}</p>
-              </div>
-            ))}
+              { name: "Bac Libanais", sub: "EB9 → Terminale · 3 tracks", href: "/generateur-examen-bac-libanais" },
+              { name: "Bac Français", sub: "Seconde → Terminale", href: "/bac-francais-exam-generator" },
+              { name: "IB Diploma", sub: "MYP5 · DP SL / HL", href: "/ib-exam-generator" },
+              { name: "Université", sub: "L1 → M2 · All majors", href: null },
+            ].map((c) => {
+              const cardClassName = "block rounded-xl border border-white/20 bg-white/10 backdrop-blur-sm px-4 py-3 hover:bg-white/20 transition-colors duration-300";
+              const content = (
+                <>
+                  <p className="text-white text-sm font-semibold leading-snug">{c.name}</p>
+                  <p className="text-emerald-200 text-xs mt-0.5 leading-relaxed">{c.sub}</p>
+                </>
+              );
+              return c.href ? (
+                <Link key={c.name} href={c.href} className={cardClassName}>
+                  {content}
+                </Link>
+              ) : (
+                <div key={c.name} className={`${cardClassName} cursor-default`}>
+                  {content}
+                </div>
+              );
+            })}
           </div>
         </div>
       </section>

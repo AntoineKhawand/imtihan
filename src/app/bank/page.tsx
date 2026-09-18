@@ -105,7 +105,7 @@ export default function BankPage() {
 
   const userSchool = profile?.school ?? "";
   const slug       = schoolSlugFrom(userSchool);
-  const inviteLink = `https://www.imtihan.live/join/${slug}`;
+  const inviteLink = `https://imtihan.live/join/${slug}`;
 
   useEffect(() => {
     setEntries(getBankExercises());

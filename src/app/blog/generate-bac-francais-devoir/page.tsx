@@ -18,7 +18,7 @@ export const metadata: Metadata = {
 
 export default function FrenchBacDevoirBlogPage() {
   const title = "Générateur de devoir Bac Français : Gagnez des heures sur vos DS de physique-chimie";
-  const url = "https://www.imtihan.live/blog/generate-bac-francais-devoir";
+  const url = "https://imtihan.live/blog/generate-bac-francais-devoir";
 
   return (
     <div className="min-h-screen bg-[var(--bg)] flex flex-col">

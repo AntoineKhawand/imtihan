@@ -18,7 +18,7 @@ export const metadata: Metadata = {
 
 export default function UniversityBlogPage() {
   const title = "Complex Assessments Simplified: AI for University Exams";
-  const url = "https://www.imtihan.live/blog/university-assessment-ai";
+  const url = "https://imtihan.live/blog/university-assessment-ai";
 
   return (
     <div className="min-h-screen bg-[var(--bg)] flex flex-col">

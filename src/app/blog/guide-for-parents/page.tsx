@@ -18,7 +18,7 @@ export const metadata: Metadata = {
 
 export default function ParentsBlogPage() {
   const title = "Is Your Child Ready for the Brevet? Mock Exams at Home";
-  const url = "https://www.imtihan.live/blog/guide-for-parents";
+  const url = "https://imtihan.live/blog/guide-for-parents";
 
   return (
     <div className="min-h-screen bg-[var(--bg)] flex flex-col">

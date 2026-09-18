@@ -9,7 +9,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Tarifs Imtihan — Générateur d'examens IA au Liban",
     description: "$5.99/mois ou $47.88/an pour générer 100 examens par mois. Sans carte bancaire, paiement WhatsApp.",
-    url: "https://www.imtihan.live/pricing",
+    url: "https://imtihan.live/pricing",
   },
 };
 

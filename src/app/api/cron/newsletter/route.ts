@@ -5,7 +5,7 @@ import { sendEmail } from "@/lib/brevo";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const APP_URL    = process.env.NEXT_PUBLIC_APP_URL    ?? "https://www.imtihan.live";
+const APP_URL    = process.env.NEXT_PUBLIC_APP_URL    ?? "https://imtihan.live";
 const WA_NUM     = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? "96170542238";
 const LOGO_URL   = `${APP_URL}/Imtihan-logo.png`;
 const TW         = (code: string) =>

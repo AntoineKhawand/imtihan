@@ -18,7 +18,7 @@ export const metadata: Metadata = {
 
 export default function IbMarkSchemeBlogPage() {
   const title = "IB mark scheme generator: free tool for IB teachers";
-  const url = "https://www.imtihan.live/blog/ib-mark-scheme-generator";
+  const url = "https://imtihan.live/blog/ib-mark-scheme-generator";
 
   return (
     <div className="min-h-screen bg-[var(--bg)] flex flex-col">

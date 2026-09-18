@@ -12,7 +12,7 @@ export const metadata = {
   openGraph: {
     title: "Générateur d'Examen Bac Libanais avec IA — Imtihan",
     description: "Concevez des devoirs et contrôles conformes aux exigences officielles du Ministère de l'Éducation libanais (Dawrat, Brevet, Terminale).",
-    url: "https://www.imtihan.live/generateur-examen-bac-libanais",
+    url: "https://imtihan.live/generateur-examen-bac-libanais",
   },
 };
 
@@ -71,7 +71,7 @@ export default function BacLibanaisLanding() {
             "@context": "https://schema.org",
             "@type": "WebApplication",
             "name": "Imtihan — Générateur d'examen Bac Libanais IA",
-            "url": "https://www.imtihan.live/generateur-examen-bac-libanais",
+            "url": "https://imtihan.live/generateur-examen-bac-libanais",
             "description": "Le premier générateur d'examen Bac Libanais intelligent. Créez des examens blancs et contrôles (Terminale SG, SV, SE, LH et Brevet EB9) avec corrigé complet en 30 secondes.",
             "applicationCategory": "EducationalApplication",
             "operatingSystem": "All",
@@ -87,14 +87,14 @@ export default function BacLibanaisLanding() {
                 "alignmentType": "educationalSubject",
                 "educationalFramework": "Lebanese National Curriculum (CRDP Liban)",
                 "targetName": "Baccalauréat Libanais (Terminale SG, SV, SE, LH)",
-                "targetUrl": "https://www.imtihan.live/generateur-examen-bac-libanais"
+                "targetUrl": "https://imtihan.live/generateur-examen-bac-libanais"
               },
               {
                 "@type": "AlignmentObject",
                 "alignmentType": "educationalSubject",
                 "educationalFramework": "Lebanese National Curriculum (CRDP Liban)",
                 "targetName": "Brevet Libanais (EB9)",
-                "targetUrl": "https://www.imtihan.live/generateur-examen-bac-libanais"
+                "targetUrl": "https://imtihan.live/generateur-examen-bac-libanais"
               }
             ]
           },

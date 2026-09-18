@@ -10,7 +10,7 @@ export const metadata = {
   openGraph: {
     title: "Contacter Imtihan — WhatsApp & Email",
     description: "Joignez l'équipe Imtihan sur WhatsApp pour une réponse rapide, ou par email pour les demandes formelles.",
-    url: "https://www.imtihan.live/contact",
+    url: "https://imtihan.live/contact",
   },
 };
 

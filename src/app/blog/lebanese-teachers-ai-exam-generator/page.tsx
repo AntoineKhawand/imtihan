@@ -18,7 +18,7 @@ export const metadata: Metadata = {
 
 export default function LebaneseTeachersBlogPage() {
   const title = "Reclaiming Your Evenings: The Power of AI Exam Generators for Lebanese Teachers";
-  const url = "https://www.imtihan.live/blog/lebanese-teachers-ai-exam-generator";
+  const url = "https://imtihan.live/blog/lebanese-teachers-ai-exam-generator";
 
   return (
     <div className="min-h-screen bg-[var(--bg)] flex flex-col">

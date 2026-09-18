@@ -54,9 +54,25 @@ keep each change reviewable and low-risk for an unattended push.
 - [ ] `sitemap.ts` is hand-maintained as a static array — as blog posts and landing pages grow
       this will drift out of sync. Consider generating it from the filesystem (`src/app/blog/*`)
       or a small content registry instead of a manually-updated list.
-- [ ] Verify canonical URLs resolve correctly post-launch (imtihan.live vs www.imtihan.live —
-      `page.tsx`'s `openGraph.url` uses `www.imtihan.live` but other pages use bare
-      `imtihan.live`; pick one canonical host and make it consistent everywhere).
+- [x] **2026-09-18** — GSC's URL Inspection API showed 3 of the 4 curricula landing pages
+      (`/ib-exam-generator`, `/bac-francais-exam-generator`, `/generateur-examen-bac-libanais`)
+      as "URL is unknown to Google" — confirmed they were true orphan pages: present only in
+      `sitemap.ts` and their own file, with zero `<Link>` references anywhere else in `src`
+      (nav, footer, homepage, or each other). Sitemap-only discovery with no internal link
+      equity is exactly the pattern Google deprioritizes for crawling. Linked all 3 from the
+      homepage's "Supported curricula" strip (`src/app/page.tsx`), which carries the bulk of
+      the site's impressions (528/546). `/ai-exam-generator-lebanon` was the 4th orphan but is
+      already indexed, so left as-is; `/blog` is "Discovered — currently not indexed" (already
+      linked from the footer, so this is a crawl-priority/authority issue, not a linking one —
+      likely resolves as the site accrues more indexed pages).
+- [x] **2026-09-18** — Picked `https://imtihan.live` (apex, no `www`) as the one canonical host:
+      GSC data showed apex already carrying 528/546 impressions vs. 14 on `www`, so apex is what
+      Google already treats as real. Replaced every hardcoded `https://www.imtihan.live` (31
+      files — `layout.tsx`, `sitemap.ts`, `robots.ts`, every landing/blog page's `openGraph.url`
+      and JSON-LD, cron/email routes) with the apex form, and added a permanent `www` → apex
+      redirect in `next.config.ts` as a backstop. Still needed: confirm `NEXT_PUBLIC_APP_URL` in
+      Vercel's production env is set to `https://imtihan.live` (not `www`), since that env var
+      overrides the code fallback.
 - [ ] Add `og:image` / `twitter:image` metadata to the 4 curricula landing pages — currently only
       the homepage (`page.tsx`) has an explicit `openGraph.images` entry.
 
