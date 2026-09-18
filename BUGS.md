@@ -19,6 +19,17 @@ Track issues here during development. Format:
 
 ## Open Issues
 
+## BUG-028: Smoke test locator collision — "Imtihan" nav-link rename made the header-logo assertion ambiguous under Playwright strict mode
+**Status:** Fixed
+**Severity:** Low
+**Area:** Testing / Landing
+**Reported:** 2026-09-19
+**Fixed:** 2026-09-19
+
+**Description:** `e2e/smoke.spec.ts:20` ("landing page displays app name in header") started failing a Playwright strict-mode check: `page.getByRole('navigation').getByRole('link', { name: "Imtihan", exact: false })` resolved to 2 elements instead of 1. Found by `qa` during a fresh spot-check of `e2e/smoke.spec.ts` (11/12 passed, this the one real regression), reported in `TEAM_CHAT.md`.
+**Root cause:** Marketing commit `b07e82a` renamed a `LandingNav` link from "Reviews" to "Why Imtihan" (`src/components/landing/LandingNav.tsx`'s `NAV_LINKS`). Its accessible name now contains the substring "Imtihan", which the test's loose `exact: false` substring match also catches, colliding with the intended target: the header `Logo` component's own `<Link href="/">` (accessible name "Imtihan Logo Imtihan", from its `alt` text + visible span). Test-only issue — the nav copy change is an intentional, unrelated marketing decision and was left untouched.
+**Fix:** Scoped the locator to uniquely target the logo link by chaining `.and(page.locator('[href="/"]'))` onto the existing role/name locator (Playwright 1.59's `Locator.and()`), since the logo is the only nav link pointing at `/` — the "Why Imtihan" link points at `#why`. No production code changed. **Not verified by execution tonight** — machine was under severe memory pressure (<0.5GB free), so no dev server was started and the e2e suite was not run; verified by re-reading `src/components/ui/Logo.tsx` and `src/components/landing/LandingNav.tsx` to confirm the `href` values used to disambiguate are accurate, and by re-reading the edited spec diff carefully. `npm run type-check` clean. `qa` should confirm with a real run when the machine has headroom.
+
 ## BUG-027: Blog auto-publish cron slugified titles by dropping accented characters instead of transliterating them
 **Status:** Fixed
 **Severity:** Low
@@ -31,15 +42,16 @@ Track issues here during development. Format:
 **Fix:** Added a shared `slugify()` helper in `src/lib/utils.ts` that runs `.normalize("NFD").replace(/[̀-ͯ]/g, "")` (Unicode decompose + strip combining diacritics, which also correctly collapses ç → c via its NFD cedilla mark) before the existing lowercase/strip-symbols/collapse-spaces logic, and pointed the cron route at it. Verified manually: `slugify("Générateur d'Examens Bac Français")` → `"generateur-dexamens-bac-francais"`. `npm run type-check` clean. Scope was kept narrow — this only changes slug generation for *future* cron-created posts; no existing published post's slug was touched, renamed, or migrated, so no URLs/backlinks are affected. Note: an unrelated, less robust local `slugify()` already existed in `src/app/student/practice/page.tsx` (drops non-`[a-z0-9-]` chars, no transliteration) — left untouched since consolidating it was out of scope for this fix.
 
 ## BUG-020: `/scanner` free-tier Pro-guard test — `signInAs()` timed out waiting for redirect off `/test-auth`
-**Status:** Open (not reproduced — likely flaky, low test margin)
+**Status:** Fixed
 **Severity:** Low
 **Area:** Auth / Testing
 **Reported:** 2026-09-18
+**Fixed:** 2026-09-19
 
 **Description:** `e2e/phases/phase-8-pricing-upgrade-misc.spec.ts:103` ("/scanner free tier is blocked by the Pro guard") failed once, deep into a 29-minute serial full-suite run, because the shared `signInAs()` helper timed out after 30s waiting for the browser to redirect away from `/test-auth`.
 **Steps to reproduce:** Did not reproduce. Re-ran in isolation against a fresh dev server 3x: 20.2s, 27.0s, 13.4s — all passed.
 **Root cause:** Not a code regression — `signInAs()`'s own internal wait budget is 45s, but this specific test has no `test.setTimeout()` override, so it inherits Playwright's 30s default, giving it near-zero margin. Late in a long serial run the single dev server instance (accumulated Turbopack/Firebase Admin state, ~1.1-1.2GB RSS observed) is measurably slower than a fresh boot, which is enough to blow that thin margin. Most other `signInAs()) call sites share the same 30s default and pass reliably, so this is specific to this test's lack of headroom, not a systemic issue.
-**Fix:** Not fixed — didn't force a fix for something that doesn't reproduce. If it recurs, add `test.setTimeout(45_000)` to this test (cheap, safe, matches the sibling BUG-021 test at line 112 which already has this override).
+**Fix:** Added `test.setTimeout(45_000);` as the first line of this test's body, matching the sibling test at line ~117 (BUG-021's "pro tier can upload an image and run a real digitization pass") which already had this override. Cheap, safe, test-only change — no production code touched. **Not verified by execution tonight** — machine was under severe memory pressure (<0.5GB free), so no dev server was started and the e2e suite was not run. Verified by re-reading the diff and confirming the edit lands inside the `test(...)` callback before any `await`, mirroring the sibling test's exact placement. `npm run type-check` clean. `qa` should confirm with a real run when the machine has headroom.
 
 ---
 

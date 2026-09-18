@@ -105,6 +105,7 @@ test.describe("/upgrade", () => {
 
 test.describe("/scanner", () => {
   test("free tier is blocked by the Pro guard", async ({ page, request }) => {
+    test.setTimeout(45_000);
     await setupTestUser(request, TEST_FREE_UID, { proExpiresAt: null, examsGenerated: 0 });
     await signInAs(page, TEST_FREE_UID, "/scanner");
 

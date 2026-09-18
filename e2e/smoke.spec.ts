@@ -19,7 +19,14 @@ test("landing page loads without errors", async ({ page }) => {
 
 test("landing page displays app name in header", async ({ page }) => {
   await page.goto("http://localhost:3005");
-  await expect(page.getByRole("navigation").getByRole("link", { name: "Imtihan", exact: false })).toBeVisible();
+  // Scoped to href="/" to uniquely target the header logo link — the nav's
+  // "Why Imtihan" link (renamed from "Reviews") also matches on accessible
+  // name alone and would otherwise trip Playwright's strict-mode check (BUG-028).
+  const logoLink = page
+    .getByRole("navigation")
+    .getByRole("link", { name: "Imtihan", exact: false })
+    .and(page.locator('[href="/"]'));
+  await expect(logoLink).toBeVisible();
 });
 
 test("pricing page loads", async ({ page }) => {
