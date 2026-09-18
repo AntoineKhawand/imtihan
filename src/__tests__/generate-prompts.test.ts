@@ -181,7 +181,7 @@ describe("buildGenerateUserPrompt — chapter coverage distribution", () => {
     const prompt = buildGenerateUserPrompt(context);
     expect(prompt).toContain("CHAPTER COVERAGE (MANDATORY");
     // 6 chapters / 3 exercises -> every exercise gets 2 chapters
-    expect(prompt).toContain('- Exercise 1 → "Nombres complexes" + "Équations différentielles" (cover EACH as a distinct sub-question within this exercise — do not drop any of them)');
+    expect(prompt).toContain('- Exercise 1 → "Nombres complexes" [id: ter-math-complex] + "Équations différentielles" [id: ter-math-diff-eq] (cover EACH as a distinct sub-question within this exercise, and include ALL of their ids in that exercise\'s "chapterIds" — do not drop any of them)');
     // every selected chapter must still appear somewhere in the block
     for (const id of TS_MATH_CHAPTERS) {
       const chapter = getChapter("bac-libanais", "terminale-s", "mathematics", id);

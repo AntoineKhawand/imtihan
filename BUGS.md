@@ -19,7 +19,21 @@ Track issues here during development. Format:
 
 ## Open Issues
 
-*None currently open.*
+## BUG-014: CSP `script-src` blocks Google Analytics/GTM — `gtag.js` fails to load
+
+**Status:** Open
+**Severity:** Medium
+**Area:** Analytics / Security
+**Reported:** 2026-09-18
+
+**Description:** Google Analytics (GTM) is silently broken by the app's own Content-Security-Policy. The browser blocks the request to load `https://www.googletagmanager.com/gtag/js?id=G-7DZ1T3P599`, so no analytics events are ever sent, with no visible error to the end user (only a CSP violation in the browser console). This also causes an e2e smoke test, `landing page loads without errors`, to fail intermittently (the console-error assertion catches the blocked-script CSP violation).
+**Steps to reproduce:**
+1. Load any page of the app in a browser with devtools open.
+2. Check the Console/Network tab — a CSP violation is logged for `https://www.googletagmanager.com/gtag/js?id=G-7DZ1T3P599`, and the script fails to load (status blocked, not a network error).
+3. No `gtag`/GA4 events fire afterward.
+4. Run the e2e suite's `landing page loads without errors` smoke test — it can fail intermittently due to this same blocked-resource console error.
+**Root cause:** `createSecurityHeaders()` in `src/lib/security.ts` sets a `Content-Security-Policy` header whose `script-src` allowlist (`'self' 'unsafe-eval' 'unsafe-inline' https://apis.google.com https://*.firebaseapp.com https://*.google.com https://va.vercel-scripts.com`) does not include `https://www.googletagmanager.com`. Traced via `git log -S googletagmanager` to commit `a410d51` ("integrate Google Analytics") — GA/GTM was wired into the app in that commit, but the CSP `script-src` list was never updated to allow it, so the policy has blocked it from day one. This is pre-existing and unrelated to the `imtihan.live` apex-domain migration.
+**Fix:** Not yet fixed. Whoever picks this up should add `https://www.googletagmanager.com` (and likely `https://www.google-analytics.com` / `https://*.google-analytics.com` for the beacon/collect calls, and possibly `connect-src` for the same) to `createSecurityHeaders()` in `src/lib/security.ts`, then verify via browser devtools (no CSP violation, `gtag.js` loads and fires) and re-run the `landing page loads without errors` e2e smoke test for stability.
 
 ---
 
@@ -55,6 +69,20 @@ These are intentional constraints in MVP — document here to avoid re-opening a
 ---
 
 ## Fixed Issues
+
+---
+
+## BUG-015: Stale test assertion in `generate-prompts.test.ts` didn't match the (intentionally restored) `[id: ...]` chapter tags
+
+**Status:** Fixed
+**Severity:** Low
+**Area:** Testing / Generation
+**Reported:** 2026-09-18
+**Fixed:** 2026-09-18
+
+**Description:** QA's full-suite run flagged `src/__tests__/generate-prompts.test.ts` (chapter-coverage "packs multiple chapters into one exercise" case) failing: it asserted the literal string `- Exercise 1 → "Nombres complexes" + "Équations différentielles"...` but `buildChapterDistribution()` in `src/lib/prompts/generate.ts` actually emits `"Nombres complexes" [id: ter-math-complex] + ...` — an inline machine-readable id tag per chapter.
+**Root cause:** Not a regression. `git log -S` traced the `[id: ...]` tagging to PR #8, "restore-chapter-id-tagging" (commit `5487cc8`), which deliberately restored the id tags so the model copies real curriculum ids verbatim into each exercise's `chapterIds` field instead of guessing/hallucinating them (see CLAUDE.md §4 anti-hallucination rule). The test predates that restore and was never updated to match.
+**Fix:** Updated the assertion in `generate-prompts.test.ts` to expect the current output including both chapters' `[id: ...]` tags and the current "include ALL of their ids in that exercise's chapterIds" instruction text. No production code changed. Full suite now green (60/60), `npm run type-check` clean.
 
 ---
 

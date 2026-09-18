@@ -159,3 +159,4 @@
 | 2026-09 | Sociology curriculum (Bac Libanais), document sourcing/borders, per-exercise point overrides, fragment-level AI regeneration |
 | 2026-09 | Fix: renderContent %%PTABLE%% leak, dropped paragraphs, RTL list indent |
 | 2026-09 | Fix: /admin loading skeleton on initial fetch |
+| 2026-09 | Add Vitest regression test for the www→apex redirect rule in `next.config.ts`; fix stale assertion in `generate-prompts.test.ts` (BUG-015) |
