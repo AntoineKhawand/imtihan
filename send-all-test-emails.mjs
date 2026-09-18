@@ -6,9 +6,9 @@ dotenv.config({ path: path.resolve(import.meta.dirname, ".env.local") });
 const API_KEY = process.env.BREVO_API_KEY;
 const TO_EMAIL = "antoinekhawand04@gmail.com";
 const TO_NAME = "Antoine";
-const APP_URL = "https://www.imtihan.live";
+const APP_URL = "https://imtihan.live";
 const WA_NUM = "96170542238";
-const LOGO_URL = "https://www.imtihan.live/Imtihan-logo.png";
+const LOGO_URL = "https://imtihan.live/Imtihan-logo.png";
 const TW = (code, alt, size = 24) =>
   `<img src="https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/${code}.png"
        alt="${alt}" width="${size}" height="${size}"
