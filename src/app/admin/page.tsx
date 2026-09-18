@@ -9,6 +9,7 @@ import { RefreshCw, Search, Calendar, Clock, ShieldCheck, User, Users, Zap, Spar
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import type { BlogPostSummary, BlogPostDetail } from "@/types/blog";
 
 const subjectMap: Record<string, string> = {
   mathematics: "Mathématiques", physics: "Physique", chemistry: "Chimie",
@@ -114,6 +115,15 @@ export default function AdminPage() {
   const [loadingSubscribers, setLoadingSubscribers] = useState(false);
   const [subscribersLoaded, setSubscribersLoaded] = useState(false);
   const [resendingChecklists, setResendingChecklists] = useState(false);
+  const [blogPosts, setBlogPosts] = useState<BlogPostSummary[]>([]);
+  const [blogPostsLoading, setBlogPostsLoading] = useState(false);
+  const [blogPostsLoaded, setBlogPostsLoaded] = useState(false);
+  const [blogSearch, setBlogSearch] = useState("");
+  const [editingPostId, setEditingPostId] = useState<string | null>(null);
+  const [editingPost, setEditingPost] = useState<BlogPostDetail | null>(null);
+  const [loadingPostDetail, setLoadingPostDetail] = useState(false);
+  const [savingPost, setSavingPost] = useState(false);
+  const [editForm, setEditForm] = useState({ title: "", description: "", content: "", category: "" });
 
   async function fetchData() {
     if (!user) return;
@@ -163,6 +173,86 @@ export default function AdminPage() {
   useEffect(() => {
     if (activeTab === "subscribers" && !subscribersLoaded) fetchSubscribers();
   }, [activeTab, subscribersLoaded, user]);
+
+  async function fetchBlogPosts() {
+    if (!user) return;
+    setBlogPostsLoading(true);
+    try {
+      const token = await user.getIdToken();
+      const res = await fetch("/api/admin/blog", { headers: { Authorization: `Bearer ${token}` }, cache: "no-store" });
+      const data = await res.json();
+      if (res.ok) setBlogPosts(data.posts);
+      else toast.error(data.error || "Failed to load blog posts");
+    } catch {
+      toast.error("Failed to load blog posts");
+    } finally {
+      setBlogPostsLoading(false);
+      setBlogPostsLoaded(true);
+    }
+  }
+
+  useEffect(() => {
+    if (activeTab === "blog" && !blogPostsLoaded) fetchBlogPosts();
+  }, [activeTab, blogPostsLoaded, user]);
+
+  async function openEditPost(id: string) {
+    if (!user) return;
+    setEditingPostId(id);
+    setEditingPost(null);
+    setLoadingPostDetail(true);
+    try {
+      const token = await user.getIdToken();
+      const res = await fetch(`/api/admin/blog/${id}`, { headers: { Authorization: `Bearer ${token}` }, cache: "no-store" });
+      const data = await res.json();
+      if (res.ok) {
+        setEditingPost(data.post);
+        setEditForm({
+          title: data.post.title,
+          description: data.post.description,
+          content: data.post.content,
+          category: data.post.category,
+        });
+      } else {
+        toast.error(data.error || "Failed to load post");
+        setEditingPostId(null);
+      }
+    } catch {
+      toast.error("Failed to load post");
+      setEditingPostId(null);
+    } finally {
+      setLoadingPostDetail(false);
+    }
+  }
+
+  function closeEditPost() {
+    setEditingPostId(null);
+    setEditingPost(null);
+  }
+
+  async function handleSaveBlogPost() {
+    if (!user || !editingPostId) return;
+    setSavingPost(true);
+    try {
+      const token = await user.getIdToken();
+      const res = await fetch(`/api/admin/blog/${editingPostId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify(editForm),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        toast.success("Post updated");
+        closeEditPost();
+        fetchBlogPosts();
+      } else {
+        toast.error(data.error || "Failed to save post");
+      }
+    } catch {
+      toast.error("Failed to save post");
+    } finally {
+      setSavingPost(false);
+    }
+  }
 
   async function handleResendChecklists() {
     if (!user) return;
@@ -373,6 +463,11 @@ export default function AdminPage() {
   );
 
   const allFilteredSelected = filtered.length > 0 && filtered.every(u => selectedUids.has(u.uid));
+
+  const filteredBlogPosts = blogPosts.filter(p =>
+    p.title.toLowerCase().includes(blogSearch.toLowerCase()) ||
+    p.slug.toLowerCase().includes(blogSearch.toLowerCase())
+  );
 
   const topSubjects = Object.entries(statsData.subjects || {}).sort(([, a], [, b]) => b - a).slice(0, 5);
 
@@ -825,6 +920,138 @@ export default function AdminPage() {
               <Link href="/blog" className="h-12 px-8 bg-emerald-600 text-white rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-600/20">
                 Go to Blog Index <ArrowRight size={18} />
               </Link>
+            </div>
+
+            {/* Manage Existing Posts — edit title/description/content/category on any
+                blog_posts doc by id (static or cron-generated). Scoped edit path, not a
+                full CMS: no create/delete/publish-toggle here. */}
+            <div className="bg-white rounded-[32px] border border-gray-100 shadow-sm overflow-hidden">
+              <div className="p-5 border-b border-gray-50 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                  <p className="font-black text-gray-900">Manage Existing Posts</p>
+                  <p className="text-xs text-gray-400 font-medium mt-0.5">
+                    {blogPosts.length} post{blogPosts.length !== 1 ? "s" : ""} in blog_posts
+                  </p>
+                </div>
+                {!editingPostId && (
+                  <div className="relative w-full sm:w-[280px]">
+                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
+                    <input
+                      type="text"
+                      placeholder="Filter by title or slug..."
+                      value={blogSearch}
+                      onChange={(e) => setBlogSearch(e.target.value)}
+                      className="w-full h-10 pl-9 pr-4 bg-gray-50 border border-gray-100 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-emerald-600/10 focus:border-emerald-600 transition-all"
+                    />
+                  </div>
+                )}
+              </div>
+
+              {editingPostId ? (
+                <div className="p-5 sm:p-6 space-y-4">
+                  {loadingPostDetail || !editingPost ? (
+                    <p className="text-sm text-gray-400 font-medium py-10 text-center">Loading post…</p>
+                  ) : (
+                    <>
+                      <div className="flex items-center justify-between">
+                        <p className="text-xs font-bold text-gray-400 uppercase tracking-widest truncate">
+                          Editing: /{editingPost.slug}
+                        </p>
+                        <button
+                          onClick={closeEditPost}
+                          disabled={savingPost}
+                          className="text-xs font-bold text-gray-400 hover:text-gray-600 shrink-0 disabled:opacity-50"
+                        >
+                          ← Back to list
+                        </button>
+                      </div>
+
+                      <div>
+                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5 block">Title</label>
+                        <input
+                          type="text"
+                          value={editForm.title}
+                          onChange={(e) => setEditForm((f) => ({ ...f, title: e.target.value }))}
+                          className="w-full h-11 px-4 border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-emerald-600/10 focus:border-emerald-600"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5 block">Category</label>
+                        <input
+                          type="text"
+                          value={editForm.category}
+                          onChange={(e) => setEditForm((f) => ({ ...f, category: e.target.value }))}
+                          className="w-full h-11 px-4 border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-emerald-600/10 focus:border-emerald-600"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5 block">Description</label>
+                        <textarea
+                          value={editForm.description}
+                          onChange={(e) => setEditForm((f) => ({ ...f, description: e.target.value }))}
+                          rows={2}
+                          className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-emerald-600/10 focus:border-emerald-600 resize-y"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5 block">Content (Markdown)</label>
+                        <textarea
+                          value={editForm.content}
+                          onChange={(e) => setEditForm((f) => ({ ...f, content: e.target.value }))}
+                          rows={16}
+                          className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm font-mono focus:outline-none focus:ring-2 focus:ring-emerald-600/10 focus:border-emerald-600 resize-y"
+                        />
+                      </div>
+
+                      <div className="flex items-center justify-end gap-3 pt-2">
+                        <button
+                          onClick={closeEditPost}
+                          disabled={savingPost}
+                          className="h-11 px-5 rounded-xl text-sm font-bold text-gray-500 hover:bg-gray-50 transition-colors disabled:opacity-50"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          onClick={handleSaveBlogPost}
+                          disabled={savingPost}
+                          className="h-11 px-6 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-bold flex items-center gap-2 disabled:opacity-50 transition-all shadow-lg shadow-emerald-600/20"
+                        >
+                          {savingPost ? <RefreshCw size={14} className="animate-spin" /> : <Check size={14} />}
+                          {savingPost ? "Saving..." : "Save Changes"}
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </div>
+              ) : (
+                <div className="divide-y divide-gray-50 max-h-[420px] overflow-y-auto">
+                  {blogPostsLoading ? (
+                    <p className="px-5 py-8 text-center text-sm text-gray-400 font-medium">Loading…</p>
+                  ) : filteredBlogPosts.length === 0 ? (
+                    <p className="px-5 py-8 text-center text-sm text-gray-400 font-medium">No posts found</p>
+                  ) : (
+                    filteredBlogPosts.map((p) => (
+                      <div key={p.id} className="flex items-center justify-between gap-4 px-5 py-4 hover:bg-gray-50/60 transition-colors">
+                        <div className="min-w-0">
+                          <p className="text-sm font-bold text-gray-900 truncate">{p.title}</p>
+                          <p className="text-xs text-gray-400 font-medium truncate">
+                            /{p.slug} · {p.category || "Uncategorized"} · {p.published ? "Published" : "Draft"}
+                          </p>
+                        </div>
+                        <button
+                          onClick={() => openEditPost(p.id)}
+                          className="h-9 px-4 rounded-xl text-xs font-bold bg-white border border-gray-200 text-emerald-700 hover:bg-emerald-50 hover:border-emerald-200 transition-colors shrink-0"
+                        >
+                          Edit
+                        </button>
+                      </div>
+                    ))
+                  )}
+                </div>
+              )}
             </div>
           </div>
         )}

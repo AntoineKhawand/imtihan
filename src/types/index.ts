@@ -2,3 +2,4 @@ export * from "./curriculum";
 export * from "./exam";
 export * from "./user";
 export * from "./student";
+export * from "./blog";
