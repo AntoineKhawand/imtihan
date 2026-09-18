@@ -2,6 +2,23 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    // The requesting user's own users/{uid} doc, as a data map. Used to scope
+    // teacher-side reads to their own school. Firestore caches repeated
+    // get() calls to the same document path within one rule evaluation, so
+    // calling this more than once per request is not an extra read.
+    function requesterProfile() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    // Any signed-in account that isn't a student is treated as a teacher for
+    // data-scoping purposes (covers "teacher", "school_teacher",
+    // "university_teacher", "tutor", and legacy accounts predating the
+    // `role` field — students always get an explicit role: "student" on
+    // registration, see src/lib/studentAuth.tsx).
+    function isTeacher() {
+      return requesterProfile().role != "student";
+    }
+
     // Each user can read and write their own profile
     match /users/{userId} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
@@ -18,17 +35,46 @@ service cloud.firestore {
       allow write: if request.auth != null;
     }
 
-    // Student profiles — each student reads/writes their own
+    // Student profiles
     match /student_profiles/{uid} {
+      // A student can read/write their own profile document directly.
       allow read, write: if request.auth != null && request.auth.uid == uid;
+
+      // A teacher can list (query) student profiles scoped to their own
+      // school — matches src/app/teacher/students/page.tsx's
+      // where("schoolName", "==", teacherSchool) query. Firestore validates
+      // a list rule that references resource.data against the query's own
+      // filters, so this only ever authorizes queries actually constrained
+      // to schoolName == the caller's school; it does not open up an
+      // unfiltered or cross-school list.
+      allow list: if request.auth != null
+        && isTeacher()
+        && requesterProfile().school != null
+        && resource.data.schoolName == requesterProfile().school;
     }
 
-    // Student attempts — students read/write only their own attempts
+    // Student attempts
     match /student_attempts/{attemptId} {
+      // A student can read (get + list — e.g. their own practice history on
+      // /student/dashboard, which queries where("userId","==", own uid)) and
+      // write only their own attempts.
       allow read, update, delete: if request.auth != null
         && resource.data.userId == request.auth.uid;
       allow create: if request.auth != null
         && request.resource.data.userId == request.auth.uid;
+
+      // A teacher can list attempts for a given student (matches
+      // src/app/teacher/students/page.tsx's where("userId", "==", uid)
+      // query), but only when that student's own student_profiles doc puts
+      // them in the teacher's own school — this prevents a teacher (or a
+      // student who edited their own users/{uid}.school field) from
+      // fetching another school's attempt data by supplying an arbitrary
+      // userId.
+      allow list: if request.auth != null
+        && isTeacher()
+        && requesterProfile().school != null
+        && requesterProfile().school ==
+          get(/databases/$(database)/documents/student_profiles/$(resource.data.userId)).data.schoolName;
     }
 
     // Deny everything else

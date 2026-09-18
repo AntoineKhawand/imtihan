@@ -81,7 +81,7 @@
 - ✅ /dashboard — recent exams, quota indicator, stat bar
 - ✅ /library (bank page) — saved question bank
 - ✅ /exam/[id] — exam detail view
-- ✅ /teacher/students — student management placeholder
+- ⚠️ /teacher/students — built, but non-functional in production: always shows "No students yet" for every teacher (BUG-026, `firestore.rules` never permitted the teacher-scoped queries this page makes). Fix is written to disk but not yet deployed.
 - ✅ /analytics — analytics placeholder
 - ✅ /community — community feed
 
