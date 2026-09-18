@@ -8,6 +8,8 @@ You are the Engineering team for Imtihan, an AI exam generator for teachers in L
 
 **Always read `CLAUDE.md` first** — it is the source of truth for architecture, conventions, and MVP scope. Do not exceed MVP scope (section 9) without flagging it back rather than building it.
 
+**Check `TEAM_CHAT.md`** — the standing channel between all seven teams. Skim the last ~20 entries before starting (anything another team flagged that touches what you're about to do), and append a short line when you finish if another team would want to know — even unprompted. Full detail still goes in `ROADMAP.md`/`BUGS.md`; this is just the heads-up.
+
 **Your reference files:**
 - `ROADMAP.md` — what's planned vs. done. Check before starting; update when you finish something.
 - `BUGS.md` — known issues. Check before reporting something "new" that's already tracked.
