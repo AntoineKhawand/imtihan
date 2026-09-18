@@ -41,12 +41,12 @@ export function proxy(request: NextRequest) {
   // Content Security Policy
   const csp = [
     "default-src 'self'",
-    "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://apis.google.com https://*.firebaseapp.com https://*.google.com https://va.vercel-scripts.com https://plausible.io",
+    "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://apis.google.com https://*.firebaseapp.com https://*.google.com https://va.vercel-scripts.com https://plausible.io https://www.googletagmanager.com",
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com",
     "font-src 'self' data: https://fonts.gstatic.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net",
     "img-src 'self' data: blob: https://*.googleusercontent.com https://*.google.com",
     "frame-src 'self' https://*.firebaseapp.com https://accounts.google.com",
-    "connect-src 'self' https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://generativelanguage.googleapis.com https://*.google.com https://*.firebaseapp.com https://*.googleapis.com https://*.firebaseio.com https://accounts.google.com https://va.vercel-scripts.com https://vitals.vercel-insights.com https://v.vercel-analytics.com https://plausible.io",
+    "connect-src 'self' https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://generativelanguage.googleapis.com https://*.google.com https://*.firebaseapp.com https://*.googleapis.com https://*.firebaseio.com https://accounts.google.com https://va.vercel-scripts.com https://vitals.vercel-insights.com https://v.vercel-analytics.com https://plausible.io https://www.googletagmanager.com https://www.google-analytics.com https://*.google-analytics.com https://*.analytics.google.com",
   ].join("; ");
 
   response.headers.set("Content-Security-Policy", csp);

@@ -19,22 +19,6 @@ Track issues here during development. Format:
 
 ## Open Issues
 
-## BUG-014: CSP `script-src` blocks Google Analytics/GTM — `gtag.js` fails to load
-
-**Status:** Open
-**Severity:** Medium
-**Area:** Analytics / Security
-**Reported:** 2026-09-18
-
-**Description:** Google Analytics (GTM) is silently broken by the app's own Content-Security-Policy. The browser blocks the request to load `https://www.googletagmanager.com/gtag/js?id=G-7DZ1T3P599`, so no analytics events are ever sent, with no visible error to the end user (only a CSP violation in the browser console). This also causes an e2e smoke test, `landing page loads without errors`, to fail intermittently (the console-error assertion catches the blocked-script CSP violation).
-**Steps to reproduce:**
-1. Load any page of the app in a browser with devtools open.
-2. Check the Console/Network tab — a CSP violation is logged for `https://www.googletagmanager.com/gtag/js?id=G-7DZ1T3P599`, and the script fails to load (status blocked, not a network error).
-3. No `gtag`/GA4 events fire afterward.
-4. Run the e2e suite's `landing page loads without errors` smoke test — it can fail intermittently due to this same blocked-resource console error.
-**Root cause:** `createSecurityHeaders()` in `src/lib/security.ts` sets a `Content-Security-Policy` header whose `script-src` allowlist (`'self' 'unsafe-eval' 'unsafe-inline' https://apis.google.com https://*.firebaseapp.com https://*.google.com https://va.vercel-scripts.com`) does not include `https://www.googletagmanager.com`. Traced via `git log -S googletagmanager` to commit `a410d51` ("integrate Google Analytics") — GA/GTM was wired into the app in that commit, but the CSP `script-src` list was never updated to allow it, so the policy has blocked it from day one. This is pre-existing and unrelated to the `imtihan.live` apex-domain migration.
-**Fix:** Not yet fixed. Whoever picks this up should add `https://www.googletagmanager.com` (and likely `https://www.google-analytics.com` / `https://*.google-analytics.com` for the beacon/collect calls, and possibly `connect-src` for the same) to `createSecurityHeaders()` in `src/lib/security.ts`, then verify via browser devtools (no CSP violation, `gtag.js` loads and fires) and re-run the `landing page loads without errors` e2e smoke test for stability.
-
 ---
 
 ## Known Limitations (Not Bugs)
@@ -69,6 +53,25 @@ These are intentional constraints in MVP — document here to avoid re-opening a
 ---
 
 ## Fixed Issues
+
+---
+
+## BUG-014: CSP `script-src` blocks Google Analytics/GTM — `gtag.js` fails to load
+
+**Status:** Fixed
+**Severity:** Medium
+**Area:** Analytics / Security
+**Reported:** 2026-09-18
+**Fixed:** 2026-09-18
+
+**Description:** Google Analytics (GTM) is silently broken by the app's own Content-Security-Policy. The browser blocks the request to load `https://www.googletagmanager.com/gtag/js?id=G-7DZ1T3P599`, so no analytics events are ever sent, with no visible error to the end user (only a CSP violation in the browser console). This also causes an e2e smoke test, `landing page loads without errors`, to fail intermittently (the console-error assertion catches the blocked-script CSP violation).
+**Steps to reproduce:**
+1. Load any page of the app in a browser with devtools open.
+2. Check the Console/Network tab — a CSP violation is logged for `https://www.googletagmanager.com/gtag/js?id=G-7DZ1T3P599`, and the script fails to load (status blocked, not a network error).
+3. No `gtag`/GA4 events fire afterward.
+4. Run the e2e suite's `landing page loads without errors` smoke test — it can fail intermittently due to this same blocked-resource console error.
+**Root cause:** Two separate CSP definitions exist, and the original diagnosis only named one of them. `createSecurityHeaders()` in `src/lib/security.ts` sets a `Content-Security-Policy` header whose `script-src` allowlist (`'self' 'unsafe-eval' 'unsafe-inline' https://apis.google.com https://*.firebaseapp.com https://*.google.com https://va.vercel-scripts.com`) did not include `https://www.googletagmanager.com` — but that function is only ever called from API route handlers, whose response headers don't govern the browser's CSP enforcement on the navigated HTML document. The CSP that actually gets enforced on every page load (including the landing page) is built independently and inline inside `src/proxy.ts` (Next.js 16's `middleware.ts`-equivalent convention, matched against all non-`/api` routes) — confirmed by curling a local dev server and diffing the returned `content-security-policy` header against both source files. `proxy.ts`'s `script-src` had the same gap. Traced the GA/GTM wiring itself via `git log -S googletagmanager` to commit `a410d51` ("integrate Google Analytics") — the CSP allowlists were never updated to allow it in either file, so the policy has blocked it from day one. Pre-existing, unrelated to the `imtihan.live` apex-domain migration.
+**Fix:** Added `https://www.googletagmanager.com` to `script-src`, and `https://www.google-analytics.com`, `https://*.google-analytics.com`, `https://*.analytics.google.com` to `connect-src`, in **both** `src/proxy.ts` (the one actually enforced on page navigations) and `createSecurityHeaders()` in `src/lib/security.ts` (kept consistent even though it's currently only wired to API JSON responses, to avoid the same trap resurfacing if it's ever applied to page responses). Verified: (1) curled a local dev server (`localhost:3000`, then `localhost:3005` under the Playwright-managed `next dev --turbopack` instance) and read the raw `content-security-policy` response header back — confirmed both new domains present. (2) Ran a one-off Playwright script against the live page that recorded every network response matching `googletagmanager.com` / `google-analytics.com` / `analytics.google.com`: `gtag.js` loaded with `200`, and the GA4 beacon (`https://www.google-analytics.com/g/collect?...&en=page_view...`) fired and returned `204` (GA4's normal success response for `/g/collect`, not an error) — so this is a genuine network-level confirmation the hit landed, not just a CSP-permits-it check. Zero console/page errors were captured during that run. (3) Ran `e2e/smoke.spec.ts`'s `landing page loads without errors` twice in isolation (both green) and the full 12-test `smoke.spec.ts` file once (12/12 green) via `npx playwright test`. (4) `npm run type-check` clean (no code paths changed beyond the two CSP header strings).
 
 ---
 
