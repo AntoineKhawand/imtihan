@@ -13,6 +13,7 @@
  */
 
 export type FaqItem = { q: string; a: string };
+export type HowToStep = { name: string; text: string };
 
 export function buildFaqSchema(items: FaqItem[]) {
   return {
@@ -25,6 +26,25 @@ export function buildFaqSchema(items: FaqItem[]) {
         "@type": "Answer",
         text: item.a,
       },
+    })),
+  };
+}
+
+export function buildHowToSchema(
+  headline: string,
+  description: string,
+  steps: HowToStep[]
+) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "HowTo",
+    name: headline,
+    description,
+    step: steps.map((step, index) => ({
+      "@type": "HowToStep",
+      position: index + 1,
+      name: step.name,
+      text: step.text,
     })),
   };
 }

@@ -19,12 +19,24 @@ keep each change reviewable and low-risk for an unattended push.
       `/upgrade` are client-component pages, so the FAQ + schema render from their (server
       component) `layout.tsx` files after `{children}`; `/about` is already a server component so
       it's inline on the page itself, before `PublicFooter`.
-- [ ] Audit blog posts (`src/app/blog/*`) for a direct-answer opening paragraph (first 40-60
-      words should stand alone as a complete answer to the title's implicit question) — AI
-      Overviews and Perplexity preferentially quote the first substantive paragraph.
-- [ ] Add `HowTo` schema to a blog post that's genuinely a step-by-step guide (e.g.
-      `generate-bac-libanais-chemistry`, `ib-mark-scheme-generator`) if the content structure
-      supports it without forcing it.
+- [x] **2026-09-19** (`content-curriculum`) — Audited all 9 static blog posts for a direct-answer
+      opening paragraph (first 40–60 words standing alone as a complete answer to the post's
+      implicit question). The 5 posts rewritten 2026-09-18 (`stop-recycled-exams`,
+      `save-time-teaching`, `guide-for-parents`, `university-assessment-ai`,
+      `lebanese-teachers-ai-exam-generator`) already opened this way — confirmed by re-reading each
+      one, no changes needed. The 4 remaining posts (`exam-standardization`,
+      `ib-mark-scheme-generator`, `generate-bac-libanais-chemistry`, `generate-bac-francais-devoir`)
+      did not — each opened with a problem-statement or scene-setting sentence instead of an
+      answer (e.g. exam-standardization's old opener was just "Educational coordination is about
+      more than just managing schedules," with no actual answer). Fixed as part of the same-day GEO
+      rewrite below, so this item and the GEO remediation item share one diff per post rather than
+      two separate passes — see that entry for the exact before/after copy.
+- [x] **2026-09-22** — Added `HowTo` schema to `generate-bac-libanais-chemistry` blog post. The
+      post's "Automating the Draft in 5 Minutes" section has a natural 4-step structure (Select
+      Curriculum, Input Topics, Upload Notes, Generate) perfectly suited for HowTo JSON-LD.
+      Created `buildHowToSchema()` export in `src/components/landing/LandingFAQ.tsx` to follow the
+      same pattern as `buildFaqSchema`, then wired it into the blog page's `<SchemaOrg>` component
+      alongside Article and FAQ schemas. Improves GEO visibility for "how to generate exam" queries.
 
 ### GEO
 - [x] **2026-09-19** — `public/llms.txt` had 2 false Arabic-support claims left over from
@@ -248,6 +260,52 @@ keep each change reviewable and low-risk for an unattended push.
       pausing the cron job or adding a review/approval step before more of these publish — flagged
       here rather than acted on, since disabling a scheduled production job is a business call,
       not a content edit.
+- [x] **2026-09-19** (`content-curriculum`) — Finished GEO remediation on the 4 template-fix-only
+      static posts left at 40/40/55/55 by the 2026-09-18 pass:
+      `exam-standardization`, `ib-mark-scheme-generator`, `generate-bac-libanais-chemistry`,
+      `generate-bac-francais-devoir`. Same recipe as the 5 posts already at 100/100: a
+      direct-answer opening paragraph, a real WebSearch-verified external citation, a
+      bullet/numbered list, and a `BlogFAQ`/`FAQPage` block, plus expanding all 4 posts past the
+      600-word depth threshold (all 4 were under 600 words pre-edit — 96/277/321/294 words
+      respectively — not just the 2 lowest-scoring ones as initially assumed; verified by
+      replicating `scripts/geo-audit.mjs`'s exact scoring logic in a local harness before editing,
+      see verification method below). Real citations used, each WebSearch-verified before citing:
+      CAEP's (Council for the Accreditation of Educator Preparation) definition of inter-rater
+      reliability for `exam-standardization`; the IB's own "Diploma programme assessment" page
+      (`ibo.org/programmes/diploma-programme/assessment-and-exams/understanding-ib-assessment/`)
+      for `ib-mark-scheme-generator`; CRDP's official Lebanese exam archive (already verified live
+      in `guide-for-parents`, reused as it's directly relevant) for `generate-bac-libanais-chemistry`;
+      and the French Ministry's official note de service defining the Terminale spécialité
+      Physique-Chimie exam structure since 2021 (`education.gouv.fr/bo/20/Special2/MENE2001798N.htm`)
+      for `generate-bac-francais-devoir`.
+      **Two real curriculum-accuracy bugs found and fixed while rewriting, not left in the new
+      copy:** `generate-bac-libanais-chemistry`'s old copy claimed "chemical equilibrium" as a
+      dense Bac Libanais chemistry topic — grepped `src/data/curricula/bac-libanais.ts` and
+      confirmed no such chapter/objective exists anywhere in the file for Chemistry (only chemical
+      kinetics at Première, and acid-base/pH titration + organic chemistry at Terminale); the claim
+      was quietly wrong and has been removed, replaced with the topics that actually exist in the
+      curriculum data. Separately, `generate-bac-francais-devoir`'s old copy said Terminale
+      spécialité Physique-Chimie DS should cover "la thermodynamique" — grepped
+      `src/data/curricula/bac-francais.ts`'s `terminale-fr-spe-pc` chapter list and confirmed there
+      is no "Thermodynamique" chapter (the closest real one is "Énergie — conversions et
+      transferts"); replaced the claim with the real chapter names (mécanique, énergie, ondes et
+      signaux, équilibres chimiques, cinétique chimique, chimie organique). Both fixes are a direct
+      application of `CLAUDE.md` §4 ("any curriculum chapter the AI references MUST exist in
+      `src/data/curricula/`") to blog copy, not just app-generated exams — a blog post asserting a
+      curriculum topic that doesn't exist in the data is the same hallucination risk in a different
+      surface. **Verification method, given the "no dev server" constraint tonight:** rather than
+      running `next dev` under memory pressure, replicated `scripts/geo-audit.mjs`'s exact scoring
+      logic (word count, external-link count, stat regex, blockquote/list/heading counts, FAQPage
+      JSON-LD detection) in a standalone Node+jsdom script, fed it the literal article HTML for the
+      current (pre-edit) and proposed (post-edit) copy, and confirmed the harness reproduced the
+      live 40/40/55/55 baseline exactly before trusting it to score the rewrites — all 4 rewrites
+      scored 90/100 on every non-schema signal (the harness can't render the real `<SchemaOrg>`
+      JSON-LD, so `faq-schema` shows as a false FAIL in the harness only; the real pages use the
+      identical `SchemaOrg`+`buildFaqSchema` pattern already confirmed live at 100/100 on the other
+      5 posts). **Ran `npm run audit:geo` against production afterward** as instructed — it still
+      shows the pre-edit 40/40/55/55 scores, because this change hasn't been deployed yet (same
+      situation the 2026-09-18 entry above hit); production won't reflect these until the next
+      deploy. `npx tsc --noEmit` (full `npm run type-check`) clean.
 
 ## Tooling
 
