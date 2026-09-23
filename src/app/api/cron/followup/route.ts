@@ -130,7 +130,7 @@ function buildActivationEmail(name: string): { subject: string; html: string } {
           <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:32px;">
             <tr><td style="padding-bottom:20px;"><table width="100%" cellpadding="0" cellspacing="0" border="0" class="step-row" style="border-radius:14px;padding:16px 20px;background:#f8fafc;border:1px solid #e2e8f0;"><tr>
               <td width="44" style="vertical-align:top;"><div style="width:36px;height:36px;background:#1a5e3f;border-radius:10px;text-align:center;line-height:36px;font-weight:800;color:#fff;font-size:16px;">1</div></td>
-              <td style="padding-left:16px;vertical-align:top;"><div style="font-weight:700;color:#1e293b;font-size:15px;margin-bottom:3px;">Describe your exam</div><p style="margin:0;color:#64748b;font-size:14px;line-height:1.5;">Type your subject and topics in any language. No formatting needed.</p></td>
+              <td style="padding-left:16px;vertical-align:top;"><div style="font-weight:700;color:#1e293b;font-size:15px;margin-bottom:3px;">Describe your exam</div><p style="margin:0;color:#64748b;font-size:14px;line-height:1.5;">Type your subject and topics in French or English. No formatting needed.</p></td>
             </tr></table></td></tr>
             <tr><td style="padding-bottom:20px;"><table width="100%" cellpadding="0" cellspacing="0" border="0" class="step-row" style="border-radius:14px;padding:16px 20px;background:#f8fafc;border:1px solid #e2e8f0;"><tr>
               <td width="44" style="vertical-align:top;"><div style="width:36px;height:36px;background:#1a5e3f;border-radius:10px;text-align:center;line-height:36px;font-weight:800;color:#fff;font-size:16px;">2</div></td>

@@ -143,23 +143,10 @@ const newsletterHtml = `<!doctype html>
           <p style="color:#78350f;font-size:13px;line-height:1.7;margin:0">In Step 1 of the exam builder, you can upload a PDF or Word file of your course notes. Imtihan reads it and generates questions grounded in <em>your exact content</em> — not generic textbook questions. Try it with your last chapter.</p></td>
         </tr></table></td></tr></table>
 
-      <!-- Stats -->
-      <table width="100%" cellpadding="0" cellspacing="0" style="background:#f8fafc;border-radius:14px;border:1px solid #e2e8f0;margin-bottom:36px">
-        <tr><td style="padding:20px 24px">
-          <p style="margin:0 0 16px;font-size:11px;font-weight:800;color:#64748b;letter-spacing:1.2px;text-transform:uppercase">Imtihan this month</p>
-          <table width="100%" cellpadding="0" cellspacing="0">
-            <tr>
-              <td style="text-align:center;border-right:1px solid #e2e8f0;padding-right:20px"><div style="font-size:30px;font-weight:800;color:#1a5e3f;letter-spacing:-1px">439+</div><div style="font-size:12px;color:#64748b;margin-top:2px">Educators</div></td>
-              <td style="text-align:center;border-right:1px solid #e2e8f0;padding:0 20px"><div style="font-size:30px;font-weight:800;color:#1a5e3f;letter-spacing:-1px">3.5k</div><div style="font-size:12px;color:#64748b;margin-top:2px">Visits</div></td>
-              <td style="text-align:center;padding-left:20px"><div style="font-size:30px;font-weight:800;color:#1a5e3f;letter-spacing:-1px">4</div><div style="font-size:12px;color:#64748b;margin-top:2px">Curricula</div></td>
-            </tr>
-          </table>
-        </td></tr></table>
-
       <!-- CTA -->
       <div style="text-align:center;margin-bottom:10px">
         <a href="${APP_URL}/create" class="cta-button" style="display:inline-block;background:linear-gradient(135deg,#1a5e3f,#2d8f5f);color:#fff;text-decoration:none;padding:16px 48px;border-radius:13px;font-weight:700;font-size:16px;letter-spacing:-0.2px;box-shadow:0 4px 20px rgba(26,94,63,0.35)">Generate an exam now →</a>
-        <p style="color:#94a3b8;font-size:12px;margin:12px 0 0">2 free exams &nbsp;·&nbsp; No credit card required</p>
+        <p style="color:#94a3b8;font-size:12px;margin:12px 0 0">1 free exam &nbsp;·&nbsp; No credit card required</p>
       </div>
     </div>
 
@@ -246,7 +233,7 @@ const welcomeHtml = `<!doctype html>
           <table width="100%" cellpadding="0" cellspacing="0" border="0" class="gift-card scale-card" style="background:#f0fdf4;border:2px solid #bbf7d0;border-radius:20px;">
             <tr><td style="padding:32px;">
               <div style="font-size:13px;font-weight:800;color:#15803d;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">Gift for new teachers</div>
-              <div style="font-size:24px;font-weight:800;color:#064e3b;line-height:1.2;margin-bottom:12px;">You have 2 Free Exams waiting</div>
+              <div style="font-size:24px;font-weight:800;color:#064e3b;line-height:1.2;margin-bottom:12px;">You have 1 Free Exam waiting</div>
               <p style="margin:0 0 24px;font-size:15px;color:#374151;line-height:1.5;">No credit card, no commitment. Just describe your curriculum and generate.</p>
               <a href="${APP_URL}/create" class="cta-btn" style="display:inline-block;background:#1a5e3f;color:#fff;text-decoration:none;padding:16px 36px;border-radius:12px;font-weight:800;font-size:16px;box-shadow:0 8px 20px rgba(26,94,63,0.3);">Start generating now <img src="${tw("26a1")}" width="16" height="16" style="vertical-align:middle;margin-left:4px;" /></a>
             </td></tr>
@@ -259,7 +246,7 @@ const welcomeHtml = `<!doctype html>
           <table width="100%" cellpadding="0" cellspacing="0" border="0">
             <tr><td style="padding-bottom:24px;"><table width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
               <td width="48" style="vertical-align:top;"><div class="slide-step" style="width:36px;height:36px;background:#ecfdf5;border-radius:10px;text-align:center;line-height:36px;font-weight:800;color:#10b981;font-size:15px;border:1px solid #d1fae5;">1</div></td>
-              <td style="padding-left:16px;vertical-align:top;"><div style="font-weight:700;color:#1e293b;font-size:16px;margin-bottom:4px;">Describe your exam</div><p style="margin:0;color:#64748b;font-size:14px;line-height:1.6;">Type in French, Arabic, or English. E.g. "Physics exam, 9th Grade, Optics section, 3 exercises."</p></td>
+              <td style="padding-left:16px;vertical-align:top;"><div style="font-weight:700;color:#1e293b;font-size:16px;margin-bottom:4px;">Describe your exam</div><p style="margin:0;color:#64748b;font-size:14px;line-height:1.6;">Type in French or English. E.g. "Physics exam, 9th Grade, Optics section, 3 exercises."</p></td>
             </tr></table></td></tr>
             <tr><td style="padding-bottom:24px;"><table width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
               <td width="48" style="vertical-align:top;"><div class="slide-step" style="animation-delay:0.1s;width:36px;height:36px;background:#ecfdf5;border-radius:10px;text-align:center;line-height:36px;font-weight:800;color:#10b981;font-size:15px;border:1px solid #d1fae5;">2</div></td>
@@ -481,7 +468,7 @@ const promiseHtml = `<!doctype html>
           <table width="100%" cellpadding="0" cellspacing="0" border="0">
             <tr><td style="padding-bottom:24px;"><table width="100%" cellpadding="0" cellspacing="0" border="0" class="step-item" style="background:#f8fafc;border-radius:16px;padding:20px;border:1px solid #e2e8f0"><tr>
               <td width="56" style="vertical-align:top;"><div style="width:40px;height:40px;background:#1a5e3f;border-radius:12px;text-align:center;line-height:40px;font-weight:800;color:#fff;font-size:18px;">1</div></td>
-              <td style="padding-left:20px;vertical-align:top;"><div style="font-weight:800;color:#1e293b;font-size:17px;margin-bottom:6px;">Describe your vision</div><p style="margin:0;color:#64748b;font-size:15px;line-height:1.6;">Don't worry about formatting. Just type "Terminale Physics, 3 exercises on Electric Circuits" in any language.</p></td>
+              <td style="padding-left:20px;vertical-align:top;"><div style="font-weight:800;color:#1e293b;font-size:17px;margin-bottom:6px;">Describe your vision</div><p style="margin:0;color:#64748b;font-size:15px;line-height:1.6;">Don't worry about formatting. Just type "Terminale Physics, 3 exercises on Electric Circuits" in French or English.</p></td>
             </tr></table></td></tr>
             <tr><td style="padding-bottom:24px;"><table width="100%" cellpadding="0" cellspacing="0" border="0" class="step-item" style="background:#f8fafc;border-radius:16px;padding:20px;border:1px solid #e2e8f0"><tr>
               <td width="56" style="vertical-align:top;"><div style="width:40px;height:40px;background:#1a5e3f;border-radius:12px;text-align:center;line-height:40px;font-weight:800;color:#fff;font-size:18px;">2</div></td>
@@ -614,7 +601,7 @@ const activationHtml = `<!doctype html>
           <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:32px;">
             <tr><td style="padding-bottom:20px;"><table width="100%" cellpadding="0" cellspacing="0" border="0" class="step-row" style="border-radius:14px;padding:16px 20px;background:#f8fafc;border:1px solid #e2e8f0;"><tr>
               <td width="44" style="vertical-align:top;"><div style="width:36px;height:36px;background:#1a5e3f;border-radius:10px;text-align:center;line-height:36px;font-weight:800;color:#fff;font-size:16px;">1</div></td>
-              <td style="padding-left:16px;vertical-align:top;"><div style="font-weight:700;color:#1e293b;font-size:15px;margin-bottom:3px;">Describe your exam</div><p style="margin:0;color:#64748b;font-size:14px;line-height:1.5;">Type your subject and topics in any language. No formatting needed.</p></td>
+              <td style="padding-left:16px;vertical-align:top;"><div style="font-weight:700;color:#1e293b;font-size:15px;margin-bottom:3px;">Describe your exam</div><p style="margin:0;color:#64748b;font-size:14px;line-height:1.5;">Type your subject and topics in French or English. No formatting needed.</p></td>
             </tr></table></td></tr>
             <tr><td style="padding-bottom:20px;"><table width="100%" cellpadding="0" cellspacing="0" border="0" class="step-row" style="border-radius:14px;padding:16px 20px;background:#f8fafc;border:1px solid #e2e8f0;"><tr>
               <td width="44" style="vertical-align:top;"><div style="width:36px;height:36px;background:#1a5e3f;border-radius:10px;text-align:center;line-height:36px;font-weight:800;color:#fff;font-size:16px;">2</div></td>
@@ -632,7 +619,7 @@ const activationHtml = `<!doctype html>
               <table cellpadding="0" cellspacing="0"><tr>
                 <td style="padding-right:16px;vertical-align:top;font-size:36px;" class="pulse-icon">🎁</td>
                 <td>
-                  <div style="font-weight:800;color:#166534;font-size:16px;margin-bottom:6px;">Your 2 free exams are ready</div>
+                  <div style="font-weight:800;color:#166534;font-size:16px;margin-bottom:6px;">Your free exam is ready</div>
                   <p style="margin:0;color:#15803d;font-size:14px;line-height:1.6;">No credit card, no commitment. Just create your account and start generating immediately.</p>
                 </td>
               </tr></table>
