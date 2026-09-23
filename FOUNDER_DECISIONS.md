@@ -36,12 +36,6 @@
 **Full detail:** `MARKETING.md`
 **Status:** Open
 
-### 5. Blog-auto-publish cron supervision
-**Raised by:** seo-growth / content-curriculum · **Date:** 2026-09-18
-**The decision needed:** Should the unsupervised daily AI blog-publishing cron keep running as-is, get a human review/approval step before each post goes live, or be paused?
-**Full detail:** `SEO_STRATEGY.md`
-**Status:** Open
-
 ### 6. Firestore deploys
 **Raised by:** database · **Date:** 2026-09-18
 **The decision needed:** Two independent deploy actions, both requiring the founder to run `firebase deploy` by hand (Claude Code's Production Deploy guardrail).
@@ -53,4 +47,8 @@
 
 ## Answered
 
-*(empty — nothing decided yet)*
+### 5. Blog-auto-publish cron supervision
+**Raised by:** seo-growth / content-curriculum · **Date:** 2026-09-18
+**The decision needed:** Should the unsupervised daily AI blog-publishing cron keep running as-is, get a human review/approval step before each post goes live, or be paused?
+**Full detail:** `SEO_STRATEGY.md`
+**Status:** Answered: 2026-09-23 — keep running as-is, no review step for now.
