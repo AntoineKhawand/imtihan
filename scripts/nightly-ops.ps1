@@ -16,6 +16,16 @@
 # instead detected explicitly via $LASTEXITCODE after each git call.
 
 $RepoDir    = "C:\Users\Administrateur\Downloads\imtihan\imtihan"
+
+# This Windows logon session's cached PATH can predate a mid-session tool
+# install (confirmed: gh was installed via winget after this session's
+# logon, and a freshly spawned process here still lacked it on PATH) —
+# prepend known install locations defensively instead of depending on the
+# session ever refreshing its environment block.
+$ExtraPath = "C:\Program Files\GitHub CLI"
+if ($env:PATH -notlike "*$ExtraPath*") {
+    $env:PATH = "$ExtraPath;$env:PATH"
+}
 $PromptFile = Join-Path $RepoDir "scripts\nightly-ops-prompt.md"
 $LogDir     = Join-Path $RepoDir "logs\nightly"
 New-Item -ItemType Directory -Force -Path $LogDir | Out-Null
