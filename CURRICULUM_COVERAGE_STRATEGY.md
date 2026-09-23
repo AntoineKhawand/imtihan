@@ -226,6 +226,70 @@ research-only pass, flagged here for whoever picks it up next.
 4. **Do not use Al-Shamel as a direct content source** for either track without further legal
    review (commercial compiled workbook); source official past exams directly instead, per point 3.
 
+## 2026-09-24 — Bac Français pre-2019-reform audit: blocked, no verification possible this session
+
+Picked up the open backlog item "Audit `bac-francais.ts` chapters against the current BO programme
+edition — flag anything that looks like it's from a pre-2019-reform programme," specifically the
+part left unaudited after 2026-09-15 (everything in `src/data/curricula/bac-francais.ts` other than
+the three `premiere-fr-spe-math` chapters already confirmed that day: "Second degré", "Dérivation",
+"Trigonométrie" — not re-checked here, per instruction).
+
+**Full read done, no edits made.** Read `src/data/curricula/bac-francais.ts` in full (all 11
+levels: `cinquieme-fr` through `terminale-fr-spe-ses`) and `docs/DATA_SOURCING.md`'s Bac Français
+section. The levels/subjects still needing this specific pre-2019-reform-drift check are:
+`premiere-fr-spe-math`'s remaining math chapters (`pre-fr-math-exponential`,
+`pre-fr-math-sequences`) plus its non-MVP subjects (french, history-geography, philosophy, ses);
+all of `terminale-fr-spe-math` (6 math chapters); all of `terminale-fr-spe-pc` (3 physics + 3
+chemistry chapters); and the non-MVP-subject levels (`terminale-fr-spe-svt`, `terminale-fr-spe-nsi`,
+`terminale-fr-spe-ses`). None of these were verified this session — see why below.
+
+**Blocker: no external-verification tool was actually available this session, contrary to the
+task's premise.** The task instructions said "WebFetch is not available this session... use
+WebSearch instead," matching the pattern already established in the 2026-09-19 IB command-terms
+entry above. In practice, every `WebSearch` call this session returned a hard tool-level
+`"Permission to use WebSearch has been denied"` error — not a network failure or a per-site block
+like the 403s/TLS errors logged in `docs/DATA_SOURCING.md` and the 2026-09-15 entry, but a denial
+at the permission layer, on three different queries (BO Première spé-math programme content, BO
+Terminale spé-math programme content, BO spécial n°8 25 juillet 2019 full text). `WebFetch` is not
+even in this session's tool list. That leaves **zero** tools capable of checking a claim against any
+external source this run.
+
+**Why nothing in `bac-francais.ts` was touched:** this team's own operating rule (and
+`docs/DATA_SOURCING.md`'s explicit methodology) is to require independent secondary sources to
+converge before treating any programme-content claim as reliable, and to never invent or guess
+chapter content. I do have background knowledge (from training, not a live-verified source) that
+makes a few things in the unaudited sections worth a *flag* for a future pass with working
+`WebSearch`/`WebFetch`:
+- `terminale-fr-spe-math` has no chapter for **nombres complexes** (complex numbers), which was
+  added to the Terminale spécialité mathématiques programme as part of the 2019-reform rollout and
+  is heavily examined — if genuinely absent from the real BO programme's current edition this would
+  be a real gap, but this is *unverified this session* and must not be treated as confirmed.
+- `ter-fr-math-probability`'s objectives list "loi normale" (normal distribution) — my own
+  recollection is that continuous/normal-distribution content sits in the *Enseignement
+  scientifique* tronc-commun programme rather than the spécialité mathématiques one, which would
+  make this a possible mis-attribution, but again this is **not verified against any source this
+  session** and should not be acted on without confirmation.
+- `premiere-fr-spe-math` has no chapter covering vecteurs/produit scalaire or probabilités
+  (variables aléatoires, loi binomiale), both of which I recall being part of the Première
+  spécialité mathématiques programme — again, unverified, flagged only as a lead.
+
+None of the three points above were changed in `bac-francais.ts` — they are explicitly *leads for a
+future pass*, not confirmed findings, because they rest on unverified background knowledge rather
+than a real source check. Presenting them as fixed would be exactly the "confident but wrong"
+failure mode this team is instructed to avoid.
+
+**What was done:** `npm run type-check` was run against the unmodified file and is clean (no
+changes were made, so this simply confirms the pre-existing baseline is still clean). No changes to
+`src/data/curricula/bac-francais.ts` in this session.
+
+**Backlog item left open, more narrowly scoped for next time:** the remaining audit
+(`premiere-fr-spe-math` exponential/suites chapters, all of `terminale-fr-spe-math`, all of
+`terminale-fr-spe-pc`, and non-MVP subjects in the file) requires a session with working
+`WebSearch` or `WebFetch` before any further edits can be made responsibly. The three leads above
+(nombres complexes gap, "loi normale" placement, vecteurs/probabilités gap in Première) are a
+good starting checklist for that pass, but must be independently confirmed via convergent secondary
+sources (same rigor as the 2026-09-19 IB entry) before treating them as real.
+
 ## Backlog (pick one per Wednesday, highest priority first)
 
 ### Data accuracy audits (grounded in `docs/DATA_SOURCING.md`)
@@ -295,6 +359,16 @@ research-only pass, flagged here for whoever picks it up next.
       spot-checked against secondary compilations of the 2019-reform BO spécial n°1 programme and
       look accurate — see the dated section above. Literal BO wording still not obtained (403 on
       the primary source from this environment) and the rest of the file is still unaudited.
+      **2026-09-24: blocked, no progress possible.** `WebSearch` returned a hard permission denial
+      on every query this session and `WebFetch` was not in the toolset at all — no external source
+      could be checked, so no edits were made. Three unverified leads (possible missing "nombres
+      complexes" chapter in `terminale-fr-spe-math`, possible "loi normale" mis-attribution in
+      `ter-fr-math-probability`, possible missing vecteurs/probabilités chapters in
+      `premiere-fr-spe-math`) were logged as a starting checklist for a future pass — see the dated
+      section above — but are explicitly *not confirmed* and must not be treated as findings. Still
+      fully unaudited: `premiere-fr-spe-math`'s exponential/suites chapters and non-MVP subjects,
+      all of `terminale-fr-spe-math`, all of `terminale-fr-spe-pc`, and the non-MVP-subject levels
+      (SVT, NSI, SES).
 - [x] **2026-09-19, partial:** Audit `ib.ts` command-term usage in `src/lib/prompts/generate.ts`
       against the current IBO command term glossary edition — see the dated section above for full
       detail. ~15 of ~30 terms spot-checked via convergent secondary sources (no `WebFetch` this
