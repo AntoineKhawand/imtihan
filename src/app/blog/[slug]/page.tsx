@@ -10,6 +10,48 @@ import { BlogAuthor } from "@/components/blog/BlogAuthor";
 import { BlogRelated } from "@/components/blog/BlogRelated";
 import { BlogShare } from "@/components/blog/BlogShare";
 import { PublicFooter } from "@/components/layout/PublicFooter";
+import { BlogFAQ, type BlogFaqItem } from "@/components/blog/BlogFAQ";
+import { SchemaOrg } from "@/components/SchemaOrg";
+import { buildFaqSchema } from "@/components/landing/LandingFAQ";
+
+/**
+ * Extracts an optional trailing "## Frequently Asked Questions" section out
+ * of a Firestore blog_posts `content` markdown field, so it can be rendered
+ * as a real <BlogFAQ> block (+ FAQPage JSON-LD via buildFaqSchema) instead of
+ * generic prose — the same GEO/AEO treatment the static /blog/* posts already
+ * have, applied to the shared dynamic-post template so any post (existing or
+ * future, cron-generated or admin-edited) picks up the signal the moment its
+ * content follows this convention. Backward-compatible: posts without this
+ * section render exactly as before (empty `items`, unchanged `body`).
+ *
+ * Convention (written into the Firestore doc's `content` field via the admin
+ * PATCH endpoint, not a new schema field):
+ *   ## Frequently Asked Questions
+ *
+ *   **Q: Question text?**
+ *   Answer text, one or more lines.
+ *
+ *   **Q: Next question?**
+ *   Next answer.
+ */
+function extractFaqSection(content: string): { body: string; items: BlogFaqItem[] } {
+  const headingMatch = /^#{2,3}\s*Frequently Asked Questions\s*$/im.exec(content);
+  if (!headingMatch) return { body: content, items: [] };
+
+  const body = content.slice(0, headingMatch.index).trimEnd();
+  const faqSection = content.slice(headingMatch.index + headingMatch[0].length);
+
+  const items: BlogFaqItem[] = [];
+  const qaRegex = /\*\*Q:\s*(.+?)\*\*\s*\n([\s\S]*?)(?=\n\*\*Q:|\s*$)/g;
+  let match: RegExpExecArray | null;
+  while ((match = qaRegex.exec(faqSection)) !== null) {
+    const q = match[1].trim();
+    const a = match[2].trim();
+    if (q && a) items.push({ q, a });
+  }
+
+  return { body, items };
+}
 
 interface BlogPostProps {
   params: Promise<{ slug: string }>;
@@ -106,6 +148,7 @@ export default async function DynamicBlogPostPage({ params }: BlogPostProps) {
   if (!post) notFound();
 
   const url = `https://imtihan.live/blog/${post.slug}`;
+  const { body, items: faqItems } = extractFaqSection(post.content);
 
   return (
     <div className="min-h-screen bg-[var(--bg)] flex flex-col">
@@ -135,6 +178,7 @@ export default async function DynamicBlogPostPage({ params }: BlogPostProps) {
           })
         }}
       />
+      {faqItems.length > 0 && <SchemaOrg schema={buildFaqSchema(faqItems)} />}
 
       <nav className="sticky top-0 left-0 right-0 z-50 flex items-center justify-between px-6 md:px-10 h-16 bg-[var(--bg)]/80 backdrop-blur-xl border-b border-[var(--border)]/60 transition-colors">
         <Logo size={26} />
@@ -186,8 +230,9 @@ export default async function DynamicBlogPostPage({ params }: BlogPostProps) {
                 strong: ({node, ...props}) => <strong className="font-bold text-[var(--text)]" {...props} />,
               }}
             >
-              {post.content}
+              {body}
             </ReactMarkdown>
+            {faqItems.length > 0 && <BlogFAQ items={faqItems} />}
           </article>
 
           <BlogAuthor 
