@@ -10,6 +10,13 @@
 
 ## Open
 
+### 7. BUG-029 content recovery — restore vs. rewrite
+**Raised by:** engineering (traced during nightly-ops's first test run) · **Date:** 2026-09-23
+**The decision needed:** 3 live blog posts had their content overwritten by a test harness with no review (see `BUGS.md` BUG-029 for full detail and the 3 affected slugs/doc ids). Should the original content be restored from a Firebase backup, or should fresh replacement articles be written for those same slugs?
+**Options:** (a) restore from Firebase PITR/backup, if the `imtihan-app` project has it enabled — founder is checking directly, since agent access to the Firebase console is correctly blocked by account permissions; (b) if no backup exists, commission 3 fresh, properly-sourced replacement articles for the same slugs (the overwritten content itself reads as coherent and well-cited, just unreviewed and undocumented — not garbled).
+**Full detail:** `BUGS.md` (BUG-029)
+**Status:** Open — blocked on founder confirming Firebase backup status.
+
 ### 1. BUG-026 verification model
 **Raised by:** database · **Date:** 2026-09-18 (restated 2026-09-19)
 **The decision needed:** How should a teacher's school affiliation actually be verified before it gates student names, emails, and quiz history? `users/{uid}.school`/`.role` are self-writable today with zero verification.

@@ -19,6 +19,27 @@ Track issues here during development. Format:
 
 ## Open Issues
 
+## BUG-029: Nightly-ops test run's own harness overwrote 3 live blog posts' content via a real production write
+**Status:** Open (process fix shipped; content-recovery decision pending founder)
+**Severity:** High
+**Area:** Data / Ops
+**Reported:** 2026-09-23
+
+**Description:** During the first manual test run of the new local nightly automation (`scripts/nightly-ops.ps1`), whichever team was dispatched to add FAQ/GEO schema support to dynamic (Firestore-backed) blog posts built a verification harness (`scripts/.tmp-blog-harness/`) that loaded real Firebase Admin credentials from `.env.local` and called the real, deployed `PATCH /api/admin/blog/[id]` route function directly — a real production write, not a simulation. It ran a `patch` command against 3 real, previously-published blog posts, overwriting each one's `content` field with draft text with zero review step:
+- `the-final-countdown-navigating-the-may-19th-pressure-peak-in-lebanese-schools-hfda` (doc `2qgonIYRexyjvXX5LcUl`)
+- `the-final-sprint-navigating-lebanons-highstakes-exam-season-with-ai-precision-lhi4` (doc `2uedoCo93HEH8KnvxZc1`)
+- `the-may-sprint-how-lebanese-educators-are-mastering-the-2026-official-exam-season-9nrg` (doc `fDu2AsaOd4p0uTsg4grr`)
+
+All 3 writes landed within the same ~10-second window (11:55:06–11:55:15 on 2026-09-23), confirmed via a read-only query for the new FAQ-heading convention. The replacement content itself is coherent and well-cited (OECD TALIS survey, Roediger & Karpicke spaced-repetition research) — not garbled or broken — but it is unreviewed AI-generated text that silently replaced whatever the original article said, with no diff, no TEAM_CHAT.md/domain-doc entry, and no founder visibility until this was traced after the fact.
+
+**Root cause:** Nothing in `scripts/nightly-ops-prompt.md`'s hard rules explicitly forbade a team from testing a feature by loading real Admin SDK credentials and invoking the real route handler directly — the rules banned `firebase deploy` and real external email, but not this.
+
+**Fix (process):** Added an explicit hard rule to `scripts/nightly-ops-prompt.md` banning any direct use of real Firebase Admin credentials or real production API-route invocation from a script/harness, even for testing — verification must go through the local Firestore emulator (`npm run test:rules`) or pure unit tests instead. Shipped 2026-09-23.
+
+**Fix (content, pending):** Whether the 3 posts' original content is recoverable depends on whether Firebase project `imtihan-app` has Point-in-Time Recovery / scheduled backups enabled — the founder is checking this directly (agent access to the Firebase console was correctly blocked by account permissions). See `FOUNDER_DECISIONS.md` for the open decision (restore from backup vs. commission fresh replacement articles).
+
+---
+
 ## BUG-028: Smoke test locator collision — "Imtihan" nav-link rename made the header-logo assertion ambiguous under Playwright strict mode
 **Status:** Fixed
 **Severity:** Low
