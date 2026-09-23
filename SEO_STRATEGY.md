@@ -83,9 +83,37 @@ keep each change reviewable and low-risk for an unattended push.
 - [x] **2026-09-01** — Hardened `robots.ts`: `/admin`, `/scanner`, `/print`, `/analytics`,
       `/test-auth`, `/test-wysiwyg`, `/account`, `/teacher/` were crawlable by default (no
       denylist entry). All now disallowed.
-- [ ] `sitemap.ts` is hand-maintained as a static array — as blog posts and landing pages grow
-      this will drift out of sync. Consider generating it from the filesystem (`src/app/blog/*`)
-      or a small content registry instead of a manually-updated list.
+- [x] **2026-09-24** — `sitemap.ts`'s 21-URL static array (hardcoded homepage, marketing/curriculum
+      landing pages, `/blog` index, and the 9 static blog posts — the ~27 Firestore-backed dynamic
+      posts were already queried live, not hand-maintained, and are untouched) is now generated
+      instead of hand-typed. New `scripts/generate-static-routes.mjs` walks `src/app/**/page.tsx`,
+      excludes authenticated/private app surfaces (mirrors `robots.ts`'s disallow list: `/admin`,
+      `/api`, `/auth`, `/create`, `/dashboard`, `/bank`, `/community`, `/print`, `/scanner`,
+      `/analytics`, `/test-auth`, `/test-wysiwyg`, `/account`, `/student`, `/teacher`), Next.js
+      dynamic route segments (`blog/[slug]`, `exam/[id]` — need runtime data, not a static walk),
+      and the two Stripe post-checkout redirect pages (`/pricing/cancel`, `/pricing/success` —
+      client-only, no metadata, thin transactional content, were never in the old array either) —
+      then writes a typed `STATIC_SITEMAP_ROUTES` array to `src/lib/seo/static-sitemap-routes.ts`,
+      which `sitemap.ts` now imports instead of the old inline literal. Also derived
+      `STATIC_BLOG_SLUGS` (used to de-dupe Firestore posts against the static ones) from that same
+      generated list instead of keeping a second hand-typed slug array, closing a second,
+      smaller drift risk in the same file. Wired into `predev`/`prebuild` npm scripts so it
+      regenerates automatically before every dev server start and build; also runnable directly via
+      `npm run generate:sitemap-routes`. **Chose build-time generation over a request-time
+      `fs.readdirSync` inside `sitemap.ts`** because Next's production serverless bundles are built
+      from the traced module graph, not the raw repo tree — a runtime filesystem walk over
+      `src/app` isn't guaranteed to see the source files once deployed, so a plain, statically
+      imported generated file is the safe option; scripts/lib/site-pages.mjs was read first per
+      instructions but wasn't reusable for this direction since it *fetches* the live
+      `sitemap.xml` for the audit scripts (downstream of `sitemap.ts`), not a filesystem-derived
+      page list that could feed it upstream. **Verified without a dev server** (avoided per the
+      "never load real Admin SDK credentials" rule and general memory-pressure caution): ran the
+      generator and diffed its 21 output paths byte-for-byte against the old hardcoded array plus
+      the derived blog-slug list — exact match, 0 missing, 0 unexpectedly added. `npm run
+      type-check` clean. One gitignore gotcha caught before committing: the obvious output path
+      `src/lib/generated/` collided with `.gitignore`'s existing bare `generated/` rule (meant for
+      local test-exam output) and would have been silently untracked — moved the output to
+      `src/lib/seo/static-sitemap-routes.ts` instead.
 - [x] **2026-09-18** — GSC's URL Inspection API showed 3 of the 4 curricula landing pages
       (`/ib-exam-generator`, `/bac-francais-exam-generator`, `/generateur-examen-bac-libanais`)
       as "URL is unknown to Google" — confirmed they were true orphan pages: present only in
