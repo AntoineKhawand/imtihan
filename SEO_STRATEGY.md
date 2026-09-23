@@ -83,9 +83,34 @@ keep each change reviewable and low-risk for an unattended push.
 - [x] **2026-09-01** — Hardened `robots.ts`: `/admin`, `/scanner`, `/print`, `/analytics`,
       `/test-auth`, `/test-wysiwyg`, `/account`, `/teacher/` were crawlable by default (no
       denylist entry). All now disallowed.
-- [ ] `sitemap.ts` is hand-maintained as a static array — as blog posts and landing pages grow
-      this will drift out of sync. Consider generating it from the filesystem (`src/app/blog/*`)
-      or a small content registry instead of a manually-updated list.
+- [x] **2026-09-23** — `sitemap.ts`'s static blog-post list (`STATIC_BLOG_SLUGS`) was a literal
+      duplicate of `STATIC_ARTICLES` in `src/app/blog/page.tsx` — the exact drift this backlog item
+      warned about had already happened once (sitemap.ts's own comment noted a real indexed post,
+      "the-may-marathon-...", was missing because this list only ever covered the original 9 seed
+      slugs). Extracted both into one shared registry, `src/app/blog/static-posts.ts`
+      (`STATIC_BLOG_POSTS`), colocated in the blog route directory itself; `blog/page.tsx` and
+      `sitemap.ts` both now derive from it, so adding a new static post page is a one-line addition
+      in one file instead of two hand-edited lists. Also collapsed `sitemap.ts`'s 12 repeated
+      landing-page object literals into one small `STATIC_PAGES` config array (path +
+      changeFrequency + priority) processed via `.map()` — still hand-maintained (no second list
+      exists elsewhere for these to drift against, and a full filesystem walk of `src/app` would
+      risk exposing private routes like `/admin`/`/dashboard` unless carefully excluded, which felt
+      riskier than the problem it'd solve) but now a one-line add instead of a 6-line paste. The
+      dynamic Firestore-backed post logic (`getDynamicBlogSlugs()`) was untouched — it already
+      queried `blog_posts` correctly. **Verified no regressions**: manually diffed the old
+      hardcoded 21-URL static array (1 home + 7 other static pages + `/blog` + 9 static posts + 3
+      legal/contact pages) against the new generated output — identical URLs, `priority`, and
+      `changeFrequency` values, just generated instead of pasted (see the diff in the commit for
+      the line-by-line match). `npx tsc --noEmit --skipLibCheck` clean. **Not run**: `npm run
+      audit:seo` against a local dev server — couldn't safely confirm free RAM (memory-check
+      commands were denied by the sandbox itself tonight, not just tight headroom), so skipped the
+      dev server per standing practice and relied on code review + tsc + the manual diff instead.
+      **Found, not fixed (flagging for a future run)**: `src/app/api/blog/route.ts` has a *third*,
+      near-identical hardcoded static-post list (`INITIAL_ARTICLES`/`FALLBACK_ARTICLES`, 2 of the 9
+      posts, different shape) used for auto-seeding Firestore when `blog_posts` is empty — this is
+      an `engineering`-owned API route with a Firestore write side effect, not a static-routes/
+      sitemap concern, so left untouched to keep tonight's diff focused; worth a follow-up to point
+      it at the same registry or remove it if the auto-seed path is no longer needed.
 - [x] **2026-09-18** — GSC's URL Inspection API showed 3 of the 4 curricula landing pages
       (`/ib-exam-generator`, `/bac-francais-exam-generator`, `/generateur-examen-bac-libanais`)
       as "URL is unknown to Google" — confirmed they were true orphan pages: present only in
