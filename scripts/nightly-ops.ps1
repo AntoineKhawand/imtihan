@@ -6,8 +6,14 @@
 # the run to Read/Edit/Write/Grep/Glob/Agent plus Bash restricted to
 # git/npm/npx/node/gh only — anything else (firebase, rm -rf, arbitrary
 # network tools) is simply not reachable, not just discouraged.
-
-$ErrorActionPreference = "Stop"
+#
+# Note: $ErrorActionPreference is deliberately left at the default
+# "Continue" for this script. Native tools (git, claude, npm) routinely
+# write normal status text to stderr (e.g. "Already on 'master'"), and
+# under "Stop" PowerShell 5.1 promotes each stderr line from a native exe
+# into a terminating error even when the exe's real exit code is 0 — that
+# previously caused false aborts on ordinary git output. Real failures are
+# instead detected explicitly via $LASTEXITCODE after each git call.
 
 $RepoDir    = "C:\Users\Administrateur\Downloads\imtihan\imtihan"
 $PromptFile = Join-Path $RepoDir "scripts\nightly-ops-prompt.md"
@@ -18,7 +24,16 @@ $Stamp   = Get-Date -Format "yyyy-MM-dd_HHmmss"
 $LogFile = Join-Path $LogDir "$Stamp.log"
 
 function Log($msg) {
-    "$(Get-Date -Format o)  $msg" | Tee-Object -FilePath $LogFile -Append
+    "$(Get-Date -Format o)  $msg" | Tee-Object -FilePath $LogFile -Append -Encoding utf8 | Out-Null
+}
+
+function RunGit {
+    param([string[]]$GitArgs)
+    $output = & git @GitArgs 2>&1
+    $output | ForEach-Object { Log $_ }
+    if ($LASTEXITCODE -ne 0) {
+        throw "git $($GitArgs -join ' ') failed with exit code $LASTEXITCODE"
+    }
 }
 
 Set-Location $RepoDir
@@ -35,13 +50,13 @@ if ($dirty) {
 
 try {
     Log "git fetch origin"
-    git fetch origin 2>&1 | ForEach-Object { Log $_ }
+    RunGit @("fetch", "origin")
 
     Log "git checkout master"
-    git checkout master 2>&1 | ForEach-Object { Log $_ }
+    RunGit @("checkout", "master")
 
     Log "git pull --ff-only origin master"
-    git pull --ff-only origin master 2>&1 | ForEach-Object { Log $_ }
+    RunGit @("pull", "--ff-only", "origin", "master")
 } catch {
     Log "ABORT: git sync failed: $_"
     exit 1
