@@ -713,19 +713,19 @@ export default function AdminPage() {
           <div className="space-y-6">
             {/* Stats */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-              <div className="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm">
-                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Total Users</p>
-                <h3 className="text-2xl font-black text-gray-900">{users.length}</h3>
+              <div className="bg-[var(--surface)] p-5 rounded-3xl border border-[var(--border)] shadow-sm">
+                <p className="text-[10px] font-black text-[var(--text-tertiary)] uppercase tracking-widest mb-1">Total Users</p>
+                <h3 className="text-2xl font-black text-[var(--text)]">{users.length}</h3>
               </div>
-              <div className="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm">
+              <div className="bg-[var(--surface)] p-5 rounded-3xl border border-[var(--border)] shadow-sm">
                 <p className="text-[10px] font-black text-emerald-500 uppercase tracking-widest mb-1">Selected</p>
                 <h3 className="text-2xl font-black text-emerald-600">{selectedUids.size}</h3>
               </div>
-              <div className="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm">
+              <div className="bg-[var(--surface)] p-5 rounded-3xl border border-[var(--border)] shadow-sm">
                 <p className="text-[10px] font-black text-amber-500 uppercase tracking-widest mb-1">No Exams</p>
                 <h3 className="text-2xl font-black text-amber-600">{users.filter(u => u.examsGenerated === 0).length}</h3>
               </div>
-              <div className="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm">
+              <div className="bg-[var(--surface)] p-5 rounded-3xl border border-[var(--border)] shadow-sm">
                 <p className="text-[10px] font-black text-blue-500 uppercase tracking-widest mb-1">Active (1+)</p>
                 <h3 className="text-2xl font-black text-blue-600">{users.filter(u => u.examsGenerated >= 1).length}</h3>
               </div>
@@ -733,18 +733,18 @@ export default function AdminPage() {
 
             {/* Template Picker */}
             <div>
-              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">Choose Template</p>
+              <p className="text-[10px] font-black text-[var(--text-tertiary)] uppercase tracking-widest mb-3">Choose Template</p>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 {EMAIL_TEMPLATES.map(t => (
                   <button key={t.id} onClick={() => setEmailTemplate(t.id)}
                     className={cn(
                       "p-4 rounded-2xl border text-left transition-all",
-                      emailTemplate === t.id ? "bg-emerald-50 border-emerald-200 shadow-sm" : "bg-white border-gray-100 hover:border-gray-200 hover:shadow-sm"
+                      emailTemplate === t.id ? "bg-emerald-50 border-emerald-200 shadow-sm" : "bg-[var(--surface)] border-[var(--border)] hover:border-[var(--border-strong)] hover:shadow-sm"
                     )}
                   >
                     <div className="text-2xl mb-2">{t.icon}</div>
-                    <p className="font-bold text-gray-900 text-sm leading-tight">{t.title}</p>
-                    <p className="text-[11px] text-gray-400 mt-1 font-medium leading-tight">{t.desc}</p>
+                    <p className="font-bold text-[var(--text)] text-sm leading-tight">{t.title}</p>
+                    <p className="text-[11px] text-[var(--text-tertiary)] mt-1 font-medium leading-tight">{t.desc}</p>
                     {emailTemplate === t.id && (
                       <div className="mt-2 flex items-center gap-1 text-[10px] font-bold text-emerald-600">
                         <Check size={10} /> Selected
@@ -757,23 +757,23 @@ export default function AdminPage() {
 
             {/* Custom HTML Editor */}
             {emailTemplate === "custom" && (
-              <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
-                <p className="font-bold text-gray-900 mb-4">Custom Email Content</p>
+              <div className="bg-[var(--surface)] p-6 rounded-3xl border border-[var(--border)] shadow-sm">
+                <p className="font-bold text-[var(--text)] mb-4">Custom Email Content</p>
                 <input type="text" placeholder="Email subject..." value={customSubject} onChange={e => setCustomSubject(e.target.value)}
-                  className="w-full h-12 px-4 border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-emerald-600/10 focus:border-emerald-600 mb-4" />
+                  className="w-full h-12 px-4 bg-[var(--surface)] text-[var(--text)] border border-[var(--border-strong)] rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-emerald-600/10 focus:border-emerald-600 mb-4" />
                 <textarea placeholder="Email HTML content..." value={customHtml} onChange={e => setCustomHtml(e.target.value)} rows={10}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm font-mono focus:outline-none focus:ring-2 focus:ring-emerald-600/10 focus:border-emerald-600 resize-y" />
+                  className="w-full px-4 py-3 bg-[var(--surface)] text-[var(--text)] border border-[var(--border-strong)] rounded-xl text-sm font-mono focus:outline-none focus:ring-2 focus:ring-emerald-600/10 focus:border-emerald-600 resize-y" />
               </div>
             )}
 
             {/* Recipient Picker */}
-            <div className="bg-white rounded-[28px] border border-gray-100 shadow-sm overflow-hidden">
-              <div className="p-5 border-b border-gray-50">
+            <div className="bg-[var(--surface)] rounded-[28px] border border-[var(--border)] shadow-sm overflow-hidden">
+              <div className="p-5 border-b border-[var(--border)]">
                 <div className="flex items-center justify-between mb-4">
-                  <p className="font-black text-gray-900">Select Recipients</p>
+                  <p className="font-black text-[var(--text)]">Select Recipients</p>
                   <span className={cn(
                     "text-xs font-bold px-3 py-1 rounded-full border",
-                    selectedUids.size > 0 ? "bg-emerald-50 text-emerald-700 border-emerald-100" : "bg-gray-50 text-gray-400 border-gray-100"
+                    selectedUids.size > 0 ? "bg-emerald-50 text-emerald-700 border-emerald-100" : "bg-[var(--bg-subtle)] text-[var(--text-tertiary)] border-[var(--border)]"
                   )}>
                     {selectedUids.size} selected
                   </span>
@@ -782,7 +782,7 @@ export default function AdminPage() {
                 {/* Quick Segment Buttons */}
                 <div className="flex flex-wrap gap-2 mb-4">
                   <button onClick={() => setSelectedUids(new Set(users.map(u => u.uid)))}
-                    className="h-8 px-4 rounded-xl text-[10px] font-bold bg-gray-900 text-white hover:bg-gray-700 transition-colors">
+                    className="h-8 px-4 rounded-xl text-[10px] font-bold bg-[var(--text)] text-[var(--surface)] hover:opacity-80 transition-opacity">
                     All ({users.length})
                   </button>
                   <button onClick={() => setSelectedUids(new Set(users.filter(u => u.proExpiresAt && u.proExpiresAt > Date.now()).map(u => u.uid)))}
@@ -807,33 +807,33 @@ export default function AdminPage() {
 
                 {/* Search within email tab */}
                 <div className="relative">
-                  <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
+                  <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)]" size={14} />
                   <input type="text" placeholder="Filter by email or name..." value={emailSearch} onChange={e => setEmailSearch(e.target.value)}
-                    className="w-full h-10 pl-9 pr-4 bg-gray-50 border border-gray-100 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-emerald-600/10 focus:border-emerald-600 transition-all" />
+                    className="w-full h-10 pl-9 pr-4 bg-[var(--bg-subtle)] text-[var(--text)] border border-[var(--border)] rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-emerald-600/10 focus:border-emerald-600 transition-all" />
                 </div>
               </div>
 
               {/* User List */}
-              <div className="divide-y divide-gray-50 max-h-72 overflow-y-auto">
+              <div className="divide-y divide-[var(--border)] max-h-72 overflow-y-auto">
                 {emailFiltered.length === 0 ? (
-                  <div className="px-5 py-8 text-center text-sm text-gray-400 font-medium">No users match your search</div>
+                  <div className="px-5 py-8 text-center text-sm text-[var(--text-tertiary)] font-medium">No users match your search</div>
                 ) : emailFiltered.map(u => (
                   <div key={u.uid} onClick={() => toggleSelect(u.uid)}
                     className={cn(
                       "flex items-center gap-3 sm:gap-4 px-5 py-3.5 cursor-pointer transition-colors",
-                      selectedUids.has(u.uid) ? "bg-emerald-50/60" : "hover:bg-gray-50/60"
+                      selectedUids.has(u.uid) ? "bg-emerald-50/60" : "hover:bg-[var(--bg-subtle)]/60"
                     )}
                   >
                     <Checkbox checked={selectedUids.has(u.uid)} onChange={() => toggleSelect(u.uid)} />
                     <div className={cn(
                       "w-9 h-9 rounded-xl flex items-center justify-center text-sm font-black border shrink-0",
-                      u.proExpiresAt && u.proExpiresAt > Date.now() ? "bg-emerald-50 text-emerald-700 border-emerald-100" : "bg-gray-50 text-gray-500 border-gray-100"
+                      u.proExpiresAt && u.proExpiresAt > Date.now() ? "bg-emerald-50 text-emerald-700 border-emerald-100" : "bg-[var(--bg-subtle)] text-[var(--text-secondary)] border-[var(--border)]"
                     )}>
                       {u.displayName?.[0] || u.email[0].toUpperCase()}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-bold text-gray-900 truncate">{u.email}</p>
-                      <p className="text-xs text-gray-400 font-medium">{u.displayName || "Anonymized Educator"}</p>
+                      <p className="text-sm font-bold text-[var(--text)] truncate">{u.email}</p>
+                      <p className="text-xs text-[var(--text-tertiary)] font-medium">{u.displayName || "Anonymized Educator"}</p>
                     </div>
                     <div className="shrink-0 hidden sm:block">
                       <ProBadge expiresAt={u.proExpiresAt} />
@@ -848,18 +848,18 @@ export default function AdminPage() {
               "rounded-3xl p-5 sm:p-6 transition-all border",
               selectedUids.size > 0
                 ? "bg-emerald-950 border-transparent shadow-2xl shadow-emerald-900/30"
-                : "bg-gray-50 border-gray-100"
+                : "bg-[var(--bg-subtle)] border-[var(--border)]"
             )}>
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
                 <div className="flex items-center gap-3 flex-1 min-w-0">
-                  <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center shrink-0", selectedUids.size > 0 ? "bg-emerald-500/20" : "bg-gray-200")}>
-                    <Mail size={18} className={selectedUids.size > 0 ? "text-emerald-400" : "text-gray-400"} />
+                  <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center shrink-0", selectedUids.size > 0 ? "bg-emerald-500/20" : "bg-[var(--border)]")}>
+                    <Mail size={18} className={selectedUids.size > 0 ? "text-emerald-400" : "text-[var(--text-tertiary)]"} />
                   </div>
                   <div>
-                    <p className={cn("font-bold text-sm", selectedUids.size > 0 ? "text-white" : "text-gray-500")}>
+                    <p className={cn("font-bold text-sm", selectedUids.size > 0 ? "text-white" : "text-[var(--text-secondary)]")}>
                       {selectedUids.size > 0 ? `${selectedUids.size} recipient${selectedUids.size !== 1 ? "s" : ""} selected` : "Select recipients above"}
                     </p>
-                    <p className={cn("text-xs mt-0.5 capitalize", selectedUids.size > 0 ? "text-emerald-300/70" : "text-gray-400")}>
+                    <p className={cn("text-xs mt-0.5 capitalize", selectedUids.size > 0 ? "text-emerald-300/70" : "text-[var(--text-tertiary)]")}>
                       Template: {emailTemplate}
                     </p>
                   </div>
@@ -877,13 +877,13 @@ export default function AdminPage() {
 
             {/* Result Banner */}
             {emailResult && (
-              <div className="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm flex items-center gap-4">
+              <div className="bg-[var(--surface)] p-5 rounded-3xl border border-[var(--border)] shadow-sm flex items-center gap-4">
                 <CheckCircle2 size={22} className="text-emerald-500 shrink-0" />
                 <div className="flex-1">
-                  <p className="font-bold text-gray-900">{emailResult.sent} email{emailResult.sent !== 1 ? "s" : ""} sent successfully</p>
+                  <p className="font-bold text-[var(--text)]">{emailResult.sent} email{emailResult.sent !== 1 ? "s" : ""} sent successfully</p>
                   {emailResult.failed > 0 && <p className="text-sm text-red-500 font-medium">{emailResult.failed} failed</p>}
                 </div>
-                <button onClick={() => setEmailResult(null)} className="text-gray-400 hover:text-gray-600"><XCircle size={18} /></button>
+                <button onClick={() => setEmailResult(null)} className="text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]"><XCircle size={18} /></button>
               </div>
             )}
           </div>
@@ -917,12 +917,12 @@ export default function AdminPage() {
               </div>
             </div>
 
-            <div className="bg-white p-8 rounded-[32px] border border-gray-100 shadow-sm flex flex-col items-center text-center">
-              <div className="w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center text-gray-400 mb-4">
+            <div className="bg-[var(--surface)] p-8 rounded-[32px] border border-[var(--border)] shadow-sm flex flex-col items-center text-center">
+              <div className="w-16 h-16 bg-[var(--bg-subtle)] rounded-2xl flex items-center justify-center text-[var(--text-tertiary)] mb-4">
                 <FileText size={32} />
               </div>
-              <h3 className="text-xl font-black text-gray-900 mb-2">Content Management</h3>
-              <p className="text-sm text-gray-400 max-w-md mb-6 font-medium leading-relaxed">
+              <h3 className="text-xl font-black text-[var(--text)] mb-2">Content Management</h3>
+              <p className="text-sm text-[var(--text-tertiary)] max-w-md mb-6 font-medium leading-relaxed">
                 Articles are automatically synced to Firestore. Manage existing articles directly via the main blog index.
               </p>
               <Link href="/blog" className="h-12 px-8 bg-emerald-600 text-white rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-600/20">
@@ -1068,15 +1068,15 @@ export default function AdminPage() {
         {activeTab === "subscribers" && (
           <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
             <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
-              <div className="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm">
-                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Total Subscribers</p>
-                <h3 className="text-2xl font-black text-gray-900">{subscribers.length}</h3>
+              <div className="bg-[var(--surface)] p-5 rounded-3xl border border-[var(--border)] shadow-sm">
+                <p className="text-[10px] font-black text-[var(--text-tertiary)] uppercase tracking-widest mb-1">Total Subscribers</p>
+                <h3 className="text-2xl font-black text-[var(--text)]">{subscribers.length}</h3>
               </div>
-              <div className="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm">
+              <div className="bg-[var(--surface)] p-5 rounded-3xl border border-[var(--border)] shadow-sm">
                 <p className="text-[10px] font-black text-emerald-500 uppercase tracking-widest mb-1">Checklist Delivered</p>
                 <h3 className="text-2xl font-black text-emerald-600">{subscribers.filter(s => s.checklistSentAt).length}</h3>
               </div>
-              <div className="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm hidden lg:block">
+              <div className="bg-[var(--surface)] p-5 rounded-3xl border border-[var(--border)] shadow-sm hidden lg:block">
                 <p className="text-[10px] font-black text-amber-500 uppercase tracking-widest mb-1">Send Failed / Pending</p>
                 <h3 className="text-2xl font-black text-amber-600">{subscribers.filter(s => !s.checklistSentAt).length}</h3>
               </div>
@@ -1096,27 +1096,27 @@ export default function AdminPage() {
               </div>
             )}
 
-            <div className="bg-white rounded-[32px] border border-gray-100 shadow-sm overflow-hidden">
+            <div className="bg-[var(--surface)] rounded-[32px] border border-[var(--border)] shadow-sm overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                   <thead>
-                    <tr className="bg-gray-50/50 border-b border-gray-50">
-                      <th className="px-6 py-5 text-[10px] font-black text-gray-400 uppercase tracking-widest">Email</th>
-                      <th className="px-4 py-5 text-[10px] font-black text-gray-400 uppercase tracking-widest">Source</th>
-                      <th className="px-4 py-5 text-[10px] font-black text-gray-400 uppercase tracking-widest">Signed Up</th>
-                      <th className="px-6 py-5 text-right text-[10px] font-black text-gray-400 uppercase tracking-widest">Checklist</th>
+                    <tr className="bg-[var(--bg-subtle)]/50 border-b border-[var(--border)]">
+                      <th className="px-6 py-5 text-[10px] font-black text-[var(--text-tertiary)] uppercase tracking-widest">Email</th>
+                      <th className="px-4 py-5 text-[10px] font-black text-[var(--text-tertiary)] uppercase tracking-widest">Source</th>
+                      <th className="px-4 py-5 text-[10px] font-black text-[var(--text-tertiary)] uppercase tracking-widest">Signed Up</th>
+                      <th className="px-6 py-5 text-right text-[10px] font-black text-[var(--text-tertiary)] uppercase tracking-widest">Checklist</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-50">
+                  <tbody className="divide-y divide-[var(--border)]">
                     {loadingSubscribers ? (
-                      <tr><td colSpan={4} className="px-6 py-10 text-center text-sm text-gray-400 font-medium">Loading…</td></tr>
+                      <tr><td colSpan={4} className="px-6 py-10 text-center text-sm text-[var(--text-tertiary)] font-medium">Loading…</td></tr>
                     ) : subscribers.length === 0 ? (
-                      <tr><td colSpan={4} className="px-6 py-10 text-center text-sm text-gray-400 font-medium">No subscribers yet</td></tr>
+                      <tr><td colSpan={4} className="px-6 py-10 text-center text-sm text-[var(--text-tertiary)] font-medium">No subscribers yet</td></tr>
                     ) : subscribers.map((s) => (
-                      <tr key={s.id} className="hover:bg-gray-50/30 transition-colors">
-                        <td className="px-6 py-4 text-sm font-bold text-gray-900">{s.email}</td>
-                        <td className="px-4 py-4 text-xs text-gray-400 font-medium">{s.source || "—"}</td>
-                        <td className="px-4 py-4 text-xs text-gray-400 font-medium">{formatDate(s.createdAt)}</td>
+                      <tr key={s.id} className="hover:bg-[var(--bg-subtle)]/30 transition-colors">
+                        <td className="px-6 py-4 text-sm font-bold text-[var(--text)]">{s.email}</td>
+                        <td className="px-4 py-4 text-xs text-[var(--text-tertiary)] font-medium">{s.source || "—"}</td>
+                        <td className="px-4 py-4 text-xs text-[var(--text-tertiary)] font-medium">{formatDate(s.createdAt)}</td>
                         <td className="px-6 py-4 text-right">
                           {s.checklistSentAt ? (
                             <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">
