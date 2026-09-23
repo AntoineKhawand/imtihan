@@ -20,7 +20,6 @@ interface SchoolExercise {
   subject: string;
   schoolSlug?: string;
   schoolName?: string;
-  school?: string;
   contributor?: string;
   exercise: {
     statement: string;
@@ -49,24 +48,13 @@ async function fetchSchoolExercises(schoolName: string): Promise<SchoolExercise[
   if (!db) return [];
   try {
     const slug = slugify(schoolName);
-    // Try schoolSlug field first (bank page writes "schoolSlug")
     const q = query(
       collection(db, "schoolBank"),
       where("schoolSlug", "==", slug),
       orderBy("sharedAt", "desc")
     );
     const snap = await getDocs(q);
-    if (!snap.empty) {
-      return snap.docs.map((d) => ({ id: d.id, ...d.data() } as SchoolExercise));
-    }
-    // Fallback: try "school" field (schoolBank.ts writes "school")
-    const q2 = query(
-      collection(db, "schoolBank"),
-      where("school", "==", schoolName),
-      orderBy("sharedAt", "desc")
-    );
-    const snap2 = await getDocs(q2);
-    return snap2.docs.map((d) => ({ id: d.id, ...d.data() } as SchoolExercise));
+    return snap.docs.map((d) => ({ id: d.id, ...d.data() } as SchoolExercise));
   } catch (err) {
     console.error("[practice] fetchSchoolExercises:", err);
     return [];

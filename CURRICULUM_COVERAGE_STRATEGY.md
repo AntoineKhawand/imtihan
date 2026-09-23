@@ -31,7 +31,18 @@ pure-analytics/no-automation approach — rejected because Antoine specifically 
 improve itself from generation history, and the exemplar-bank approach *is* automatic (no human
 review step required to take effect), it just doesn't spend extra tokens doing it.
 
-## ⚠️ Known blocker to fix before building the exemplar bank
+## ✅ Known blocker to fix before building the exemplar bank — RESOLVED 2026-09-24
+
+**Update 2026-09-24 (`engineering`):** Dead `src/lib/schoolBank.ts` (collection `"school_bank"`,
+field `"school"`) has been deleted, and the stale `"school"`-field fallback read (plus its unused
+type field) in `src/app/student/practice/page.tsx` has been removed. This was a pure cleanup — the
+live `src/app/bank/page.tsx` implementation (`shareToSchoolBank`/`getSchoolBankExercises`,
+collection `"schoolBank"`, field `"schoolSlug"`) was left untouched, not consolidated. `getChapterExemplars()`
+below still needs to be written fresh against `bank/page.tsx`'s inline pattern (there is no
+`schoolBank.ts` module to add it to anymore) — see the build-out checklist. `npm run type-check`
+clean; not yet reviewed by `qa`.
+
+Original note, kept for history:
 
 `src/lib/schoolBank.ts` (collection `"school_bank"`, field `"school"`) is **dead code** — grep
 confirms zero imports anywhere in `src/`. The actual live School Bank feature is implemented as a
@@ -293,10 +304,12 @@ research-only pass, flagged here for whoever picks it up next.
       left for a future pass with browser/`WebFetch` access.
 
 ### Exemplar-bank build-out (no extra AI cost)
-- [ ] **Blocker above must be resolved first** — consolidate `schoolBank` into one implementation.
-- [ ] Write `getChapterExemplars(curriculumId, levelId, subject, chapterId)` in
-      `src/lib/schoolBank.ts` (once consolidated) — queries School Bank exercises tagged with a
-      chapter, returns up to 2, ranked by recency.
+- [x] **Blocker above resolved 2026-09-24** — dead `schoolBank.ts` deleted; only `bank/page.tsx`'s
+      inline implementation remains (not consolidated into a shared module).
+- [ ] Write `getChapterExemplars(curriculumId, levelId, subject, chapterId)` — no `src/lib/schoolBank.ts`
+      module exists anymore, so this needs a fresh home (e.g. a new `src/lib/schoolBank.ts` written
+      against the current `"schoolBank"`/`"schoolSlug"` schema, or inline next to `bank/page.tsx`'s
+      logic) — queries School Bank exercises tagged with a chapter, returns up to 2, ranked by recency.
 - [ ] Wire `getChapterExemplars()` into `buildChaptersSummary()` (`src/data/curricula/index.ts`)
       or directly into `src/lib/prompts/generate.ts` — inject as "Example of a previously
       well-received exercise for this chapter:" context, clearly labeled as an example, not an
