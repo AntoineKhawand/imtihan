@@ -19,6 +19,19 @@ Track issues here during development. Format:
 
 ## Open Issues
 
+## BUG-031: `buildCurriculaReference()` resolves its data via a runtime `require("@/data/curricula")` that only works inside a webpack/Next.js bundle
+**Status:** Open
+**Severity:** Low
+**Area:** API / Generation
+**Reported:** 2026-09-22
+
+**Description:** `src/lib/prompts/analyze.ts`'s `buildCurriculaReference()` (used by `/api/analyze` to build the `<curriculum_reference>` block fed to Gemini) loads curriculum data with a runtime `const { CURRICULA } = require("@/data/curricula");` inside the function body, guarded by the comment "Import here to avoid circular deps," instead of a normal static `import { CURRICULA } from "@/data/curricula"` at the top of the file. Found while adding unit tests for the prompt builders in `src/lib/prompts/` — every other export in `analyze.ts` (`buildAnalyzeSystemPrompt`, `buildAnalyzeUserPrompt`) is a plain pure function and tests fine, but calling `buildCurriculaReference()` under Vitest throws `Error: Cannot find module '@/data/curricula'`.
+**Root cause:** The `@/...` path alias is only rewritten for module resolution by bundlers that are configured to do so (Next.js/webpack resolves it for both `import` and `require`, which is why this works fine in production). Vitest, plain Node, ts-node, and Jest without an explicit `moduleNameMapper` all resolve a bare `require("@/...")` through Node's real CJS loader, which has no idea what the alias means and throws immediately — confirmed this reproduces even through `vi.mock("@/data/curricula", ...)`, since the dynamic `require()` call bypasses Vitest's module graph entirely (it's resolved by `node:internal/modules/cjs/loader`, not by Vite). Checked whether the "avoid circular deps" comment still reflects reality: `grep -rn "from \"@/lib/prompts" src/data/curricula/` finds nothing, so `src/data/curricula/` does not currently import back from `src/lib/prompts/` — there is no live circular dependency this `require()` is actually protecting against today. It's possible one existed at an earlier point in the codebase's history and was never cleaned up after the dependency causing it was removed.
+**Fix:** Not fixed. Swapping this for a static top-level `import { CURRICULA } from "@/data/curricula"` looks like the straightforward fix (and would make the function trivially unit-testable), but this function feeds the live `/api/analyze` prompt-construction path — changing an import strategy there is an application-code change outside the scope of a test-coverage-only session, so it's left as-is and documented here for `engineering` to pick up. Worked around it for now in `src/__tests__/prompt-builders.test.ts` by testing an inlined copy of the exact same iteration logic against the real `CURRICULA` data (same pattern `qcm.test.ts` already uses for `generate/route.ts`'s pure helpers), so the algorithm is still covered even though the real exported function isn't callable in Vitest.
+**Verification:** Reproduced directly (`require("@/lib/prompts/analyze")` → `buildCurriculaReference()` → `Cannot find module '@/data/curricula'`), and confirmed `vi.mock` does not intercept it. Not touched in production — `npm run test:coverage` and `npx tsc --noEmit` both pass with this left as documented-but-unfixed.
+
+---
+
 ## BUG-029: Nightly-ops test run's own harness overwrote 3 live blog posts' content via a real production write
 **Status:** Open (process fix shipped; content-recovery decision pending founder)
 **Severity:** High
