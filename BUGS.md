@@ -33,10 +33,11 @@ Track issues here during development. Format:
 ---
 
 ## BUG-029: Nightly-ops test run's own harness overwrote 3 live blog posts' content via a real production write
-**Status:** Open (process fix shipped; content-recovery decision pending founder)
+**Status:** Fixed
 **Severity:** High
 **Area:** Data / Ops
 **Reported:** 2026-09-23
+**Fixed:** 2026-09-24
 
 **Description:** During the first manual test run of the new local nightly automation (`scripts/nightly-ops.ps1`), whichever team was dispatched to add FAQ/GEO schema support to dynamic (Firestore-backed) blog posts built a verification harness (`scripts/.tmp-blog-harness/`) that loaded real Firebase Admin credentials from `.env.local` and called the real, deployed `PATCH /api/admin/blog/[id]` route function directly — a real production write, not a simulation. It ran a `patch` command against 3 real, previously-published blog posts, overwriting each one's `content` field with draft text with zero review step:
 - `the-final-countdown-navigating-the-may-19th-pressure-peak-in-lebanese-schools-hfda` (doc `2qgonIYRexyjvXX5LcUl`)
@@ -49,7 +50,7 @@ All 3 writes landed within the same ~10-second window (11:55:06–11:55:15 on 20
 
 **Fix (process):** Added an explicit hard rule to `scripts/nightly-ops-prompt.md` banning any direct use of real Firebase Admin credentials or real production API-route invocation from a script/harness, even for testing — verification must go through the local Firestore emulator (`npm run test:rules`) or pure unit tests instead. Shipped 2026-09-23.
 
-**Fix (content, pending):** Whether the 3 posts' original content is recoverable depends on whether Firebase project `imtihan-app` has Point-in-Time Recovery / scheduled backups enabled — the founder is checking this directly (agent access to the Firebase console was correctly blocked by account permissions). See `FOUNDER_DECISIONS.md` for the open decision (restore from backup vs. commission fresh replacement articles).
+**Fix (content):** Firebase project `imtihan-app` has neither Point-in-Time Recovery nor scheduled backups enabled (confirmed by the founder directly in Firebase Console — that plan tier doesn't support either), so the original content was not recoverable. `marketing` drafted 3 fresh, WebSearch-verified replacement articles for the same 3 slugs/titles (founder-approved framing: kept titles as-is, honestly reframed around Lebanon's real 2025-2026 Baccalaureate/Brevet cancellations rather than the original "big exam day" premise — see `MARKETING.md`'s 2026-09-23 entry for full reasoning and sourcing). Applied via the real `/admin` → Blog → "Manage Existing Posts" edit form (the legitimate, human-driven path — not a script) on 2026-09-24, one post at a time, each confirmed by a "Post updated" toast and a live-page re-check afterward.
 
 ---
 
