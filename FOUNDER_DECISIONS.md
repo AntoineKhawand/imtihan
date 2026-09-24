@@ -24,9 +24,8 @@
 
 ### 3. Font system
 **Raised by:** design · **Date:** 2026-09-18
-**The decision needed:** `CLAUDE.md` documents Fraunces + Geist as locked-in, but the shipped code actually runs Nunito + DM Sans. Which is correct — update the doc, or revert the code?
 **Full detail:** `DESIGN.md`
-**Status:** Open
+**Status:** Answered: 2026-09-24 — revert the code to match the documented Fraunces + Geist system (not the other way around). Applied: body/`.heading` repointed from DM Sans/Nunito to Geist/Fraunces, unused font loaders removed, plus a latent bug fixed (`--font-geist` was a hardcoded string matching no real font-face). Not yet visually verified (no local dev server — memory-constrained machine); will confirm once deployed.
 
 ### 4. Pricing / quota number
 **Raised by:** marketing · **Date:** 2026-09-18
