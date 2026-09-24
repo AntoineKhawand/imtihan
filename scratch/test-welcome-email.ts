@@ -90,7 +90,7 @@ function buildWelcomeNewsletter(name: string): { subject: string; html: string }
                 <tr>
                   <td style="padding:32px;">
                     <div style="font-size:13px;font-weight:800;color:#15803d;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">Gift for new teachers</div>
-                    <div style="font-size:24px;font-weight:800;color:#064e3b;line-height:1.2;margin-bottom:12px;">You have 2 Free Exams waiting</div>
+                    <div style="font-size:24px;font-weight:800;color:#064e3b;line-height:1.2;margin-bottom:12px;">You have 1 Free Exam waiting</div>
                     <p style="margin:0 0 24px;font-size:15px;color:#374151;line-height:1.5;">No credit card, no commitment. Just describe your curriculum and generate.</p>
                     <a href="${APP_URL}/create" class="cta-btn" style="display:inline-block;background:#1a5e3f;color:#fff;text-decoration:none;padding:16px 36px;border-radius:12px;font-weight:800;font-size:16px;box-shadow:0 8px 20px rgba(26,94,63,0.3);">Start generating now <img src="${tw("26a1")}" width="16" height="16" style="vertical-align:middle;margin-left:4px;" /></a>
                   </td>
@@ -110,7 +110,7 @@ function buildWelcomeNewsletter(name: string): { subject: string; html: string }
                       <td width="48" style="vertical-align:top;"><div style="width:36px;height:36px;background:#ecfdf5;border-radius:10px;text-align:center;line-height:36px;font-weight:800;color:#10b981;font-size:15px;border:1px solid #d1fae5;">1</div></td>
                       <td style="padding-left:16px;vertical-align:top;">
                         <div style="font-weight:700;color:#1e293b;font-size:16px;margin-bottom:4px;">Describe your exam</div>
-                        <p style="margin:0;color:#64748b;font-size:14px;line-height:1.6;">Type in French, Arabic, or English. E.g. "Physics exam, 9th Grade, Optics section, 3 exercises."</p>
+                        <p style="margin:0;color:#64748b;font-size:14px;line-height:1.6;">Type in French or English. E.g. "Physics exam, 9th Grade, Optics section, 3 exercises."</p>
                       </td>
                     </tr>
                   </table>

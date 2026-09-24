@@ -124,6 +124,20 @@ These are intentional constraints in MVP — document here to avoid re-opening a
 
 ---
 
+## BUG-030: Dead `src/lib/schoolBank.ts` (unused Firestore helper, wrong collection/field names) removed; stale fallback in `/student/practice` cleaned up
+**Status:** Fixed
+**Severity:** Low
+**Area:** Data
+**Reported:** 2026-09-19 (`engineering`, `TEAM_CHAT.md`; also flagged in `CURRICULUM_COVERAGE_STRATEGY.md`)
+**Fixed:** 2026-09-24
+
+**Description:** `src/lib/schoolBank.ts` exported `shareToSchoolBank`/`getSchoolBankExercises` against a Firestore collection `"school_bank"` with field `"school"` — never wired into the app. The real, live School Bank feature lives inline in `src/app/bank/page.tsx`, using collection `"schoolBank"` and field `"schoolSlug"` (different collection name and field, confirmed not a typo). `src/app/student/practice/page.tsx` read from the correct live `"schoolBank"`/`"schoolSlug"` path but also carried a second fallback query against a `"school"` field that nothing had ever written, plus an unused `school?: string` field in its local `SchoolExercise` type.
+**Root cause:** Leftover code from an earlier, abandoned school-bank implementation that was superseded by the current `bank/page.tsx` design without being deleted.
+**Fix:** Re-verified zero imports of `src/lib/schoolBank.ts` anywhere in `src/` (`grep -r "from .*lib/schoolBank"` — no matches; the only files matching the string `schoolBank` all reference the live `"schoolBank"` Firestore collection directly, not this file: `src/app/bank/page.tsx`, `src/app/student/practice/page.tsx`, `src/app/api/tools/chapter-performance/route.ts`, `src/__tests__/firestore.rules.test.ts`). Deleted `src/lib/schoolBank.ts` via `git rm`. In `src/app/student/practice/page.tsx`, removed the `"school"`-field fallback query in `fetchSchoolExercises()` (kept only the real `"schoolSlug"` query) and removed the now-unused `school?: string` field from the local `SchoolExercise` interface. Did not touch `src/app/bank/page.tsx` — its implementation was already correct.
+**Verification:** `npm run type-check` clean. `npm run test:e2e` / `npm run test:rules` intentionally not run (nightly-ops unattended-run rule) — `qa` should verify `/student/practice` and `/bank` still work end-to-end.
+
+---
+
 ## BUG-026: `/teacher/students` has shown "No students yet" for every teacher since the feature was built — `firestore.rules` never permitted the query it makes
 
 **Status:** Fix on disk, not yet deployed

@@ -74,7 +74,7 @@ function build30SecondPromise(name: string): { subject: string; html: string } {
                         </td>
                         <td style="padding-left:20px;vertical-align:top;">
                           <div style="font-weight:800;color:#1e293b;font-size:17px;margin-bottom:6px;">Describe your vision</div>
-                          <p style="margin:0;color:#64748b;font-size:15px;line-height:1.6;">Don't worry about formatting. Just type "Terminale Physics, 3 exercises on Electric Circuits" in any language.</p>
+                          <p style="margin:0;color:#64748b;font-size:15px;line-height:1.6;">Don't worry about formatting. Just type "Terminale Physics, 3 exercises on Electric Circuits" in French or English.</p>
                         </td>
                       </tr>
                     </table>

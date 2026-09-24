@@ -24,9 +24,6 @@ function buildNewsletterHtml(firstName: string, month: string): string {
     .hero{padding:28px 24px!important;border-radius:16px 16px 0 0!important}
     .body{padding:28px 24px!important}
     .foot{padding:24px!important;border-radius:0 0 16px 16px!important}
-    .stats-cell{display:block!important;width:100%!important;border-right:none!important;
-                border-bottom:1px solid #e2e8f0!important;padding:12px 0!important}
-    .stats-cell:last-child{border-bottom:none!important}
     .cta-btn{padding:14px 28px!important;font-size:14px!important}
   }
 </style>
@@ -197,33 +194,6 @@ function buildNewsletterHtml(firstName: string, month: string): string {
             </p>
           </td>
         </tr></table>
-      </td></tr>
-    </table>
-
-    <!-- Stats -->
-    <table width="100%" cellpadding="0" cellspacing="0"
-           style="background:#f8fafc;border-radius:14px;border:1px solid #e2e8f0;margin-bottom:36px">
-      <tr><td style="padding:20px 24px">
-        <p style="margin:0 0 14px;font-size:10px;font-weight:800;color:#64748b;
-                  letter-spacing:1.2px;text-transform:uppercase">Imtihan this month</p>
-        <table width="100%" cellpadding="0" cellspacing="0">
-          <tr>
-            <td class="stats-cell" align="center"
-                style="border-right:1px solid #e2e8f0;padding-right:16px">
-              <div style="font-size:28px;font-weight:800;color:#1a5e3f;letter-spacing:-1px">439+</div>
-              <div style="font-size:12px;color:#64748b;margin-top:2px">Educators</div>
-            </td>
-            <td class="stats-cell" align="center"
-                style="border-right:1px solid #e2e8f0;padding:0 16px">
-              <div style="font-size:28px;font-weight:800;color:#1a5e3f;letter-spacing:-1px">3.5k</div>
-              <div style="font-size:12px;color:#64748b;margin-top:2px">Page Views</div>
-            </td>
-            <td class="stats-cell" align="center" style="padding-left:16px">
-              <div style="font-size:28px;font-weight:800;color:#1a5e3f;letter-spacing:-1px">4</div>
-              <div style="font-size:12px;color:#64748b;margin-top:2px">Curricula</div>
-            </td>
-          </tr>
-        </table>
       </td></tr>
     </table>
 

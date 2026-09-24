@@ -25,9 +25,9 @@ export const CHECKLIST_HTML = `
         <li><strong>Difficulty is actually mixed</strong> — not every question at the same level, front-loaded easy.</li>
         <li><strong>Chapter coverage matches what you taught</strong> — no question from a chapter you skipped.</li>
         <li><strong>Every document has a real, checkable source</strong> — never an invented citation.</li>
-        <li><strong>Command verbs match the curriculum's convention</strong> — "Montrer que" vs "Calculer" vs "استنتج" aren't interchangeable.</li>
+        <li><strong>Command verbs match the curriculum's convention</strong> — "Montrer que" vs "Calculer" (or "Show that" vs "Calculate") aren't interchangeable.</li>
         <li><strong>Corrigé barème sums to the exercise's points</strong>, not just the exam's total.</li>
-        <li><strong>Language is fully consistent</strong> — no stray English/French mixed into an Arabic paper.</li>
+        <li><strong>Language is fully consistent</strong> — no stray English mixed into a French paper, or vice versa.</li>
         <li><strong>Numbers in the corrigé are internally consistent</strong> — no negative mass, no probability over 100%.</li>
         <li><strong>Duration is realistic</strong> for the exercise count and difficulty, not just copy-pasted from last time.</li>
         <li><strong>You'd want to sit it yourself</strong> — the actual test: is it fair, or just hard?</li>

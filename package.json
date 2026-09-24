@@ -4,7 +4,9 @@
   "private": true,
   "description": "AI-powered exam generator for Lebanese teachers — Bac Libanais, Bac Français, IB, and University",
   "scripts": {
+    "predev": "node scripts/generate-static-routes.mjs",
     "dev": "next dev --turbopack",
+    "prebuild": "node scripts/generate-static-routes.mjs",
     "build": "cross-env NEXT_TURBO_FORCE_NO_TURBOPACK=1 next build",
     "start": "next start",
     "lint": "next lint",
@@ -17,7 +19,8 @@
     "test:e2e": "playwright test",
     "test:e2e:daily": "node scripts/run-daily-phase.mjs",
     "audit:seo": "node scripts/seo-audit.mjs",
-    "audit:geo": "node scripts/geo-audit.mjs"
+    "audit:geo": "node scripts/geo-audit.mjs",
+    "generate:sitemap-routes": "node scripts/generate-static-routes.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.90.0",

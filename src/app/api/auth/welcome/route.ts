@@ -109,7 +109,7 @@ function buildWelcomeNewsletter(name: string): { subject: string; html: string }
                         </td>
                         <td style="padding-left:16px;vertical-align:top;">
                           <div style="font-weight:700;color:#1e293b;font-size:16px;margin-bottom:4px;">Describe your exam</div>
-                          <p style="margin:0;color:#64748b;font-size:14px;line-height:1.6;">Type in French, Arabic, or English. E.g. "Physics exam, 9th Grade, Optics section, 3 exercises."</p>
+                          <p style="margin:0;color:#64748b;font-size:14px;line-height:1.6;">Type in French or English. E.g. "Physics exam, 9th Grade, Optics section, 3 exercises."</p>
                         </td>
                       </tr>
                     </table>
