@@ -4,11 +4,11 @@ import { LandingFAQ, buildFaqSchema } from "@/components/landing/LandingFAQ";
 
 export const metadata: Metadata = {
   title: "Pricing — Imtihan Pro",
-  description: "Imtihan Pro à partir de $5.99/mois. 100 examens par mois, toutes les matières, corrigé inclus. Paiement via WhatsApp. Commencez gratuitement avec 1 examen.",
+  description: "Imtihan Pro à partir de $5.99/mois. 10 examens par mois (20 avec l'abonnement annuel), toutes les matières, corrigé inclus. Paiement via WhatsApp. Commencez gratuitement avec 1 examen.",
   alternates: { canonical: "/pricing" },
   openGraph: {
     title: "Tarifs Imtihan — Générateur d'examens IA au Liban",
-    description: "$5.99/mois ou $47.88/an pour générer 100 examens par mois. Sans carte bancaire, paiement WhatsApp.",
+    description: "$5.99/mois pour générer 10 examens par mois, ou $47.88/an pour 20 examens par mois. Sans carte bancaire, paiement WhatsApp.",
     url: "https://imtihan.live/pricing",
     images: [{ url: "/opengraph-image", width: 1200, height: 630, alt: "Imtihan — AI Exam Generator" }],
   },
@@ -21,7 +21,7 @@ const PRICING_FAQ_ITEMS = [
   },
   {
     q: "How much does Imtihan Pro cost?",
-    a: "$5.99 per month, or $3.99 per month billed yearly ($47.88/year). Both plans include 100 exams per month with corrigés included.",
+    a: "$5.99 per month for 10 exams per month, or $3.99 per month billed yearly ($47.88/year) for 20 exams per month. Corrigés included on both plans.",
   },
   {
     q: "How do I pay for Imtihan Pro?",

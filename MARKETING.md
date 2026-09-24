@@ -257,3 +257,5 @@
   - `src/app/api/cron/sync-styles/route.ts` and `src/app/api/cron/blog-auto-publish/route.ts` — confirmed these crons don't send any email (grepped for `sendEmail`/`brevo`, no matches); out of scope for this sweep.
 
   Outbound email copy is now clean against the same standard as the two prior sweeps, with the one open non-marketing item (the "100 exams/month" `/pricing` vs `/upgrade` mismatch) confirmed **not** to have leaked into any email template.
+
+- **2026-09-24**: Founder confirmed 10/20 for the `/pricing` vs `/upgrade` quota mismatch (`FOUNDER_DECISIONS.md` #4) — Option 1 from the 2026-09-19 memo above. Applied the pre-drafted diffs: `pricing/layout.tsx` (metadata description + openGraph description + `PRICING_FAQ_ITEMS[1]`, which actually lives in `layout.tsx` not `page.tsx` as the original draft assumed — same fix, corrected file) and `upgrade/layout.tsx` (metadata description). All six surfaces (2 page bodies, 2 metadata objects, 2 FAQ blocks) now consistently say 10/month, 20/year, matching `MONTHLY_LIMITS.pro` actually enforced in `/api/generate/route.ts`. `npm run type-check` clean. Options 2 and 3 discarded.

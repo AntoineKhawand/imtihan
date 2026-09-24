@@ -19,9 +19,8 @@
 
 ### 2. Accent color
 **Raised by:** design · **Date:** carried from `CLAUDE.md` §8
-**The decision needed:** Keep emerald `#1A5E3F` as final, or move to terracotta as previously floated?
 **Full detail:** `DESIGN.md`
-**Status:** Open
+**Status:** Answered: 2026-09-24 — keep emerald `#1A5E3F`, do not move to terracotta.
 
 ### 3. Font system
 **Raised by:** design · **Date:** 2026-09-18
@@ -31,10 +30,8 @@
 
 ### 4. Pricing / quota number
 **Raised by:** marketing · **Date:** 2026-09-18
-**The decision needed:** `/pricing`'s own FAQ contradicts its own pricing card (100/month vs. 10-20/month). Three ready-to-ship copy diffs are pre-drafted for whichever real number is confirmed.
-**Options:** (a) confirm 10/20 to match what the backend already enforces — smallest diff; (b) raise the real backend limit toward 100/month and update copy to match; (c) a genuine new tiered structure.
 **Full detail:** `MARKETING.md`
-**Status:** Open
+**Status:** Answered: 2026-09-24 — confirmed 10/20 (matches what the backend already enforces). Option 1's pre-drafted diffs applied to `pricing/layout.tsx` and `upgrade/layout.tsx`; all six surfaces (2 page bodies, 2 metadata objects, 2 FAQ blocks) now agree.
 
 ### 6. Firestore deploys
 **Raised by:** database · **Date:** 2026-09-18
