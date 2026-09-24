@@ -290,6 +290,49 @@ changes were made, so this simply confirms the pre-existing baseline is still cl
 good starting checklist for that pass, but must be independently confirmed via convergent secondary
 sources (same rigor as the 2026-09-19 IB entry) before treating them as real.
 
+## 2026-09-25 — Bac Français pre-2019-reform audit retry: WebSearch denied a second consecutive session
+
+Picked up the same backlog item as 2026-09-24 ("Audit `bac-francais.ts` chapters against the current
+BO programme edition") specifically to retry the 3 unverified leads left by that session (possible
+missing "nombres complexes" chapter in `terminale-fr-spe-math`; possible "loi normale"
+mis-attribution in `ter-fr-math-probability`; possible missing vecteurs/probabilités chapters in
+`premiere-fr-spe-math`), on the premise that `WebSearch` would be working tonight.
+
+**It is not.** Two separate `WebSearch` calls this session — one for the terminale spé-math
+"nombres complexes" question, one for the BO spécial n°8 (25 juillet 2019) programme text directly —
+both returned the identical hard tool-level `"Permission to use WebSearch has been denied"` error
+seen on 2026-09-24, not a network/site-level failure. `WebFetch` is again not present in this
+session's toolset. That means, for the second consecutive audit attempt, there is still no tool in
+this environment capable of checking any curriculum claim against a real external source.
+
+**No verification was possible, so no edits were made to `src/data/curricula/bac-francais.ts`.**
+Re-read the file in full to confirm nothing had drifted since 2026-09-24 (it hasn't — same content,
+same 3 leads still open, same unaudited scope: `premiere-fr-spe-math`'s exponential/suites chapters
+and non-MVP subjects; all of `terminale-fr-spe-math`; all of `terminale-fr-spe-pc`; and the
+non-MVP-subject levels SVT/NSI/SES). Per this team's standing rule and the task's own explicit
+instruction ("if WebSearch is STILL blocked/denied tonight, stop immediately, make no edits, and
+report that clearly — don't improvise from memory"), none of the 3 leads were applied as fixes. They
+remain exactly what they were on 2026-09-24: plausible, background-knowledge-only leads, not
+confirmed findings, and must not be treated as such by a future pass.
+
+**What was done:** `npm run type-check` run against the unmodified file — clean (confirms baseline,
+not a content change). No other file touched.
+
+**Flag, stated plainly since this is the second identical failure in a row:** this is now a
+reproducible environment/tooling problem, not a one-off. Two consecutive dated sessions
+(2026-09-24, 2026-09-25) targeting this exact backlog item were both fully blocked by the same
+`WebSearch` permission denial, with `WebFetch` absent both times. Retrying a third time with the same
+tool configuration is unlikely to produce a different result — this needs the tool-attachment/permission
+fix itself (same category of fix `seo-growth` flagged for its own blocked `gsc`/`chrome-devtools` MCP
+tools on 2026-09-19) before this backlog item can make further progress. Not a business decision, so
+not routed to `FOUNDER_DECISIONS.md` — this is a session/tooling configuration issue for whoever
+manages agent tool permissions to fix.
+
+**Backlog item left open, unchanged in scope from 2026-09-24.** The 3 leads (nombres complexes gap,
+"loi normale" placement, vecteurs/probabilités gap in Première) remain the starting checklist for
+whichever future session actually gets working `WebSearch` or `WebFetch` access — do not act on them
+without independent, convergent, real-source confirmation first.
+
 ## Backlog (pick one per Wednesday, highest priority first)
 
 ### Data accuracy audits (grounded in `docs/DATA_SOURCING.md`)
@@ -369,6 +412,10 @@ sources (same rigor as the 2026-09-19 IB entry) before treating them as real.
       fully unaudited: `premiere-fr-spe-math`'s exponential/suites chapters and non-MVP subjects,
       all of `terminale-fr-spe-math`, all of `terminale-fr-spe-pc`, and the non-MVP-subject levels
       (SVT, NSI, SES).
+      **2026-09-25: retried, blocked again.** Same hard `WebSearch` permission denial on 2 separate
+      queries, `WebFetch` still absent — second consecutive session unable to verify anything. No
+      edits made. See the dated section above; this is now flagged as a reproducible tooling problem,
+      not a one-off, worth fixing before a third retry.
 - [x] **2026-09-19, partial:** Audit `ib.ts` command-term usage in `src/lib/prompts/generate.ts`
       against the current IBO command term glossary edition — see the dated section above for full
       detail. ~15 of ~30 terms spot-checked via convergent secondary sources (no `WebFetch` this
