@@ -61,13 +61,11 @@ const config: Config = {
         },
       },
       fontFamily: {
-        // Original fonts (kept for compatibility)
         serif: ["var(--font-fraunces)", "Georgia", "serif"],
         sans:  ["var(--font-geist)", "system-ui", "sans-serif"],
         mono:  ["var(--font-geist-mono)", "monospace"],
-        // New design-system fonts
-        heading: ["var(--font-nunito)", "Nunito", "sans-serif"],
-        body:    ["var(--font-dm-sans)", "DM Sans", "system-ui", "sans-serif"],
+        heading: ["var(--font-fraunces)", "Georgia", "serif"],
+        body:    ["var(--font-geist)", "system-ui", "sans-serif"],
       },
       fontSize: {
         "display-2xl": ["clamp(3.5rem, 8vw, 6.5rem)", { lineHeight: "0.95", letterSpacing: "-0.04em" }],

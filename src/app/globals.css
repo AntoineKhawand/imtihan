@@ -5,10 +5,11 @@
 @layer base {
   :root {
     --font-fraunces: 'Fraunces', Georgia, serif;
-    --font-geist: 'Geist', system-ui, sans-serif;
+    /* The literal string 'Geist' matches no real font-face — GeistSans (next/font/local)
+       exposes its actual self-hosted font only via the --font-geist-sans variable it
+       sets on <html> (see layout.tsx). Proxy to that, not a hardcoded name. */
+    --font-geist: var(--font-geist-sans), system-ui, sans-serif;
     --font-geist-mono: 'Geist Mono', monospace;
-    --font-nunito: 'Nunito', sans-serif;
-    --font-dm-sans: 'DM Sans', system-ui, sans-serif;
 
     /* Light mode — Emerald #1a5e3f primary */
     --bg: #faf8f3;
@@ -62,8 +63,8 @@
   body {
     background-color: var(--bg);
     color: var(--text);
-    /* DM Sans as primary body font */
-    font-family: var(--font-dm-sans), var(--font-geist), system-ui, sans-serif;
+    /* Geist as primary body font — matches CLAUDE.md's locked-in Fraunces + Geist system */
+    font-family: var(--font-geist), system-ui, sans-serif;
     font-size: 16px;
     line-height: 1.6;
     /* Only transition background to avoid "flash" glitches on interactive elements */
@@ -114,10 +115,10 @@
 @layer components {
   .serif   { font-family: var(--font-fraunces), Georgia, serif; }
   .mono    { font-family: var(--font-geist-mono), monospace; }
-  /* Nunito for UI headings */
-  .heading { font-family: var(--font-nunito), Nunito, sans-serif; font-weight: 700; }
-  /* DM Sans explicit utility */
-  .body-font { font-family: var(--font-dm-sans), system-ui, sans-serif; }
+  /* Fraunces for UI headings — display serif, matches CLAUDE.md's font system */
+  .heading { font-family: var(--font-fraunces), Georgia, serif; font-weight: 600; }
+  /* Geist explicit utility */
+  .body-font { font-family: var(--font-geist), system-ui, sans-serif; }
 
   /* Noise texture overlay */
   .noise::after {
