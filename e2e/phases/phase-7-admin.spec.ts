@@ -82,8 +82,15 @@ test.describe("/admin", () => {
     await page.locator('input[placeholder="Search email or name..."]').fill(TEST_FREE_UID);
     await page.waitForTimeout(500);
 
+    // Get the quota cell before clicking (should show +0)
+    const quotaCell = page.locator("table tbody tr").filter({ has: page.locator(`text=${TEST_FREE_UID}`) }).locator("td").nth(6);
+    await expect(quotaCell).toContainText("+0");
+
+    // Click the +10Q button
     await page.getByRole("button", { name: "+10Q" }).click();
-    await expect(page.getByText("+10", { exact: true }).first()).toBeVisible({ timeout: 10_000 });
+
+    // Wait for the quota to update to +10 (the badge should fade in with the new value)
+    await expect(quotaCell).toContainText("+10", { timeout: 10_000 });
   });
 
   test("Reset clears the test user's trial", async ({ page, request }) => {

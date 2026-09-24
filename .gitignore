@@ -67,3 +67,8 @@ fix-git-lock.ps1
 # and must be tracked so anyone cloning the repo gets the same team setup.
 .claude/worktrees/
 .claude/settings.local.json
+
+# Local nightly-ops run logs (machine-specific, not shared state).
+# scripts/nightly-ops.ps1 and scripts/nightly-ops-prompt.md ARE tracked —
+# those are the shared automation definition, not this machine's output.
+logs/nightly/

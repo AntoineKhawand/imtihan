@@ -218,6 +218,54 @@ research-only pass, flagged here for whoever picks it up next.
 ## Backlog (pick one per Wednesday, highest priority first)
 
 ### Data accuracy audits (grounded in `docs/DATA_SOURCING.md`)
+- [x] **2026-09-19:** Audited the `COMMAND_TERMS["ib-english"]` IB command-term glossary in
+      `src/lib/prompts/generate.ts` (lines 71–117) against the current IBO Diploma Programme
+      command-term conventions — this is the block `docs/DATA_SOURCING.md` explicitly flags as
+      needing to "stay verbatim" since exact wording affects mark-scheme validity. **Method
+      limitation, stated up front:** this session had no `WebFetch`/browser tool, only `WebSearch`
+      — so nothing here is a direct quote pulled from the primary IBO subject-guide PDF itself.
+      Instead, each spot-checked term was verified by requiring **multiple independent secondary
+      sources (school-hosted command-term PDFs, IB-subject blogs, tutoring sites) to converge on
+      identical, distinctively-worded phrasing** before treating it as reliable — a coincidental
+      match across unrelated sites on an unusual exact phrase is unlikely unless they're all
+      quoting the same real source. ~15 of the ~30 terms in the block were spot-checked this way.
+      **Confirmed accurate, no change:** "State", "Define", "List", "Draw", "Label", "Measure",
+      "Outline", "Deduce", "Explain" all matched the block's existing wording exactly. The
+      M1/A1/ecf method/answer-mark convention and "[1]/[2]/[3]" bracketed mark notation
+      (lines 109–117) were also confirmed still current IB Diploma Programme practice (distinct
+      from MYP, which uses different notation).
+      **Found and fixed 5 real wording discrepancies** (all in the OBJECTIVE 3 block):
+      - `"Analyse"` was defined as "Interpret data to reach conclusions" — this doesn't match any
+        source found; the real definition is **"Break down in order to bring out the essential
+        elements or structure."** Fixed.
+      - `"Compare"` was defined as "Give an account of similarities AND differences between two or
+        more items" — this is actually the definition of **"Compare and contrast"**, a distinct
+        command term. The real "Compare" definition covers similarities only: **"Give an account
+        of the similarities between two or more items or situations, referring to both (all) of
+        them throughout."** This one matters for grading accuracy: a generated mark scheme built
+        on the old definition would have been awarding marks for differences under a term that,
+        per real IB convention, shouldn't require them. Fixed.
+      - `"Discuss"` was a shortened paraphrase ("Give an account including arguments for and
+        against, where possible") of the real, longer definition: **"Offer a considered and
+        balanced review that includes a range of arguments, factors or hypotheses. Opinions or
+        conclusions should be presented clearly and supported by appropriate evidence."** Fixed.
+      - `"Evaluate"` was defined as "Assess the implications and limitations" — this phrasing
+        traces to the **MYP** (Middle Years Programme) glossary, not the Diploma Programme one
+        Imtihan actually generates for. The real DP definition is **"Make an appraisal by weighing
+        up the strengths and limitations."** Fixed.
+      - `"Suggest"` was missing a clause: "Propose a hypothesis or other possible answer" should be
+        **"Propose a solution, hypothesis or other possible answer."** Fixed.
+      **Not spot-checked this pass** (left unchanged, not verified either way): "Calculate",
+      "Describe", "Distinguish", "Estimate", "Identify", "Annotate", "Apply", "Sketch",
+      "Construct", "Derive", "Determine", "Predict", "Show"/"Show that", "Solve", "Hence", "Hence
+      or otherwise" — none of these showed up as obviously wrong in the searches run, but they
+      weren't independently confirmed either, so treat them as unverified, not as re-confirmed.
+      **Recommended follow-up:** a future pass with `WebFetch`/browser access should pull the real
+      IBO subject-guide PDF text directly (the general Diploma Programme command-term glossary, or
+      at minimum the Physics/Chemistry/Mathematics subject-guide appendices, since those are
+      Imtihan's actual supported subjects) to close the remaining gap between "converging secondary
+      sources" and an actual primary-source quote — same standard `docs/DATA_SOURCING.md` already
+      applies to CRDP and BO sourcing.
 - [x] **2026-09-09:** Audited `bac-libanais.ts` Terminale-S mathematics chapters against the
       official CRDP "Curriculum of Mathematics" (crdp.org, General Sciences section, Third Year).
       Found and fixed a real inaccuracy: `ter-math-probability`'s objectives (normal/exponential
@@ -236,9 +284,13 @@ research-only pass, flagged here for whoever picks it up next.
       spot-checked against secondary compilations of the 2019-reform BO spécial n°1 programme and
       look accurate — see the dated section above. Literal BO wording still not obtained (403 on
       the primary source from this environment) and the rest of the file is still unaudited.
-- [ ] Audit `ib.ts` command-term usage in `src/lib/prompts/generate.ts` against the current IBO
-      command term glossary edition — IB revises subject guides periodically; verify [1]/[2]/[3]
-      mark notation and M1/A1/ecf conventions are still current.
+- [x] **2026-09-19, partial:** Audit `ib.ts` command-term usage in `src/lib/prompts/generate.ts`
+      against the current IBO command term glossary edition — see the dated section above for full
+      detail. ~15 of ~30 terms spot-checked via convergent secondary sources (no `WebFetch` this
+      session, so no direct primary-source PDF quote); 5 real wording errors found and fixed
+      (Analyse, Compare, Discuss, Evaluate, Suggest); [1]/[2]/[3] mark notation and M1/A1/ecf
+      conventions confirmed still current. Remaining ~15 terms and a primary-source PDF read are
+      left for a future pass with browser/`WebFetch` access.
 
 ### Exemplar-bank build-out (no extra AI cost)
 - [ ] **Blocker above must be resolved first** — consolidate `schoolBank` into one implementation.

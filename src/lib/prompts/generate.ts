@@ -90,19 +90,19 @@ OBJECTIVE 2 — understanding/application (2–3 marks):
 - "Sketch" — Represent by means of a graph showing a line and labelled but unscaled axes.
 
 OBJECTIVE 3 — analysis/synthesis (3–6 marks, mainly HL):
-- "Analyse" — Interpret data to reach conclusions.
-- "Compare" — Give an account of similarities AND differences between two or more items.
+- "Analyse" — Break down in order to bring out the essential elements or structure.
+- "Compare" — Give an account of the similarities between two or more items or situations, referring to both (all) of them throughout.
 - "Construct" — Represent or develop in graphical form.
 - "Deduce" — Reach a conclusion from the information given.
 - "Derive" — Manipulate a mathematical relationship(s) to give a new equation or relationship.
 - "Determine" — Find the only possible answer.
-- "Discuss" — Give an account including arguments for and against, where possible.
-- "Evaluate" — Assess the implications and limitations.
+- "Discuss" — Offer a considered and balanced review that includes a range of arguments, factors or hypotheses. Opinions or conclusions should be presented clearly and supported by appropriate evidence.
+- "Evaluate" — Make an appraisal by weighing up the strengths and limitations.
 - "Explain" — Give a detailed account of causes, reasons or mechanisms.
 - "Predict" — Give an expected result.
 - "Show" / "Show that" — Give the steps in a calculation or derivation; the answer is already provided, demonstrate how to reach it.
 - "Solve" — Obtain an answer using algebraic and/or numerical methods.
-- "Suggest" — Propose a hypothesis or other possible answer.
+- "Suggest" — Propose a solution, hypothesis or other possible answer.
 - "Hence" — Answer MUST follow from the previous part; alternative method earns zero.
 - "Hence or otherwise" — Method from previous part recommended but not required.
 
