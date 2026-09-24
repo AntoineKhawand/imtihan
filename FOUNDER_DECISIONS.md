@@ -25,7 +25,7 @@
 ### 3. Font system
 **Raised by:** design · **Date:** 2026-09-18
 **Full detail:** `DESIGN.md`
-**Status:** Answered: 2026-09-24 — revert the code to match the documented Fraunces + Geist system (not the other way around). Applied: body/`.heading` repointed from DM Sans/Nunito to Geist/Fraunces, unused font loaders removed, plus a latent bug fixed (`--font-geist` was a hardcoded string matching no real font-face). Not yet visually verified (no local dev server — memory-constrained machine); will confirm once deployed.
+**Status:** Answered: 2026-09-24 — revert the code to match the documented Fraunces + Geist system (not the other way around). Applied: body/`.heading` repointed from DM Sans/Nunito to Geist/Fraunces, unused font loaders removed, plus a latent bug fixed (`--font-geist` was a hardcoded string matching no real font-face). Verified live on production post-deploy: `getComputedStyle(document.body).fontFamily` now resolves to `GeistSans, "GeistSans Fallback", ...` — confirmed fixed, not just a code review.
 
 ### 4. Pricing / quota number
 **Raised by:** marketing · **Date:** 2026-09-18
