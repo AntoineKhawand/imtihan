@@ -12,10 +12,8 @@
 
 ### 1. BUG-026 verification model
 **Raised by:** database · **Date:** 2026-09-18 (restated 2026-09-19)
-**The decision needed:** How should a teacher's school affiliation actually be verified before it gates student names, emails, and quiz history? `users/{uid}.school`/`.role` are self-writable today with zero verification.
-**Options:** (a) Firebase custom claims set at a controlled invite/verification step; (b) an email-domain allowlist; (c) explicitly accept the risk pre-launch with a documented expiry date.
 **Full detail:** `DATABASE.md`, `BUGS.md` (BUG-026)
-**Status:** Open
+**Status:** Answered: 2026-09-24 — option (c), accept the risk for now (only individual teachers today, no real schools onboarded). **Expiry: must be revisited with real verification (option a or b) before any real school institution is onboarded** — see the schools-outreach item below, since that's the event that would actually trigger this risk.
 
 ### 2. Accent color
 **Raised by:** design · **Date:** carried from `CLAUDE.md` §8
