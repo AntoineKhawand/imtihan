@@ -30,6 +30,14 @@
 **Full detail:** `MARKETING.md`
 **Status:** Answered: 2026-09-24 — confirmed 10/20 (matches what the backend already enforces). Option 1's pre-drafted diffs applied to `pricing/layout.tsx` and `upgrade/layout.tsx`; all six surfaces (2 page bodies, 2 metadata objects, 2 FAQ blocks) now agree.
 
+### 8. Unauthenticated API routes that call paid AI APIs or proxy third-party services with zero auth or rate limiting
+**Raised by:** security · **Date:** 2026-09-25
+**The decision needed:** `/api/generate/transform`, `/api/image/generate`, `/api/rubric`, `/api/scanner`, and `/api/translate` all call a paid AI API (Gemini/Claude) or proxy a third-party image service, with no `verifyIdToken` check and no rate limiting — unlike `/api/generate` (the main exam-creation endpoint), which is properly auth-gated and quota-enforced. Concrete exploit: anyone who finds these URLs (no account needed) can call them in an unbounded loop, running up the founder's Gemini/Claude/image-proxy API bill indefinitely and completely bypassing the "1 free exam, then paywall" quota model — this isn't a data-exposure risk, it's a direct-cost risk with no ceiling. `/api/visual/mermaid` (unauthenticated proxy to `mermaid.ink`/`kroki.io`) has a milder version of the same shape (free third-party services, so no direct API cost, but still an open, unbounded proxy).
+**Why this isn't a unilateral security fix:** Adding a blanket auth requirement to all of these could break an intentionally-public "try it free" UX on a landing/demo page (unclear from the code alone whether that's the intent for any of them) — this needs a product decision on which of these should require sign-in vs. stay public-with-rate-limiting vs. accept the cost exposure pre-launch (traffic is presumably still low pre-launch, so the practical cost today may be small). Two rate-limiting libraries (`express-rate-limit`, `rate-limiter-flexible`) are already installed as dependencies but never actually used anywhere in `src/` — whichever direction is chosen, the tooling to implement it is already in the repo.
+**Options:** (a) require `verifyIdToken` on all 5 routes, same pattern as `/api/generate`; (b) keep them public but add IP-based rate limiting via the already-installed `rate-limiter-flexible`/`express-rate-limit`; (c) accept the exposure for now given pre-launch traffic levels, revisit before any paid marketing push.
+**Full detail:** `SECURITY.md` (2026-09-25 audit log)
+**Status:** Open
+
 ### 6. Firestore deploys
 **Raised by:** database · **Date:** 2026-09-18
 **The decision needed:** Two independent deploy actions, both requiring the founder to run `firebase deploy` by hand (Claude Code's Production Deploy guardrail).
