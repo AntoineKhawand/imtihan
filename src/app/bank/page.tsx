@@ -35,19 +35,19 @@ function schoolSlugFrom(name: string) {
 
 async function getSchoolBankExercises(schoolName: string) {
   if (!schoolName) return [];
-  try {
-    const slug = schoolSlugFrom(schoolName);
-    const q = query(
-      collection(db, "schoolBank"),
-      where("schoolSlug", "==", slug),
-      orderBy("sharedAt", "desc"),
-    );
-    const snap = await getDocs(q);
-    return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
-  } catch (err) {
-    console.error("[Bank] getSchoolBankExercises:", err);
-    return [];
-  }
+  // Let the caller distinguish a real query failure (e.g. a missing Firestore
+  // composite index — BUG-045) from a genuinely empty result. Silently
+  // swallowing this here and returning [] made a broken query indistinguishable
+  // from "no one has shared anything yet," so a real failure never surfaced
+  // to the user at all.
+  const slug = schoolSlugFrom(schoolName);
+  const q = query(
+    collection(db, "schoolBank"),
+    where("schoolSlug", "==", slug),
+    orderBy("sharedAt", "desc"),
+  );
+  const snap = await getDocs(q);
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
 }
 
 async function shareToSchoolBank(
@@ -103,6 +103,7 @@ export default function BankPage() {
   const [mounted, setMounted]           = useState(false);
   const [isInviteOpen, setIsInviteOpen] = useState(false);
   const [loadingSchool, setLoadingSchool] = useState(false);
+  const [schoolError, setSchoolError]   = useState(false);
   const [inviteEmail, setInviteEmail]   = useState("");
   const [copied, setCopied]             = useState(false);
   const [schoolInput, setSchoolInput]   = useState("");
@@ -125,9 +126,17 @@ export default function BankPage() {
 
   async function loadSchool() {
     setLoadingSchool(true);
-    const data = await getSchoolBankExercises(userSchool);
-    setSchoolEntries(data);
-    setLoadingSchool(false);
+    setSchoolError(false);
+    try {
+      const data = await getSchoolBankExercises(userSchool);
+      setSchoolEntries(data);
+    } catch (err) {
+      console.error("[Bank] loadSchool:", err);
+      setSchoolEntries([]);
+      setSchoolError(true);
+    } finally {
+      setLoadingSchool(false);
+    }
   }
 
   async function handleShare(entry: BankExercise) {
@@ -402,6 +411,19 @@ export default function BankPage() {
                   <div className="py-20 flex flex-col items-center gap-4 opacity-40">
                     <div className="w-6 h-6 rounded-full border-2 border-emerald-600 border-t-transparent animate-spin" />
                     <p className="text-xs font-medium">Fetching shared questions…</p>
+                  </div>
+                ) : schoolError ? (
+                  <div className="card p-14 text-center space-y-2 border-[var(--danger)]/30">
+                    <p className="font-medium text-[var(--danger)]">Couldn't load your school's shared exercises</p>
+                    <p className="text-sm text-[var(--text-secondary)]">
+                      Something went wrong on our end — this isn't the same as there being nothing shared yet.
+                    </p>
+                    <button
+                      onClick={() => loadSchool()}
+                      className="mt-2 text-sm font-medium text-[var(--accent)] hover:underline"
+                    >
+                      Try again
+                    </button>
                   </div>
                 ) : filtered.length === 0 ? (
                   <div className="card p-14 text-center opacity-60 space-y-2">
