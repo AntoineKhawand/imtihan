@@ -81,7 +81,7 @@ function splitMath(text: string, open: string, close: string): Array<{ kind: "te
  * correctly), strips any stray "$" found inside, and ensures the whole
  * expression is wrapped in exactly one outer $...$ pair.
  */
-function fixBoxedMath(text: string): string {
+export function fixBoxedMath(text: string): string {
   const KEYWORD = "\\boxed{";
   let result = "";
   let i = 0;

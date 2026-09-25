@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { 
-  Document, Packer, Paragraph, TextRun, HeadingLevel, 
+import {
+  Document, Packer, Paragraph, TextRun, HeadingLevel,
   AlignmentType, BorderStyle, Table, TableRow, TableCell, WidthType,
   ImageRun, TableBorders, VerticalAlign
 } from "docx";
+import { fixBoxedMath } from "@/lib/renderContent";
 
 
 /**
@@ -300,6 +301,53 @@ function cleanLatexForWord(text: string): string {
  * cleanLatexForWord() to readable Unicode before embedding as text,
  * since Word does not natively understand LaTeX strings.
  */
+/**
+ * Unwraps every \boxed{...} span down to its inner content, discarding the
+ * box command itself — Word/docx TextRuns have no equivalent of KaTeX's
+ * visual box border, so unlike renderContent.ts (which keeps \boxed for the
+ * browser to render), the export path only wants the math content plain.
+ *
+ * Walks with real brace-depth tracking (same approach as fixBoxedMath)
+ * instead of a single-level-nesting regex, so deeply nested content like
+ * \boxed{\sqrt{\frac{a}{b}}} — \boxed → \sqrt → \frac, 3 levels — unwraps
+ * correctly instead of being left as literal, unstripped text.
+ */
+export function unwrapBoxed(text: string): string {
+  const KEYWORD = "\\boxed{";
+  let result = "";
+  let i = 0;
+  while (i < text.length) {
+    const idx = text.indexOf(KEYWORD, i);
+    if (idx === -1) {
+      result += text.slice(i);
+      break;
+    }
+    result += text.slice(i, idx);
+    let depth = 0;
+    let j = idx + KEYWORD.length - 1;
+    const start = j;
+    let closed = false;
+    for (; j < text.length; j++) {
+      if (text[j] === "{") depth++;
+      else if (text[j] === "}") {
+        depth--;
+        if (depth === 0) {
+          j++;
+          closed = true;
+          break;
+        }
+      }
+    }
+    if (!closed) {
+      result += text.slice(idx);
+      return result;
+    }
+    result += text.slice(start + 1, j - 1);
+    i = j;
+  }
+  return result;
+}
+
 function createFormattedTextRuns(
   text: string,
   baseOptions: { size: number; color?: string; font?: string; bidirectional?: boolean }
@@ -309,8 +357,20 @@ function createFormattedTextRuns(
 
   // Pre-process \boxed{...} BEFORE splitting on $...$, because \boxed{} can
   // contain nested $\text{ cm}$ markers that would otherwise get torn apart.
-  // The regex handles one level of nested braces (e.g. \text{...} inside \boxed{}).
-  let preprocessed = text.replace(/\\boxed\{((?:[^{}]|\{[^{}]*\})*)\}/g, '$1');
+  //
+  // The AI sometimes nests stray $...$ delimiters INSIDE \boxed{} instead of
+  // wrapping the whole boxed expression in one outer $...$ pair (e.g.
+  // \boxed{$y = h$ + x\tan\alpha - \frac{g}{2v_0^2\cos^2\alpha}\,x^2}), which
+  // used to break the naive brace-stripping regex below: only the "$y = h$"
+  // fragment got treated as math, and everything after the stray closing $
+  // fell through as plain text with raw, unrendered LaTeX commands and
+  // dollar signs still visible in the exported document (BUG-040). Repair
+  // this the same way renderContent.ts does (fixBoxedMath — walks \boxed{}
+  // spans with real brace-depth tracking and strips any stray $ found
+  // inside) before applying the simpler stripping regex, which only needs
+  // to handle well-formed input once the repair has run.
+  const repaired = fixBoxedMath(text);
+  let preprocessed = unwrapBoxed(repaired);
 
   // Split on $...$ / $$...$$ to convert math to unicode text
   const mathSplitRegex = /(\$\$[\s\S]+?\$\$|\$[^$\n]+?\$)/g;

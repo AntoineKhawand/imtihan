@@ -19,6 +19,18 @@ Track issues here during development. Format:
 
 ## Open Issues
 
+## BUG-040: Word (.docx) export left raw, unrendered LaTeX visible (\boxed{}, backslashes, stray $) when the AI nested malformed math inside \boxed{...}
+**Status:** Fixed
+**Severity:** High
+**Area:** Export / Generation
+**Reported:** 2026-09-26 (founder, live production examples)
+**Fixed:** 2026-09-26
+
+**Description:** Exported Word documents sometimes showed literal, unrendered LaTeX instead of clean math text — e.g. `\boxed{$y = h$ + x\tan\alpha - \frac{g}{2v_0^2\cos^2\alpha}\,x^2}` and `\boxed{$v = \sqrt${\frac{GM_T}{r}}}` appeared verbatim (backslashes, dollar signs, and all) in the exported .docx, rather than clean readable math.
+**Root cause:** `src/app/api/export/route.ts`'s `createFormattedTextRuns()` had its own separate, simpler `\boxed{...}` handling than `renderContent.ts`'s (the shared browser/print renderer, which already had a proper repair function — `fixBoxedMath()` — for exactly this AI-generated malformation: stray `$...$` nested inside `\boxed{}` instead of one clean outer `$...$` pair around the whole expression). The export route's own regex (a) had no repair for the stray-`$` case, so splitting on `$` cut the expression apart mid-boxed-content and left everything after the stray closing `$` as raw, unconverted plain text, and (b) only matched one level of brace nesting, so a `\boxed{...}` wrapping something like `\sqrt{\frac{a}{b}}` (2+ levels deep) wasn't unwrapped at all.
+**Fix:** Exported `fixBoxedMath()` from `renderContent.ts` and reused it in the export route (repairs the stray-`$` case) before applying a new `unwrapBoxed()` helper — a proper brace-depth-tracking walk (same approach as `fixBoxedMath`, adapted to fully unwrap `\boxed{}` regardless of nesting depth, since Word has no visual box styling to preserve). Added 4 regression tests (`src/__tests__/export-boxed-math.test.ts`) covering both real founder-reported examples plus a synthetic 4-level-deep nesting case. `npm run type-check` clean, `npm test` 142/142, `npm run build` clean.
+**Verification:** Manually traced both real reported examples through the fixed pipeline via a standalone script before applying the fix, confirmed both produce clean, correctly-unwrapped, single well-formed math expressions with no stray `$`/`\boxed`/leftover backslash-command artifacts.
+
 ## BUG-039: Browser back-navigation from Export (Step 5) to Generate (Step 4) silently discards the generated/edited exam and re-triggers a fresh generation
 **Status:** Open
 **Severity:** High
