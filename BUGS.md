@@ -19,6 +19,81 @@ Track issues here during development. Format:
 
 ## Open Issues
 
+## BUG-042: "Generate Version B" (Confirm & Configure toggle) has zero effect on generation and its own description is false; the real Version A/B feature is a pure exercise/sub-question reorder, not "regenerated numerical values"
+**Status:** Open
+**Severity:** High
+**Area:** Generation / UI / Marketing copy vs. product
+**Reported:** 2026-09-26 (QA exploratory Pro-tier pass, live production, real Pro test account - extends BUG-036 from the 2026-09-25 free-tier pass)
+
+**Description:** Tested as a real Pro user (BUG-036 only established the Free-vs-Pro copy mismatch; this establishes the feature itself is weaker than advertised on both sides of that gate):
+1. The Step 2 "Generate Version B" toggle is inert. Its own UI copy says "Shuffles question order and regenerates numerical values." Enabling it sends generateVersionB: true in the /api/generate request body - confirmed via the raw network request - but src/app/api/generate/route.ts accepts this field into its Zod schema (line 65) and never reads it again anywhere in the file. Toggling it on/off at Step 2 has no effect whatsoever on what gets generated; verified by reconstructing the full streamed AI response, which contains exactly one exercises array (Version A only) regardless of the toggle state.
+2. The real Version A/B mechanism lives entirely at Export (Step 5), fully decoupled from the Step 2 toggle - a "Variant: Version A / Version B" selector that a Pro user can flip regardless of what was chosen at Step 2. It calls buildVersionB() (src/lib/variant.ts), which only reorders the exercise array and (if more than 1) shuffles + relabels sub-questions (a)/b)/... or 1./2./...). It does not touch statement text or any numerical value anywhere.
+3. Confirmed via the raw /api/export request body: for a real 2-exercise/7-sub-question exam, Version B's exercise 2 (electromagnetism/RLC) had byte-identical statement text and numbers to Version A, just reordered (moved from position 2 to position 1) with its 7 sub-questions shuffled and relabeled. No number, unit, or wording differed. For a small exam (2 exercises), a Fisher-Yates shuffle also has a real chance of landing on the same order as Version A, i.e., producing an export that's completely identical to Version A despite being labeled "Version B."
+**Steps to reproduce:**
+1. As a Pro account, at Confirm & Configure (Step 2), toggle "Generate Version B" ON, generate an exam. Inspect the /api/generate network request/response (DevTools) - request body has generateVersionB: true; response body (reconstruct the SSE chunk stream) contains only one exercises array, no versionB key anywhere, and sessionStorage.imtihan_exercises after generation is a single flat array, not an A/B pair.
+2. At Export (Step 5), toggle the "Variant" control between "Version A" and "Version B" (present and functional regardless of what Step 2's toggle was set to) and download both. Diff the /api/export request bodies: exercise/sub-question order differs, but every statement string and numeric value is identical between the two.
+**Root cause:** generateVersionB is declared in both src/app/api/analyze/route.ts and src/app/api/generate/route.ts's Zod schemas and threaded through src/app/create/confirm/page.tsx's UI state, but the generate route never actually branches on it - it's dead plumbing. The only real "Version B" implementation is the client-side buildVersionB() reorder in src/lib/variant.ts, invoked solely from src/app/create/export/page.tsx, which is architecturally unrelated to the Step 2 toggle.
+**Fix:** Not applied - reporting only, per QA role. This is a product decision, not just a bug fix, given BUG-036 already flagged the Free/Pro copy side of this: the founder needs to decide whether "Version A/B" should (a) actually get a second AI-generated variant with different numbers/wording (closing the gap between marketing's promise and the reorder-only reality), (b) stay a reorder-only feature but get honestly described everywhere (including removing/rewriting the Step 2 toggle, which currently does nothing and describes something it doesn't do), or (c) something else. Either way, the Step 2 toggle should not silently no-op.
+**Verification:** Reproduced live on production with a real Pro test account. Verified via raw network request/response inspection (/api/generate request+response, /api/export request body for both variants) and sessionStorage inspection, not just UI observation.
+
+---
+
+## BUG-043: Full generation is silently re-triggered (burning real quota + AI API cost) on any direct navigation/reload of the Generate step, not only via browser Back - generalizes BUG-039
+**Status:** Open
+**Severity:** Critical
+**Area:** Generation / UI (workflow state)
+**Reported:** 2026-09-26 (QA exploratory Pro-tier pass, live production, real Pro test account)
+
+**Description:** BUG-039 (2026-09-25) reported this only as a browser-Back-button issue. Retested as a real Pro user this pass: simply navigating directly to /create/generate by URL (address bar, not the browser Back button - e.g. returning to a bookmarked/previously-visited step, or a page reload) after already having completed Export for that exam also fails to restore the cached exam from sessionStorage and silently starts a brand-new /api/generate call instead - reproduced twice in one session. For a free-tier user this just fails loudly with a quota error (as BUG-039 noted); for a Pro user with quota remaining, it silently succeeds, generating and displaying a completely different exam with no warning that anything was discarded, and burns one of the account's paid monthly generations (and real Claude/Gemini API cost) for an exam that is never shown to have existed unless the user happens to export/save it before navigating away again.
+**Steps to reproduce:**
+1. As a Pro account, complete Describe -> Confirm -> Generate -> Export for an exam, downloading a file (which auto-saves it to the library).
+2. Note the dashboard's quota counter and "Exams created" count.
+3. Navigate directly to https://imtihan.live/create/generate via the address bar (not the in-app Back link, not the browser Back button).
+4. Observe: the page shows "Generating exercises..." and produces a new, different exam (different numbers/context in my repro: a satellite/projectile problem became a completely different projectile+RLC-circuit problem) instead of restoring the one just exported.
+5. Check the dashboard again: quota-used counter increments (2/10 -> 3/10 in my repro) but "Exams created" / the saved-library count does not, if the newly-generated exam is never exported or manually saved - that generation's cost and quota are simply gone.
+**Root cause:** Same class of bug as BUG-039 (src/app/create/generate/page.tsx's sessionStorage cache-key mismatch on mount), but not specific to the back-button gesture - any fresh navigation/reload of this route hits the same "no valid cache match -> regenerate from scratch" branch. Confirms BUG-039's original root-cause hypothesis (a stale/mismatched imtihan_exercises_key written by one of the several persistExercises() call sites) generalizes beyond browser history navigation.
+**Fix:** Not applied - reporting only, per QA role. Same fix target as BUG-039; this repro strengthens the case for prioritizing it, since for a Pro user this is a silent, repeatable way to burn paid quota and real AI API cost with zero recovery path or warning, not just a jarring UX surprise.
+**Verification:** Reproduced live on production twice in one session with a real Pro account; confirmed via the dashboard's own quota counter (2/10 -> 3/10) and library count (stayed at 1) that the second generation was real, cost real quota, and was never recoverable.
+
+**Update (2026-09-26, qa, same session):** Traced afterward - `engineering` landed a real fix for BUG-039 on `master` (commit `584de98`, routes every `imtihan_exercises` write through `persistExercises()` so the cache key can never desync) apparently during/after this repro. It is unclear whether that fix was live on production (Vercel) at the moment of my repro above, or whether my repro hit the pre-fix deployed bundle - the timing could not be established from this session alone. This BUG-043 report should be re-verified against production *after* confirming `584de98` is actually deployed (not just merged to `master`), rather than treated as a second, independent bug needing its own separate fix - it may already be closed.
+
+---
+
+## BUG-044: "Share to Student Bank" wording contradicts the feature's own "colleagues only" framing - sharing an exercise also publishes it, with full worked solution, directly to students
+**Status:** Open
+**Severity:** Medium
+**Area:** UI / Data (cross-feature interaction)
+**Reported:** 2026-09-26 (QA exploratory Pro-tier pass, live production)
+
+**Description:** /bank's "My School" tab describes the feature purely as teacher-to-teacher collaboration: "The School Bank lets Pro teachers share exercises with colleagues at the same school - building a private, institution-level question repository." But the actual share buttons tooltip and toast both say "Share to Student Bank" / "Sharing to student bank..." (src/app/bank/page.tsx:545) - and this is not just inconsistent copy: the exact same schoolBank Firestore collection (matched by schoolSlug) is read directly by src/app/student/practice/page.tsx and shown to students, including the full solution/methodology (SchoolExercise.exercise.solution.methodology, not just the statement). A teacher who shares an unused exercise from their personal bank - believing, per the "My School" tabs own copy, that this only reaches colleagues - is actually also giving their own students immediate access to that exercises complete worked answer via /student/practice, which could undermine using it on a real exam later.
+**Steps to reproduce:**
+1. Read /bank's "My School" empty-state and Pro-gate copy (colleagues-only framing) side by side with the share buttons tooltip/toast (student-bank framing) - same page, same action, contradictory language.
+2. Trace src/app/bank/page.tsx's shareToSchoolBank() (writes to schoolBank) against src/app/student/practice/page.tsx's fetchSchoolExercises() (reads schoolBank filtered by the same schoolSlug, displays exercise.solution.methodology to students).
+**Root cause:** Two independent features (/bank teacher-to-teacher sharing, /student/practice student self-practice) share one Firestore collection with no separation between "share with colleagues" and "publish to students" as distinct actions - but only one of the two consuming surfaces communicates this to the teacher at share time.
+**Fix:** Not applied - reporting only, per QA role. Likely fix shape is a product decision (flagging, not deciding): either (a) make these genuinely one action and update /bank's "colleagues" copy to honestly say "colleagues and your students," or (b) split into two distinct, separately-labeled actions with the student-facing one requiring explicit confirmation given it exposes the solution key.
+**Verification:** Confirmed via source read (src/app/bank/page.tsx:545, src/app/student/practice/page.tsx:18-62) and live UI text comparison on production. Not exercised end-to-end as a student (blocked behind BUG-045's broken read path, and a separate student account/flow was out of this pass's scope) - the exposure is inferred from matching Firestore query/collection/field names in both files' source, not from actually observing a students screen.
+
+---
+
+## BUG-045: "School Bank" / Community exam library (Pro feature) is completely broken for viewing - shares succeed but nothing ever shows, with zero user-facing error
+**Status:** Open
+**Severity:** Critical
+**Area:** Data / API (Firestore) / UI
+**Reported:** 2026-09-26 (QA exploratory Pro-tier pass, live production, real Pro test account imtihan.qa.pro.2026@mailinator.com)
+
+**Description:** The Pro-gated "School Bank" (marketed on /pricing and /upgrade as "Community exam library") lets a Pro teacher share a saved exercise with colleagues at the same school. The share action itself succeeds (verified via a read-only Admin SDK query - a real schoolBank document was created with the correct schoolSlug/schoolName/contributor fields), but the read query used to display shared exercises - both in /bank's "My School" tab and in the student-facing /student/practice page - throws FirebaseError: The query requires an index on every load, because the composite index for schoolBank (schoolSlug ==, sharedAt order) does not exist. The UI swallows this error completely: "My School" just shows "0 shared exercises... / No shared exercises yet", identical to the genuinely-empty state, with no toast/banner/user-visible indication anything is wrong. From a teacher's perspective this Pro feature looks like it silently does nothing - data disappears into Firestore with no way to ever see it again, for anyone (the sharer, colleagues, or students).
+**Steps to reproduce:**
+1. As a real Pro account with school set (via /bank's "Set your school first" form), generate an exam, use the per-exercise "Save to bank" action on Step 4 (Generate & Refine).
+2. Go to /bank -> "My Bank" tab, hover the saved exercise, click the share icon (tooltip: "Share to Student Bank") - a "Sharing to student bank..." toast appears.
+3. Click the "My School" tab. Observe: "0 shared exercises from <school>." / "No shared exercises yet" - even though the share in step 2 just ran.
+4. Open DevTools console: [Bank] getSchoolBankExercises: FirebaseError: The query requires an index, with a direct Firebase Console link to create it.
+**Root cause:** Missing Firestore composite index on the schoolBank collection for the schoolSlug (==) + sharedAt (orderBy) query used by both src/app/bank/page.tsx's getSchoolBankExercises() and src/app/student/practice/page.tsx's fetchSchoolExercises(). Confirmed via read-only Admin SDK query that the write path works fine - this is purely a missing-index read failure, silently caught and swallowed (no user-facing error surfaced).
+**Fix:** Not applied - reporting only, per QA role. database owns firestore.indexes.json; needs the composite index added and deployed (firebase deploy --only firestore:indexes, a founder-run action per this repo's deploy guardrails). Also worth a UX fix (not just the index): getSchoolBankExercises's catch block should surface a real error state distinct from "genuinely empty," so this class of failure is never silent again.
+**Verification:** Reproduced live on production. Confirmed via console error message and via a read-only Firebase Admin SDK query (schoolBank collection, filtered by schoolSlug) that the share write actually succeeded (1 real document found) despite the read displaying zero results.
+
+---
+
+
 ## BUG-041: Word (.docx) and PDF (`/print`) exports had redundant, compounding blank-space paragraphs — found while investigating a founder-reported "lots of white empty spaces" complaint
 **Status:** Fixed
 **Severity:** Medium
