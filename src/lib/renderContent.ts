@@ -583,8 +583,20 @@ export function renderContent(raw: string): string {
 
   // 3. Process newlines safely BEFORE replacing placeholders.
   // This ensures that the HTML inside visual/mermaid blocks isn't shredded.
+  //
+  // insideSvg tracks whether we're currently inside an <svg>...</svg> block
+  // that KaTeX emitted (stretchy delimiters like \sqrt{} render as inline
+  // SVG). KaTeX's own SVG path `d` attribute can itself contain a literal
+  // newline character, which splits it across two of these htmlLines even
+  // though it's one continuous attribute value — the isShortMath guard below
+  // only recognizes a line that STARTS with `<span class="katex`, so an SVG
+  // continuation fragment (e.g. "...8.667 1.667 12 5") never matches it
+  // regardless of length, and a <br /> was getting spliced directly into the
+  // path data, corrupting the glyph (BUG-038). Suppress <br /> insertion for
+  // the whole svg block instead of trying to widen the katex-line guard.
   const htmlLines = html.split("\n");
   let finalHtml = "";
+  let insideSvg = false;
   for (let i = 0; i < htmlLines.length; i++) {
     const line = htmlLines[i];
     if (!line.trim()) {
@@ -607,7 +619,7 @@ export function renderContent(raw: string): string {
       const nextReal = i < htmlLines.length - 1 ? htmlLines[i + 1].trim() : "";
       const prevIsHtmlOrPlaceholder = isBlockHtmlEnd(prevReal) || /%%(VISUAL|MERMAID|PTABLE|DOC)_\d+%%/.test(prevReal);
       const nextIsHtmlOrPlaceholder = isBlockHtmlStart(nextReal) || /%%(VISUAL|MERMAID|PTABLE|DOC)_\d+%%/.test(nextReal);
-      if (prevReal && nextReal && !prevIsHtmlOrPlaceholder && !nextIsHtmlOrPlaceholder) {
+      if (prevReal && nextReal && !prevIsHtmlOrPlaceholder && !nextIsHtmlOrPlaceholder && !insideSvg) {
         finalHtml += "<br />";
       }
       continue;
@@ -623,11 +635,17 @@ export function renderContent(raw: string): string {
       const wasPlaceholder = htmlLines[i-1].includes("%%VISUAL_") || htmlLines[i-1].includes("%%MERMAID_") || htmlLines[i-1].includes("%%PTABLE_") || htmlLines[i-1].includes("%%DOC_");
       const isShortMath = line.trim().startsWith("<span class=\"katex") && line.trim().length < 200;
 
-      if (!isPrevHtml && !isCurrHtml && !isPlaceholder && !wasPlaceholder && !isShortMath) {
+      if (!isPrevHtml && !isCurrHtml && !isPlaceholder && !wasPlaceholder && !isShortMath && !insideSvg) {
         finalHtml += "<br />";
       }
     }
     finalHtml += line;
+    // Update insideSvg using this line's own svg tags, in the order they
+    // appear, so a line that both opens and closes an svg (a short
+    // self-contained one) correctly leaves insideSvg false afterward.
+    for (const tagMatch of line.matchAll(/<\/?svg\b[^>]*>/gi)) {
+      insideSvg = !tagMatch[0].startsWith("</");
+    }
   }
 
   // 3.5 Restore document blocks BEFORE visual/mermaid/table blocks. A
