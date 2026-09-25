@@ -182,7 +182,15 @@ export default function PrintPage() {
       </div>
 
       {/* ── CORRIGÉ ── */}
-      <div className="page-break mt-8 pt-8">
+      {/* No extra margin/padding here beyond the heading's own spacing —
+          `.page-break` already forces this onto a fresh page, so a
+          margin-top has nothing above it to separate from, and stacking
+          mt-8 + pt-8 on top of the print stylesheet's own `@page { margin:
+          20mm }` compounded into a large, empty gap above "CORRIGÉ" on
+          every exported PDF (see BUGS.md's Word/PDF export whitespace
+          investigation — the same redundant-spacer pattern found and fixed
+          in the Word export route). */}
+      <div className="page-break">
         <h1 className="text-2xl font-bold text-center mb-8" style={{ color: primaryColor }}>
           {corrigWord}
         </h1>

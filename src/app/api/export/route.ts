@@ -757,7 +757,11 @@ export async function generateWordDocument(
       }
     }
 
-    children.push(new Paragraph({ text: "" }));
+    // No trailing filler paragraph here — the next exercise's own heading
+    // already carries spacing.before:240 (see the Exercice heading Paragraph
+    // above), so an extra empty Paragraph only compounded into visibly
+    // excessive whitespace between exercises for no typographic benefit
+    // (see BUGS.md "Word/PDF export whitespace investigation").
   }
 
   // ─── Corrigé (only if includeAnswerKey is true) ───────────
@@ -775,7 +779,10 @@ export async function generateWordDocument(
     spacing: { after: 400 },
     bidirectional: isArabic,
   }));
-  children.push(new Paragraph({ text: "" }));
+  // No filler paragraph here either — CORRIGÉ's own spacing.after:400 plus
+  // the first exercise heading's spacing.before:240 already give ample
+  // separation (see the matching removal above and BUGS.md's whitespace
+  // investigation entry).
 
   for (const ex of exercises) {
     children.push(new Paragraph({
@@ -909,7 +916,9 @@ export async function generateWordDocument(
       }));
     }
 
-    children.push(new Paragraph({ text: "" }));
+    // No trailing filler paragraph here — same reasoning as the main
+    // exercises loop above: the next exercise's heading already carries its
+    // own spacing.before:240.
   }
 
   const doc = new Document({
