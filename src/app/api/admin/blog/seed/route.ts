@@ -1,5 +1,6 @@
-import { NextResponse } from "next/server";
-import { adminDb } from "@/lib/firebase-admin";
+import { NextRequest, NextResponse } from "next/server";
+import { adminDb, verifyIdToken } from "@/lib/firebase-admin";
+import { isAdmin } from "@/lib/admin";
 
 const ARTICLES = [
   {
@@ -28,7 +29,12 @@ const ARTICLES = [
   }
 ];
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const uid = await verifyIdToken(request);
+  if (!uid || !(await isAdmin(uid))) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   try {
     const results = [];
     for (const article of ARTICLES) {

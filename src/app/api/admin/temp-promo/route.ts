@@ -1,7 +1,13 @@
-import { NextResponse } from "next/server";
-import { adminDb } from "@/lib/firebase-admin";
+import { NextRequest, NextResponse } from "next/server";
+import { adminDb, verifyIdToken } from "@/lib/firebase-admin";
+import { isAdmin } from "@/lib/admin";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const uid = await verifyIdToken(request);
+  if (!uid || !(await isAdmin(uid))) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   const email = "bassel_yassine74@hotmail.com";
   const days = 30;
 

@@ -1,9 +1,14 @@
 import { NextResponse } from "next/server";
 import * as admin from "firebase-admin";
-import { adminDb } from "@/lib/firebase-admin";
+import { adminDb, verifyIdToken } from "@/lib/firebase-admin";
 
 export async function POST(req: Request) {
   try {
+    const uid = await verifyIdToken(req);
+    if (!uid) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const { exam, settings } = await req.json();
 
     if (!exam || !exam.exercises) {
@@ -27,7 +32,7 @@ export async function POST(req: Request) {
         antiCheating: settings.antiCheating || true,
         showResults: settings.showResults || false
       },
-      teacherId: exam.teacherId || "anonymous",
+      teacherId: uid,
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
       isActive: true
     });

@@ -1,9 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
-import { adminDb } from "@/lib/firebase-admin";
+import { adminDb, verifyIdToken } from "@/lib/firebase-admin";
+import { isAdmin } from "@/lib/admin";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
+  const uid = await verifyIdToken(request);
+  if (!uid || !(await isAdmin(uid))) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   try {
     const snapshot = await adminDb.collection("blog_posts")
       .orderBy("createdAt", "desc")
