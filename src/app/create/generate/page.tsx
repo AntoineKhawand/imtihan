@@ -10,6 +10,7 @@ import { ExerciseEditor } from "@/components/ui/ExerciseEditor";
 import { Logo } from "@/components/ui/Logo";
 import { shortId } from "@/lib/utils";
 import { saveToBank, type BankExercise } from "@/lib/storage";
+import { buildExercisesCacheKey } from "@/lib/workflowCache";
 import { useToast } from "@/components/ui/Toast";
 import type { ExamContext, Exercise, Difficulty } from "@/types/exam";
 import { StepIndicator, StepLabel } from "@/app/create/page";
@@ -87,7 +88,7 @@ export default function GeneratePage() {
 
   function persistExercises(next: Exercise[], ctx: ExamContext | null = context, tmpl: string = templateId) {
     sessionStorage.setItem("imtihan_exercises", JSON.stringify(next));
-    if (ctx) sessionStorage.setItem("imtihan_exercises_key", JSON.stringify({ c: ctx, t: tmpl }));
+    if (ctx) sessionStorage.setItem("imtihan_exercises_key", buildExercisesCacheKey(ctx, tmpl));
   }
 
   useEffect(() => {
@@ -103,7 +104,7 @@ export default function GeneratePage() {
       // instead of hammering the Gemini API again.
       const cachedEx = sessionStorage.getItem("imtihan_exercises");
       const cachedKey = sessionStorage.getItem("imtihan_exercises_key");
-      const currentKey = JSON.stringify({ c: ctx, t: tmpl });
+      const currentKey = buildExercisesCacheKey(ctx, tmpl);
       if (cachedEx && cachedKey === currentKey) {
         try {
           const parsed = JSON.parse(cachedEx) as Exercise[];
@@ -214,7 +215,7 @@ export default function GeneratePage() {
               }));
               const all = [...progressiveExercises, ...remaining].map((ex, i) => ({ ...ex, number: i + 1 }));
               setExercises(all);
-              sessionStorage.setItem("imtihan_exercises", JSON.stringify(all));
+              persistExercises(all);
               setStatus("done");
             }
           }
@@ -237,7 +238,7 @@ export default function GeneratePage() {
         if (progressiveExercises.length > 0) {
           const all = progressiveExercises.map((ex, i) => ({ ...ex, number: i + 1 }));
           setExercises(all);
-          sessionStorage.setItem("imtihan_exercises", JSON.stringify(all));
+          persistExercises(all);
           setStatus("done");
         } else {
           setError("Generation timed out. Please try again.");
@@ -316,7 +317,7 @@ export default function GeneratePage() {
                 if (idx === -1) return prev;
                 const next = [...prev];
                 next[idx] = { ...replacement, number: idx + 1, isRegenerating: false };
-                sessionStorage.setItem("imtihan_exercises", JSON.stringify(next));
+                persistExercises(next);
                 return next;
               });
             }
@@ -417,7 +418,7 @@ export default function GeneratePage() {
       setExercises((prev) => {
         const appended: ExerciseWithStatus = { ...(newExercise as Exercise), number: prev.length + 1 };
         const next = [...prev, appended];
-        sessionStorage.setItem("imtihan_exercises", JSON.stringify(next));
+        persistExercises(next);
         return next;
       });
     } catch {
@@ -430,7 +431,7 @@ export default function GeneratePage() {
   function handleRemove(id: string) {
     setExercises((prev) => {
       const next = prev.filter((e) => e.id !== id).map((e, i) => ({ ...e, number: i + 1 }));
-      sessionStorage.setItem("imtihan_exercises", JSON.stringify(next));
+      persistExercises(next);
       return next;
     });
   }
@@ -442,7 +443,7 @@ export default function GeneratePage() {
   function handleEditorSave(updated: Exercise) {
     setExercises((prev) => {
       const next = prev.map((e) => e.id === updated.id ? updated : e);
-      sessionStorage.setItem("imtihan_exercises", JSON.stringify(next));
+      persistExercises(next);
       return next;
     });
     setEditingExercise(null);
