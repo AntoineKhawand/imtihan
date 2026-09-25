@@ -88,7 +88,13 @@ $Prompt = Get-Content -Raw -Path $PromptFile
 # read search-analytics data; it just can't reconfigure Search Console or
 # open a browser on its own.
 $GscReadOnlyTools = "mcp__gsc__list_properties mcp__gsc__get_performance_overview mcp__gsc__get_search_analytics mcp__gsc__get_search_by_page_query mcp__gsc__get_advanced_search_analytics mcp__gsc__compare_search_periods mcp__gsc__check_indexing_issues mcp__gsc__inspect_url_enhanced mcp__gsc__batch_url_inspection mcp__gsc__get_sitemaps mcp__gsc__get_sitemap_details mcp__gsc__list_sitemaps_enhanced mcp__gsc__get_site_details mcp__gsc__get_capabilities mcp__gsc__get_creator_info"
-$AllowedTools = "Read Edit Write Grep Glob Agent WebSearch Bash(git *) Bash(npm *) Bash(npx *) Bash(node *) Bash(gh *) $GscReadOnlyTools"
+
+# WebFetch: added 2026-09-25 alongside WebSearch — engineering/seo-growth/
+# content-curriculum/marketing/database/security all now declare it in
+# their own agent frontmatter (read a specific real page directly rather
+# than only a search summary). Skill: added so the new `security` team can
+# invoke the built-in security-review skill during its nightly pass.
+$AllowedTools = "Read Edit Write Grep Glob Agent WebSearch WebFetch Skill Bash(git *) Bash(npm *) Bash(npx *) Bash(node *) Bash(gh *) $GscReadOnlyTools"
 
 Log "Launching claude -p (model claude-sonnet-5, scoped allowedTools)"
 

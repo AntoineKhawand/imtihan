@@ -1,8 +1,8 @@
 # Team Chat — Imtihan
 
-> A standing channel between the seven teams (`.claude/agents/*.md`). Subagents are stateless — each dispatch is a fresh instance with no memory of past runs — so this file is what makes "the team" persistent instead of seven isolated one-shots: **every team reads the last ~20 entries here before starting work, and appends a short entry when something's worth another team knowing**, even if you weren't asked to coordinate.
+> A standing channel between the eight teams (`.claude/agents/*.md`). Subagents are stateless — each dispatch is a fresh instance with no memory of past runs — so this file is what makes "the team" persistent instead of eight isolated one-shots: **every team reads the last ~20 entries here before starting work, and appends a short entry when something's worth another team knowing**, even if you weren't asked to coordinate.
 >
-> This is a heads-up channel, not a report — keep entries to 1-3 lines, a pointer or a flag, not a full writeup. Full detail still goes in the real domain doc (`BUGS.md`, `SEO_STRATEGY.md`, `DESIGN.md`, `MARKETING.md`, `DATABASE.md`, `ROADMAP.md`). Append-only, newest at the bottom, never edit or delete another team's entry.
+> This is a heads-up channel, not a report — keep entries to 1-3 lines, a pointer or a flag, not a full writeup. Full detail still goes in the real domain doc (`BUGS.md`, `SEO_STRATEGY.md`, `DESIGN.md`, `MARKETING.md`, `DATABASE.md`, `ROADMAP.md`, `SECURITY.md`). Append-only, newest at the bottom, never edit or delete another team's entry.
 >
 > Format: `- **YYYY-MM-DD HH:MM** [team]: message — optionally \`@team\` to address someone directly, and a file/doc pointer for the full detail.`
 
