@@ -21,7 +21,9 @@
 │  uploads PDFs/DOCX/images (textbook chapter, past exam, notes). │
 │                                                                 │
 │  → POST /api/analyze                                            │
-│  → Gemini 2.5 Flash with vision reads everything                │
+│  → Claude Sonnet (primary) reads everything via vision/PDF, with │
+│    Gemini 2.5 Flash as fallback (API failure, or a document      │
+│    format only Gemini's vision handles, e.g. DOCX)               │
 │  → Returns structured ExamContext (curriculum, level, subject,   │
 │    chapters, language, duration, exercise count, etc.)          │
 └─────────────────────────────────────────────────────────────────┘
@@ -65,7 +67,7 @@
 | Auth | Firebase Auth | Standard cloud stack |
 | Database | Firestore | Teacher accounts, saved exams, exam library |
 | Storage | Firebase Storage | Uploaded source documents, generated files |
-| AI | Google Gemini 1.5 Flash | Best quality/cost for exam generation + vision |
+| AI | Claude Sonnet (primary) + Gemini 2.5 Flash (fallback) | Claude for generation/analysis/translation quality; Gemini as a reliability fallback and for document formats (e.g. DOCX) Claude's vision API doesn't accept |
 | Word export | `docx` npm package | Full styling control |
 | PDF export | `@react-pdf/renderer` | React-native PDF rendering |
 | Payments | Stripe (v1.1+) | Monthly subscription, USD |
@@ -106,7 +108,7 @@ Prompts live in `src/lib/prompts/` as versioned TypeScript files, not hardcoded 
 1. Has a **named export** describing its purpose: `buildAnalyzePrompt()`, `buildExerciseGenerationPrompt()`.
 2. Takes typed inputs and returns a single string.
 3. Uses explicit XML tags when structuring sub-sections (`<curriculum>`, `<teacher_description>`, etc.) — this is how Claude is trained to parse structure.
-4. Asks Gemini to **return JSON only** when structured output is needed, and we parse it safely with Zod schemas.
+4. Asks the model to **return JSON only** when structured output is needed (Claude and Gemini both), and we parse it safely with Zod schemas.
 
 **Never** inline a prompt as a template literal inside a route handler. It makes prompts un-testable and un-versionable.
 
@@ -184,7 +186,7 @@ If a request implies scope creep, flag it and point back to this section.
 ## 11. Testing Strategy (Post-MVP Priority)
 
 - Unit tests for prompt builders (deterministic string output).
-- Integration tests for the generate endpoint using recorded Gemini responses.
+- Integration tests for the generate endpoint using recorded Claude/Gemini responses.
 - E2E with Playwright for the full workflow — same pattern as previous apps.
 
 ## 12. Known Gotchas

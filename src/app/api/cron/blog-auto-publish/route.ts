@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminDb, adminAuth } from "@/lib/firebase-admin";
-import { getGeminiModel, withRetryAndFallback } from "@/lib/gemini";
+import { withRetryAndFallback, geminiErrorMessage } from "@/lib/gemini";
+import { getAnthropicClient, isAnthropicConfigured, CLAUDE_MODEL, MAX_TOKENS } from "@/lib/anthropic";
 import { shortId, slugify } from "@/lib/utils";
 
 export const runtime = "nodejs";
@@ -69,11 +70,49 @@ export async function GET(request: NextRequest) {
         }
     `;
 
-    const result = await withRetryAndFallback(async (model) => {
-      const res = await model.generateContent(prompt);
-      return res.response.text();
-    });
-    
+    // ── AI Generation (Primary: Claude, Fallback: Gemini) ───────────────────
+    // Matches the pattern already used by /api/generate, /api/analyze, and
+    // /api/exam/translate — this route is text-only (no document upload),
+    // so it's the simplest case: no image/PDF content block needed.
+    let result = "";
+    let providerName: "Claude" | "Gemini" = "Gemini";
+
+    if (isAnthropicConfigured()) {
+      try {
+        console.log("[/api/cron/blog-auto-publish] Attempting Claude...");
+        const anthropic = getAnthropicClient();
+        const message = await anthropic.messages.create({
+          model: CLAUDE_MODEL,
+          max_tokens: MAX_TOKENS,
+          messages: [{ role: "user", content: prompt }],
+        });
+        // @ts-ignore
+        result = message.content[0].text;
+        providerName = "Claude";
+      } catch (claudeErr) {
+        console.warn("[/api/cron/blog-auto-publish] Claude failed, falling back to Gemini:", claudeErr);
+      }
+    }
+
+    if (!result) {
+      try {
+        console.log("[/api/cron/blog-auto-publish] Using Gemini...");
+        result = await withRetryAndFallback(async (model) => {
+          const res = await model.generateContent(prompt);
+          return res.response.text();
+        });
+        providerName = "Gemini";
+      } catch (geminiErr) {
+        console.error("[/api/cron/blog-auto-publish] Gemini fallback failed:", geminiErr);
+        return NextResponse.json(
+          { success: false, error: geminiErrorMessage(geminiErr) },
+          { status: 503 }
+        );
+      }
+    }
+
+    console.log(`[/api/cron/blog-auto-publish] Generated via ${providerName}`);
+
     // Clean up JSON response - more robust extraction
     let postData;
     try {
