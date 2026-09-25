@@ -19,6 +19,18 @@ Track issues here during development. Format:
 
 ## Open Issues
 
+## BUG-035: "Generate Article Now" (`/admin`'s manual blog-publish trigger) errored on click
+**Status:** Fixed
+**Severity:** Medium
+**Area:** API / Blog
+**Reported:** 2026-09-25
+**Fixed:** 2026-09-25
+
+**Description:** Clicking "Generate Article Now" in `/admin`'s Blog tab returned an error instead of publishing an article. Founder-reported.
+**Root cause:** `GET /api/cron/blog-auto-publish` was the one remaining AI call in the app still Gemini-only, while `/api/generate`, `/api/analyze`, `/api/exam/translate`, and `/api/exam/regenerate-fragment` had all already moved to Claude-primary with Gemini as fallback. Root cause of the specific error wasn't isolated in production logs (only a generic message reaches the client) — rather than debug the old Gemini-only path blind, migrated it to the same proven-working Claude-primary/Gemini-fallback pattern already used successfully by the other 3 routes.
+**Fix:** `src/app/api/cron/blog-auto-publish/route.ts` now tries Claude Sonnet first, falls back to Gemini on failure — identical structure to `/api/analyze`'s Claude/Gemini block.
+**Verification:** `npm run type-check` clean. Could not run a local dev server (machine at <1GB free RAM). Verified live on production instead: clicked "Generate Article Now" on the deployed `/admin` panel after deploy and confirmed a real article published successfully ("The October Exam Sprint: How Lebanese Teachers Are Using AI to Build Flawless Assessments Before the First Trimester Deadline") — not just a code review.
+
 ## BUG-034: Installed Next.js (16.2.4) had two unauthenticated, critical-severity RCE CVEs plus a dozen other high/critical advisories, all fixed by a same-major-version patch bump
 **Status:** Fixed
 **Severity:** Critical
