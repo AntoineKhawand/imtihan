@@ -38,18 +38,25 @@
 **Full detail:** `SECURITY.md` (2026-09-25 audit log)
 **Status:** Open
 
-### 9. Version A/B: marketing copy vs. actual product gate disagree
-**Raised by:** qa (exploratory pass, live production) · **Date:** 2026-09-25
-**The decision needed:** The homepage `/#pricing` and `/pricing` both list "Version A/B generation" as an included Free-plan feature. But the actual Confirm & Configure step gates "Generate Version B" as Pro-only (confirmed live with a real free-tier account) — and `ROADMAP.md` confirms this Pro-gating is the intended design, not a bug in the gate itself. One of the two is wrong.
-**Options:** (a) fix the marketing copy — Free plan lists "Version A generation" only, drop the "A/B"; (b) make Version B genuinely free-tier, contradicting `ROADMAP.md`'s recorded intent; (c) something in between (e.g. Version B free with a cap).
-**Full detail:** `BUGS.md` (BUG-036)
+### 9. Version A/B: marketing copy vs. actual product gate disagree — AND the feature itself is weaker than either side claims
+**Raised by:** qa (exploratory pass, live production) · **Date:** 2026-09-25, deepened 2026-09-26
+**The decision needed:** The homepage `/#pricing` and `/pricing` both list "Version A/B generation" as an included Free-plan feature. But the actual Confirm & Configure step gates "Generate Version B" as Pro-only (confirmed live with a real free-tier account), and `ROADMAP.md` confirms this Pro-gating is the intended design — that's the original BUG-036 mismatch. Retested as a real Pro user (BUG-042): the Step 2 "Generate Version B" toggle is completely dead code — its own copy claims it "regenerates numerical values," but the field is accepted into `/api/generate`'s schema and never read again anywhere in the route; toggling it does nothing. The *real* Version A/B mechanism lives only at Export, is a pure client-side reorder (same statement text and numbers, just shuffled order + relabeled sub-questions) — for a small exam there's a real chance the shuffle produces an export identical to Version A. So this isn't just a copy problem: the underlying feature doesn't do what either the Free-plan copy or the Pro-gated Step 2 toggle claims.
+**Options:** (a) invest in a real second AI-generated variant (different numbers/wording, not just reordering) — closes the gap for real, more cost/complexity; (b) keep it reorder-only, but describe it honestly everywhere (drop or rewrite the Step 2 toggle entirely, since it currently claims a capability that doesn't exist and does nothing when toggled) and fix the Free/Pro copy mismatch to match; (c) something else.
+**Full detail:** `BUGS.md` (BUG-036, BUG-042)
+**Status:** Open
+
+### 10. School Bank sharing silently also publishes to students, including full solutions
+**Raised by:** qa (Pro-tier exploratory pass) · **Date:** 2026-09-26
+**The decision needed:** `/bank`'s "My School" tab describes School Bank purely as teacher-to-teacher collaboration ("share exercises with colleagues at the same school"). But the same `schoolBank` Firestore collection a teacher shares to is read directly by `/student/practice` and shown to students — including the full worked solution/methodology, not just the exercise statement. A teacher sharing an exercise believing (per the feature's own copy) that only colleagues see it is also silently giving their own students immediate access to its complete answer key.
+**Options:** (a) make this one action honestly — update `/bank`'s copy to say "colleagues and your students" so teachers know what they're actually doing; (b) split into two distinct actions ("share with colleagues" vs. "publish to students"), with the student-facing one requiring explicit confirmation given it exposes the answer key; (c) something else.
+**Full detail:** `BUGS.md` (BUG-044)
 **Status:** Open
 
 ### 6. Firestore deploys
-**Raised by:** database · **Date:** 2026-09-18
+**Raised by:** database · **Date:** 2026-09-18 · **Escalated:** 2026-09-26 (qa, BUG-045)
 **The decision needed:** Two independent deploy actions, both requiring the founder to run `firebase deploy` by hand (Claude Code's Production Deploy guardrail).
-**Options:** BUG-013's index fix has no security implication and is ready to deploy independently, anytime. BUG-026's rules fix should wait for decision #1 above.
-**Full detail:** `DATABASE.md`
+**Options:** BUG-013's index fix has no security implication and is ready to deploy independently, anytime — `firebase deploy --only firestore:indexes`. This one now blocks a second, Pro-tier paid feature too (BUG-045: "School Bank"/Community exam library has been completely non-functional for viewing since it shipped, not just the free "My School" tab BUG-013 originally covered) — 8 days pending with no downside to deploying. BUG-026's rules fix should wait for decision #1 above (already answered — accept risk for now).
+**Full detail:** `DATABASE.md`, `BUGS.md` (BUG-013, BUG-045)
 **Status:** Open
 
 ---

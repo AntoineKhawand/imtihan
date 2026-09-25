@@ -39,7 +39,7 @@ Track issues here during development. Format:
 ---
 
 ## BUG-043: Full generation is silently re-triggered (burning real quota + AI API cost) on any direct navigation/reload of the Generate step, not only via browser Back - generalizes BUG-039
-**Status:** Open
+**Status:** Very likely already resolved by BUG-039's fix (584de98) — pending live re-verification, not treated as a separate open bug
 **Severity:** Critical
 **Area:** Generation / UI (workflow state)
 **Reported:** 2026-09-26 (QA exploratory Pro-tier pass, live production, real Pro test account)
@@ -56,6 +56,7 @@ Track issues here during development. Format:
 **Verification:** Reproduced live on production twice in one session with a real Pro account; confirmed via the dashboard's own quota counter (2/10 -> 3/10) and library count (stayed at 1) that the second generation was real, cost real quota, and was never recoverable.
 
 **Update (2026-09-26, qa, same session):** Traced afterward - `engineering` landed a real fix for BUG-039 on `master` (commit `584de98`, routes every `imtihan_exercises` write through `persistExercises()` so the cache key can never desync) apparently during/after this repro. It is unclear whether that fix was live on production (Vercel) at the moment of my repro above, or whether my repro hit the pre-fix deployed bundle - the timing could not be established from this session alone. This BUG-043 report should be re-verified against production *after* confirming `584de98` is actually deployed (not just merged to `master`), rather than treated as a second, independent bug needing its own separate fix - it may already be closed.
+**Update (2026-09-26, orchestrator):** Multiple commits (and Vercel deploys, this app auto-deploys on push to `master`) have landed after `584de98` since this repro was written — high confidence the fix is live by now, since every prior fix this session was confirmed deployed within a minute or two of pushing. Not personally re-verified live (would need a real Pro test account and a fresh repro, same constraint QA hit). `qa` should still do one quick live re-check before this is marked definitively closed, but this is not being tracked as separate open work for `engineering`.
 
 ---
 
@@ -76,7 +77,7 @@ Track issues here during development. Format:
 ---
 
 ## BUG-045: "School Bank" / Community exam library (Pro feature) is completely broken for viewing - shares succeed but nothing ever shows, with zero user-facing error
-**Status:** Open
+**Status:** Same root cause as BUG-013, still blocked on deploy; error-surfacing half fixed
 **Severity:** Critical
 **Area:** Data / API (Firestore) / UI
 **Reported:** 2026-09-26 (QA exploratory Pro-tier pass, live production, real Pro test account imtihan.qa.pro.2026@mailinator.com)
@@ -88,7 +89,8 @@ Track issues here during development. Format:
 3. Click the "My School" tab. Observe: "0 shared exercises from <school>." / "No shared exercises yet" - even though the share in step 2 just ran.
 4. Open DevTools console: [Bank] getSchoolBankExercises: FirebaseError: The query requires an index, with a direct Firebase Console link to create it.
 **Root cause:** Missing Firestore composite index on the schoolBank collection for the schoolSlug (==) + sharedAt (orderBy) query used by both src/app/bank/page.tsx's getSchoolBankExercises() and src/app/student/practice/page.tsx's fetchSchoolExercises(). Confirmed via read-only Admin SDK query that the write path works fine - this is purely a missing-index read failure, silently caught and swallowed (no user-facing error surfaced).
-**Fix:** Not applied - reporting only, per QA role. database owns firestore.indexes.json; needs the composite index added and deployed (firebase deploy --only firestore:indexes, a founder-run action per this repo's deploy guardrails). Also worth a UX fix (not just the index): getSchoolBankExercises's catch block should surface a real error state distinct from "genuinely empty," so this class of failure is never silent again.
+**Fix:** This is NOT a new missing index — `firestore.indexes.json` already defines exactly this composite (`schoolSlug` ASC + `sharedAt` DESC on `schoolBank`), added for BUG-013 back on 2026-09-18 and never deployed (see `FOUNDER_DECISIONS.md` #6, open since then). QA's repro just reconfirms that pending deploy is still blocking two features now, not one: BUG-013's free "My School" bank tab, and this Pro-tier "School Bank"/Community exam library. No new index-definition work needed — this is purely waiting on `firebase deploy --only firestore:indexes` (founder-run action, no security implication, ready anytime).
+Separately fixed 2026-09-26: `getSchoolBankExercises()`'s silent `catch { return [] }` (indistinguishable from genuinely-empty) replaced with a real error state — `src/app/bank/page.tsx` now shows a distinct "Couldn't load your school's shared exercises" card with a retry button instead of the misleading "No shared exercises yet" empty state on a real query failure. `npm run type-check` clean, `npm test` 149/149.
 **Verification:** Reproduced live on production. Confirmed via console error message and via a read-only Firebase Admin SDK query (schoolBank collection, filtered by schoolSlug) that the share write actually succeeded (1 real document found) despite the read displaying zero results.
 
 ---
