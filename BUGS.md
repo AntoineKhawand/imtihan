@@ -19,6 +19,78 @@ Track issues here during development. Format:
 
 ## Open Issues
 
+## BUG-039: Browser back-navigation from Export (Step 5) to Generate (Step 4) silently discards the generated/edited exam and re-triggers a fresh generation
+**Status:** Open
+**Severity:** High
+**Area:** Generation / UI (workflow state)
+**Reported:** 2026-09-25 (QA exploratory pass, live production, `imtihan.qa.explore.2026@mailinator.com` real free-tier test account)
+
+**Description:** After generating an exam, editing an exercise (difficulty/points via the "Edit" modal), and reaching the Export step (Step 5), pressing the browser Back button to return to the Generate step (Step 4) does not restore the previously generated + edited exam from its `sessionStorage` cache as designed. Instead, the page mount effect finds no valid cache and silently calls `generateExam()` again, i.e. it attempts to generate a brand-new exam from scratch. In my session (free tier, quota already used) this surfaced as a clear "Generation failed - You have reached your limit of 1 free exam" screen - but for a Pro-tier user with quota remaining, this would silently replace the edited exam with a brand-new AI generation with zero warning, discarding the edits.
+**Steps to reproduce:**
+1. Sign in, go through Describe -> Confirm -> Generate to produce an exam.
+2. On the Generate step, open Edit on Exercise 1, change difficulty/points, Save changes (confirms in UI).
+3. Click Export exam to reach Step 5.
+4. Press the browser Back button (real browser history back, not the in-app Back link).
+5. Observe: the Generate step remounts and immediately attempts a fresh /api/generate call instead of restoring the edited exam.
+**Root cause:** Not fully isolated, but strongly localized. `src/app/create/generate/page.tsx` mount effect (lines ~93-118) is designed to restore from `sessionStorage.imtihan_exercises` when its cache key (`JSON.stringify({c: context, t: templateId})`, stored via `persistExercises()`) matches the current context - explicitly commented as being for exactly this scenario (restore instead of hammering the Gemini API again). Live inspection of sessionStorage immediately after the failed back-navigation showed `imtihan_exercises` and `imtihan_exercises_key` were both null - the cache had been wiped, most likely by the mismatch-cleanup branch at lines 112-116 (`else if (cachedEx && cachedKey !== currentKey) { sessionStorage.removeItem(...) }`), which deletes the cache on any key mismatch. There are several `persistExercises()` call sites in this file (after edit, save-to-bank, regenerate, remove - lines ~217, 240, 306, 407, 420, 432) - one of them likely wrote a cache key that no longer matched context/templateId as freshly read on remount. Needs engineering to trace which write desynced the key (or whether `imtihan_templateId` - which is never actually set anywhere in the normal create flow, only read with a fallback of classic - contributes to the mismatch).
+**Fix:** Not applied - reporting only, per QA role.
+**Verification:** Reproduced live on production (state inspected via sessionStorage.getItem directly in the browser console after the repro).
+
+---
+
+## BUG-038: KaTeX stretchy-symbol SVG glyphs (e.g. \sqrt{}) are corrupted in the PDF/print export - literal <br /> injected into SVG path d attributes
+**Status:** Fixed
+**Fixed:** 2026-09-26 — tracked `insideSvg` state across renderContent()'s newline-processing loop and suppressed `<br />` insertion for the whole svg block, rather than trying to widen the katex-line string-prefix guard. `npm run type-check` clean, `npm test` 138/138.
+**Severity:** High
+**Area:** Export / Generation (shared renderer)
+**Reported:** 2026-09-25 (QA exploratory pass, live production)
+
+**Description:** When exporting an exam to PDF (which renders via a new tab at `/print` that calls the browser native print dialog), any KaTeX-rendered stretchy symbol whose SVG output spans multiple lines - confirmed with `\sqrt{982}` and `\sqrt{v_x^2+v_y^2}` in a corrige methodology section - gets its SVG `<path d="...">` attribute corrupted with a literal `<br />` string spliced into the middle of the path data, e.g. `"...8.667 1.667 12 5<br />3.333 2.66..."`. The browser SVG parser then throws `Error: <path> attribute d: Expected path command` (confirmed via 9 separate instances of this exact console error on the /print page for a single 2-exercise exam), and the corresponding glyph (radical sign / stretchy delimiter) very likely renders visibly broken or missing in the resulting PDF - a teacher-facing rendering defect in the exported document, not just a console-only issue.
+**Steps to reproduce:**
+1. Generate (or view) an exam whose corrige/methodology includes a `\sqrt{...}` (or other KaTeX stretchy construct - large delimiters, `\overbrace`, etc. likely share the same code path).
+2. With Includes corrige toggle ON, click PDF on the Export step.
+3. A new tab opens at /print; open DevTools console on that tab - multiple `<path> attribute d: Expected path command` errors appear, each containing a literal `<br />` substring inside otherwise-numeric SVG path data.
+**Root cause:** `src/lib/renderContent.ts` newline-to-br conversion pass (the loop starting ~line 584, after KaTeX rendering has already produced the final HTML/SVG string) splits the entire rendered HTML on newline characters and inserts `<br />` between non-HTML, non-placeholder lines. Its only guard against corrupting KaTeX output is the isShortMath check (line 624): a line must start with `<span class="katex` and be under 200 characters to be protected. KaTeX inline SVG for stretchy glyphs (radical signs, big delimiters) is an svg/path element, not a katex-span-prefixed line, and is typically well over 200 characters, so it is not protected at all. If that SVG d attribute value (as emitted by KaTeX) contains a literal newline character, this pass injects a br tag directly into the attribute, breaking the SVG. /print (`src/app/print/page.tsx`) uses this same shared renderContent function - the same function BUG-033 (stored XSS) was recently patched in - so this is very likely present in every other surface that renders a corrige or exercise containing sqrt or a similar stretchy symbol, not just /print, though the isShortMath line-length guard did visibly protect shorter KaTeX output on the in-app Corrige view checked, which never triggered this console error.
+**Fix:** Not applied - reporting only, per QA role. Likely fix shape: the isShortMath-style guard needs to also skip lines that are inside an svg block (or, more robustly, KaTeX HTML should be joined without ever splitting on raw newlines in the first place - the safest fix is probably protecting anything between an opening and closing svg tag regardless of length, not just raising the character limit).
+**Verification:** Reproduced live on production; console errors captured via list_console_messages on the /print tab.
+
+---
+
+## BUG-037: Per-exercise Regenerate / Make easier / Make harder fail completely silently on any non-OK API response (e.g. quota exceeded) - no toast, no error, exercise just reverts with no explanation
+**Status:** Fixed
+**Fixed:** 2026-09-26 — mirrored `handleAddChapterExercise`'s error handling in `handleRegenerate`'s `!res.ok` and "no reader" branches: read `data.errors[0]`, show a real toast, and reset the optimistic `isRegenerating` flag. Independently traced this was actually slightly worse than reported — `isRegenerating` was never reset at all on this path (a plain `return` skips the `catch` block that normally resets it), so the exercise card's regenerating state was stuck forever, not just silently reverted. `npm run type-check` clean, `npm test` 138/138.
+**Severity:** High
+**Area:** Generation / UI
+**Reported:** 2026-09-25 (QA exploratory pass, live production, `imtihan.qa.explore.2026@mailinator.com` real free-tier test account)
+
+**Description:** On the Generate step (Step 4), clicking Make easier (or Make harder / Regenerate) on a per-exercise action menu, when the underlying `/api/generate` call returns a non-200 response (confirmed with a real 429 "You have reached your limit of 1 free exam" response, reproduced twice), shows absolutely no feedback to the user - no toast, no inline error, no alert. The button loading spinner clears normally (so it does not look stuck), and the exercise content silently reverts to exactly what it was before the click, giving the user zero indication the action failed or why. A user would reasonably conclude the button did nothing or is broken, with no path to understanding they have hit their quota.
+**Steps to reproduce:**
+1. As a free-tier user who has already used the 1 free exam generation (or otherwise causes /api/generate to return non-200 - a network blip would trigger the same code path), open the per-exercise action menu (the unlabeled lightning-bolt icon on any exercise card) on the Generate step.
+2. Click Make easier (or Make harder, or Regenerate).
+3. Observe: POST /api/generate returns e.g. 429 with body {"success":false,"errors":["You have reached your limit of 1 free exam..."]}. Nothing appears on screen - no toast, list_console_messages shows nothing new, and the Notifications live-region (aria-label Notifications alt+T) is empty.
+**Root cause:** `src/app/create/generate/page.tsx` handleRegenerate() function (used by Regenerate/Make easier/Make harder), line 281: `if (!res.ok) return;` - bails out immediately on any non-OK response without reading the response body or calling showToast. This is inconsistent with the sibling function handleAddChapterExercise() a few lines below (lines ~355-364), which correctly reads data.errors[0] and calls showToast(message, "error") on failure. The main full-exam generateExam() function also correctly surfaces failures via a visible "Generation failed" banner (confirmed working when this was forced via a full re-generation attempt). So the error-handling pattern exists and works elsewhere in this same file - it is specifically missing from handleRegenerate.
+**Fix:** Not applied - reporting only, per QA role. Straightforward fix shape: mirror handleAddChapterExercise error handling in handleRegenerate if-not-ok branch (read data.errors[0], call showToast(message, "error"), and revert the optimistic isRegenerating state the same way the catch block already does on network errors).
+**Verification:** Reproduced live on production twice (repeat click, immediate screenshot both times) to rule out a toast that had already auto-dismissed before observation.
+
+---
+
+## BUG-036: Landing/pricing pages list Version A/B generation as a Free-plan feature, but the product gates Version B generation behind Pro
+**Status:** Open
+**Severity:** Medium
+**Area:** UI / Marketing copy vs. product gating
+**Reported:** 2026-09-25 (QA exploratory pass, live production)
+
+**Description:** The homepage pricing section (/#pricing) and the standalone /pricing page both list "Version A/B generation" as an included checkmarked feature of the Free plan card. But on the actual Confirm and Configure step (Step 2) of the exam-creation flow, the Generate Version B toggle is disabled for a free-tier account with the label "Available on the Pro plan" and a PRO badge - confirmed live with a real free-tier test account. ROADMAP.md (line ~104, "Pro feature gates (logo, email, Version B, modern template)") confirms Version B being Pro-only is the actual intended product behavior, meaning the marketing copy is the side that is wrong, not the gate.
+**Steps to reproduce:**
+1. Visit https://imtihan.live/#pricing (or /pricing) while logged out or on a free-tier account - the Free plan card lists "Version A/B generation" as included.
+2. Sign in as a free-tier account, go through Describe -> Confirm and Configure.
+3. Observe the Generate Version B toggle under Exam Variants: disabled, labeled "Available on the Pro plan", with a PRO badge.
+**Root cause:** Marketing copy in `src/components/landing/LandingPricing.tsx:90`, `src/app/pricing/page.tsx:14`, and `src/app/pricing/layout.tsx:20` all list or describe "Version A/B generation" as part of the Free plan. The actual gate lives in `src/app/create/confirm/page.tsx:434-435` (description set to "Available on the Pro plan" when isFreeTier is true), which matches the intentional design recorded in ROADMAP.md.
+**Fix:** Not applied - this is a copy-vs-product mismatch, not something QA fixes. Flagging to marketing (copy owner per CLAUDE.md section 15) and engineering/founder to decide which side is correct: either the Free plan copy should say "Version A generation" only (dropping A/B), or Version B should genuinely be free-tier (contradicting ROADMAP.md recorded intent) - this is a product decision, not a code bug per se.
+**Verification:** Confirmed live on production via screenshot of /#pricing and live click-through of the Confirm and Configure step with a real free-tier account.
+
+---
+
 ## BUG-035: "Generate Article Now" (`/admin`'s manual blog-publish trigger) errored on click
 **Status:** Fixed
 **Severity:** Medium
