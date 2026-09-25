@@ -38,6 +38,13 @@
 **Full detail:** `SECURITY.md` (2026-09-25 audit log)
 **Status:** Open
 
+### 9. Version A/B: marketing copy vs. actual product gate disagree
+**Raised by:** qa (exploratory pass, live production) · **Date:** 2026-09-25
+**The decision needed:** The homepage `/#pricing` and `/pricing` both list "Version A/B generation" as an included Free-plan feature. But the actual Confirm & Configure step gates "Generate Version B" as Pro-only (confirmed live with a real free-tier account) — and `ROADMAP.md` confirms this Pro-gating is the intended design, not a bug in the gate itself. One of the two is wrong.
+**Options:** (a) fix the marketing copy — Free plan lists "Version A generation" only, drop the "A/B"; (b) make Version B genuinely free-tier, contradicting `ROADMAP.md`'s recorded intent; (c) something in between (e.g. Version B free with a cap).
+**Full detail:** `BUGS.md` (BUG-036)
+**Status:** Open
+
 ### 6. Firestore deploys
 **Raised by:** database · **Date:** 2026-09-18
 **The decision needed:** Two independent deploy actions, both requiring the founder to run `firebase deploy` by hand (Claude Code's Production Deploy guardrail).
