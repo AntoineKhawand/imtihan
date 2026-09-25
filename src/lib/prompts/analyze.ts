@@ -1,3 +1,4 @@
+import { CURRICULA } from "@/data/curricula";
 import type { CurriculumId, Language, Subject } from "@/types/curriculum";
 import type { ExamType } from "@/types/exam";
 
@@ -66,9 +67,6 @@ Based on the teacher's description${hasUploadedDocument ? " and the uploaded doc
 
 /** Build a compact curriculum reference string for prompt injection */
 export function buildCurriculaReference(): string {
-  // Import here to avoid circular deps
-  const { CURRICULA } = require("@/data/curricula");
-
   const lines: string[] = [];
 
   for (const [currId, curriculum] of Object.entries(CURRICULA) as [CurriculumId, any][]) {

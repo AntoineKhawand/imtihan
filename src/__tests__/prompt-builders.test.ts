@@ -127,54 +127,15 @@ describe("buildAnalyzeUserPrompt", () => {
   });
 });
 
-// NOTE on buildCurriculaReference(): the exported function itself resolves
-// its curricula data via a runtime `require("@/data/curricula")` (see
-// src/lib/prompts/analyze.ts) instead of a static top-level import. That
-// only resolves under a bundler that rewrites the "@/..." alias for
-// `require` calls too (Next.js/webpack does, which is why it works in
-// production). Under Vitest — and under plain Node/ts-node/Jest-without-
-// moduleNameMapper — the alias is resolved by Node's real CJS loader, which
-// has no idea what "@/data/curricula" means and throws
-// `Cannot find module '@/data/curricula'` (confirmed while writing this
-// suite; reproduces even through `vi.mock`, since the dynamic `require`
-// bypasses Vitest's own module graph entirely). This is a genuine fragility
-// in the function, not a test-authoring gap — documented in BUGS.md rather
-// than "fixed" here, since swapping it for a static import is an
-// application-code change and this routine's job is tests, not code
-// changes. `describe.skip` below records that the real exported function
-// can't be called in this environment; the test after it exercises an
-// inlined copy of the exact same iteration logic (same pattern
-// src/__tests__/qcm.test.ts already uses for generate/route.ts's pure
-// helpers) against the real curricula data, so the algorithm itself is
-// still verified against every real curriculum/level/subject/chapter.
-describe.skip("buildCurriculaReference — see BUGS.md, not callable outside a webpack/Next.js bundle", () => {
-  it("would list every curriculum id and every real chapter id, if callable here", () => {
-    const reference = buildCurriculaReference();
-    expect(reference).toBeTruthy();
-  });
-});
-
-function buildCurriculaReferenceLogic(curricula: typeof CURRICULA): string {
-  const lines: string[] = [];
-  for (const [currId, curriculum] of Object.entries(curricula) as [CurriculumId, (typeof CURRICULA)[CurriculumId]][]) {
-    lines.push(`\nCURRICULUM: ${currId} (${curriculum.name.en})`);
-    for (const level of curriculum.levels) {
-      lines.push(`  LEVEL: ${level.id} — ${level.name.en}`);
-      for (const [subject, chapters] of Object.entries(level.chapters) as [Subject, (typeof level.chapters)[Subject]][]) {
-        if (!chapters || chapters.length === 0) continue;
-        lines.push(`    SUBJECT: ${subject}`);
-        for (const ch of chapters) {
-          lines.push(`      CHAPTER_ID: ${ch.id} — ${ch.name.en ?? ch.name.fr}`);
-        }
-      }
-    }
-  }
-  return lines.join("\n");
-}
-
-describe("buildCurriculaReferenceLogic (inlined copy of buildCurriculaReference's algorithm)", () => {
+// buildCurriculaReference() used to resolve its curricula data via a
+// runtime `require("@/data/curricula")` instead of a static top-level
+// import, which only resolved under a bundler that rewrites the "@/..."
+// alias for `require` calls too (Next.js/webpack). That's been fixed (see
+// BUGS.md BUG-031) — the function now uses a normal static import, so it's
+// callable directly here under Vitest like any other exported function.
+describe("buildCurriculaReference", () => {
   it("lists every curriculum id and, for every level/subject that has chapters, every real chapter id", () => {
-    const reference = buildCurriculaReferenceLogic(CURRICULA);
+    const reference = buildCurriculaReference();
 
     for (const curriculumId of Object.keys(CURRICULA) as CurriculumId[]) {
       const curriculum = CURRICULA[curriculumId];
@@ -197,7 +158,7 @@ describe("buildCurriculaReferenceLogic (inlined copy of buildCurriculaReference'
   });
 
   it("emits a LEVEL line with no SUBJECT lines for a curriculum whose level defines no chapters (university, by design)", () => {
-    const reference = buildCurriculaReferenceLogic(CURRICULA);
+    const reference = buildCurriculaReference();
     const university = CURRICULA.university;
     const firstLevel = university.levels[0];
 
