@@ -206,7 +206,9 @@ function renderCellMath(cell: string): string {
     const inlineParts = splitMath(part.content, "$", "$");
     return inlineParts.map(p => {
       if (p.kind === "math") return renderKaTeX(p.content, false);
-      return p.content
+      // Escape first — same stored-XSS concern as applyMarkdown() above:
+      // table cells come from the same unescaped AI/user-authored text.
+      return escapeHtml(p.content)
         .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
         .replace(/(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)/g, "<em>$1</em>");
     }).join("");
@@ -240,7 +242,22 @@ function renderPipeTable(tableText: string): string {
   return html;
 }
 
-function applyMarkdown(text: string): string {
+function applyMarkdown(rawText: string): string {
+  // Escape any literal HTML in the source text before applying our own
+  // markdown transformations below. This function is the last stop before
+  // AI/user-authored exercise text is inserted into the DOM via
+  // dangerouslySetInnerHTML across the app (ExerciseCard, ExerciseEditor,
+  // /bank, /student/practice, /exam/[id], /print, ...). Content reaching
+  // here is not limited to Gemini's own output — a teacher (or, via the
+  // open-to-any-signed-in-user `schoolBank` collection, any authenticated
+  // account) can freely edit an exercise's statement in ExerciseEditor
+  // before sharing it to School Bank, where every other viewer renders it.
+  // Without escaping first, a crafted statement like
+  // `<img src=x onerror=...>` rendered as live HTML/JS for every viewer —
+  // a stored XSS. escapeHtml() only touches & < > " ' , so it doesn't
+  // interfere with the markdown syntax (**, *, `, digits, colons) matched
+  // by the regexes below.
+  const text = escapeHtml(rawText);
   // 1. Detect and style "Step X:" or "Étape X:" headers
   // We strip any surrounding stars/markdown and the colon
   let processed = text.replace(/[\s*_]*(Step|Étape|خطوة)\s*(\d+)\s*[:：]?[\s*_]*/gi, (_match, keyword, num) => {
@@ -465,8 +482,9 @@ export function renderContent(raw: string): string {
     (match: string, header: string, body: string, sourceLine: string) => {
       const idx = documentBlocks.length;
       const cleanHeader = header.replace(/\*+/g, "").trim();
-      const cleanBody = body
-        .trim()
+      // Escape first — same stored-XSS concern as applyMarkdown()/renderCellMath()
+      // above: a "document" block's body is attacker-reachable AI/user text too.
+      const cleanBody = escapeHtml(body.trim())
         .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
         .replace(/\n\s*\n/g, "<br /><br />")
         .replace(/\n/g, "<br />");
