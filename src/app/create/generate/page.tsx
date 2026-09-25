@@ -278,10 +278,23 @@ export default function GeneratePage() {
       // Optimistic UI update: Mark the specific exercise as updating
       setExercises(prev => prev.map(ex => ex.id === id ? { ...ex, isRegenerating: true } : ex));
 
-      if (!res.ok) return;
+      if (!res.ok) {
+        let message = "Failed to regenerate exercise. Please try again.";
+        try {
+          const data = await res.json();
+          if (typeof data?.errors?.[0] === "string") message = data.errors[0];
+        } catch { /* ignore body parse failure */ }
+        setExercises(prev => prev.map(ex => ex.id === id ? { ...ex, isRegenerating: false } : ex));
+        showToast(message, "error");
+        return;
+      }
 
       const reader = res.body?.getReader();
-      if (!reader) return;
+      if (!reader) {
+        setExercises(prev => prev.map(ex => ex.id === id ? { ...ex, isRegenerating: false } : ex));
+        showToast("Failed to regenerate exercise. Please try again.", "error");
+        return;
+      }
       const decoder = new TextDecoder();
       let newExerciseFromStream: Exercise | null = null;
       let sseBuffer2 = "";
