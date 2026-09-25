@@ -73,7 +73,22 @@ try {
 }
 
 $Prompt = Get-Content -Raw -Path $PromptFile
-$AllowedTools = "Read Edit Write Grep Glob Agent Bash(git *) Bash(npm *) Bash(npx *) Bash(node *) Bash(gh *)"
+
+# WebSearch and a read-only slice of the gsc MCP tools are included here
+# because content-curriculum.md and seo-growth.md both declare them, but
+# --allowedTools is a hard ceiling for the whole session tree (subagents
+# included) — declaring a tool in an agent's own frontmatter doesn't grant
+# it if the outer session was never given it. Confirmed root cause after
+# both teams hit repeated tool-denial dead ends across several nightly runs.
+# Deliberately NOT included: gsc's mutating tools (add_site, delete_site,
+# submit_sitemap, delete_sitemap, manage_sitemaps, reauthenticate) and all
+# chrome-devtools tools (live browser automation) — those change real GSC
+# config or drive a live browser, which an unattended overnight run
+# shouldn't be able to do without a human watching. seo-growth can still
+# read search-analytics data; it just can't reconfigure Search Console or
+# open a browser on its own.
+$GscReadOnlyTools = "mcp__gsc__list_properties mcp__gsc__get_performance_overview mcp__gsc__get_search_analytics mcp__gsc__get_search_by_page_query mcp__gsc__get_advanced_search_analytics mcp__gsc__compare_search_periods mcp__gsc__check_indexing_issues mcp__gsc__inspect_url_enhanced mcp__gsc__batch_url_inspection mcp__gsc__get_sitemaps mcp__gsc__get_sitemap_details mcp__gsc__list_sitemaps_enhanced mcp__gsc__get_site_details mcp__gsc__get_capabilities mcp__gsc__get_creator_info"
+$AllowedTools = "Read Edit Write Grep Glob Agent WebSearch Bash(git *) Bash(npm *) Bash(npx *) Bash(node *) Bash(gh *) $GscReadOnlyTools"
 
 Log "Launching claude -p (model claude-sonnet-5, scoped allowedTools)"
 
