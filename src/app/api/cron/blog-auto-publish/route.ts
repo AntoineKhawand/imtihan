@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { adminDb, adminAuth } from "@/lib/firebase-admin";
 import { withRetryAndFallback, geminiErrorMessage } from "@/lib/gemini";
 import { getAnthropicClient, isAnthropicConfigured, CLAUDE_MODEL, MAX_TOKENS } from "@/lib/anthropic";
+import { isAdmin } from "@/lib/admin";
 import { shortId, slugify } from "@/lib/utils";
 
 export const runtime = "nodejs";
@@ -20,11 +21,18 @@ export async function GET(request: NextRequest) {
   }
 
   // Check Admin Identity (if called from Dashboard)
+  // BUG: this used to treat ANY successfully-verified Firebase ID token as
+  // authorized — i.e. any signed-in account (a free-tier teacher, even a
+  // student), not just an admin — despite the comment's own intent and
+  // every sibling /api/admin/* route gating on isAdmin(uid). That let any
+  // signed-in user trigger an unbounded, cost-incurring Claude/Gemini call
+  // and auto-publish a live blog post with zero review. Now matches the
+  // same verifyIdToken + isAdmin(uid) pattern used everywhere else.
   if (!isAuthorized && authHeader?.startsWith("Bearer ")) {
     const token = authHeader.split(" ")[1];
     try {
       const decodedToken = await adminAuth.verifyIdToken(token);
-      if (decodedToken) isAuthorized = true;
+      if (decodedToken && (await isAdmin(decodedToken.uid))) isAuthorized = true;
     } catch (e) {
       console.error("Auth verify error:", e);
     }

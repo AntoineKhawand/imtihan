@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminDb, adminAuth } from "@/lib/firebase-admin";
 import { sendEmail } from "@/lib/brevo";
+import { isAdmin } from "@/lib/admin";
 import { CHECKLIST_SUBJECT, CHECKLIST_HTML } from "@/lib/emails/newsletterChecklist";
 
 export const runtime = "nodejs";
@@ -19,10 +20,14 @@ export async function GET(request: NextRequest) {
   if (cronSecret && authHeader === `Bearer ${cronSecret}`) {
     isAuthorized = true;
   }
+  // Same fix as /api/cron/blog-auto-publish (2026-09-27 security pass): a
+  // verified ID token alone means "any signed-in account," not "an admin" —
+  // this route bulk-sends real email via Brevo to real subscribers, so it
+  // needs the same isAdmin(uid) gate every /api/admin/* route already uses.
   if (!isAuthorized && authHeader?.startsWith("Bearer ")) {
     try {
       const decoded = await adminAuth.verifyIdToken(authHeader.split(" ")[1]);
-      if (decoded) isAuthorized = true;
+      if (decoded && (await isAdmin(decoded.uid))) isAuthorized = true;
     } catch (e) {
       console.error("[/api/cron/newsletter-checklist-backfill] Auth verify error:", e);
     }
