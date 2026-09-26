@@ -16,6 +16,8 @@
 
 ## Known gaps / decisions log
 
+- **2026-09-26 — BUG-044 (School Bank student-visibility consent)**: Added a new `visibleToStudents: boolean` field to `schoolBank` documents (default `false`, set only when a teacher explicitly opts in via `/bank`'s new share confirmation modal). This requires 2 new composite indexes, added to `firestore.indexes.json`: `schoolSlug`+`visibleToStudents`+`sharedAt` (for `/student/practice`'s school-scoped read) and `visibleToStudents`+`sharedAt` (for its no-school-set fallback that reads across all schools). **Not yet deployed** — same pending `firebase deploy --only firestore:indexes` action already blocking BUG-013/BUG-045's `schoolSlug`+`sharedAt` index; this makes it 3 index needs bundled into that one deploy, not a new separate deploy action. See `FOUNDER_DECISIONS.md` #6.
+
 - **2026-09-18 — BUG-026**: `firestore.rules` never granted teachers `list` access to `student_profiles`/`student_attempts` at all — the `/teacher/students` feature has been non-functional since it shipped (`51e4c7f`). Fixed on disk: school-scoped `list` rules plus two new composite indexes. **Not yet deployed** — needs `firebase deploy --only firestore:rules,firestore:indexes` and ideally a review/emulator test first, since it's a security-rule change gating real student data.
 
 - **2026-09-18 — BUG-026 second review (database team, independent of the author of the original fix)**. Reviewed `git show 51ec045 -- firestore.rules firestore.indexes.json`, the calling code (`src/app/teacher/students/page.tsx`), the full `firestore.rules`, and the two new composite indexes in `firestore.indexes.json`. Going through the four checks:

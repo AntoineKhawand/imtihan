@@ -41,15 +41,9 @@
 ### 9. Version A/B: marketing copy vs. actual product gate disagree — AND the feature itself is weaker than either side claims
 **Raised by:** qa (exploratory pass, live production) · **Date:** 2026-09-25, deepened 2026-09-26
 **The decision needed:** The homepage `/#pricing` and `/pricing` both list "Version A/B generation" as an included Free-plan feature. But the actual Confirm & Configure step gates "Generate Version B" as Pro-only (confirmed live with a real free-tier account), and `ROADMAP.md` confirms this Pro-gating is the intended design — that's the original BUG-036 mismatch. Retested as a real Pro user (BUG-042): the Step 2 "Generate Version B" toggle is completely dead code — its own copy claims it "regenerates numerical values," but the field is accepted into `/api/generate`'s schema and never read again anywhere in the route; toggling it does nothing. The *real* Version A/B mechanism lives only at Export, is a pure client-side reorder (same statement text and numbers, just shuffled order + relabeled sub-questions) — for a small exam there's a real chance the shuffle produces an export identical to Version A. So this isn't just a copy problem: the underlying feature doesn't do what either the Free-plan copy or the Pro-gated Step 2 toggle claims.
-**Options:** (a) invest in a real second AI-generated variant (different numbers/wording, not just reordering) — closes the gap for real, more cost/complexity; (b) keep it reorder-only, but describe it honestly everywhere (drop or rewrite the Step 2 toggle entirely, since it currently claims a capability that doesn't exist and does nothing when toggled) and fix the Free/Pro copy mismatch to match; (c) something else.
+**Options:** (a) invest in a real second AI-generated variant (different numbers/wording, not just reordering) — closes the gap for real, more cost/complexity; (b) keep it reorder-only, but describe it honestly everywhere and fix the Free/Pro copy mismatch to match; (c) something else.
+**Partially actioned, 2026-09-26:** the dead Step 2 toggle itself (claimed a capability that didn't exist, did nothing when toggled) needed no business judgment to remove — it's gone, along with the `generateVersionB` field everywhere it appeared in the codebase. The bigger direction question — real regeneration vs. honest reorder-only, and the Free/Pro copy fix — is still open below; removing the dead toggle doesn't presuppose either answer.
 **Full detail:** `BUGS.md` (BUG-036, BUG-042)
-**Status:** Open
-
-### 10. School Bank sharing silently also publishes to students, including full solutions
-**Raised by:** qa (Pro-tier exploratory pass) · **Date:** 2026-09-26
-**The decision needed:** `/bank`'s "My School" tab describes School Bank purely as teacher-to-teacher collaboration ("share exercises with colleagues at the same school"). But the same `schoolBank` Firestore collection a teacher shares to is read directly by `/student/practice` and shown to students — including the full worked solution/methodology, not just the exercise statement. A teacher sharing an exercise believing (per the feature's own copy) that only colleagues see it is also silently giving their own students immediate access to its complete answer key.
-**Options:** (a) make this one action honestly — update `/bank`'s copy to say "colleagues and your students" so teachers know what they're actually doing; (b) split into two distinct actions ("share with colleagues" vs. "publish to students"), with the student-facing one requiring explicit confirmation given it exposes the answer key; (c) something else.
-**Full detail:** `BUGS.md` (BUG-044)
 **Status:** Open
 
 ### 6. Firestore deploys
@@ -62,6 +56,11 @@
 ---
 
 ## Answered
+
+### 10. School Bank sharing silently also publishes to students, including full solutions
+**Raised by:** qa (Pro-tier exploratory pass) · **Date:** 2026-09-26
+**Full detail:** `BUGS.md` (BUG-044)
+**Status:** Answered: 2026-09-26 — option (b), split into two distinct actions. Reasoning: School Bank is genuinely valuable (a real differentiator for a school-based product) and shouldn't be cut — the problem was consent, not the feature. Chose the smallest fix that solves the trust problem: one new `visibleToStudents` field (default off) plus a confirmation modal with an explicit opt-in checkbox, not a second collection or duplicated write path — appropriate for a pre-launch feature with zero real users on the current behavior yet. Sharing with colleagues is now always private by default; a teacher must explicitly check a box to also expose the solution to students. Pending the same index deploy as BUG-013/045.
 
 ### 7. BUG-029 content recovery — restore vs. rewrite
 **Raised by:** engineering (traced during nightly-ops's first test run) · **Date:** 2026-09-23

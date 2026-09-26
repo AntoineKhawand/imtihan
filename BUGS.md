@@ -20,7 +20,7 @@ Track issues here during development. Format:
 ## Open Issues
 
 ## BUG-042: "Generate Version B" (Confirm & Configure toggle) has zero effect on generation and its own description is false; the real Version A/B feature is a pure exercise/sub-question reorder, not "regenerated numerical values"
-**Status:** Open
+**Status:** Dead toggle removed 2026-09-26; underlying direction question still open (`FOUNDER_DECISIONS.md` #9)
 **Severity:** High
 **Area:** Generation / UI / Marketing copy vs. product
 **Reported:** 2026-09-26 (QA exploratory Pro-tier pass, live production, real Pro test account - extends BUG-036 from the 2026-09-25 free-tier pass)
@@ -33,8 +33,8 @@ Track issues here during development. Format:
 1. As a Pro account, at Confirm & Configure (Step 2), toggle "Generate Version B" ON, generate an exam. Inspect the /api/generate network request/response (DevTools) - request body has generateVersionB: true; response body (reconstruct the SSE chunk stream) contains only one exercises array, no versionB key anywhere, and sessionStorage.imtihan_exercises after generation is a single flat array, not an A/B pair.
 2. At Export (Step 5), toggle the "Variant" control between "Version A" and "Version B" (present and functional regardless of what Step 2's toggle was set to) and download both. Diff the /api/export request bodies: exercise/sub-question order differs, but every statement string and numeric value is identical between the two.
 **Root cause:** generateVersionB is declared in both src/app/api/analyze/route.ts and src/app/api/generate/route.ts's Zod schemas and threaded through src/app/create/confirm/page.tsx's UI state, but the generate route never actually branches on it - it's dead plumbing. The only real "Version B" implementation is the client-side buildVersionB() reorder in src/lib/variant.ts, invoked solely from src/app/create/export/page.tsx, which is architecturally unrelated to the Step 2 toggle.
-**Fix:** Not applied - reporting only, per QA role. This is a product decision, not just a bug fix, given BUG-036 already flagged the Free/Pro copy side of this: the founder needs to decide whether "Version A/B" should (a) actually get a second AI-generated variant with different numbers/wording (closing the gap between marketing's promise and the reorder-only reality), (b) stay a reorder-only feature but get honestly described everywhere (including removing/rewriting the Step 2 toggle, which currently does nothing and describes something it doesn't do), or (c) something else. Either way, the Step 2 toggle should not silently no-op.
-**Verification:** Reproduced live on production with a real Pro test account. Verified via raw network request/response inspection (/api/generate request+response, /api/export request body for both variants) and sessionStorage inspection, not just UI observation.
+**Fix:** The broader direction question (real second AI variant vs. honest reorder-only copy) is still a product decision for the founder — logged in `FOUNDER_DECISIONS.md` #9, not decided here. But the dead, actively-misleading Step 2 toggle itself needed no judgment call to remove: it did nothing and claimed a capability that doesn't exist. Removed 2026-09-26 — the whole "Exam Variants" section on Confirm & Configure, the `generateVersionB` field everywhere it appeared (`src/types/exam.ts`, both route Zod schemas, `src/lib/prompts/analyze.ts`'s AI-inference instructions, `src/app/create/confirm/page.tsx`'s context normalization, and its test assertion), plus the now-fully-unused `useAuth`/`isProActive`/`isFreeTier` block in `confirm/page.tsx` that existed only to gate it. The real Export-step Version A/B selector (`src/app/create/export/page.tsx`) is untouched and remains independently Pro-gated — confirmed this removal doesn't change that gate, so BUG-036's original Free/Pro copy mismatch is still open exactly as before.
+**Verification:** Reproduced live on production with a real Pro test account (QA). Removal verified: `npm run type-check` clean, `npm test` 149/149, `npm run build` clean.
 
 ---
 
@@ -61,7 +61,7 @@ Track issues here during development. Format:
 ---
 
 ## BUG-044: "Share to Student Bank" wording contradicts the feature's own "colleagues only" framing - sharing an exercise also publishes it, with full worked solution, directly to students
-**Status:** Open
+**Status:** Fixed
 **Severity:** Medium
 **Area:** UI / Data (cross-feature interaction)
 **Reported:** 2026-09-26 (QA exploratory Pro-tier pass, live production)
@@ -71,8 +71,11 @@ Track issues here during development. Format:
 1. Read /bank's "My School" empty-state and Pro-gate copy (colleagues-only framing) side by side with the share buttons tooltip/toast (student-bank framing) - same page, same action, contradictory language.
 2. Trace src/app/bank/page.tsx's shareToSchoolBank() (writes to schoolBank) against src/app/student/practice/page.tsx's fetchSchoolExercises() (reads schoolBank filtered by the same schoolSlug, displays exercise.solution.methodology to students).
 **Root cause:** Two independent features (/bank teacher-to-teacher sharing, /student/practice student self-practice) share one Firestore collection with no separation between "share with colleagues" and "publish to students" as distinct actions - but only one of the two consuming surfaces communicates this to the teacher at share time.
-**Fix:** Not applied - reporting only, per QA role. Likely fix shape is a product decision (flagging, not deciding): either (a) make these genuinely one action and update /bank's "colleagues" copy to honestly say "colleagues and your students," or (b) split into two distinct, separately-labeled actions with the student-facing one requiring explicit confirmation given it exposes the solution key.
-**Verification:** Confirmed via source read (src/app/bank/page.tsx:545, src/app/student/practice/page.tsx:18-62) and live UI text comparison on production. Not exercised end-to-end as a student (blocked behind BUG-045's broken read path, and a separate student account/flow was out of this pass's scope) - the exposure is inferred from matching Firestore query/collection/field names in both files' source, not from actually observing a students screen.
+**Fix (2026-09-26, business decision — option b, split into two distinct actions):** Given School Bank is currently non-functional for viewing anyway (BUG-045, pending index deploy) and pre-launch has zero real users depending on current behavior, chose the smallest change that actually fixes the trust problem rather than the most elaborate one — a single new `visibleToStudents: boolean` field on `schoolBank` documents (default `false`, i.e. colleagues-only), not a second collection or duplicated write path:
+- `src/app/bank/page.tsx`: the share button no longer writes instantly on click — it opens a confirmation modal with an explicit, unchecked-by-default "Also let students practice this exercise (they'll see the full solution)" checkbox. Updated the "My School" tab's description and the share button's tooltip to stop calling this "Student Bank" by default.
+- `src/app/student/practice/page.tsx`: both `fetchSchoolExercises()` and `fetchAllPublicExercises()` now filter `where("visibleToStudents", "==", true)` — students only ever see exercises a teacher explicitly opted into.
+- `firestore.indexes.json`: added the 2 new composite indexes these filtered queries need (`schoolSlug`+`visibleToStudents`+`sharedAt`, and `visibleToStudents`+`sharedAt`) — pending the same founder `firebase deploy --only firestore:indexes` action as BUG-013/BUG-045 (see `FOUNDER_DECISIONS.md` #6, now covers 3 index needs, not 1).
+**Verification:** `npm run type-check` clean, `npm test` 149/149, `npm run build` clean. Not verified with a live click-through (memory-constrained machine, no dev server) — `qa` should confirm live once possible: share an exercise with the checkbox off, confirm it's colleague-visible but does NOT appear in `/student/practice`; repeat with the checkbox on and confirm it does.
 
 ---
 
