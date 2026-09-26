@@ -1,32 +1,5 @@
 import { z } from "zod";
 
-const dangerousPatterns = [
-  /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi,
-  /javascript:/gi,
-  /on\w+\s*=/gi,
-  /<iframe/gi,
-  /<object/gi,
-  /<embed/gi,
-  /<applet/gi,
-  /<link/gi,
-  /<base\s/gi,
-  /<meta\s+http-equiv/gi,
-  /\.exec\s*\(/gi,
-  /\.eval\s*\(/gi,
-  /<img\s+src\s*=\s*["']?\s*javascript:/gi,
-  /expression\s*\(/gi,
-  /vbscript:/gi,
-  /data:text\/html/gi,
-];
-
-export function sanitizeHTML(input: string): string {
-  let sanitized = input;
-  for (const pattern of dangerousPatterns) {
-    sanitized = sanitized.replace(pattern, "");
-  }
-  return sanitized;
-}
-
 export function sanitizeFilename(filename: string): string {
   return filename.replace(/[^a-zA-Z0-9.\-_]/g, "").slice(0, 255);
 }
@@ -64,26 +37,6 @@ export function validateInput<T extends z.ZodType>(schema: T, data: unknown): z.
   } catch {
     return null;
   }
-}
-
-export function sanitizeObject<T extends Record<string, unknown>>(obj: T): T {
-  const sanitized: Record<string, unknown> = {};
-  
-  for (const [key, value] of Object.entries(obj)) {
-    if (typeof value === "string") {
-      sanitized[key] = sanitizeHTML(value);
-    } else if (Array.isArray(value)) {
-      sanitized[key] = value.map(item => 
-        typeof item === "string" ? sanitizeHTML(item) : item
-      );
-    } else if (typeof value === "object" && value !== null) {
-      sanitized[key] = sanitizeObject(value as Record<string, unknown>);
-    } else {
-      sanitized[key] = value;
-    }
-  }
-  
-  return sanitized as T;
 }
 
 export function isValidUrl(url: string): boolean {
