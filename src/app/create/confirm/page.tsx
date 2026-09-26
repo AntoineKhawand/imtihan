@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, ArrowRight, AlertTriangle, CheckCircle2, Info, X, Layout, FileText, Wand2, Sparkles } from "lucide-react";
+import { ArrowLeft, ArrowRight, AlertTriangle, CheckCircle2, Info, X, Layout, FileText, Wand2 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Select } from "@/components/ui/FormElements";
 import { cn, SUBJECT_LABELS, LANGUAGE_LABELS, EXAM_TYPE_LABELS } from "@/lib/utils";
@@ -13,9 +13,7 @@ import type { ExamContext } from "@/types/exam";
 import type { CurriculumId, Subject } from "@/types/curriculum";
 import { StepIndicator, StepLabel } from "@/app/create/page";
 import { Logo } from "@/components/ui/Logo";
-import { Input, Toggle } from "@/components/ui/StructureFormElements";
-import { useAuth } from "@/contexts/AuthContext";
-import { isProActive } from "@/lib/subscription";
+import { Input } from "@/components/ui/StructureFormElements";
 
 /** Even split of `total` points across `count` exercises, e.g. (20, 3) → [7, 7, 6] — extra points land on the earliest exercises. */
 function evenPointSplit(total: number, count: number): number[] {
@@ -42,15 +40,6 @@ export default function ConfirmPage() {
   const [loading, setLoading] = useState(true);
   const [dismissedWarnings, setDismissedWarnings] = useState<number[]>([]);
   const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
-  const { user: authUser, profile, loading: authLoading } = useAuth();
-  // AuthContext's `loading` flips to false as soon as the Firestore profile
-  // listener attaches, not once it delivers its first snapshot — leaving a
-  // window where `user` is set but `profile` is still null. Don't lock a
-  // genuinely-Pro user's Version B toggle while that resolves (see
-  // BUG-021..024) — mirror DashboardSidebar's "assume unlocked while
-  // resolving" tradeoff rather than guessing "free."
-  const profileResolving = authLoading || (!!authUser && !profile);
-  const isFreeTier = !profileResolving && !isProActive(profile);
 
   useEffect(() => {
     const raw = sessionStorage.getItem("imtihan_context");
@@ -71,7 +60,6 @@ export default function ConfirmPage() {
         templateType: parsed.templateType ?? (fileName ? "uploaded" : "modern"),
         totalPoints: parsed.totalPoints ?? 20,
         exerciseCount: parsed.exerciseCount ?? 3,
-        generateVersionB: parsed.generateVersionB ?? false,
         // Pre-fill instructions if they chose uploaded but have no prefs yet
         layoutPreferences: parsed.layoutPreferences ?? (fileName ? `Mimic the header, logo, and general visual layout of the uploaded document "${fileName}".` : ""),
       }); 
@@ -422,25 +410,6 @@ export default function ConfirmPage() {
                 </div>
               </div>
             )}
-          </div>
-
-          {/* Exam Variants */}
-          <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-[var(--text)] flex items-center gap-2">
-              <Sparkles size={16} className="text-[var(--text-tertiary)]" />
-              Exam Variants
-            </h3>
-            <Toggle
-              label="Generate Version B"
-              description={isFreeTier ? "Available on the Pro plan" : "Shuffles question order and regenerates numerical values."}
-              checked={!!context.generateVersionB}
-              onChange={(checked) => {
-                if (!isFreeTier) {
-                  update("generateVersionB", checked);
-                }
-              }}
-              locked={isFreeTier}
-            />
           </div>
 
           <Button

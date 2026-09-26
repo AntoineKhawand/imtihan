@@ -37,7 +37,6 @@ describe("buildAnalyzeSystemPrompt", () => {
       '"totalPoints"',
       '"difficultyMix"',
       '"teacherNotes"',
-      '"generateVersionB"',
       '"warnings"',
       '"confidence"',
       '"layoutPreferences"',

@@ -51,7 +51,6 @@ const ExamContextSchema = z.object({
   }).catch({ easy: 0.3, medium: 0.5, hard: 0.2 }),
   // Optional fields — null/undefined both fine
   teacherNotes: z.string().nullable().optional().transform(v => v ?? undefined),
-  generateVersionB: z.coerce.boolean().default(false),
   layoutPreferences: z.string().default(""),
   visualPreference: z.string().default(""),
   geographicContext: z.string().default("Global"),
