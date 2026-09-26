@@ -55,6 +55,7 @@ async function shareToSchoolBank(
   schoolName: string,
   contributorName: string,
   teacherUid: string,
+  visibleToStudents: boolean,
 ) {
   const slug = schoolSlugFrom(schoolName);
   await addDoc(collection(db, "schoolBank"), {
@@ -62,6 +63,12 @@ async function shareToSchoolBank(
     schoolName,
     contributor: contributorName,
     sharedBy: teacherUid,
+    // BUG-044: sharing used to always also expose the full solution to
+    // students via /student/practice, with no way for a teacher to know
+    // that from this "share with colleagues" action. Defaults to false —
+    // colleagues-only — unless the teacher explicitly opts in via the
+    // share confirmation modal.
+    visibleToStudents,
     subject: entry.subject,
     // Added for /api/tools/chapter-performance (Performance-Aware Difficulty
     // Calibration) — that route joins on curriculumId + subject +
@@ -104,6 +111,15 @@ export default function BankPage() {
   const [isInviteOpen, setIsInviteOpen] = useState(false);
   const [loadingSchool, setLoadingSchool] = useState(false);
   const [schoolError, setSchoolError]   = useState(false);
+  // BUG-044: sharing used to instantly write to schoolBank with one click,
+  // no confirmation, and always exposed the full solution to students via
+  // /student/practice — with the "My School" tab's own copy telling
+  // teachers this was colleagues-only. Now requires one explicit
+  // confirmation step with an opt-in checkbox (default off) for student
+  // visibility, so a teacher can't be surprised into publishing an answer
+  // key to their own students.
+  const [sharingEntry, setSharingEntry] = useState<BankExercise | null>(null);
+  const [shareToStudentsChecked, setShareToStudentsChecked] = useState(false);
   const [inviteEmail, setInviteEmail]   = useState("");
   const [copied, setCopied]             = useState(false);
   const [schoolInput, setSchoolInput]   = useState("");
@@ -139,21 +155,33 @@ export default function BankPage() {
     }
   }
 
-  async function handleShare(entry: BankExercise) {
+  function openShareConfirm(entry: BankExercise) {
     if (!userSchool) {
       toast.error("Set your school name in account settings first.");
       return;
     }
+    setShareToStudentsChecked(false);
+    setSharingEntry(entry);
+  }
+
+  async function confirmShare() {
+    if (!sharingEntry) return;
+    const entry = sharingEntry;
+    const visibleToStudents = shareToStudentsChecked;
+    setSharingEntry(null);
     const promise = shareToSchoolBank(
       entry,
       userSchool,
       profile?.displayName ?? "Educator",
       user?.uid ?? "",
+      visibleToStudents,
     );
     toast.promise(promise, {
-      loading: "Sharing to student bank…",
-      success: "Shared! Students can now practice this exercise.",
-      error:   "Share failed — please try again.",
+      loading: "Sharing with your school…",
+      success: visibleToStudents
+        ? "Shared! Colleagues and students can now see this exercise."
+        : "Shared with colleagues at your school.",
+      error: "Share failed — please try again.",
     });
     try { await promise; if (tab === "school") loadSchool(); } catch {}
   }
@@ -312,7 +340,7 @@ export default function BankPage() {
                       key={entry.id}
                       entry={entry}
                       onRemove={handleRemove}
-                      onShare={!profileResolving && isPro ? () => handleShare(entry) : undefined}
+                      onShare={!profileResolving && isPro ? () => openShareConfirm(entry) : undefined}
                       isSchool={false}
                     />
                   ))}
@@ -338,7 +366,7 @@ export default function BankPage() {
                 </div>
                 <h2 className="serif text-xl text-[var(--text)]">Pro feature</h2>
                 <p className="text-sm text-[var(--text-secondary)] max-w-sm mx-auto leading-relaxed">
-                  The School Bank lets Pro teachers share exercises with colleagues at the same school — building a private, institution-level question repository.
+                  The School Bank lets Pro teachers share exercises with colleagues at the same school — building a private, institution-level question repository. You choose per exercise whether to also let students practice it (they'll see the full solution).
                 </p>
                 <Link href="/upgrade">
                   <Button className="bg-[var(--accent)] mx-auto">Upgrade to Pro — $5.99/mo</Button>
@@ -447,6 +475,61 @@ export default function BankPage() {
       </main>
 
       {/* Invite Modal */}
+      {sharingEntry && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setSharingEntry(null)} />
+          <div className="relative w-full max-w-md bg-white rounded-3xl border border-[var(--border)] shadow-2xl overflow-hidden">
+            <div className="p-8 space-y-6">
+              <div className="flex items-center justify-between">
+                <div className="w-12 h-12 rounded-2xl bg-emerald-50 flex items-center justify-center text-emerald-600">
+                  <Share2 size={22} />
+                </div>
+                <button onClick={() => setSharingEntry(null)} className="w-9 h-9 rounded-xl hover:bg-[var(--bg-subtle)] flex items-center justify-center text-[var(--text-tertiary)] transition-colors">
+                  <X size={18} />
+                </button>
+              </div>
+
+              <div>
+                <h3 className="serif text-2xl text-[var(--text)] mb-1">Share with your school</h3>
+                <p className="text-sm text-[var(--text-secondary)] leading-relaxed">
+                  This adds the exercise to <strong className="text-emerald-600">{userSchool}</strong>&apos;s shared bank, visible to your colleagues.
+                </p>
+              </div>
+
+              <label className="flex items-start gap-3 p-4 rounded-2xl border border-[var(--border)] bg-[var(--bg-subtle)] cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={shareToStudentsChecked}
+                  onChange={(e) => setShareToStudentsChecked(e.target.checked)}
+                  className="mt-0.5 w-4 h-4 rounded border-[var(--border)] accent-emerald-600"
+                />
+                <span className="text-sm text-[var(--text)]">
+                  <span className="font-semibold">Also let students practice this exercise.</span>
+                  <span className="block text-[var(--text-secondary)] mt-0.5">
+                    They&apos;ll see the full solution, so only check this for exercises you don&apos;t plan to reuse on a real exam.
+                  </span>
+                </span>
+              </label>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setSharingEntry(null)}
+                  className="flex-1 h-11 rounded-xl border border-[var(--border)] text-sm font-medium text-[var(--text-secondary)] hover:bg-[var(--bg-subtle)] transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmShare}
+                  className="flex-1 h-11 rounded-xl bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-700 transition-colors"
+                >
+                  Share
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {isInviteOpen && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setIsInviteOpen(false)} />
@@ -564,7 +647,7 @@ function BankCard({
 
           <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
             {!isSchool && onShare && (
-              <button onClick={onShare} title="Share to Student Bank"
+              <button onClick={onShare} title="Share with your school"
                 className="p-2 rounded-lg text-[var(--text-secondary)] hover:text-emerald-600 hover:bg-emerald-50 transition-colors">
                 <Share2 size={14} />
               </button>

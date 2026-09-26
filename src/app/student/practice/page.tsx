@@ -44,6 +44,12 @@ function slugify(name: string) {
   return name.trim().toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
 }
 
+// BUG-044: schoolBank exercises used to be shown to students unconditionally
+// the moment a teacher shared them with colleagues — with no way for the
+// teacher to know sharing also published the full solution to their own
+// students. Both queries now only return exercises a teacher explicitly
+// opted into student visibility for (see shareToSchoolBank's
+// visibleToStudents field, src/app/bank/page.tsx).
 async function fetchSchoolExercises(schoolName: string): Promise<SchoolExercise[]> {
   if (!db) return [];
   try {
@@ -51,6 +57,7 @@ async function fetchSchoolExercises(schoolName: string): Promise<SchoolExercise[
     const q = query(
       collection(db, "schoolBank"),
       where("schoolSlug", "==", slug),
+      where("visibleToStudents", "==", true),
       orderBy("sharedAt", "desc")
     );
     const snap = await getDocs(q);
@@ -64,7 +71,12 @@ async function fetchSchoolExercises(schoolName: string): Promise<SchoolExercise[
 async function fetchAllPublicExercises(): Promise<SchoolExercise[]> {
   if (!db) return [];
   try {
-    const snap = await getDocs(query(collection(db, "schoolBank"), orderBy("sharedAt", "desc")));
+    const q = query(
+      collection(db, "schoolBank"),
+      where("visibleToStudents", "==", true),
+      orderBy("sharedAt", "desc")
+    );
+    const snap = await getDocs(q);
     return snap.docs.map((d) => ({ id: d.id, ...d.data() } as SchoolExercise));
   } catch {
     return [];

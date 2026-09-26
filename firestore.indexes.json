@@ -18,6 +18,23 @@
       ]
     },
     {
+      "collectionGroup": "schoolBank",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "schoolSlug", "order": "ASCENDING" },
+        { "fieldPath": "visibleToStudents", "order": "ASCENDING" },
+        { "fieldPath": "sharedAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "schoolBank",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "visibleToStudents", "order": "ASCENDING" },
+        { "fieldPath": "sharedAt", "order": "DESCENDING" }
+      ]
+    },
+    {
       "collectionGroup": "student_profiles",
       "queryScope": "COLLECTION",
       "fields": [
