@@ -333,6 +333,98 @@ manages agent tool permissions to fix.
 whichever future session actually gets working `WebSearch` or `WebFetch` access — do not act on them
 without independent, convergent, real-source confirmation first.
 
+## 2026-09-27 — Bac Français pre-2019-reform audit: WebSearch restored, 2 confirmed fixes + 1 refuted lead
+
+Retried the same backlog item ("Audit `bac-francais.ts` chapters against the current BO programme
+edition") specifically to resolve the 3 leads left open by 2026-09-24/2026-09-25 (both fully blocked
+by a hard `WebSearch` permission denial, `WebFetch` absent). **Confirmed working this session:**
+`WebSearch` returned real results on the first test query, and `WebFetch` was available too (per the
+task note that it was added 2026-09-25) — though direct fetches of `education.gouv.fr/bo/...` URLs
+still return HTTP 403 from this environment, same as every prior session; all verification below
+relied on independent secondary compilations, cross-checked 2-4 sources deep per claim, same
+convergent-sources discipline as the 2026-09-19 IB command-terms audit.
+
+**Lead 1 — "possible missing nombres complexes chapter in `terminale-fr-spe-math`" — REFUTED, no
+edit made.** This lead was backwards. Complex numbers were *removed* from the compulsory Terminale
+spécialité mathématiques programme in the 2019 reform and now live **only** in the optional
+"mathématiques expertes" track (a separate enseignement Imtihan doesn't model as its own subject).
+Confirmed via 3 independent, detailed sources that explicitly state the specialty programme's
+absence of the topic:
+- https://www.cours-thales.fr/lycee/terminale/programme-mathematiques/ — verbatim: "Les grands
+  absents de ce nouveau programme sont les nombres complexes" (only in maths expertes).
+- https://www.jai20enmaths.com/terminale — full 16-chapter list of the compulsory specialty with no
+  complex-numbers chapter present.
+- Search-aggregated confirmation across sherpas.com, lesclefsdelecole.com, lyceedadultes.fr,
+  annabac.com (all independently describing nombres complexes as a maths-expertes-only topic post-2019).
+`terminale-fr-spe-math` correctly has **no** nombres complexes chapter — this is accurate, not a gap.
+No change made.
+
+**Lead 2 — "possible loi normale mis-attribution in `ter-fr-math-probability`" — CONFIRMED, fixed.**
+"Loi normale" (normal distribution) does **not** appear anywhere in the compulsory Terminale
+spécialité mathématiques probability programme. The 2019 reform explicitly *removed* lois à densité,
+loi normale, and inferential-statistics content from this track, replacing it with combinatorics,
+sums of random variables, and the law of large numbers. Confirmed via 3 independent sources that
+each list the real 3-chapter probability programme and explicitly note loi normale's absence:
+- https://www.jai20enmaths.com/terminale — verbatim: "Les grands absents... la loi normale et les
+  statistiques" removed, replaced by combinatorics/sums-of-variables/law-of-large-numbers.
+- https://xymaths.fr/Lycee/Terminale-generale-specialite-mathematiques/ — lists "probabilités
+  conditionnelles et loi binomiale," "combinatoire et dénombrement," "somme de variables aléatoires,
+  inégalités et loi des grands nombres" with no loi normale mention.
+- https://groupe-reussite.fr/ressources/programme-terminale-maths/ — same 3-chapter probability
+  breakdown verbatim ("Succession d'épreuves indépendantes et schéma de Bernoulli," "Sommes de
+  variables aléatoires," "Concentration et loi des grands nombres"), explicitly confirming no loi
+  normale anywhere in the content provided.
+Fixed `ter-fr-math-probability` in `bac-francais.ts`: renamed from "Probabilités — loi binomiale et
+normale" to "Probabilités — schéma de Bernoulli et variables aléatoires," and replaced the
+objectives (previously: "Utiliser loi binomiale" / "Utiliser loi normale" / "Construire intervalle de
+fluctuation" — the last of these is also pre-2019-reform terminology) with the real programme content:
+dénombrement/Pascal's triangle, schéma de Bernoulli + loi binomiale, sums of independent random
+variables, and the Bienaymé-Tchebychev inequality / law of large numbers. Chapter `id` unchanged
+(grepped `src/` first — only `bac-francais.ts` itself references it, so renaming the display name and
+objectives is safe).
+**Not independently resolved:** whether "loi normale" instead belongs to the *Enseignement
+scientifique* tronc-commun programme, as the original lead speculated. Searches on this point were
+inconclusive/generic (no clean primary-source or single authoritative secondary source pinning it to
+a specific ES theme) — this narrower attribution question is left open, but didn't need resolving to
+fix the actual bug, since the wrong content was confirmed wrong for spé maths terminale regardless of
+where (or whether) it belongs elsewhere.
+
+**Lead 3 — "possible missing vecteurs/produit scalaire or probabilités chapters in
+`premiere-fr-spe-math`" — CONFIRMED, fixed.** Both are real, present chapters in the compulsory
+Première spécialité mathématiques 2019-reform programme that were entirely absent from
+`premiere-fr-spe-math`'s chapter list. Confirmed via 3 independent sources:
+- https://groupe-reussite.fr/ressources/programme-premiere-maths/ — 18-chapter breakdown including
+  "Produit scalaire" and "Géométrie repérée" under Géométrie, and "Conditionnement et indépendance" +
+  "Variables aléatoires réelles" under Probabilités et Statistiques.
+- https://www.logamaths.fr/premiere-specialite-maths/ — 13-chapter list explicitly confirming both:
+  "Produit scalaire de deux vecteurs dans le plan" (ch. 2 and 9) and "Probabilités, probabilités
+  conditionnelles. Événements indépendants" (ch. 3) + "Variables aléatoires réelles discrètes" (ch. 7).
+- https://www.lesclefsdelecole.com/Lycee/Spe-Maths-1re/Le-programme-de-la-Spe-Maths — confirms
+  "Probabilités conditionnelles & indépendance" and "Les variables aléatoires" as distinct chapters
+  (less conclusive on produit scalaire specifically as a standalone heading, but doesn't contradict
+  the other two sources).
+Added two new chapters to `premiere-fr-spe-math.mathematics` in `bac-francais.ts`:
+`pre-fr-math-scalar-product` ("Produit scalaire" — dot product, vector coordinates via dot products,
+orthogonality/projection applications) and `pre-fr-math-probability` ("Probabilités conditionnelles
+et variables aléatoires" — conditional probability, independence, discrete random variable law,
+expectation/variance/standard deviation). This closes the gap the original lead flagged; the level
+now has 7 mathematics chapters instead of 5.
+
+**Verification:** `npm run type-check` clean after both edits. `WebFetch` on the two primary
+`education.gouv.fr/bo/...` BO source URLs still returned HTTP 403 both times this session (same as
+every prior session) — nothing here is a direct primary-source quote; all three findings rest on
+2-3-source convergent secondary-source corroboration, per this team's standing methodology. Not yet
+reviewed by `qa`.
+
+**Remaining unaudited scope, unchanged:** `premiere-fr-spe-math`'s exponential/suites chapters (now
+also worth a quick recheck alongside the rest, though not flagged as suspect) and its non-MVP
+subjects (french, history-geography, philosophy, ses); all of `terminale-fr-spe-math`'s other 5
+chapters (limits, dérivation/primitives, logarithm, integrals, geometry-space — probability now
+fixed); all of `terminale-fr-spe-pc` (3 physics + 3 chemistry chapters); non-MVP-subject levels
+(`terminale-fr-spe-svt`, `terminale-fr-spe-nsi`, `terminale-fr-spe-ses`). No new leads identified for
+these this session — this pass was scoped to the 3 specific leads queued from 2026-09-24/09-25, not a
+fresh read of the unaudited sections.
+
 ## Backlog (pick one per Wednesday, highest priority first)
 
 ### Data accuracy audits (grounded in `docs/DATA_SOURCING.md`)
@@ -416,6 +508,17 @@ without independent, convergent, real-source confirmation first.
       queries, `WebFetch` still absent — second consecutive session unable to verify anything. No
       edits made. See the dated section above; this is now flagged as a reproducible tooling problem,
       not a one-off, worth fixing before a third retry.
+      **2026-09-27: `WebSearch`/`WebFetch` both working — 2 of 3 queued leads confirmed and fixed, 1
+      refuted.** See the dated section above for full detail. Fixed: `ter-fr-math-probability`'s
+      "loi normale" mis-attribution (real content is dénombrement/schéma de Bernoulli/loi
+      binomiale/sommes de variables aléatoires/loi des grands nombres — no loi normale in the
+      compulsory specialty programme); added two missing `premiere-fr-spe-math` chapters (produit
+      scalaire, probabilités conditionnelles et variables aléatoires). Refuted: the "missing nombres
+      complexes" lead was backwards — complex numbers were removed from the compulsory Terminale spé
+      maths programme in 2019 and live only in the separate "mathématiques expertes" option, so their
+      absence from `terminale-fr-spe-math` is correct, not a gap. Still unaudited: `premiere-fr-spe-math`'s
+      exponential/suites chapters and non-MVP subjects; `terminale-fr-spe-math`'s other 5 chapters; all
+      of `terminale-fr-spe-pc`; non-MVP-subject levels (SVT, NSI, SES).
 - [x] **2026-09-19, partial:** Audit `ib.ts` command-term usage in `src/lib/prompts/generate.ts`
       against the current IBO command term glossary edition — see the dated section above for full
       detail. ~15 of ~30 terms spot-checked via convergent secondary sources (no `WebFetch` this

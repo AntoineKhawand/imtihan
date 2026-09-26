@@ -27,6 +27,12 @@
     --accent-text: #185c3f;
     --danger: #b84a2a;
     --warning: #c57c22;
+    /* Decorative secondary accent (stat cards, hero blobs) — not part of the
+       emerald accent system, just a color token that was referenced but never
+       defined. Kept visually distinct from --warning's amber and --danger's
+       rust-red: a genuine, fully-saturated orange (Tailwind orange-500). */
+    --orange: #f97316;
+    --orange-light: rgba(249, 115, 22, 0.1);
   }
 
   .dark {
@@ -45,6 +51,10 @@
     --accent-text: #82cfa3;
     --danger: #d46b47;
     --warning: #e8a94a;
+    /* Lighter/more-saturated for dark backgrounds, same ratio as the other
+       dark-mode token pairs above (Tailwind orange-400). */
+    --orange: #fb923c;
+    --orange-light: rgba(251, 146, 60, 0.15);
   }
 
   * {
