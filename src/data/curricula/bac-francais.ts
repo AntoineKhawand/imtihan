@@ -432,6 +432,25 @@ export const bacFrancais: Curriculum = {
               "Raisonner par récurrence (initiation)",
             ],
           },
+          {
+            id: "pre-fr-math-scalar-product",
+            name: { fr: "Produit scalaire", en: "Dot product" },
+            objectives: [
+              "Calculer le produit scalaire de deux vecteurs dans le plan",
+              "Exprimer les coordonnées d'un vecteur à l'aide de produits scalaires",
+              "Appliquer le produit scalaire en géométrie plane (orthogonalité, projection)",
+            ],
+          },
+          {
+            id: "pre-fr-math-probability",
+            name: { fr: "Probabilités conditionnelles et variables aléatoires", en: "Conditional probability and random variables" },
+            objectives: [
+              "Calculer des probabilités conditionnelles",
+              "Étudier l'indépendance de deux événements",
+              "Définir une variable aléatoire réelle discrète et sa loi",
+              "Calculer espérance, variance et écart-type d'une variable aléatoire",
+            ],
+          },
         ],
         french: [
           {
@@ -551,11 +570,12 @@ export const bacFrancais: Curriculum = {
           },
           {
             id: "ter-fr-math-probability",
-            name: { fr: "Probabilités — loi binomiale et normale", en: "Probability — binomial and normal distributions" },
+            name: { fr: "Probabilités — schéma de Bernoulli et variables aléatoires", en: "Probability — Bernoulli scheme and random variables" },
             objectives: [
-              "Utiliser loi binomiale",
-              "Utiliser loi normale",
-              "Construire intervalle de fluctuation",
+              "Dénombrer avec le triangle de Pascal et les coefficients binomiaux",
+              "Modéliser une succession d'épreuves indépendantes (schéma de Bernoulli) et utiliser la loi binomiale",
+              "Étudier la somme de variables aléatoires indépendantes (espérance, variance)",
+              "Appliquer l'inégalité de Bienaymé-Tchebychev et la loi des grands nombres",
             ],
           },
           {
