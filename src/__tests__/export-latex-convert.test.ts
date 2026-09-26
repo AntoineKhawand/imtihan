@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { cleanLatexForWord } from "@/app/api/export/route";
+import { cleanLatexForWord, convertBraceCommands } from "@/app/api/export/route";
 
 // Regression tests for BUG-046: real strings QA pulled from a live exported .docx.
 describe("cleanLatexForWord — BUG-046", () => {
@@ -43,5 +43,23 @@ describe("cleanLatexForWord — BUG-046", () => {
 
   it("leaves unbalanced input without throwing", () => {
     expect(() => cleanLatexForWord("\\frac{a")).not.toThrow();
+  });
+});
+
+// Regression for BUG-047: unbalanced \frac{ / \sqrt{ was O(n^2) on an
+// unauthenticated route with no size cap.
+describe("convertBraceCommands — pathological input (BUG-047)", () => {
+  it("finishes quickly on a huge unbalanced input (past the length cap)", () => {
+    const input = "\\frac{".repeat(200_000);
+    const t0 = Date.now();
+    expect(() => convertBraceCommands(input)).not.toThrow();
+    expect(Date.now() - t0).toBeLessThan(1000);
+  });
+
+  it("finishes quickly on unbalanced input right at the cap", () => {
+    const input = "\\sqrt{".repeat(1_666); // ~10,000 chars
+    const t0 = Date.now();
+    expect(() => cleanLatexForWord(input)).not.toThrow();
+    expect(Date.now() - t0).toBeLessThan(2000);
   });
 });
