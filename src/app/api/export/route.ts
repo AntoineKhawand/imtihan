@@ -237,7 +237,84 @@ const SUBJECT_LABELS: Record<string, string> = {
   informatics: "Informatique",
 };
 
-function cleanLatexForWord(text: string): string {
+function readBraceGroup(text: string, open: number): { inner: string; end: number } | null {
+  if (text[open] !== "{") return null;
+  let depth = 0;
+  for (let j = open; j < text.length; j++) {
+    if (text[j] === "{") depth++;
+    else if (text[j] === "}") {
+      depth--;
+      if (depth === 0) return { inner: text.slice(open + 1, j), end: j + 1 };
+    }
+  }
+  return null;
+}
+
+function parenthesizeIfCompound(s: string): string {
+  const t = s.trim();
+  return /^[\w.,{}^_°]+$/.test(t) || /^\([^()]*\)$/.test(t) ? t : `(${t})`;
+}
+
+const ACCENTS: Record<string, string> = {
+  dot: "̇", ddot: "̈", hat: "̂", bar: "̄", tilde: "̃",
+};
+
+// Brace-depth-aware conversion so nested groups convert at any depth instead
+// of stopping at the first "}" (BUG-046). Unbalanced input is left for the
+// caller's backslash-stripping pass rather than throwing.
+export function convertBraceCommands(text: string): string {
+  const cmd = /\\(?:(?:d|t)?frac|sqrt|(dot|ddot|hat|bar|tilde)|begin\{(cases|aligned)\})(?![a-zA-Z])/;
+  let out = "";
+  let rest = text;
+  for (;;) {
+    const m = cmd.exec(rest);
+    if (!m) { out += rest; break; }
+    out += rest.slice(0, m.index);
+    const after = m.index + m[0].length;
+    const name = m[0];
+    if (m[2]) {
+      const endTag = `\\end{${m[2]}}`;
+      const endIdx = rest.indexOf(endTag, after);
+      if (endIdx !== -1) {
+        const rows = rest
+          .slice(after, endIdx)
+          .split(/\\\\/)
+          .map((r) => convertBraceCommands(r.replace(/&/g, " ").trim()))
+          .filter(Boolean);
+        out += m[2] === "cases" ? `{ ${rows.join(" ; ")} }` : rows.join(" ; ");
+        rest = rest.slice(endIdx + endTag.length);
+        continue;
+      }
+    } else if (name.includes("frac")) {
+      const a = readBraceGroup(rest, after);
+      const b = a ? readBraceGroup(rest, a.end) : null;
+      if (a && b) {
+        out += `${parenthesizeIfCompound(convertBraceCommands(a.inner))}/${parenthesizeIfCompound(convertBraceCommands(b.inner))}`;
+        rest = rest.slice(b.end);
+        continue;
+      }
+    } else if (name === "\\sqrt") {
+      const a = readBraceGroup(rest, after);
+      if (a) {
+        out += `√(${convertBraceCommands(a.inner)})`;
+        rest = rest.slice(a.end);
+        continue;
+      }
+    } else if (m[1]) {
+      const a = readBraceGroup(rest, after);
+      if (a) {
+        out += `${convertBraceCommands(a.inner)}${ACCENTS[m[1]]}`;
+        rest = rest.slice(a.end);
+        continue;
+      }
+    }
+    out += name;
+    rest = rest.slice(after);
+  }
+  return out.replace(/\\(?:left|right)(?![a-zA-Z])\s*\.?/g, "");
+}
+
+export function cleanLatexForWord(text: string): string {
   let cleaned = text;
   
   // 1. Handle \ce{...} - Convert chemical indices to subscript notation _{x}
@@ -256,7 +333,7 @@ function cleanLatexForWord(text: string): string {
   cleaned = cleaned.replace(/\\textbf\{([^}]+)\}/g, "$1");
   cleaned = cleaned.replace(/\\textit\{([^}]+)\}/g, "$1");
   cleaned = cleaned.replace(/\\text\s+/g, ""); 
-  cleaned = cleaned.replace(/\\ /g, " "); 
+  cleaned = cleaned.replace(/(?<!\\)\\ /g, " ");
   
   // 4. Advanced symbol mapping
   const latexMap: Record<string, string> = {
@@ -277,13 +354,13 @@ function cleanLatexForWord(text: string): string {
     cleaned = cleaned.split(key).join(val);
   }
   
-  // 5. Fractions and roots
-  cleaned = cleaned.replace(/\\frac\{([^}]+)\}\{([^}]+)\}/g, "$1/$2");
-  cleaned = cleaned.replace(/\\sqrt\{([^}]+)\}/g, "√($1)");
+  cleaned = cleaned.replace(/\{,\}/g, ","); // French decimal comma, e.g. 6{,}674
+  // 5. Fractions, roots, accents, \left/\right and cases blocks (brace-depth aware, any nesting)
+  cleaned = convertBraceCommands(cleaned);
   
   // 6. Cleanup remaining LaTeX commands and strip HTML tags
   cleaned = cleaned.replace(/\\(sin|cos|tan|ln|log|exp)/g, "$1");
-  cleaned = cleaned.replace(/\\( )/g, " "); // escaped spaces
+  cleaned = cleaned.replace(/(?<!\\)\\( )/g, " "); // escaped spaces
   cleaned = cleaned.replace(/\\{/g, "{").replace(/\\}/g, "}");
   cleaned = cleaned.replace(/C_f/g, "Cf").replace(/f_x/g, "f(x)"); // common sub mapping
   cleaned = cleaned.replace(/<[^>]*>?/gm, ""); // Strip any accidental HTML tags (like <img>)

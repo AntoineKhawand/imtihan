@@ -20,7 +20,7 @@ Track issues here during development. Format:
 ## Open Issues
 
 ## BUG-046: Word (.docx) export still leaks raw LaTeX command fragments for constructs BUG-040 never targeted — nested `\frac` inside `\sqrt`, `\dfrac`, `\left(...\right)`, `\begin{cases}...\end{cases}` render as garbled plain text, some with mismatched braces/parens
-**Status:** Open — new finding, distinct from BUG-040 (verified live 2026-09-27, post-deploy)
+**Status:** Fixed 2026-09-27 (pending live re-verification after deploy) — new finding, distinct from BUG-040
 **Severity:** Medium
 **Area:** Export
 **Reported:** 2026-09-27 (QA live-verification pass of BUG-037 through BUG-041 after the Vercel deploy-gap fix — see TEAM_CHAT.md)
@@ -37,7 +37,7 @@ However, once methodology text goes beyond a single-level `\boxed{...}`/`\frac{a
 2. Unzip the downloaded `.docx`, open `word/document.xml`, and read the `<w:t>` text nodes in the CORRIGÉ methodology sections.
 3. Observe literal "frac{...}", "dfrac{...}", "left(...", "...right)", "begin{cases}...end{cases}" fragments, and in some cases a mismatched `{`/`)` pair from the partial conversion.
 **Root cause (not confirmed, QA does not fix):** Likely the same general shape as BUG-040 — `src/app/api/export/route.ts`'s `createFormattedTextRuns()` (or a shared LaTeX-to-plain-text helper it calls) evidently has some handling for a single, shallow `\frac{a}{b}` -> "a/b" and `\sqrt{x}` -> "√(x)", but no handling at all for `\dfrac`, `\left`/`\right`, or `\begin{cases}/\end{cases}`, and the shallow `\frac`/`\sqrt` handling doesn't recurse correctly when one is nested inside the other (hence the stray brace-to-paren corruption on `6{,)674`). Not traced to an exact line — that's for `engineering` to isolate, same file area as BUG-040 (`src/app/api/export/route.ts`).
-**Fix:** Not applied — reporting only, per QA role.
+**Fix:** Replaced the single-level regexes in `cleanLatexForWord` with a brace-depth-aware `convertBraceCommands` (`src/app/api/export/route.ts`) covering `rac`/`\dfrac`/`	frac`, `\sqrt`, `\dot`/`\ddot`/`\hat`/`ar`/`	ilde`, `\left`/`ight`, `egin{cases|aligned}`; `{,}` decimal commas normalized (root cause of the `6{,)674` corruption was `[^}]+` stopping at the inner `}`); `\` row separators no longer eaten by the escaped-space rule. Tests: `src/__tests__/export-latex-convert.test.ts` (6). type-check clean, 155/155.
 **Verification:** Reproduced live on production 2026-09-27 via a real free-tier account's own already-generated exam (`imtihan.qa.explore.2026@mailinator.com`), using the dashboard's own "Download Word" action (network response captured via a page-level fetch patch, saved and unzipped locally, `word/document.xml` inspected directly for literal backslash/`$`/`boxed` — none found — and separately scanned for literal `frac{`/`dfrac{`/`left(`/`right)`/`begin{`/`end{`, all of which were found repeatedly in this real corrigé).
 
 ---
