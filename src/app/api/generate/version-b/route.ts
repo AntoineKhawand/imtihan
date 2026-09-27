@@ -33,17 +33,24 @@ export const dynamic = "force-dynamic";
 export const maxDuration = 120;
 
 export async function GET() {
-  return NextResponse.json({ status: "ok", timestamp: Date.now() });
+  return NextResponse.json({ status: "ok", timestamp: Date.now() }, { headers: createSecurityHeaders() });
 }
 
-// exercises is z.any() passthrough, same convention as
-// src/app/api/exam/translate/route.ts — these are already-generated,
-// already-trusted exercises from the same session, not raw AI/user input.
-// The AI's RESPONSE (the actual new content) is what gets strictly
-// Zod-validated below via AIExerciseSchema, same schema /api/generate uses.
+// BUG-048: this used to be z.array(z.any()) on the theory that "exercises"
+// are already-generated, already-trusted output from the same session — but
+// nothing actually enforces that a caller sends real prior /api/generate
+// output rather than crafted garbage. mergeVariantExercise() (src/lib/variant.ts)
+// only guards the AI's response shape, never `original`, so a malformed
+// element (e.g. `null`, or an object missing `solution`) crashed with a
+// plain TypeError — AFTER a real, billed Claude/Gemini call had already run,
+// and the quota-increment above only fires on the success path, so this was
+// a repeatable, unlimited, unbilled-to-quota AI-cost drain. Validating the
+// same shape used for the AI's OWN response (AIExerciseSchema) closes this
+// at the boundary — a malformed `exercises` element is now rejected with a
+// 400 before any AI call is made, at zero cost.
 const RequestSchema = z.object({
   context: ExamContextSchema,
-  exercises: z.array(z.any()).min(1).max(50),
+  exercises: z.array(AIExerciseSchema).min(1).max(50),
 });
 
 export async function POST(request: NextRequest) {

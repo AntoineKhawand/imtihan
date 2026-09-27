@@ -19,6 +19,33 @@ Track issues here during development. Format:
 
 ## Open Issues
 
+## BUG-048: `POST /api/generate/version-b` — quota only ever increments on the full-success path, so a Pro account can deterministically burn unlimited real Claude/Gemini API calls with zero quota consumption by sending garbage `exercises`
+**Status:** Fixed 2026-09-27
+**Severity:** High
+**Area:** API | Auth | Generation
+
+**Fix:** `RequestSchema.exercises` in `src/app/api/generate/version-b/route.ts` now validates each element with `AIExerciseSchema` (the same schema already used for the AI's own response) instead of `z.array(z.any())`. A malformed element (`null`, or an object missing `solution`) is now rejected with a 400 at the request boundary, before any AI call is made — closing the free/uncosted-crash path. `mergeVariantExercise`'s own lack of a null-guard on `original` is no longer reachable in practice once the boundary is validated, so left as-is (adding a redundant guard there would just duplicate the schema's guarantee). The secondary, softer finding (unawaited fire-and-forget quota increment, no Firestore transaction) is the same pre-existing pattern as `/api/generate` and is not fixed here — tracking it as a shared, separate cleanup rather than duplicating effort per-route. Regression tests: `src/__tests__/version-b-input-validation.test.ts` (3). `npm run type-check` clean, `npm test` 183/183.
+
+**Description:** `src/app/api/generate/version-b/route.ts`'s `RequestSchema.exercises` is `z.array(z.any()).min(1).max(50)` (route's own comment, lines 39-43: "already-generated, already-trusted exercises from the same session, not raw AI/user input"). Nothing enforces that trust assumption — a direct POST (bypassing the real Confirm→Generate→Export UI flow) can pass any array of up to 50 arbitrary values, e.g. `exercises: [null]`, and it is cast straight to `Exercise[]` with an unchecked `as` (line 62) and used, unvalidated, as `original` in `mergeVariantExercises()`.
+
+`mergeVariantExercise()` (`src/lib/variant.ts:129-157`) reads `original.id`, `original.solution.finalAnswer`, etc. directly with no defensive null-check on `original` itself (only `variant`/the AI response gets an `asRecord()` guard). If `original` is `null` (or is missing a `solution` key), this throws a plain `TypeError` the moment it's evaluated.
+
+The quota increment (`monthlyExamsGenerated`/`examsGenerated` `FieldValue.increment(1)`, route.ts lines 231-236) only executes *after* `mergeVariantExercises()` returns successfully, inside the same `try` block whose `catch (parseErr)` (line 242) swallows the `TypeError` and returns a generic 502 — so any request that fails after the (real, billed) Claude/Gemini call runs, for *any* reason (merge crash, exercise-count mismatch at line 196, AI returned no exercises), never touches the user's quota at all. Sending `exercises: [null]` (or `[null, null, ...]`, count up to 50) makes this 100% deterministic, not just a timing race: the AI is asked to build "Version B" from a garbage/null source, its (real, full-length, full-cost) response is parsed, and the very next line (`original.id` inside `mergeVariantExercise`) always throws because `original` is `null`.
+
+Net effect: a signed-in Pro user, calling this endpoint directly instead of through the UI, can trigger unlimited full-cost AI generations (real $ against the founder's Anthropic/Gemini billing) that never count against their 10/20-per-month Pro quota — repeatable indefinitely, no rate limit anywhere in this route.
+
+Secondary, softer finding in the same area: even with well-formed input, the quota increment is a fire-and-forget `userRef.update(...).catch(...)` that is *not awaited* before the response returns (route.ts lines 231-238), and the quota check itself (lines 104-120) is a plain read-then-compare with no Firestore transaction. A user one generation away from their monthly limit could fire several concurrent requests; all would read the same `quotaUsed` before any single increment commits, letting several billed generations through before the counter catches up. This is the same check-then-act/fire-and-forget pattern already used by `/api/generate` (`src/app/api/generate/route.ts` lines 304-332, 607-630) — not newly invented by this diff — but not previously logged as its own item.
+
+**Steps to reproduce:** As any Pro account (real `proExpiresAt` in the future), `POST /api/generate/version-b` with a valid `context` object and `exercises: [null]`. Observe: a real Claude/Gemini API call is made (visible in server logs / API billing), the response is 502 `{"success":false,"errors":["Failed to parse Version B. Please try again."]}`, and `monthlyExamsGenerated` is unchanged. Repeat indefinitely.
+
+**Root cause:** (1) No schema/shape validation on the *original* `exercises` input, despite `route.ts`'s own comment asserting it can be trusted; (2) `mergeVariantExercise()` has no defensive guard on `original` (only on `variant`), contradicting its own doc comment's "Never throws" claim, which was written considering only a malformed AI response, not a malformed original; (3) quota increment is gated behind full success rather than "a paid AI call was made," and is unawaited/non-transactional.
+
+**Suggested fix (not applied — review-only dispatch):** Validate `exercises` elements against `AIExerciseSchema` (or a dedicated lighter "trusted Exercise" schema) at the route boundary before using them as `original`, rejecting the request with 400 if any element doesn't parse — the same posture the route already takes for the AI's *response*. Separately, make `mergeVariantExercise` defensive against a malformed `original` (return `null`/skip rather than throw) so the "never throws" doc comment is actually true either way. For the quota race, consider reserving the quota slot (an atomic conditional increment, e.g. via a Firestore transaction) *before* the paid AI call rather than after a successful merge — or at minimum `await` the increment before responding.
+
+**Found by:** security (2026-09-27, adversarial review of BUG-042's Version B implementation, commit cf96745). Not fixed in this dispatch per explicit review-only instruction — flagged to `engineering` in `TEAM_CHAT.md`.
+
+---
+
 ## BUG-047: `/api/export` (unauthenticated, no size cap) — `convertBraceCommands` is O(n^2) on unbalanced `\frac{`/`\sqrt{` input (DoS)
 **Status:** Fixed 2026-09-27
 **Severity:** Medium
