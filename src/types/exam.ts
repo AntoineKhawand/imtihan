@@ -117,7 +117,15 @@ export interface Exam {
     teacherName?: string;
     date?: string;
   };
-  versionB?: Exam;
+  /**
+   * A real, AI-generated second variant of `exercises` — different numbers/
+   * wording/context, same difficulty, chapter coverage, and per-exercise
+   * points (see src/app/api/generate/version-b/route.ts, FOUNDER_DECISIONS.md
+   * #9). Matches the Firestore schema documented in ARCHITECTURE.md: an
+   * `Exercise[]`, not a nested `Exam` — Version B shares this exam's own
+   * `context`/`header`/`templateId`, it isn't a second exam record.
+   */
+  versionB?: Exercise[];
   createdAt: number;
   updatedAt: number;
   /** Template used for rendering */

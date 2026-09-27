@@ -21,6 +21,13 @@ export interface SavedExam {
   templateId: string;
   createdAt: number;
   updatedAt: number;
+  /**
+   * A real, AI-generated Version B (see src/app/api/generate/version-b),
+   * cached alongside the exam once a teacher generates it at Export, so it
+   * doesn't need to be regenerated (real AI cost + Pro quota) every time the
+   * saved exam is reopened. Absent until a teacher explicitly generates it.
+   */
+  versionB?: Exercise[];
 }
 
 export interface BankExercise {

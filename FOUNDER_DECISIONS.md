@@ -38,14 +38,6 @@
 **Full detail:** `SECURITY.md` (2026-09-25 audit log)
 **Status:** Open
 
-### 9. Version A/B: marketing copy vs. actual product gate disagree — AND the feature itself is weaker than either side claims
-**Raised by:** qa (exploratory pass, live production) · **Date:** 2026-09-25, deepened 2026-09-26
-**The decision needed:** The homepage `/#pricing` and `/pricing` both list "Version A/B generation" as an included Free-plan feature. But the actual Confirm & Configure step gates "Generate Version B" as Pro-only (confirmed live with a real free-tier account), and `ROADMAP.md` confirms this Pro-gating is the intended design — that's the original BUG-036 mismatch. Retested as a real Pro user (BUG-042): the Step 2 "Generate Version B" toggle is completely dead code — its own copy claims it "regenerates numerical values," but the field is accepted into `/api/generate`'s schema and never read again anywhere in the route; toggling it does nothing. The *real* Version A/B mechanism lives only at Export, is a pure client-side reorder (same statement text and numbers, just shuffled order + relabeled sub-questions) — for a small exam there's a real chance the shuffle produces an export identical to Version A. So this isn't just a copy problem: the underlying feature doesn't do what either the Free-plan copy or the Pro-gated Step 2 toggle claims.
-**Options:** (a) invest in a real second AI-generated variant (different numbers/wording, not just reordering) — closes the gap for real, more cost/complexity; (b) keep it reorder-only, but describe it honestly everywhere and fix the Free/Pro copy mismatch to match; (c) something else.
-**Partially actioned, 2026-09-26:** the dead Step 2 toggle itself (claimed a capability that didn't exist, did nothing when toggled) needed no business judgment to remove — it's gone, along with the `generateVersionB` field everywhere it appeared in the codebase. The bigger direction question — real regeneration vs. honest reorder-only, and the Free/Pro copy fix — is still open below; removing the dead toggle doesn't presuppose either answer.
-**Full detail:** `BUGS.md` (BUG-036, BUG-042)
-**Status:** Open
-
 ### 6. Firestore deploys
 **Raised by:** database · **Date:** 2026-09-18 · **Escalated:** 2026-09-26 (qa, BUG-045)
 **The decision needed:** Two independent deploy actions, both requiring the founder to run `firebase deploy` by hand (Claude Code's Production Deploy guardrail).
@@ -56,6 +48,11 @@
 ---
 
 ## Answered
+
+### 9. Version A/B: marketing copy vs. actual product gate disagree — AND the feature itself is weaker than either side claims
+**Raised by:** qa (exploratory pass, live production) · **Date:** 2026-09-25, deepened 2026-09-26
+**Full detail:** `BUGS.md` (BUG-036, BUG-042)
+**Status:** Answered: 2026-09-27 — option (a), invest in a real second AI-generated variant. Implemented: `/api/generate/version-b` (new route) asks Claude/Gemini to rewrite every exercise's numbers/names/context and fully recompute its solution, given Version A's exercises; `src/lib/variant.ts`'s new `mergeVariantExercise()` then force-copies every structural/gradable field (type, difficulty, points, chapterIds, sub-question/option counts and labels, bareme/microBareme points) from the original so "same difficulty and points distribution as Version A" is a code-enforced guarantee, not just a prompt instruction the AI might ignore. Trigger point is the existing Pro-gated "Variant" selector at Export (Step 5) — clicking "Version B" for the first time now makes a real AI call instead of an instant client-side reorder. Also fixed in the process: PDF export (`/print`) had never respected the variant selector at all (Word/email were the only paths that did) — it now accepts `?variant=b`. BUG-036's Free-vs-Pro pricing-tier copy mismatch remains open and separate — that's a gating question, not addressed here. Two open sub-questions flagged back for founder input in `BUGS.md`'s BUG-042 update: (1) whether Version B should cost 1 unit of the same monthly Pro quota as a fresh generation (current default) or get its own separate/cheaper cap; (2) whether repeated Version B re-rolls need their own cooldown beyond the shared monthly quota, since each is a real second AI API call.
 
 ### 10. School Bank sharing silently also publishes to students, including full solutions
 **Raised by:** qa (Pro-tier exploratory pass) · **Date:** 2026-09-26

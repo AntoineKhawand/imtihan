@@ -17,8 +17,19 @@ export default function PrintPage() {
 
   useEffect(() => {
     const ctxRaw = sessionStorage.getItem("imtihan_context");
-    const exRaw = sessionStorage.getItem("imtihan_exercises");
     const tmpl = sessionStorage.getItem("imtihan_templateId") ?? "classic";
+    // /create/export can open this page with ?variant=b to print the real,
+    // AI-generated Version B (src/app/api/generate/version-b) instead of the
+    // default Version A — falls back to Version A if no Version B was ever
+    // generated in this session (e.g. a stale/shared link). Read directly
+    // from window.location instead of next/navigation's useSearchParams()
+    // so this page doesn't need a Suspense boundary just for one query flag.
+    const wantsVersionB = new URLSearchParams(window.location.search).get("variant") === "b";
+    const versionBRaw = wantsVersionB ? sessionStorage.getItem("imtihan_versionb_exercises") : null;
+    const exRaw = versionBRaw ?? sessionStorage.getItem("imtihan_exercises");
+    if (wantsVersionB && !versionBRaw) {
+      console.warn("[/print] ?variant=b requested but no cached Version B found — falling back to Version A.");
+    }
     if (!ctxRaw || !exRaw) {
       router.replace("/create");
       return;
