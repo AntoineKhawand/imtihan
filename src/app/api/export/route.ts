@@ -175,6 +175,14 @@ async function processContentBlocks(
   return blocks;
 }
 
+// Generous caps so real exams never hit them; /api/export is unauthenticated
+// and convertBraceCommands is super-linear on pathological input (BUG-047).
+const MAX_TEXT_LEN = 30_000;
+const longText = z.string().max(MAX_TEXT_LEN);
+// Max length of a single string run through convertBraceCommands (real math
+// snippets are a few hundred chars).
+const MAX_CONVERT_LEN = 10_000;
+
 const RequestSchema = z.object({
   context: z.object({
     curriculumId: z.string(),
@@ -191,32 +199,32 @@ const RequestSchema = z.object({
     type: z.string(),
     difficulty: z.string(),
     points: z.number(),
-    statement: z.string(),
+    statement: longText,
     options: z.array(z.object({
-      label: z.string(),
-      text: z.string(),
+      label: z.string().max(500),
+      text: longText,
       isCorrect: z.boolean(),
-    })).nullable().optional(),
+    })).max(50).nullable().optional(),
     subQuestions: z.array(z.object({
-      label: z.string(),
-      statement: z.string(),
+      label: z.string().max(500),
+      statement: longText,
       points: z.number(),
-    })).nullable().optional(),
+    })).max(50).nullable().optional(),
     solution: z.object({
-      finalAnswer: z.string(),
-      methodology: z.string(),
+      finalAnswer: longText,
+      methodology: longText,
       bareme: z.array(z.object({
-        label: z.string(),
+        label: z.string().max(500),
         points: z.number(),
-        criterion: z.string(),
-      })).optional(),
+        criterion: longText,
+      })).max(100).optional(),
       microBareme: z.array(z.object({
-        step: z.string(),
+        step: longText,
         points: z.number(),
-        criterion: z.string(),
-      })).optional(),
+        criterion: longText,
+      })).max(100).optional(),
     }),
-  })),
+  })).max(100),
   format: z.enum(["word", "pdf"]),
   includeAnswerKey: z.boolean().optional().default(true),
   header: z.object({
@@ -263,6 +271,9 @@ const ACCENTS: Record<string, string> = {
 // of stopping at the first "}" (BUG-046). Unbalanced input is left for the
 // caller's backslash-stripping pass rather than throwing.
 export function convertBraceCommands(text: string): string {
+  // Bail out past a sane length: the scan below is O(n^2) on unbalanced input
+  // (BUG-047). Over-limit text is left for the caller's backslash-stripping pass.
+  if (text.length > MAX_CONVERT_LEN) return text;
   const cmd = /\\(?:(?:d|t)?frac|sqrt|(dot|ddot|hat|bar|tilde)|begin\{(cases|aligned)\})(?![a-zA-Z])/;
   let out = "";
   let rest = text;

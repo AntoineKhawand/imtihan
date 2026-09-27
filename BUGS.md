@@ -19,6 +19,15 @@ Track issues here during development. Format:
 
 ## Open Issues
 
+## BUG-047: `/api/export` (unauthenticated, no size cap) — `convertBraceCommands` is O(n^2) on unbalanced `\frac{`/`\sqrt{` input (DoS)
+**Status:** Fixed 2026-09-27
+**Severity:** Medium
+**Area:** API | Export
+**Reported:** 2026-09-27 (security nightly review of ad944b6)
+
+**Description:** Each unbalanced `\frac{` makes `readBraceGroup` scan to end-of-string, and `rest.slice` copies the remainder each loop, so one crafted request pins a serverless function. Measured ~2.9s for 30k chars of `\sqrt{` even at 30k.
+**Fix:** `src/app/api/export/route.ts`: `convertBraceCommands` returns input unchanged past `MAX_CONVERT_LEN` (10,000 chars; falls back to the existing backslash-stripping pass); `RequestSchema` now caps every statement/option/solution string at 30,000 chars, labels at 500, and exercises/options/subQuestions/barème arrays at 100/50/50/100. Not made truly linear (deep balanced nesting still recomputes per level) — the length cap bounds it. Regression tests in `src/__tests__/export-latex-convert.test.ts`. `type-check` clean, `npm test` 157/157. `qa` should confirm a normal real export still works; `security` should review the new caps.
+
 ## BUG-046: Word (.docx) export still leaks raw LaTeX command fragments for constructs BUG-040 never targeted — nested `\frac` inside `\sqrt`, `\dfrac`, `\left(...\right)`, `\begin{cases}...\end{cases}` render as garbled plain text, some with mismatched braces/parens
 **Status:** Fixed 2026-09-27 (pending live re-verification after deploy) — new finding, distinct from BUG-040
 **Severity:** Medium

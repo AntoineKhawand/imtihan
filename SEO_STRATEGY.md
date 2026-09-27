@@ -193,7 +193,34 @@ keep each change reviewable and low-risk for an unattended push.
       expected given no blog-body content changes; confirms the domain fix didn't break anything
       GEO-side either. Full reports regenerated at `SEO_AUDIT_REPORT.md` / `GEO_AUDIT_REPORT.md`
       (both gitignored, not committed).
-- [ ] **GSC follow-up on the 2026-09-18 www→apex domain fix — still not completed; now 4 runs
+- [~] **2026-09-27 — GSC follow-up, first run with `gsc` tools actually attached (read-only
+      slice). Real numbers, `sc-domain:imtihan.live`, 28d to 2026-09-27:** 9 clicks / 554
+      impressions / CTR 1.6% / avg pos 5.8. Sitemap `https://imtihan.live/sitemap.xml` (apex)
+      is the only one registered: Valid, 48 URLs, 0 errors, 0 warnings, last downloaded
+      2026-09-22. Page split: apex `/` = 501 impr / 9 clicks (all clicks); 9 blog/landing apex
+      URLs = 2-24 impr each; only ONE `www` URL still appears (a `/blog/the-may-marathon-...-ljv6`,
+      15 impr) versus 14 www impr on 2026-09-18 — i.e. www residue is ~3% of impressions, down
+      from being the only other host. Daily impressions dipped 11-13/day on 09-17/18 and 3 on
+      09-20 (vs ~20-25 baseline), recovering to 14-18 by 09-24: consistent with a brief transient
+      around the redirect fix, not an ongoing loss. Indexing (URL Inspection):
+      `https://imtihan.live/` = PASS, Submitted and indexed, last crawled 2026-09-20 (post-fix),
+      Google canonical = user canonical = apex. `https://www.imtihan.live/` = "Alternate page
+      with proper canonical tag" (correct, the desired outcome). `/generateur-examen-bac-libanais`
+      = Crawled - currently not indexed (crawled 2026-09-21, fetch SUCCESSFUL, referring page is
+      only `/`). `/ib-exam-generator` = Discovered - currently not indexed; `/bac-francais-exam-generator`
+      = URL is unknown to Google (both never crawled). Stale www blog URL inspected: still
+      "indexed" as the www URL, last crawled 2026-08-31 (pre-fix), Google canonical = the www URL,
+      so Google has not yet re-crawled it to see the 308/canonical; expect it to consolidate on
+      next crawl. Open points: (a) the two never-crawled curricula pages and the crawled-not-indexed
+      one are a discovery/quality-signal problem, not a domain problem — they have only the
+      homepage as an internal referrer; more internal links (blog posts, footer) would help;
+      flag to `content-curriculum`/`engineering` if wanted. (b) Requesting re-crawl and reading
+      the Coverage "Redirect error" report are not possible with read-only API tools (URL
+      Inspection API has no request-indexing method; Coverage report isn't in the API) — a human
+      needs to click "Request indexing" in the GSC UI for the 3 curricula URLs + confirm no
+      Redirect-error rows. (c) Vercel `NEXT_PUBLIC_APP_URL` check remains a human item.
+      Prior history: this item was blocked 4 runs on tool access, not data.
+      (Original note follows.) — GSC follow-up on the 2026-09-18 www→apex domain fix — still not completed; now 4 runs
       blocked on tool access, not data. Stop retrying — this needs the `gsc` MCP server actually
       attached to the session, not another same-step retry.** 2026-09-18 (run 1): no `gsc` tools.
       2026-09-18 (run 2, after being told to retry): checked again, still absent. An unlogged run
