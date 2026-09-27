@@ -60,16 +60,80 @@ keep each change reviewable and low-risk for an unattended push.
       evidence either profile exists. Removed both from the `sameAs` array; a dead `sameAs`
       undermines entity credibility for AI Overviews/GEO more than having none at all. If/when
       real Facebook/LinkedIn pages go live before Q3 launch, re-add them then.
-- [ ] **Blocked on a decision, not a technical fix:** the 27 Firestore-backed dynamic blog posts
-      (14 of them at 40/100) need the same `BlogCallout`/`BlogFAQ` treatment the 5 rewritten
-      static posts got, but there's no update path for existing Firestore `blog_posts` docs
-      anywhere in the app (only add-if-missing and add-new routes exist) — see the 2026-09-18
-      follow-up entry below for the full trace. Needs either (a) a proper admin edit endpoint
-      built by `engineering`, or (b) an explicit go-ahead to write a one-off `adminDb` script
-      against production, before this can move. Also surfaces a separate, non-GEO question: an
-      unattended daily cron job (`api/cron/blog-auto-publish`) is auto-publishing these with no
-      review step and a rotating template producing near-duplicate titles — flagged for the
-      founder, not something this run decided unilaterally.
+- [~] **2026-09-27 — the "blocked on a decision" reason above is stale; re-checked, not assumed.**
+      Re-ran `npm run audit:geo` against production first (not trusting the old "14 at 40/100"
+      count): only **9** dynamic posts are still at 40/100 today (the other 5 the original count
+      included — `the-final-countdown-navigating-the-may-19th…`, `the-final-sprint-navigating-
+      lebanons-highstakes…`, `the-may-sprint-how-lebanese-educators…`, and 2 others — are now at
+      100/100 or 60-75/100, most likely via the 2026-09-23/24 BUG-029 content-recovery rewrites;
+      average across all 37 posts in the sitemap is now 67/100, up from 44/100 at the last
+      full audit). Then read `src/app/admin/page.tsx` + `src/app/api/admin/blog/[id]/route.ts`
+      directly rather than trusting the 2026-09-20 00:40 `TEAM_CHAT.md` entry secondhand:
+      confirmed `GET`/`PATCH /api/admin/blog/[id]` is real, admin-auth-gated, Zod-validated
+      (`BlogPostUpdateSchema`), and **can edit an existing post's `content` field** — so engineering
+      already closed the "no update path exists" blocker (this was in fact resolved 2026-09-20,
+      just never reflected back into this doc). Better still: `src/app/blog/[slug]/page.tsx`
+      already has an `extractFaqSection()` convention wired in (a trailing `## Frequently Asked
+      Questions` heading with `**Q: …**` pairs in the `content` markdown renders as a real
+      `<BlogFAQ>` block *and* `FAQPage` JSON-LD via `buildFaqSchema` — no per-post code change
+      needed, purely a content edit through the existing PATCH endpoint). `BlogCallout` (the
+      blockquote-testimonial component) is **not** wired into the dynamic template at all, only
+      `BlogFAQ` is — so FAQ, not a fabricated testimonial, is the correct/only treatment available
+      for these posts, which also sidesteps the fabricated-persona/testimonial problem `marketing`
+      already flagged elsewhere in this codebase.
+      **Picked the highest-priority post using real GSC data, not just the lowest GEO score:**
+      pulled `page`-dimension search analytics (2026-08-01→2026-09-27) for all 9 candidates —
+      8 of the 9 have **zero impressions** in the last ~2 months; the one exception,
+      `the-may-sprint-engineering-perfection-in-lebanese-exams-without-the-burnout-sx7l`, has 3
+      impressions at position 6.7, and URL Inspection confirms it's genuinely indexed (`PASS`,
+      `Submitted and indexed`, last crawled 2026-09-22) — the only one of the 9 actually
+      surfacing in real search right now. **Drafted a grounded 3-item FAQ** for that post (pulled
+      its live rendered content via `WebFetch` first so nothing is invented — the 3 Qs restate
+      only what the post already says: multi-curricula support in one generator, AI-generated
+      diagrams for physics/biology, and coordinator-level standardization across sections; no new
+      stats or claims added):
+      ```
+      ## Frequently Asked Questions
+
+      **Q: Can Imtihan generate exams for the Bac Libanais, Bac Français, and IB from one tool?**
+      Yes. The platform handles three distinct pathways in the same generator: CRDP-aligned Bac
+      Libanais assessments, French Baccalauréat-style document-based studies and essays, and
+      IB Diploma-style questions using command terms like "Analyze" and "Evaluate." You choose the
+      curriculum and level when describing the exam, and Imtihan grounds the questions in that
+      track's own requirements instead of a generic template.
+
+      **Q: Does Imtihan generate diagrams for physics and biology questions, not just text?**
+      Yes. Alongside the exam text, Imtihan produces diagrams — physics circuits and labeled
+      biological illustrations — aligned to each exercise's curriculum context, so teachers don't
+      have to source or hand-draw figures separately during a busy exam season.
+
+      **Q: Can department heads use Imtihan to standardize exams across multiple class sections?**
+      Yes. Coordinators can set the same complexity level, chapter coverage, and time limit when
+      generating exams for parallel sections, keeping the assessment consistent across sections
+      instead of each teacher writing their own version.
+      ```
+      **Not applied this run — a narrower blocker than before, and stated plainly rather than
+      worked around:** this dispatch has no `chrome-devtools` tool attached (same
+      dispatch-configuration gap `qa` hit on 2026-09-27 testing Version B — full mutating `gsc`
+      tools were present, so this reads as an interactive session, but no browser tool came with
+      it), so there's no way to drive the real `/admin` UI end-to-end. The only other path would
+      be calling `PATCH /api/admin/blog/[id]` directly with a real authenticated request, which
+      needs a real admin Firebase ID token — obtaining one without an interactive browser login
+      means either minting a token from service-account credentials or hand-authenticating via a
+      script, both of which are exactly the "never call a real production API route/handler
+      directly or use real Admin SDK credentials from a script" rule this codebase already got
+      burned by twice (BUG-029, the QA Pro-tier incident). **Did not do either** in that dispatch.
+      **Applied in a follow-up interactive session, same day:** verified the drafted FAQ against
+      the post's live rendered content directly (independent re-check, not just trusting the
+      draft), then applied it through the real `/admin` → Blog → "Manage Existing Posts" panel
+      (already-authenticated admin session in the browser) — appended verbatim to the end of the
+      post's `content`, saved ("Post updated" confirmed), and verified live on
+      `imtihan.live/blog/...-sx7l`: renders as a real `<BlogFAQ>` component (confirmed via
+      accessibility tree — a labeled "Frequently asked questions" region, not just raw markdown
+      text), so the `FAQPage` JSON-LD fired too. Re-ran `npm run audit:geo` against production:
+      this post moved from **40/100 to 70/100**; site-wide average ticked up from 67 to 68 across
+      37 posts. Re-flagging the cron-job editorial-review question from the original entry below
+      is unchanged and still stands.
 
 ### Technical SEO
 - [x] **2026-09-18** — Fixed a real bug found by the new internal SEO audit tool
@@ -238,6 +302,23 @@ keep each change reviewable and low-risk for an unattended push.
       for a "Redirect error" spike on 2026-09-18 (the hours the www/apex redirect loop was live)
       so it reads as a resolved transient blip, not an ongoing issue, in any future audit of this
       data.
+- [x] **2026-09-27 — checked homepage's low CTR (2.46% at avg position 5.8, 690 impr/17 clicks,
+      2026-08-01→2026-09-27) for a title/meta-description opportunity — verified it's not one, so
+      didn't touch the copy.** Pulled query-level data behind that page: the top query is the bare
+      brand term `imtihan` (90 impressions, position 5.7, **0 clicks**), followed by Arabic
+      transliterations/spellings of the generic word "exam" (`امتحان` 61 impr, `امتحن` 12 impr,
+      `امتحتن` 6 impr, etc.) and misspellings (`imithan`, `mtihan`, `imtiha`, `itihan`) — every
+      single one of these 36 queries has **0 clicks**, several at very strong positions (2-3),
+      which rules out "buried in results" as the cause. Re-read `src/app/layout.tsx`'s root
+      `metadata` (title, description, OG/Twitter copy) — already accurate, on-brand, and
+      appropriately concise (no length/truncation issue, matches `CLAUDE.md` §9 scope, no stale
+      claims). **Conclusion: the low aggregate CTR is explained by the query mix (bare-brand/
+      generic-Arabic-word/misspelling impressions that were never going to convert, likely low
+      commercial intent or unrelated matches on the common word "امتحان"/"imtihan"), not a
+      fixable on-page defect** — no code change made, logging the verified non-finding so a future
+      run doesn't re-investigate the same homepage CTR number from scratch. Separately re-checked
+      indexing status of the 3 orphan curricula pages flagged this morning: unchanged (still
+      needs a human to click "Request Indexing" in the GSC UI) — not re-logging as new.
 
 ### AEO / GEO — done
 - [x] **2026-09-01** — Added `FAQPage` JSON-LD + visible Q&A (`LandingFAQ`) to all 4 curricula
