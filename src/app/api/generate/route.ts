@@ -10,9 +10,14 @@ import { getAllElements, formatElementsForPrompt } from "@/lib/chemistry";
 import { getHumanitiesContext } from "@/lib/humanities";
 import { GEOGRAPHIC_SUBJECTS, buildChaptersSummary } from "@/data/curricula";
 import { getTeacherStyle, saveTeacherStyle, buildTeacherStylePrompt } from "@/lib/teacherStyle";
+import { AIExerciseSchema } from "@/lib/schemas/exercise";
 
-const MONTHLY_PERIOD_MS = 30 * 24 * 60 * 60 * 1000;
-const MONTHLY_LIMITS = { free: 1, pro: 10 } as const;
+// Exported so src/app/api/generate/version-b/route.ts can enforce the exact
+// same monthly quota semantics for a real Version B generation (a second
+// full AI call, of comparable cost to a fresh /api/generate call) instead of
+// redeclaring — and risking drifting from — these numbers.
+export const MONTHLY_PERIOD_MS = 30 * 24 * 60 * 60 * 1000;
+export const MONTHLY_LIMITS = { free: 1, pro: 10 } as const;
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -78,75 +83,18 @@ const RequestSchema = z.object({
 // Everything below parses the exercise objects the AI returns. Per
 // CLAUDE.md §10 ("Zod at every boundary... parse anything coming from the
 // AI"), this was previously missing — parsed JSON flowed to the client
-// almost as-is. Mirrors ExamContextSchema's style (same z import, same
-// permissive/optional posture for fields the model may omit) rather than
-// introducing a new validation approach.
-const McqOptionAISchema = z.object({
-  label: z.string(),
-  text: z.string(),
-  isCorrect: z.boolean(),
-});
-
-const SubQuestionAISchema = z.object({
-  label: z.string(),
-  statement: z.string(),
-  points: z.number(),
-});
-
-const BaremeEntryAISchema = z.object({
-  label: z.string(),
-  points: z.number(),
-  criterion: z.string(),
-});
-
-const MicroBaremeEntryAISchema = z.object({
-  step: z.string(),
-  points: z.number(),
-  criterion: z.string(),
-});
-
-// "essay" is a valid Exercise type in src/types/exam.ts but is not part of
-// the AI-facing schema in src/lib/prompts/generate.ts — kept in sync with
-// that prompt's JSON schema block, not the broader app-level type.
-const AIExerciseSchema = z
-  .object({
-    id: z.string(),
-    number: z.number(),
-    type: z.enum([
-      "multiple_choice",
-      "short_answer",
-      "problem_solving",
-      "proof",
-      "calculation",
-      "lab_analysis",
-    ]),
-    difficulty: z.enum(["easy", "medium", "hard"]),
-    points: z.number(),
-    statement: z.string(),
-    options: z.array(McqOptionAISchema).nullable().optional(),
-    subQuestions: z.array(SubQuestionAISchema).nullable().optional(),
-    solution: z.object({
-      finalAnswer: z.string(),
-      methodology: z.string(),
-      commonMistakes: z.array(z.string()).optional(),
-      bareme: z.array(BaremeEntryAISchema).optional(),
-      microBareme: z.array(MicroBaremeEntryAISchema).optional(),
-    }),
-    // Regression fix (see CURRICULUM_COVERAGE_STRATEGY.md, 2026-09 entry):
-    // commit 9515e8a dropped these two fields from the prompt's JSON schema,
-    // so the AI stopped producing them and nothing back-filled them here —
-    // chapterIds stayed empty, silently breaking the "Chapter coverage" card
-    // on /create/generate. Optional/defaulted (not required) so one
-    // non-compliant AI response doesn't fail validation for the whole
-    // exercise — see sanitizeExercise() below for the chapterIds filtering.
-    chapterIds: z.array(z.string()).optional().default([]),
-    estimatedMinutes: z.number().optional(),
-    mathPlots: z.array(z.string()).optional(),
-  })
-  // Preserve any other field the model emits (e.g. future additions) rather
-  // than silently dropping it — the client consumes the exercise object
-  // close to as-is, same as before this fix.
-  .passthrough();
+// almost as-is. AIExerciseSchema itself now lives in src/lib/schemas/
+// exercise.ts (dependency-free — no next/server, no firebase-admin) so
+// src/app/api/generate/version-b/route.ts and unit tests can reuse the exact
+// same schema without pulling in this whole route's server-only imports.
+// Regression fix (see CURRICULUM_COVERAGE_STRATEGY.md, 2026-09 entry):
+// commit 9515e8a dropped chapterIds/estimatedMinutes from the prompt's JSON
+// schema, so the AI stopped producing them and nothing back-filled them
+// here — chapterIds stayed empty, silently breaking the "Chapter coverage"
+// card on /create/generate. Both are optional/defaulted in the schema (not
+// required) so one non-compliant AI response doesn't fail validation for
+// the whole exercise — see sanitizeExercise() below for the chapterIds
+// filtering.
 
 /**
  * Validate one AI-generated exercise object and filter its "chapterIds"

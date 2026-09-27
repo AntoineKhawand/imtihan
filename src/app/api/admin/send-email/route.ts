@@ -37,7 +37,7 @@ function buildNewsletterHtml(firstName: string): string {
     <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e2e8f0;border-radius:14px;margin-bottom:16px;overflow:hidden;background:#fff">
       <tr><td style="padding:22px 24px"><table cellpadding="0" cellspacing="0"><tr>
         <td style="padding-right:16px;vertical-align:top;padding-top:2px"><div style="width:44px;height:44px;border-radius:11px;background:#f0fdf4;border:1px solid #bbf7d0;text-align:center;line-height:44px"><img src="${tw("1f500")}" width="22" height="22" /></div></td>
-        <td><strong style="color:#0f172a;font-size:15px;display:block;margin-bottom:6px">Version A & B — Anti-cheating exams</strong><p style="color:#64748b;font-size:13px;line-height:1.65;margin:0">Generate two parallel versions with different numbers and shuffled questions.</p></td>
+        <td><strong style="color:#0f172a;font-size:15px;display:block;margin-bottom:6px">Version A & B — Anti-cheating exams</strong><p style="color:#64748b;font-size:13px;line-height:1.65;margin:0">Generate a real second exam — different numbers and wording, same difficulty.</p></td>
       </tr></table></td></tr></table>
     <div style="text-align:center;margin-top:24px">
       <a href="${APP_URL}/create" style="display:inline-block;background:linear-gradient(135deg,#1a5e3f,#2d8f5f);color:#fff;text-decoration:none;padding:16px 48px;border-radius:13px;font-weight:700;font-size:16px;box-shadow:0 4px 20px rgba(26,94,63,0.35)">Generate an exam now →</a>

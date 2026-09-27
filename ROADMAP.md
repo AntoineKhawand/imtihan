@@ -31,7 +31,7 @@
 - ✅ Landing page — hero, features, testimonials, pricing
 - ✅ Step 1 — Describe + file upload (PDF, DOCX, images via Gemini vision)
 - ✅ Step 2 — Confirm context (auto-filled, fully editable)
-- ✅ Step 3 — Structure & Style (points, difficulty slider, template, Version B)
+- ✅ Step 3 — Structure & Style (points, difficulty slider, template)
 - ✅ Step 4 — Generate & Refine (SSE streaming, per-exercise actions)
 - ✅ Step 5 — Export (Word download, PDF/print, email, library save)
 
@@ -53,7 +53,7 @@
 - ✅ Difficulty distribution bar
 - ✅ Corrigé with barème, methodology, micro-barème, common mistakes
 - ✅ Corrigé toggle (per-exercise reveal)
-- ✅ Version A/B (number shuffling via deterministic seed)
+- ✅ Version A/B — real, AI-generated second variant (different numbers/wording/context, same difficulty & points, see `/api/generate/version-b`; replaced the old shuffle-only implementation 2026-09-27, `FOUNDER_DECISIONS.md` #9)
 - ✅ Answer checker tools: math expression, statistics, chemistry (molar mass), physics constants (NIST CODATA)
 - ✅ AI diagram tool (Mermaid), AI image tool, math plot tool, table tool (per-exercise)
 - ✅ Question bank — save individual exercises to localStorage
@@ -92,7 +92,7 @@
 - ✅ Email delivery (Brevo) with corrigé toggle
 - ✅ School header fields (name, class, teacher, date, logo)
 - ✅ School logo upload (Pro)
-- ✅ Version A/B export
+- ✅ Version A/B export — Version B generated on-demand at Export (Pro-only), reflected in Word, PDF (`/print?variant=b`), and email
 - ✅ Language override at export time
 
 ### Payments

@@ -1,5 +1,8 @@
 {
   "projects": {
-    "default": "demo-imtihan"
-  }
+    "default": "demo-imtihan",
+    "production": "imtihan-app"
+  },
+  "targets": {},
+  "etags": {}
 }

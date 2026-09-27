@@ -132,7 +132,7 @@ function buildNewsletterHtml(firstName: string, month: string): string {
               Version A &amp; B — Anti-cheating exams
             </strong>
             <p style="color:#64748b;font-size:13px;line-height:1.65;margin:0">
-              Generate two parallel versions with different numbers and shuffled questions.
+              Generate a real second exam — different numbers and wording, same difficulty.
               Students in adjacent seats get completely different papers.
             </p>
           </td>

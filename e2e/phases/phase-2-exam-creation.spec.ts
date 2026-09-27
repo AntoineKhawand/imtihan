@@ -5,8 +5,10 @@
  * char limit, example-prompt chips, saved class profiles (add/apply/remove),
  * arXiv research search, file dropzone, the free-tier limit gate, all six
  * dropdowns on the confirm page, geographic-context input, chapter chips +
- * validation, blueprint point/exercise inputs, template picker, and the
- * Pro-gated "Generate Version B" toggle.
+ * validation, blueprint point/exercise inputs, and template picker.
+ * (The Step 2 "Generate Version B" toggle previously tested here was removed
+ * 2026-09-26 — BUG-042. Real Version B generation is now an Export-step
+ * action, covered in phase-4-export.spec.ts.)
  *
  * Cost note: "Analyze & continue" makes one real call to /api/analyze
  * (Gemini). That's intentional — it's the cheapest possible check that the
@@ -314,33 +316,12 @@ test.describe("/create/confirm", () => {
     await expect(instructions).toBeHidden();
   });
 
-  test("Generate Version B is locked for free-tier users", async ({ page }) => {
-    await signInAs(page, TEST_FREE_UID, "/create");
-    await seedContext(page, { ...BASE_CONTEXT, chapterIds: ["eb9-math-algebra"] });
-    await page.goto(BASE_URL + "/create/confirm");
-
-    await expect(page.getByText("Available on the Pro plan")).toBeVisible();
-    await expect(page.getByText("Pro", { exact: true })).toBeVisible();
-
-    const toggleRow = page.locator("p", { hasText: "Generate Version B" }).locator("xpath=ancestor::div[1]/parent::div");
-    await toggleRow.click();
-    // Still locked — description text unchanged, no crash
-    await expect(page.getByText("Available on the Pro plan")).toBeVisible();
-  });
-
-  test("Generate Version B toggles on for Pro users", async ({ page }) => {
-    await signInAs(page, TEST_PRO_UID, "/create");
-    await seedContext(page, { ...BASE_CONTEXT, chapterIds: ["eb9-math-algebra"], generateVersionB: false });
-    await page.goto(BASE_URL + "/create/confirm");
-
-    await expect(page.getByText("Shuffles question order and regenerates numerical values.")).toBeVisible();
-    const knob = page.locator("div.w-10.h-6.rounded-full");
-    await expect(knob).toHaveClass(/bg-\[var\(--bg-subtle\)\]/);
-
-    const toggleRow = page.locator("p", { hasText: "Generate Version B" }).locator("xpath=ancestor::div[1]/parent::div");
-    await toggleRow.click();
-    await expect(knob).toHaveClass(/bg-\[var\(--accent\)\]/);
-  });
+  // The Step 2 "Generate Version B" toggle tested here was removed 2026-09-26
+  // (BUG-042 — it was dead code, accepted into the request body and never
+  // read anywhere). Real Version B generation now lives at Export (Step 5)
+  // as an on-demand "Generate Version B" action — see
+  // e2e/phases/phase-4-export.spec.ts for its own coverage, and
+  // FOUNDER_DECISIONS.md #9 for the full history.
 
   test("Generate Exam navigates to /create/generate", async ({ page }) => {
     await signInAs(page, TEST_PRO_UID, "/create");

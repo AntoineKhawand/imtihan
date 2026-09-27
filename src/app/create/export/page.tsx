@@ -18,7 +18,7 @@ import {
   saveExam, buildExamTitle,
   type SavedExam,
 } from "@/lib/storage";
-import { buildVersionB } from "@/lib/variant";
+import { buildExercisesCacheKey } from "@/lib/workflowCache";
 import type { ExamContext, Exercise } from "@/types/exam";
 import { StepIndicator, StepLabel } from "@/app/create/page";
 import { useAuth } from "@/contexts/AuthContext";
@@ -60,7 +60,14 @@ export default function ExportPage() {
   const [emailIncludeSolution, setEmailIncludeSolution] = useState(true);
   const [variant, setVariant] = useState<"A" | "B">("A");
   const [exportLanguage, setExportLanguage] = useState<"french" | "english" | "arabic">("french");
-  const [examSeed] = useState(() => shortId());
+
+  // Real, AI-generated Version B (FOUNDER_DECISIONS.md #9) — generated
+  // on-demand the first time a Pro teacher picks "Version B", then cached in
+  // sessionStorage (keyed the same way as the main exercises cache) so it
+  // survives a remount without a second AI call / a second quota charge.
+  const [versionBExercises, setVersionBExercises] = useState<Exercise[] | null>(null);
+  const [generatingVersionB, setGeneratingVersionB] = useState(false);
+  const [versionBError, setVersionBError] = useState<string | null>(null);
 
   // Track whether we've saved to the library
   const [savedToLibrary, setSavedToLibrary] = useState(false);
@@ -76,6 +83,16 @@ export default function ExportPage() {
       setExercises(JSON.parse(exRaw));
       setTemplateId(tmpl);
       setExportLanguage(ctx.language);
+
+      // Restore a previously-generated Version B, if this exact (context,
+      // template) still matches — same cache-key convention the Generate
+      // step uses for its own exercises cache (src/lib/workflowCache.ts).
+      const key = buildExercisesCacheKey(ctx, tmpl);
+      const cachedKey = sessionStorage.getItem("imtihan_versionb_key");
+      const cachedVB = sessionStorage.getItem("imtihan_versionb_exercises");
+      if (cachedKey === key && cachedVB) {
+        try { setVersionBExercises(JSON.parse(cachedVB)); } catch { /* ignore corrupt cache */ }
+      }
     } catch { router.replace("/create"); }
 
     // Pre-fill school settings from localStorage and extracted header
@@ -114,12 +131,55 @@ export default function ExportPage() {
     reader.readAsDataURL(file);
   };
 
+  /**
+   * Generate a real Version B via /api/generate/version-b (Pro-only, a
+   * genuine second AI call — see FOUNDER_DECISIONS.md #9). Caches the result
+   * in sessionStorage keyed like the main exercises cache, so switching back
+   * and forth or a remount doesn't re-trigger the AI / re-charge quota.
+   */
+  async function handleGenerateVersionB() {
+    if (!context || !exercises.length || generatingVersionB) return;
+    setGeneratingVersionB(true);
+    setVersionBError(null);
+    try {
+      const res = await fetch("/api/generate/version-b", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ context, exercises }),
+      });
+      const data = await res.json().catch(() => ({ success: false, errors: ["The server returned an invalid response."] }));
+      if (!res.ok || !data.success) {
+        throw new Error(data.errors?.[0] ?? "Failed to generate Version B.");
+      }
+      setVersionBExercises(data.exercises);
+      setVariant("B");
+      sessionStorage.setItem("imtihan_versionb_key", buildExercisesCacheKey(context, templateId));
+      sessionStorage.setItem("imtihan_versionb_exercises", JSON.stringify(data.exercises));
+      toast.success("Version B generated — different numbers and wording, same difficulty and points.");
+    } catch (err) {
+      setVersionBError(err instanceof Error ? err.message : "Failed to generate Version B. Please try again.");
+      toast.error(err instanceof Error ? err.message : "Failed to generate Version B.");
+    } finally {
+      setGeneratingVersionB(false);
+    }
+  }
+
+  function handleSelectVariant(v: "A" | "B") {
+    if (isFreeTier) return;
+    if (v === "B" && !versionBExercises) {
+      handleGenerateVersionB();
+      return;
+    }
+    setVariant(v);
+  }
+
   async function handleDownload(format: "word" | "pdf") {
     if (!context || !exercises.length) return;
+    if (variant === "B" && !versionBExercises) return; // Version B not ready yet
     setDownloading(format);
 
     try {
-      const exportExercises = variant === "B" ? buildVersionB(exercises, examSeed) : exercises;
+      const exportExercises = variant === "B" && versionBExercises ? versionBExercises : exercises;
       const exportContext = { ...context, language: exportLanguage };
 
       const res = await fetch("/api/export", {
@@ -165,10 +225,11 @@ export default function ExportPage() {
 
   async function handleSendEmail() {
     if (!context || !exercises.length || !email) return;
+    if (variant === "B" && !versionBExercises) return; // Version B not ready yet
     setEmailSending(true);
     setEmailError(null);
     try {
-      const exportExercises = variant === "B" ? buildVersionB(exercises, examSeed) : exercises;
+      const exportExercises = variant === "B" && versionBExercises ? versionBExercises : exercises;
       const exportContext = { ...context, language: exportLanguage };
       const header = { schoolName, className, teacherName, date: examDate, schoolLogo };
 
@@ -211,6 +272,7 @@ export default function ExportPage() {
       templateId,
       createdAt: Date.now(),
       updatedAt: Date.now(),
+      ...(versionBExercises ? { versionB: versionBExercises } : {}),
     };
     saveExam(exam);
     setSavedToLibrary(true);
@@ -405,23 +467,35 @@ export default function ExportPage() {
                   {(["A", "B"] as const).map((v) => (
                     <button
                       key={v}
-                      onClick={() => !isFreeTier && setVariant(v)}
-                      disabled={isFreeTier}
+                      onClick={() => handleSelectVariant(v)}
+                      disabled={isFreeTier || generatingVersionB}
                       className={cn(
-                        "flex-1 text-xs px-3 py-1.5 rounded-lg border transition-all",
+                        "flex-1 text-xs px-3 py-1.5 rounded-lg border transition-all inline-flex items-center justify-center gap-1.5",
                         variant === v
                           ? "bg-[var(--accent)] text-white border-[var(--accent)]"
                           : "border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--border-strong)]",
-                        isFreeTier && "cursor-not-allowed"
+                        (isFreeTier || generatingVersionB) && "cursor-not-allowed"
                       )}
                     >
+                      {v === "B" && generatingVersionB && (
+                        <span className="w-2.5 h-2.5 rounded-full border-2 border-current border-t-transparent animate-spin" />
+                      )}
                       Version {v}
                     </button>
                   ))}
                 </div>
                 <p className="text-[10px] text-[var(--text-tertiary)] mt-1.5">
-                  {variant === "B" ? "Exercises and sub-questions reordered." : "Original exercise order."}
+                  {generatingVersionB
+                    ? "Generating a real second exam — different numbers, same difficulty…"
+                    : variant === "B"
+                      ? versionBExercises
+                        ? "A real second exam: different numbers & wording, same difficulty and points."
+                        : "Click to generate a real second exam variant (AI-generated)."
+                      : "Original exercise order."}
                 </p>
+                {versionBError && (
+                  <p className="text-[10px] text-[var(--danger)] mt-1">{versionBError}</p>
+                )}
               </div>
               <div className="rounded-xl border border-[var(--border)] p-3 bg-[var(--bg-subtle)]/30">
                 <div className="flex items-center gap-2 mb-2">
@@ -442,13 +516,13 @@ export default function ExportPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <button
                 onClick={() => handleDownload("word")}
-                disabled={!!downloading}
+                disabled={!!downloading || (variant === "B" && !versionBExercises)}
                 className={cn(
                   "flex items-center gap-4 p-4 rounded-xl border text-left transition-all",
                   downloaded === "word"
                     ? "border-[var(--accent)] bg-[var(--accent-light)]"
                     : "border-[var(--border)] hover:border-[var(--accent)] hover:bg-[var(--accent-light)]",
-                  downloading === "word" && "opacity-60"
+                  (downloading === "word" || (variant === "B" && !versionBExercises)) && "opacity-60"
                 )}
               >
                 <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center flex-shrink-0">
@@ -467,10 +541,12 @@ export default function ExportPage() {
               </button>
 
               <button
-                onClick={() => window.open("/print", "_blank")}
+                onClick={() => window.open(variant === "B" && versionBExercises ? "/print?variant=b" : "/print", "_blank")}
+                disabled={variant === "B" && !versionBExercises}
                 className={cn(
                   "flex items-center gap-4 p-4 rounded-xl border text-left transition-all",
-                  "border-[var(--border)] hover:border-[var(--accent)] hover:bg-[var(--accent-light)]"
+                  "border-[var(--border)] hover:border-[var(--accent)] hover:bg-[var(--accent-light)]",
+                  variant === "B" && !versionBExercises && "opacity-60 cursor-not-allowed"
                 )}
               >
                 <div className="w-10 h-10 rounded-xl bg-red-50 text-red-500 flex items-center justify-center flex-shrink-0">
