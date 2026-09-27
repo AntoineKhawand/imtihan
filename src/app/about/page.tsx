@@ -33,6 +33,7 @@ export const metadata = {
   description: "The story behind Imtihan: we empower Lebanese and international educators by automating exam creation (Bac Libanais, Bac Français, IB) to save hours of prep time.",
   alternates: { canonical: "/about" },
   openGraph: {
+    type: "website",
     title: "About Imtihan — Empowering Teachers with AI",
     description: "Learn how Imtihan is solving teacher burnout in Lebanon by automating curriculum-aligned exam drafts and marking keys.",
     url: "https://imtihan.live/about",

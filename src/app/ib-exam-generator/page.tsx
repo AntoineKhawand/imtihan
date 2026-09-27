@@ -10,6 +10,7 @@ export const metadata = {
   description: "Create IB Diploma Programme (DP) and MYP Chemistry & Physics exams in seconds. Automatically generate detailed mark schemes matching IB Command Terms and rubrics.",
   alternates: { canonical: "/ib-exam-generator" },
   openGraph: {
+    type: "website",
     title: "IB Exam Generator Chemistry & Physics — Imtihan",
     description: "The professional assessment tool for IB science teachers. Draft curriculum-aligned worksheets and full mark schemes instantly.",
     url: "https://imtihan.live/ib-exam-generator",

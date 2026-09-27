@@ -10,6 +10,7 @@ export const metadata = {
   description: "Le générateur de devoir Bac Français pour enseignants. Créez des Devoirs Surveillés (DS) et examens blancs (Mathématiques, Physique-Chimie) de la Seconde à la Terminale.",
   alternates: { canonical: "/bac-francais-exam-generator" },
   openGraph: {
+    type: "website",
     title: "Générateur de Devoir Bac Français — Imtihan",
     description: "Élaborez des contrôles et des grilles de correction conformes aux programmes officiels de l'Éducation Nationale française (AEFE).",
     url: "https://imtihan.live/bac-francais-exam-generator",

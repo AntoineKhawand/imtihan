@@ -17,6 +17,7 @@ export const metadata: Metadata = {
   description: "Guides and insights on exam creation, curriculum coverage, and teaching in Lebanon — from the Imtihan team.",
   alternates: { canonical: "/blog" },
   openGraph: {
+    type: "website",
     title: "Imtihan Blog",
     description: "Guides and insights on exam creation, curriculum coverage, and teaching in Lebanon.",
     url: "/blog",

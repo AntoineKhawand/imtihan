@@ -7,6 +7,7 @@ export const metadata: Metadata = {
   description: "Imtihan Pro à partir de $5.99/mois. 10 examens par mois (20 avec l'abonnement annuel), toutes les matières, corrigé inclus. Paiement via WhatsApp. Commencez gratuitement avec 1 examen.",
   alternates: { canonical: "/pricing" },
   openGraph: {
+    type: "website",
     title: "Tarifs Imtihan — Générateur d'examens IA au Liban",
     description: "$5.99/mois pour générer 10 examens par mois, ou $47.88/an pour 20 examens par mois. Sans carte bancaire, paiement WhatsApp.",
     url: "https://imtihan.live/pricing",

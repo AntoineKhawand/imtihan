@@ -8,6 +8,7 @@ export const metadata = {
   description: "Contactez l'équipe Imtihan au Liban via WhatsApp, email ou formulaire. Réponse sous 24h en Français, Anglais ou Arabe.",
   alternates: { canonical: "/contact" },
   openGraph: {
+    type: "website",
     title: "Contacter Imtihan — WhatsApp & Email",
     description: "Joignez l'équipe Imtihan sur WhatsApp pour une réponse rapide, ou par email pour les demandes formelles.",
     url: "https://imtihan.live/contact",

@@ -10,6 +10,7 @@ export const metadata = {
   description: "Le premier générateur d'examen Bac Libanais intelligent. Créez des examens blancs et contrôles (Terminale SG, SV, SE, LH et Brevet EB9) avec corrigé complet en 30 secondes.",
   alternates: { canonical: "/generateur-examen-bac-libanais" },
   openGraph: {
+    type: "website",
     title: "Générateur d'Examen Bac Libanais avec IA — Imtihan",
     description: "Concevez des devoirs et contrôles conformes aux exigences officielles du Ministère de l'Éducation libanais (Dawrat, Brevet, Terminale).",
     url: "https://imtihan.live/generateur-examen-bac-libanais",
