@@ -34,7 +34,7 @@ $Stamp   = Get-Date -Format "yyyy-MM-dd_HHmmss"
 $LogFile = Join-Path $LogDir "$Stamp.log"
 
 function Log($msg) {
-    "$(Get-Date -Format o)  $msg" | Tee-Object -FilePath $LogFile -Append -Encoding utf8 | Out-Null
+    Add-Content -Path $LogFile -Value "$(Get-Date -Format o)  $msg" -Encoding UTF8
 }
 
 function RunGit {
