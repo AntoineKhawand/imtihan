@@ -10,6 +10,7 @@ export const metadata = {
   description: "The leading AI exam generator tailored for teachers and schools in Lebanon. Generate curriculum-aligned exams, Brevet / Bac mock tests, and full corrigés in seconds.",
   alternates: { canonical: "/ai-exam-generator-lebanon" },
   openGraph: {
+    type: "website",
     title: "AI Exam Generator Lebanon — Imtihan",
     description: "Create customized exams in English or French, aligned to Lebanese, French, and IB standards. Perfect for Lebanese schools and tutors.",
     url: "https://imtihan.live/ai-exam-generator-lebanon",

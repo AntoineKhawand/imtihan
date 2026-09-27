@@ -7,6 +7,7 @@ export const metadata: Metadata = {
   description: "Create curriculum-aligned exams for Bac Libanais, Bac Français, IB, and University in seconds. Full answer key included. 1 free exam, no credit card required.",
   alternates: { canonical: "/" },
   openGraph: {
+    type: "website",
     title: "Imtihan — AI Exam Generator for Teachers in Lebanon",
     description: "Describe your exam in French or English. Imtihan generates questions and a full corrigé in seconds. Bac Libanais · Bac Français · IB · University.",
     url: "https://imtihan.live",
