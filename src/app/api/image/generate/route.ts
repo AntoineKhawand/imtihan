@@ -1,5 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 
+// FOUNDER_DECISIONS.md #8 covered this route too, but it's a different shape
+// than the routes that call a paid AI API: it proxies to pollinations.ai, a
+// free third-party service — no direct $ cost to the founder from abuse, and
+// it's embedded via <img src> in rendered exam content across authenticated
+// AND public-ish pages (renderContent.ts renders it for students on
+// /student/practice and possibly shared /exam/[id] links, neither of which
+// require a teacher session — see src/proxy.ts's PROTECTED_PATHS), so gating
+// it behind login isn't viable without breaking legitimate rendering. Kept
+// public; added only an input-length cap, same treatment as the other
+// hardcoded-host proxy fixed today (src/app/api/visual/mermaid/route.ts).
+const MAX_PROMPT_LENGTH = 2000;
+
 /**
  * Robust Image Generation Proxy
  * Centralizes visual generation logic and provides a reliable endpoint.
@@ -13,6 +25,9 @@ export async function GET(request: NextRequest) {
 
   if (!prompt) {
     return NextResponse.json({ error: "Missing prompt" }, { status: 400 });
+  }
+  if (prompt.length > MAX_PROMPT_LENGTH) {
+    return NextResponse.json({ error: "Prompt too long" }, { status: 413 });
   }
 
   // We use the FLUX model which is currently the best 'open' model for scientific diagrams.

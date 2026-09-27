@@ -10,6 +10,30 @@
 
 ## Open
 
+*(Nothing open right now — check back after the next dispatch. Every item below is resolved.)*
+
+---
+
+## Answered
+
+### 8. Unauthenticated API routes that call paid AI APIs or proxy third-party services with zero auth or rate limiting
+**Raised by:** security · **Date:** 2026-09-25
+**Full detail:** `SECURITY.md` (2026-09-25 audit log), `BUGS.md`
+**Status:** Answered: 2026-09-27 — a per-route decision, not one blanket policy, after actually checking which routes have a real current caller:
+- `/api/rubric`, `/api/generate/transform`, and the top-level `/api/translate` (distinct from the real, already-authenticated `/api/exam/translate`) have **zero callers anywhere in `src/`** — confirmed by search. Gated behind `verifySession` (401 if signed out). Zero regression risk, since nothing depends on the old unauthenticated behavior.
+- `/api/scanner` is a real, intentional public "try our scanner" demo (linked from `src/app/scanner/page.tsx`) that calls paid Gemini — kept public, but given a per-IP daily cap (15/day) and request-size/shape validation it never had, via a new Firestore-backed rate limiter (`src/lib/rateLimit.ts`) — the two previously-installed rate-limiting libraries were removed as unused dead code earlier the same day (BUG-034 cleanup) and wouldn't have worked anyway on Vercel's stateless serverless functions (in-memory limiters don't persist across invocations); Firestore is the same pattern this app already uses for quota counters.
+- `/api/image/generate` is a free (zero-$-cost) proxy to `pollinations.ai`, embedded via `<img src>` in exam content shown to students and on pages `src/proxy.ts` doesn't gate behind login (`/student/practice`, `/exam/[id]`) — auth-gating it would break legitimate rendering for students who never sign in as a teacher. Kept public; added only a prompt-length cap, matching the fix already applied the same day to `/api/visual/mermaid` (a hardcoded-host proxy, same shape).
+
+### 9. Version A/B: marketing copy vs. actual product gate disagree — AND the feature itself is weaker than either side claims
+**Raised by:** qa (exploratory pass, live production) · **Date:** 2026-09-25, deepened 2026-09-26
+**Full detail:** `BUGS.md` (BUG-036, BUG-042)
+**Status:** Answered: 2026-09-27 — option (a), invest in a real second AI-generated variant. Implemented: `/api/generate/version-b` (new route) asks Claude/Gemini to rewrite every exercise's numbers/names/context and fully recompute its solution, given Version A's exercises; `src/lib/variant.ts`'s new `mergeVariantExercise()` then force-copies every structural/gradable field (type, difficulty, points, chapterIds, sub-question/option counts and labels, bareme/microBareme points) from the original so "same difficulty and points distribution as Version A" is a code-enforced guarantee, not just a prompt instruction the AI might ignore. Trigger point is the existing Pro-gated "Variant" selector at Export (Step 5) — clicking "Version B" for the first time now makes a real AI call instead of an instant client-side reorder. Also fixed in the process: PDF export (`/print`) had never respected the variant selector at all (Word/email were the only paths that did) — it now accepts `?variant=b`. **Update, same day:** BUG-036's Free-vs-Pro copy mismatch is now also fixed — since Version B is a genuinely costly second AI call, kept it Pro-only (protects margin) and corrected every surface that wrongly listed it as a Free-plan feature (`LandingPricing.tsx`, `pricing/page.tsx`, `pricing/layout.tsx`'s FAQ, the homepage FAQ) to instead list it under Pro. Two open sub-questions remain flagged for founder input in `BUGS.md`'s BUG-042 update: (1) whether Version B should cost 1 unit of the same monthly Pro quota as a fresh generation (current default) or get its own separate/cheaper cap; (2) whether repeated Version B re-rolls need their own cooldown beyond the shared monthly quota, since each is a real second AI API call.
+
+### 6. Firestore deploys
+**Raised by:** database · **Date:** 2026-09-18 · **Escalated:** 2026-09-26 (qa, BUG-045)
+**Full detail:** `DATABASE.md`, `BUGS.md` (BUG-013, BUG-045)
+**Status:** Answered/done: 2026-09-27 — founder ran `firebase deploy --only firestore:indexes` himself. All 3 pending indexes (BUG-013's original "My School" fix, plus BUG-045/BUG-044's `visibleToStudents` pair) are live. Both dependent features (My School tab, School Bank) confirmed working.
+
 ### 1. BUG-026 verification model
 **Raised by:** database · **Date:** 2026-09-18 (restated 2026-09-19)
 **Full detail:** `DATABASE.md`, `BUGS.md` (BUG-026)
@@ -29,30 +53,6 @@
 **Raised by:** marketing · **Date:** 2026-09-18
 **Full detail:** `MARKETING.md`
 **Status:** Answered: 2026-09-24 — confirmed 10/20 (matches what the backend already enforces). Option 1's pre-drafted diffs applied to `pricing/layout.tsx` and `upgrade/layout.tsx`; all six surfaces (2 page bodies, 2 metadata objects, 2 FAQ blocks) now agree.
-
-### 8. Unauthenticated API routes that call paid AI APIs or proxy third-party services with zero auth or rate limiting
-**Raised by:** security · **Date:** 2026-09-25
-**The decision needed:** `/api/generate/transform`, `/api/image/generate`, `/api/rubric`, `/api/scanner`, and `/api/translate` all call a paid AI API (Gemini/Claude) or proxy a third-party image service, with no `verifyIdToken` check and no rate limiting — unlike `/api/generate` (the main exam-creation endpoint), which is properly auth-gated and quota-enforced. Concrete exploit: anyone who finds these URLs (no account needed) can call them in an unbounded loop, running up the founder's Gemini/Claude/image-proxy API bill indefinitely and completely bypassing the "1 free exam, then paywall" quota model — this isn't a data-exposure risk, it's a direct-cost risk with no ceiling. `/api/visual/mermaid` (unauthenticated proxy to `mermaid.ink`/`kroki.io`) has a milder version of the same shape (free third-party services, so no direct API cost, but still an open, unbounded proxy).
-**Why this isn't a unilateral security fix:** Adding a blanket auth requirement to all of these could break an intentionally-public "try it free" UX on a landing/demo page (unclear from the code alone whether that's the intent for any of them) — this needs a product decision on which of these should require sign-in vs. stay public-with-rate-limiting vs. accept the cost exposure pre-launch (traffic is presumably still low pre-launch, so the practical cost today may be small). Two rate-limiting libraries (`express-rate-limit`, `rate-limiter-flexible`) are already installed as dependencies but never actually used anywhere in `src/` — whichever direction is chosen, the tooling to implement it is already in the repo.
-**Options:** (a) require `verifyIdToken` on all 5 routes, same pattern as `/api/generate`; (b) keep them public but add IP-based rate limiting via the already-installed `rate-limiter-flexible`/`express-rate-limit`; (c) accept the exposure for now given pre-launch traffic levels, revisit before any paid marketing push.
-**Full detail:** `SECURITY.md` (2026-09-25 audit log)
-**Status:** Open
-
-### 6. Firestore deploys
-**Raised by:** database · **Date:** 2026-09-18 · **Escalated:** 2026-09-26 (qa, BUG-045)
-**The decision needed:** Two independent deploy actions, both requiring the founder to run `firebase deploy` by hand (Claude Code's Production Deploy guardrail).
-**Options:** BUG-013's index fix has no security implication and is ready to deploy independently, anytime — `firebase deploy --only firestore:indexes`. This one now blocks a second, Pro-tier paid feature too (BUG-045: "School Bank"/Community exam library has been completely non-functional for viewing since it shipped, not just the free "My School" tab BUG-013 originally covered) — 8 days pending with no downside to deploying. BUG-026's rules fix should wait for decision #1 above (already answered — accept risk for now).
-**Full detail:** `DATABASE.md`, `BUGS.md` (BUG-013, BUG-045)
-**Status:** Open
-
----
-
-## Answered
-
-### 9. Version A/B: marketing copy vs. actual product gate disagree — AND the feature itself is weaker than either side claims
-**Raised by:** qa (exploratory pass, live production) · **Date:** 2026-09-25, deepened 2026-09-26
-**Full detail:** `BUGS.md` (BUG-036, BUG-042)
-**Status:** Answered: 2026-09-27 — option (a), invest in a real second AI-generated variant. Implemented: `/api/generate/version-b` (new route) asks Claude/Gemini to rewrite every exercise's numbers/names/context and fully recompute its solution, given Version A's exercises; `src/lib/variant.ts`'s new `mergeVariantExercise()` then force-copies every structural/gradable field (type, difficulty, points, chapterIds, sub-question/option counts and labels, bareme/microBareme points) from the original so "same difficulty and points distribution as Version A" is a code-enforced guarantee, not just a prompt instruction the AI might ignore. Trigger point is the existing Pro-gated "Variant" selector at Export (Step 5) — clicking "Version B" for the first time now makes a real AI call instead of an instant client-side reorder. Also fixed in the process: PDF export (`/print`) had never respected the variant selector at all (Word/email were the only paths that did) — it now accepts `?variant=b`. BUG-036's Free-vs-Pro pricing-tier copy mismatch remains open and separate — that's a gating question, not addressed here. Two open sub-questions flagged back for founder input in `BUGS.md`'s BUG-042 update: (1) whether Version B should cost 1 unit of the same monthly Pro quota as a fresh generation (current default) or get its own separate/cheaper cap; (2) whether repeated Version B re-rolls need their own cooldown beyond the shared monthly quota, since each is a real second AI API call.
 
 ### 10. School Bank sharing silently also publishes to students, including full solutions
 **Raised by:** qa (Pro-tier exploratory pass) · **Date:** 2026-09-26

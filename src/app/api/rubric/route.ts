@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { withRetryAndFallback, geminiErrorMessage } from "@/lib/gemini";
 import { buildRubricSystemPrompt, buildRubricUserPrompt } from "@/lib/prompts/rubric";
+import { verifySession } from "@/lib/firebase-admin";
 import type { Exercise } from "@/types/exam";
 
 const ExerciseSchema = z.object({
@@ -78,6 +79,15 @@ function robustParse(text: string): unknown {
 
 export async function POST(request: NextRequest) {
   try {
+    // FOUNDER_DECISIONS.md #8: this route calls a paid AI API with no auth and
+    // no current caller anywhere in src/ (confirmed by search, 2026-09-27) —
+    // closing the exposure with a sign-in requirement is a zero-regression-risk
+    // fix, since nothing currently depends on it being reachable unauthenticated.
+    const uid = await verifySession(request);
+    if (!uid) {
+      return NextResponse.json({ success: false, errors: ["Unauthorized. Please sign in."] }, { status: 401 });
+    }
+
     const body = await request.json();
     const parsed = RequestSchema.safeParse(body);
     if (!parsed.success) {

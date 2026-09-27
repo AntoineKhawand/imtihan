@@ -3,6 +3,7 @@ import { z } from "zod";
 import { withRetryAndFallback } from "@/lib/gemini";
 import type { Exercise } from "@/types/exam";
 import { sanitizeError, createSecurityHeaders } from "@/lib/security";
+import { verifySession } from "@/lib/firebase-admin";
 
 const RequestSchema = z.object({
   exercise: z.any(),
@@ -23,6 +24,14 @@ function sanitizeJSON(input: string): string {
 
 export async function POST(request: NextRequest) {
   try {
+    // FOUNDER_DECISIONS.md #8: paid-AI-API route with no auth and no current
+    // caller anywhere in src/ (confirmed by search, 2026-09-27) — gating it
+    // closes the exposure with zero regression risk.
+    const uid = await verifySession(request);
+    if (!uid) {
+      return NextResponse.json({ error: "Unauthorized. Please sign in." }, { status: 401, headers: createSecurityHeaders() });
+    }
+
     const body = await request.json();
     const parsed = RequestSchema.safeParse(body);
 

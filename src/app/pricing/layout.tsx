@@ -17,11 +17,11 @@ export const metadata: Metadata = {
 const PRICING_FAQ_ITEMS = [
   {
     q: "What's included in Imtihan's free plan?",
-    a: "1 complete exam with its corrigé, access to every curriculum and subject, Word and PDF export, and Version A/B generation — no credit card required.",
+    a: "1 complete exam with its corrigé, access to every curriculum and subject, and Word and PDF export — no credit card required.",
   },
   {
     q: "How much does Imtihan Pro cost?",
-    a: "$5.99 per month for 10 exams per month, or $3.99 per month billed yearly ($47.88/year) for 20 exams per month. Corrigés included on both plans.",
+    a: "$5.99 per month for 10 exams per month, or $3.99 per month billed yearly ($47.88/year) for 20 exams per month. Corrigés and Version A/B generation (a real second exam variant, for anti-cheating) are included on both plans.",
   },
   {
     q: "How do I pay for Imtihan Pro?",
