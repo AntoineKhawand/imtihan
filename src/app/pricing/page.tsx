@@ -11,19 +11,26 @@ const FEATURES_FREE = [
   "1 complete exam + corrigé",
   "All curricula & subjects",
   "Word + PDF export",
-  "Version A/B generation",
 ];
 
 // Exam-count copy must match the limits actually enforced in
 // /api/generate/route.ts (MONTHLY_LIMITS.pro = 10, or 20 on the yearly
 // plan) — this page previously said "100 exams per month" for both,
 // which the backend has never allowed.
+//
+// BUG-036: "Version A/B generation" used to appear on the FREE feature list
+// above while the actual gate (src/app/create/confirm/page.tsx) has always
+// been Pro-only — confirmed the intended design in ROADMAP.md. Now that
+// Version B is a real, costly second AI generation call (FOUNDER_DECISIONS.md
+// #9), keeping it Pro-only is the right call for margin, not just
+// convenient — moved here, where the gate actually lives.
 function getFeaturesPro(yearly: boolean): string[] {
   return [
     `${yearly ? 20 : 10} exams per month`,
     "All curricula & subjects",
     "Corrigé included per exam",
     "Word + PDF export",
+    "Version A/B generation (anti-cheating)",
     "Saved exam library",
     "Community exam library",
   ];

@@ -93,7 +93,7 @@ const FAQ_ITEMS = [
   },
   {
     q: "Can I generate different versions of the same exam?",
-    a: "Yes, Imtihan includes a Version A/B feature. You can generate two parallel versions of the same assessment. The system changes numeric values or details while keeping the conceptual difficulty identical, making cheating in class much harder."
+    a: "Yes, on the Pro plan. Imtihan includes a Version A/B feature: you can generate two parallel versions of the same assessment. The system changes numeric values or details while keeping the conceptual difficulty identical, making cheating in class much harder."
   },
   {
     q: "Can I export the exam for printing?",

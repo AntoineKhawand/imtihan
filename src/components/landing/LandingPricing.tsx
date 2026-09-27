@@ -87,7 +87,6 @@ export function LandingPricing({ isAuthenticated }: { isAuthenticated?: boolean 
                 "1 complete exam + corrigé",
                 "All curricula & subjects",
                 "Word + PDF export",
-                "Version A/B generation",
               ].map((f) => (
                 <li key={f} className="flex items-start gap-3 text-sm text-[var(--text-secondary)]">
                   <div className="mt-1 w-4 h-4 rounded-full bg-[var(--accent-light)] text-[var(--accent)] flex items-center justify-center flex-shrink-0">
@@ -137,6 +136,7 @@ export function LandingPricing({ isAuthenticated }: { isAuthenticated?: boolean 
                 "All curricula & subjects",
                 "Corrigé included per exam",
                 "Word + PDF export",
+                "Version A/B generation (anti-cheating)",
                 "Saved exam library",
                 "Community exam library",
               ].map((f) => (

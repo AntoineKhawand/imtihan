@@ -266,10 +266,11 @@ Separately fixed 2026-09-26: `getSchoolBankExercises()`'s silent `catch { return
 ---
 
 ## BUG-036: Landing/pricing pages list Version A/B generation as a Free-plan feature, but the product gates Version B generation behind Pro
-**Status:** Open
+**Status:** Fixed 2026-09-27
 **Severity:** Medium
 **Area:** UI / Marketing copy vs. product gating
 **Reported:** 2026-09-25 (QA exploratory pass, live production)
+**Fix:** Founder decision (`FOUNDER_DECISIONS.md` #8/#9, 2026-09-27): keep Version B Pro-only — it's now a genuinely costly second AI generation call (FOUNDER_DECISIONS #9), so giving it away free would undermine the reason Pro exists. Removed "Version A/B generation" from the Free plan's feature list in `src/components/landing/LandingPricing.tsx` and `src/app/pricing/page.tsx`, added it to the Pro list in both (as "Version A/B generation (anti-cheating)"), corrected `src/app/pricing/layout.tsx`'s FAQ answer (previously said it was included free, now correctly attributes it to Pro), and qualified the homepage FAQ (`src/app/page.tsx`) with "on the Pro plan" since it didn't specify a tier at all. `npm run type-check` clean, `npm test` 183/183 (no test coverage change needed — this is pure copy).
 
 **Description:** The homepage pricing section (/#pricing) and the standalone /pricing page both list "Version A/B generation" as an included checkmarked feature of the Free plan card. But on the actual Confirm and Configure step (Step 2) of the exam-creation flow, the Generate Version B toggle is disabled for a free-tier account with the label "Available on the Pro plan" and a PRO badge - confirmed live with a real free-tier test account. ROADMAP.md (line ~104, "Pro feature gates (logo, email, Version B, modern template)") confirms Version B being Pro-only is the actual intended product behavior, meaning the marketing copy is the side that is wrong, not the gate.
 **Steps to reproduce:**

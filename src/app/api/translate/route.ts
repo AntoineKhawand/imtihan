@@ -1,13 +1,32 @@
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 import { GEMINI_MODEL_PRIMARY, getGeminiModel } from "@/lib/gemini";
+import { verifySession } from "@/lib/firebase-admin";
+
+// FOUNDER_DECISIONS.md #8: distinct from src/app/api/exam/translate/route.ts
+// (the real, already-authenticated translate feature actually wired to the
+// UI) — this top-level route has no current caller anywhere in src/
+// (confirmed by search, 2026-09-27), no auth, and no request-shape
+// validation. Closing all three with zero regression risk, since nothing
+// depends on the current unauthenticated/unvalidated behavior.
+const RequestSchema = z.object({
+  exercise: z.any(),
+  targetLanguage: z.string().min(1).max(50),
+});
 
 export async function POST(req: NextRequest) {
   try {
-    const { exercise, targetLanguage } = await req.json();
+    const uid = await verifySession(req);
+    if (!uid) {
+      return NextResponse.json({ error: "Unauthorized. Please sign in." }, { status: 401 });
+    }
 
-    if (!exercise || !targetLanguage) {
+    const body = await req.json();
+    const parsed = RequestSchema.safeParse(body);
+    if (!parsed.success) {
       return NextResponse.json({ error: "Exercise and target language are required" }, { status: 400 });
     }
+    const { exercise, targetLanguage } = parsed.data;
 
     const model = getGeminiModel(GEMINI_MODEL_PRIMARY);
 
