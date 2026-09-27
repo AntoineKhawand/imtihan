@@ -128,7 +128,18 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${GeistSans.variable} ${GeistMono.variable} ${fraunces.variable}`} suppressHydrationWarning>
-      <head />
+      <head>
+        {/*
+          Facebook's Sharing Debugger flags fb:app_id as a required property.
+          Next.js's Metadata API has no dedicated field for it (it's not part
+          of the openGraph type schema), and metadata.other renders name="..."
+          rather than property="...", which Facebook's crawler doesn't
+          recognize for its own fb:/og: namespaced tags (confirmed the same
+          issue with og:type earlier — see that fix's commit). A raw tag here
+          is the only way to get the correct attribute.
+        */}
+        <meta property="fb:app_id" content="1968562397881054" />
+      </head>
       <body>
         <Script
           src="https://www.googletagmanager.com/gtag/js?id=G-7DZ1T3P599"
