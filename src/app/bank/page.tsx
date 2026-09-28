@@ -478,10 +478,10 @@ export default function BankPage() {
       {sharingEntry && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setSharingEntry(null)} />
-          <div className="relative w-full max-w-md bg-white rounded-3xl border border-[var(--border)] shadow-2xl overflow-hidden">
+          <div className="relative w-full max-w-md bg-[var(--surface)] rounded-3xl border border-[var(--border)] shadow-2xl overflow-hidden">
             <div className="p-8 space-y-6">
               <div className="flex items-center justify-between">
-                <div className="w-12 h-12 rounded-2xl bg-emerald-50 flex items-center justify-center text-emerald-600">
+                <div className="w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-950/30 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
                   <Share2 size={22} />
                 </div>
                 <button onClick={() => setSharingEntry(null)} className="w-9 h-9 rounded-xl hover:bg-[var(--bg-subtle)] flex items-center justify-center text-[var(--text-tertiary)] transition-colors">
@@ -533,10 +533,10 @@ export default function BankPage() {
       {isInviteOpen && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setIsInviteOpen(false)} />
-          <div className="relative w-full max-w-md bg-white rounded-3xl border border-[var(--border)] shadow-2xl overflow-hidden">
+          <div className="relative w-full max-w-md bg-[var(--surface)] rounded-3xl border border-[var(--border)] shadow-2xl overflow-hidden">
             <div className="p-8 space-y-6">
               <div className="flex items-center justify-between">
-                <div className="w-12 h-12 rounded-2xl bg-emerald-50 flex items-center justify-center text-emerald-600">
+                <div className="w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-950/30 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
                   <Building2 size={22} />
                 </div>
                 <button onClick={() => setIsInviteOpen(false)} className="w-9 h-9 rounded-xl hover:bg-[var(--bg-subtle)] flex items-center justify-center text-[var(--text-tertiary)] transition-colors">
@@ -582,7 +582,7 @@ export default function BankPage() {
                     onChange={(e) => setInviteEmail(e.target.value)}
                     onKeyDown={(e) => e.key === "Enter" && sendInvite()}
                     placeholder="colleague@school.edu.lb"
-                    className="w-full h-11 pl-10 pr-4 rounded-xl border border-[var(--border)] text-sm focus:outline-none focus:border-emerald-500 transition-all"
+                    className="w-full h-11 pl-10 pr-4 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-[var(--text)] text-sm focus:outline-none focus:border-emerald-500 transition-all"
                   />
                 </div>
               </div>
