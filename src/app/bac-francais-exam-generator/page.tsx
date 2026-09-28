@@ -117,8 +117,9 @@ export default function FrenchBacLandingPage() {
               <Star size={12} className="fill-[var(--accent)]" /> Dédié au programme officiel français (AEFE)
             </div>
 
-            <h1 className="serif text-display-xl text-[var(--text)] leading-tight tracking-tight max-w-2xl mx-auto">
-              Le <span className="italic text-[var(--accent)]">générateur de devoir Bac Français</span> conçu pour les professeurs.
+            <h1 className="serif text-display-lg text-[var(--text)] leading-tight tracking-tight max-w-3xl mx-auto">
+              <span className="md:block md:whitespace-nowrap">Le générateur de devoir Bac Français</span>
+              <span className="italic text-[var(--accent)] md:block md:whitespace-nowrap">conçu pour les professeurs.</span>
             </h1>
 
             <p className="text-base text-[var(--text-secondary)] max-w-xl mx-auto leading-relaxed">

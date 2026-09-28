@@ -124,8 +124,9 @@ export default function IbLandingPage() {
               <BookOpen size={12} className="fill-[var(--accent)]" /> Designed for IB DP & MYP Science Teachers
             </div>
 
-            <h1 className="serif text-display-xl text-[var(--text)] leading-tight tracking-tight max-w-2xl mx-auto">
-              The professional <span className="italic text-[var(--accent)]">IB exam generator</span> for chemistry & physics.
+            <h1 className="serif text-display-lg text-[var(--text)] leading-tight tracking-tight max-w-3xl mx-auto">
+              <span className="md:block md:whitespace-nowrap">The professional IB exam generator</span>
+              <span className="italic text-[var(--accent)] md:block md:whitespace-nowrap">for chemistry & physics.</span>
             </h1>
 
             <p className="text-base text-[var(--text-secondary)] max-w-xl mx-auto leading-relaxed">
