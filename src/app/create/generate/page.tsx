@@ -17,6 +17,7 @@ import { StepIndicator, StepLabel } from "@/app/create/page";
 import { getChapter } from "@/data/curricula";
 import { useAuth } from "@/contexts/AuthContext";
 import { isProActive } from "@/lib/subscription";
+import { trackEvent } from "@/lib/analytics";
 
 type ExerciseWithStatus = Exercise & { isRegenerating?: boolean };
 type GenerationStatus = "idle" | "generating" | "done" | "error";
@@ -217,6 +218,11 @@ export default function GeneratePage() {
               setExercises(all);
               persistExercises(all);
               setStatus("done");
+              trackEvent("exam_generated", {
+                curriculum: context?.curriculumId,
+                subject: context?.subject,
+                exercise_count: all.length,
+              });
             }
           }
         } catch { /* skip malformed event */ }
@@ -240,6 +246,11 @@ export default function GeneratePage() {
           setExercises(all);
           persistExercises(all);
           setStatus("done");
+          trackEvent("exam_generated", {
+            curriculum: context?.curriculumId,
+            subject: context?.subject,
+            exercise_count: all.length,
+          });
         } else {
           setError("Generation timed out. Please try again.");
           setStatus("error");

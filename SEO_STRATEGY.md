@@ -136,6 +136,60 @@ keep each change reviewable and low-risk for an unattended push.
       is unchanged and still stands.
 
 ### Technical SEO
+- [x] **2026-09-27 — investigated why organic traffic reads as ~zero (founder request, GA4↔GSC
+      just linked; GA4's own 28d numbers: 816 sessions, 809 Direct, only 6 Organic Search).
+      Real GSC numbers (`sc-domain:imtihan.live`, 28d 2026-08-30→2026-09-27): 10 clicks / 573
+      impressions / 1.75% CTR / avg pos 5.8 — and 508 of those 573 impressions (89%) plus all
+      10 clicks are on the homepage alone; every other URL gets 0-24 impressions, 0 clicks.**
+      Sitemap: `https://imtihan.live/sitemap.xml`, Valid, 48 URLs submitted, 0 errors, 0
+      warnings — but its own "indexed" count for the WEB content type reads **0/48** (a known
+      GSC sitemap-report lag, not literal — cross-checked against real per-URL inspection
+      below). Ran `check_indexing_issues` + individual URL Inspections on 9 important pages
+      (homepage, `/pricing`, `/about`, `/blog`, the one blog post with real impressions, the 3
+      curricula landing pages, `/ai-exam-generator-lebanon`): only **3 of 9 are actually
+      indexed** (homepage, `/ai-exam-generator-lebanon`, the `...-sx7l` blog post — the same 3
+      already known from the 2026-09-27 GSC-follow-up entry below). No robots-blocked URLs, no
+      canonical-mismatch issues found on any of the 9 — ruling out the two most common "actively
+      blocking" causes. Confirmed no accidental `noindex`: grepped `/pricing`, `/about`,
+      `/blog` source for `robots` metadata (none set) and re-fetched live `robots.txt` (no
+      disallow entry for either page).
+      **Found one concrete, fixable cause for 2 of the non-indexed pages specifically** — not
+      a blanket explanation, but a real bug: `/about` inspects as **"URL is unknown to
+      Google"** with **zero referring URLs at all** (Google hasn't even properly discovered it
+      through a crawl path, only knows it exists from the sitemap listing itself) — grepped the
+      *entire* `src/` tree for `href="/about"` and got **zero matches, anywhere** — the page has
+      no internal link pointing to it from any other page in the app, ever. `/pricing` inspects
+      as "Discovered - currently not indexed" with its only referring URL being `sitemap.xml`
+      itself — traced every `href="/pricing"` in the app: 4 deep marketing sub-pages
+      (`/about`, `/ib-exam-generator`, `/bac-francais-exam-generator`, `/create/generate`'s
+      upgrade CTA) link to it, but **not the homepage, global nav, or footer** —
+      `LandingNav.tsx`'s "Pricing" link is a same-page `#pricing` anchor to the homepage's own
+      embedded pricing section, not a crawlable `<a href="/pricing">`. This is the identical
+      orphan-page pattern already diagnosed and fixed once before for the 3 curricula landing
+      pages (2026-09-18 entry below) — recurring on 2 more pages that fix didn't cover, and
+      notably on the two pages a converting visitor most needs (`/about`, `/pricing`), reached
+      via the page carrying 89% of the site's own impressions.
+      **Fix applied:** added `/about` and `/pricing` links to `PublicFooter.tsx` (confirmed via
+      grep to render on all 12 marketing/blog page files, including the homepage and every
+      curricula landing page). Verified: `npx tsc --noEmit --skipLibCheck` clean; re-confirmed
+      `PublicFooter` import present in `src/app/page.tsx` and 10 other files. Not re-deployed/
+      re-crawled yet in this run (code-only fix; Google needs to re-crawl the homepage to pick up
+      the new links, same as any content change).
+      **Honest bigger picture, stated plainly rather than inventing more fixes:** this linking
+      fix will not by itself move organic traffic off near-zero. The dominant explanation for
+      3/48 sitemap URLs being indexed, with a clean sitemap, no robots blocks, and no canonical
+      issues, is that **this is a brand-new, pre-launch domain with no backlinks and no external
+      authority signals yet** — Google allocates crawl/index priority roughly in proportion to
+      perceived site authority, and a clean technical setup doesn't override that. This matches
+      what every prior GSC-data entry in this doc has already found (single-digit clicks,
+      double-digit-to-low-hundreds impressions, homepage-dominated). There is no further
+      technical-SEO lever to pull here beyond continuing to fix real orphan-page/internal-linking
+      gaps like the one above as they're found — real indexing growth will come from actual
+      launch activity and backlinks, which is a marketing/business timeline question, not a
+      technical one. GA4's 809/816 Direct-vs-6-Organic split is consistent with this and with the
+      founder's own read (internal QA/founder browsing during a heavy work week, not real
+      acquisition) — no separate GA4-side issue found or expected once the GSC integration
+      backfills over the next 24-48h.
 - [x] **2026-09-18** — Fixed a real bug found by the new internal SEO audit tool
       (`npm run audit:seo`, see "Tooling" below): every blog post (all 9 static pages, the
       `/blog` index, and every dynamic post) had no `alternates.canonical` of its own, so each
