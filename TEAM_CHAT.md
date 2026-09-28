@@ -71,3 +71,14 @@
   the needle alone — the real explanation for near-zero organic is a brand-new domain with no
   backlinks/authority yet, which is expected pre-launch, not a bug. Full detail: `SEO_STRATEGY.md`.
 - **2026-09-28** [founder-directed]: Linked Search Console to GA4 (imtihan.live only, via the GA4 admin UI). Real numbers pulled first: 816 sessions/28d, 99.1% Direct, 0.7% Organic — matches seo-growth's near-zero-organic finding above. Added the first real GA4 event tracking beyond pageviews: `src/lib/analytics.ts`'s `trackEvent()` wraps `window.gtag` safely (never throws, e.g. if an ad blocker strips gtag). Wired `sign_up` (both email/password and Google paths, new-user-only for Google) in `src/app/auth/register/page.tsx`, and `exam_generated` (both the normal-completion and stream-ended-without-done-event paths) in `src/app/create/generate/page.tsx`. Founder confirmed these two as the events to track (declined Pro-upgrade tracking for now, since that's a manual WhatsApp-confirmed action, not an automatic one). Still needed: mark these as GA4 "key events" in the admin UI once real events start flowing in (Admin → Events → mark as key event) — not done yet, since no events have fired in production to promote. `npm run type-check` clean, `npm test` 189/189 (3 new).
+- **2026-09-28** [seo-growth]: Checked the 4 dedicated SEO landing pages (bac-libanais/bac-français/
+  IB/Lebanon) for real query traction. Only `/ai-exam-generator-lebanon` is indexed, and even it has
+  just 1 impression (90d) — for the bare brand query, not a target phrase; the other 3 have zero
+  impressions each. On-page title/H1/copy already matches realistic query language on all 4 (not a
+  content gap). Real finding: the only non-brand query with impressions site-wide, `bac libanais`,
+  lands on a blog post with zero links to the matching landing page, not the landing page itself —
+  traced to `PublicFooter.tsx` still missing links to any of these 4 pages (only ever linked once,
+  from the homepage strip). Fixed: added an "Exam generators" link row to the footer, now reaching
+  every marketing page + all 37 blog posts. `npx tsc --noEmit --skipLibCheck` clean. Won't flip
+  indexing overnight (same brand-new-domain ceiling as yesterday) but is a real, additive fix. Full
+  detail: `SEO_STRATEGY.md`.
