@@ -2,13 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { withRetryAndFallback, geminiErrorMessage, isRetryableError } from "@/lib/gemini";
 import { getAnthropicClient, isAnthropicConfigured, GENERATE_MODEL, GENERATE_MAX_TOKENS } from "@/lib/anthropic";
-import { buildGenerateSystemPrompt, buildGenerateUserPrompt } from "@/lib/prompts/generate";
+import { buildGenerateSystemPrompt, buildGenerateUserPrompt, buildExemplarsPrompt } from "@/lib/prompts/generate";
+import { getChapterExemplars } from "@/lib/schoolBank";
 import { sanitizeError, createSecurityHeaders } from "@/lib/security";
 import * as admin from "firebase-admin";
 import { adminDb, verifySession } from "@/lib/firebase-admin";
 import { getAllElements, formatElementsForPrompt } from "@/lib/chemistry";
 import { getHumanitiesContext } from "@/lib/humanities";
-import { GEOGRAPHIC_SUBJECTS, buildChaptersSummary } from "@/data/curricula";
+import { GEOGRAPHIC_SUBJECTS, buildChaptersSummary, getChapter } from "@/data/curricula";
 import { getTeacherStyle, saveTeacherStyle, buildTeacherStylePrompt } from "@/lib/teacherStyle";
 import { AIExerciseSchema } from "@/lib/schemas/exercise";
 
@@ -372,10 +373,46 @@ export async function POST(request: NextRequest) {
       ? buildChaptersSummary(context.curriculumId, context.levelId, context.subject, context.chapterIds)
       : undefined;
 
+    // School Bank exemplars — "example of a previously well-received
+    // exercise for this chapter" prompt context (Firestore reads only, no
+    // extra AI cost). Skipped entirely for university mode (no fixed
+    // chapter list to key off). Capped at 8 distinct chapters so a teacher
+    // selecting an unusually long chapter list can't fan this out into an
+    // unbounded number of Firestore reads per generation request; a real
+    // exam realistically selects far fewer than 8 chapters anyway. Runs
+    // in parallel and never blocks/fails the request — getChapterExemplars()
+    // itself already resolves to [] on any error, but isAdjustment (a
+    // regenerate/edit pass, not a fresh exam) skips this the same way it
+    // already skips teacher-style lookup above, since exemplars matter most
+    // for a first full generation.
+    const MAX_EXEMPLAR_CHAPTERS = 8;
+    let exemplarsPrompt = "";
+    if (context.curriculumId !== "university" && !isAdjustment && context.chapterIds.length > 0) {
+      try {
+        const chapterIdsToQuery = context.chapterIds.slice(0, MAX_EXEMPLAR_CHAPTERS);
+        const groups = await Promise.all(
+          chapterIdsToQuery.map(async (chapterId) => {
+            const chapter = getChapter(context.curriculumId, context.levelId, context.subject, chapterId);
+            const chapterName = chapter ? (chapter.name.fr ?? chapter.name.en ?? chapterId) : chapterId;
+            const exercises = await getChapterExemplars(
+              context.curriculumId,
+              context.levelId,
+              context.subject,
+              chapterId
+            );
+            return { chapterName, chapterId, exercises };
+          })
+        );
+        exemplarsPrompt = buildExemplarsPrompt(groups);
+      } catch (err) {
+        console.warn("[/api/generate] Failed to fetch School Bank exemplars, proceeding without them.", err);
+      }
+    }
+
     // Static system prompt — same for all requests with identical (language, curriculum, subject)
     const systemPrompt = buildGenerateSystemPrompt(context);
     // Dynamic user prompt — carries per-request context (chapters, teacher style, document note)
-    const userPrompt = buildGenerateUserPrompt(context, extraContext, chaptersSummary, teacherStylePrompt, hasDocument);
+    const userPrompt = buildGenerateUserPrompt(context, extraContext, chaptersSummary, teacherStylePrompt, hasDocument, exemplarsPrompt);
 
     // ── AI Generation (Primary: Claude, Fallback: Gemini) ───────────────────
     let stream: AsyncIterable<any>;

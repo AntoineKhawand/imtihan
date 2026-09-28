@@ -641,18 +641,21 @@ programme's 4-theme structure.
 ### Exemplar-bank build-out (no extra AI cost)
 - [x] **Blocker above resolved 2026-09-24** — dead `schoolBank.ts` deleted; only `bank/page.tsx`'s
       inline implementation remains (not consolidated into a shared module).
-- [ ] Write `getChapterExemplars(curriculumId, levelId, subject, chapterId)` — no `src/lib/schoolBank.ts`
-      module exists anymore, so this needs a fresh home (e.g. a new `src/lib/schoolBank.ts` written
-      against the current `"schoolBank"`/`"schoolSlug"` schema, or inline next to `bank/page.tsx`'s
-      logic) — queries School Bank exercises tagged with a chapter, returns up to 2, ranked by recency.
-- [ ] Wire `getChapterExemplars()` into `buildChaptersSummary()` (`src/data/curricula/index.ts`)
-      or directly into `src/lib/prompts/generate.ts` — inject as "Example of a previously
-      well-received exercise for this chapter:" context, clearly labeled as an example, not an
-      instruction to copy verbatim (avoid the model just repeating the same exercise every time).
-      Guard against near-zero-data chapters (most chapters will have 0 shared exercises for a long
-      time post-launch) — the feature should be a no-op, not an error, when no exemplar exists.
-- [ ] Add a lightweight regression test (Playwright or unit) confirming generation still succeeds
-      when a chapter has zero exemplars (the common case pre-launch) and when it has one.
+- [x] **2026-09-29 (nightly-ops)** Wrote `getChapterExemplars(curriculumId, levelId, subject, chapterId)`
+      in a fresh `src/lib/schoolBank.ts` — queries the real `schoolBank` collection
+      (`curriculumId`/`subject`/`exercise.chapterIds array-contains chapterId`, via `adminDb`, using the
+      composite index `firestore.indexes.json` already has for `/api/tools/chapter-performance`), sorts
+      by `sharedAt` in JS (not a Firestore `orderBy`, to avoid needing a new composite index — see the
+      module's own comment), returns up to 2 exemplars.
+- [x] **2026-09-29 (nightly-ops)** Wired `getChapterExemplars()` directly into `src/lib/prompts/generate.ts`
+      (new pure `buildExemplarsPrompt()`, same convention as `buildTeacherStylePrompt()`) and
+      `src/app/api/generate/route.ts` (fetches for up to 8 selected chapters in parallel, skipped for
+      university mode and regenerate/adjustment passes). Injected as a clearly-labeled "SCHOOL BANK
+      EXEMPLARS (for inspiration ONLY — do NOT copy verbatim...)" block. Confirmed no-op (empty string,
+      no block at all) when a chapter has 0 exemplars — the expected case for a long time post-launch.
+- [x] **2026-09-29 (nightly-ops)** Added 10 Vitest tests (`src/__tests__/schoolBank-exemplars.test.ts`)
+      confirming prompt generation succeeds with 0, 1, and 2 exemplars. Full detail + a real discrepancy
+      from this checklist's own client-SDK assumption: `ROADMAP.md`'s 2026-09-29 entry.
 
 ### Secondary signal (also no extra AI cost)
 - [ ] Track chapter-coverage misses (`chapterCoverage[].missing` in
