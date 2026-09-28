@@ -280,6 +280,90 @@ describe("buildGenerateUserPrompt — general fields", () => {
 });
 
 // ---------------------------------------------------------------------------
+// src/lib/prompts/generate.ts — buildGenerateUserPrompt's pointsPerExercise
+// override ("EXERCISE POINT VALUES" block). Previously untested: a teacher
+// can set an explicit per-exercise point split (e.g. [5, 10, 5] for a
+// 3-exercise, 20-point exam) instead of leaving the split to the model, but
+// per the function's own code comment, "a malformed one is silently ignored
+// rather than sent as a contradictory instruction" — only applied when both
+// the array length matches exerciseCount AND the values sum to totalPoints.
+// ---------------------------------------------------------------------------
+
+describe("buildGenerateUserPrompt — pointsPerExercise override (EXERCISE POINT VALUES)", () => {
+  it("includes the mandatory block when the split matches exerciseCount and sums to totalPoints", () => {
+    const prompt = buildGenerateUserPrompt(
+      baseContext({ exerciseCount: 3, totalPoints: 20, pointsPerExercise: [5, 10, 5] }),
+    );
+    expect(prompt).toContain('EXERCISE POINT VALUES (MANDATORY — set by the teacher, do not redistribute):');
+    expect(prompt).toContain("- Exercise 1 → exactly 5 points");
+    expect(prompt).toContain("- Exercise 2 → exactly 10 points");
+    expect(prompt).toContain("- Exercise 3 → exactly 5 points");
+  });
+
+  it("omits the block entirely when pointsPerExercise is not provided", () => {
+    const prompt = buildGenerateUserPrompt(baseContext({ pointsPerExercise: undefined }));
+    expect(prompt).not.toContain("EXERCISE POINT VALUES");
+  });
+
+  it("omits the block when pointsPerExercise is an empty array (length mismatch)", () => {
+    const prompt = buildGenerateUserPrompt(
+      baseContext({ exerciseCount: 3, totalPoints: 20, pointsPerExercise: [] }),
+    );
+    expect(prompt).not.toContain("EXERCISE POINT VALUES");
+  });
+
+  it("silently drops the split when its length doesn't match exerciseCount, rather than sending a contradictory instruction", () => {
+    // 4 values for a 3-exercise exam — a plausible real mistake (teacher
+    // edited exerciseCount after already typing a point split).
+    const prompt = buildGenerateUserPrompt(
+      baseContext({ exerciseCount: 3, totalPoints: 20, pointsPerExercise: [5, 5, 5, 5] }),
+    );
+    expect(prompt).not.toContain("EXERCISE POINT VALUES");
+    // The exam is still generatable — total points instruction still present.
+    expect(prompt).toContain("Total points: 20");
+  });
+
+  it("silently drops the split when it doesn't sum to totalPoints", () => {
+    const prompt = buildGenerateUserPrompt(
+      baseContext({ exerciseCount: 3, totalPoints: 20, pointsPerExercise: [5, 5, 5] }), // sums to 15, not 20
+    );
+    expect(prompt).not.toContain("EXERCISE POINT VALUES");
+  });
+
+  it("accepts a split that sums exactly right even with uneven/fractional-looking values", () => {
+    const prompt = buildGenerateUserPrompt(
+      baseContext({ exerciseCount: 3, totalPoints: 20, pointsPerExercise: [7, 6, 7] }),
+    );
+    expect(prompt).toContain("- Exercise 1 → exactly 7 points");
+    expect(prompt).toContain("- Exercise 2 → exactly 6 points");
+    expect(prompt).toContain("- Exercise 3 → exactly 7 points");
+  });
+
+  it("documents a real edge case: classic binary floating-point drift (0.1 + 0.2) fails the strict sum-equality check and is silently dropped", () => {
+    // The reduce() uses exact `===` equality (see generate.ts's
+    // pointsBreakdownValid), so any caller-computed (rather than
+    // teacher-typed integer) split that hits a binary floating-point
+    // representation gap silently loses the override with zero warning —
+    // worth documenting explicitly since it's the kind of gap that's easy to
+    // miss until a real caller (e.g. a UI that divides totalPoints
+    // proportionally) hits it.
+    const split = [0.1, 0.2];
+    expect(split.reduce((a, b) => a + b, 0)).not.toBe(0.3); // 0.30000000000000004
+    const prompt = buildGenerateUserPrompt(
+      baseContext({ exerciseCount: 2, totalPoints: 0.3, pointsPerExercise: split }),
+    );
+    expect(prompt).not.toContain("EXERCISE POINT VALUES");
+  });
+
+  it("single-exercise exam: a one-element split matching totalPoints is accepted", () => {
+    const prompt = buildGenerateUserPrompt(
+      baseContext({ exerciseCount: 1, totalPoints: 20, pointsPerExercise: [20] }),
+    );
+    expect(prompt).toContain("- Exercise 1 → exactly 20 points");
+  });
+});
+
+// ---------------------------------------------------------------------------
 // src/lib/prompts/generate.ts — buildGenerateSystemPrompt branch selection
 // ---------------------------------------------------------------------------
 
