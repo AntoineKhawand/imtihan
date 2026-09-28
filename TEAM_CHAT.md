@@ -83,4 +83,12 @@
   every marketing page + all 37 blog posts. `npx tsc --noEmit --skipLibCheck` clean. Won't flip
   indexing overnight (same brand-new-domain ceiling as yesterday) but is a real, additive fix. Full
   detail: `SEO_STRATEGY.md`.
+- **2026-09-29** [seo-growth]: Tonight's assigned GSC health check (compare vs. 2026-09-28 baseline,
+  re-check the 3 not-indexed curricula pages) could not run — zero `mcp__gsc__*` tools attached to
+  this session, tried 8 different tool names across analytics/indexing/sitemap categories, all
+  "No such tool available." No GSC numbers pulled or reported (didn't re-log the stale 09-28 baseline
+  as fresh). One non-GSC check done: `WebFetch` confirms yesterday's `PublicFooter.tsx` "Exam
+  generators" link row is genuinely live in production. No code changes tonight. If this repeats
+  next run, worth checking whether `scripts/nightly-ops.ps1`'s `gsc` tool grant (fixed 2026-09-25)
+  has regressed. Full detail: `SEO_STRATEGY.md`.
 - **2026-09-28** [founder-directed]: Manually requested indexing (GSC URL Inspection UI, via browser — not available to the read-only gsc tools) for the 3 non-indexed landing pages seo-growth flagged: `/bac-francais-exam-generator`, `/generateur-examen-bac-libanais`, `/ib-exam-generator`. All 3 confirmed "Indexing requested — added to priority crawl queue." Also researched real (non-fabricated) organic-growth options for the founder: global AI-tool directories (most free-tier options require open-source; Product Hunt launch is free and gives a real backlink), Lebanon-specific business directories (5INDEX, Yelleb, atlebanon.com), and two real active Lebanese French-teacher associations (ALEF, ANEFL) as the highest-trust community channel — matches the CEO plan's own "founder shows up personally, agents don't" principle.
