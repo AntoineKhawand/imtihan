@@ -136,6 +136,70 @@ keep each change reviewable and low-risk for an unattended push.
       is unchanged and still stands.
 
 ### Technical SEO
+- [x] **2026-09-28 — checked whether the 4 dedicated SEO landing pages
+      (`/ai-exam-generator-lebanon`, `/bac-francais-exam-generator`,
+      `/generateur-examen-bac-libanais`, `/ib-exam-generator`) are actually getting found for
+      their target queries, per founder request (continuation of yesterday's near-zero-organic
+      investigation).** Pulled per-page query data (`get_search_by_page_query`, 90d
+      2026-06-30→2026-09-28): `/ai-exam-generator-lebanon` has **1 impression total** — for the
+      bare brand query `imtihan`, not any target phrase, 0 clicks, position 4. The other 3 pages
+      have **zero impressions each, zero queries** — literally no search data at all. URL
+      Inspection (re-checked today, `batch_url_inspection`): only `/ai-exam-generator-lebanon` is
+      indexed (`PASS`, `Submitted and indexed`, last crawled 2026-07-22); `/bac-francais-exam-generator`
+      = Discovered - currently not indexed (never crawled — flipped sub-state from yesterday's
+      "URL is unknown to Google," `/generateur-examen-bac-libanais` unchanged at Crawled - currently
+      not indexed (crawled 2026-09-21), `/ib-exam-generator` now reads "URL is unknown to Google"
+      (flipped from yesterday's Discovered state) — both flips are Google's indexing-queue churn
+      between two not-indexed sub-states, not a regression (confirmed the one internal link each
+      still has from the homepage strip is unchanged, via `grep`).
+      **On-page query-match sanity check (the honest-gap check this task specifically asked for):
+      not a gap.** Read all 4 page files directly — title tags, H1s, and opening paragraphs already
+      target realistic query language prominently, not generic marketing copy that merely touches
+      the topic: `/bac-francais-exam-generator`'s title is literally "Générateur de Devoir Bac
+      Français | Imtihan," its H1 reads "Le générateur de devoir Bac Français conçu pour les
+      professeurs," matching the exact example phrase this task asked to check for.
+      `/generateur-examen-bac-libanais` similarly titles/H1s on "Générateur d'Examen Bac Libanais
+      IA" / "générateur d'examen Bac Libanais." `/ib-exam-generator` and `/ai-exam-generator-lebanon`
+      do the same for their respective English-language target phrases. No content rewrite needed
+      here — this isn't the bottleneck.
+      **Found one real, additional, fixable gap beyond yesterday's "3 of 4 not indexed" finding, by
+      cross-referencing site-wide query data against page-level data (not just checking the 4 pages
+      in isolation):** filtered site-wide queries for `bac`/`ib`/`exam generator` — the only
+      real (non-brand) query with any impressions site-wide is `bac libanais` (3 impr, position 8,
+      90d), and it's landing on a **blog post**
+      (`/blog/the-2026-rentre-playbook-standardizing-diagnostic-assessments-across-bac-libanais-french-bac-and-ib-xzi2`,
+      confirmed indexed and about exactly this topic — Bac Libanais/French Bac/IB standardization),
+      **not** on `/generateur-examen-bac-libanais`, the page actually purpose-built for that query.
+      Fetched the live post (`WebFetch`): it has **zero outbound links** to any of the 3 curricula
+      landing pages despite being topically about all three. Checked the root cause structurally,
+      not just for this one post: `PublicFooter.tsx` (renders on all 12 marketing/blog page files,
+      including every one of the 37 blog posts via the shared static and dynamic templates) still
+      had **no link to any of the 4 landing pages** — they were only ever linked once, from the
+      homepage hero curricula strip (the 2026-09-18 fix), which is evidently not enough internal-link
+      signal for Google to index 3 of them. This is the same orphan/thin-internal-linking pattern
+      already fixed twice this month for `/about`+`/pricing` (2026-09-27) and the 3 curricula pages
+      themselves (2026-09-18) — recurring because the footer fix that day only covered `/about`/
+      `/pricing`, not these 4.
+      **Fix applied:** added a compact "Exam generators" link row to `PublicFooter.tsx` (Bac
+      Libanais, Bac Français, IB Diploma, Lebanon AI Generator → the 4 landing pages), below the
+      existing nav row, using only existing utility classes (no color/Tailwind-config changes).
+      This puts a real crawlable link to all 4 pages on every marketing page and every blog post
+      (currently ~37, cron-generated ones included) instead of just the homepage — the single
+      highest-leverage internal-linking change available, since it reaches every page at once
+      rather than editing one post's content. Verified via `grep` that `PublicFooter` still renders
+      on the same 12 files (`src/app/page.tsx`, both blog templates, all 4 landing pages
+      themselves, `/about`, `/contact`, `/privacy`, `/terms`). `npx tsc --noEmit --skipLibCheck`
+      clean.
+      **Honest bottom line, consistent with yesterday's finding, not contradicted by it:** this
+      internal-linking fix addresses a real, verifiable gap (thin internal links to these 4 pages)
+      but won't by itself flip 3 pages from not-indexed to indexed overnight — Google still needs
+      to re-crawl the footer on enough pages to register the new links, and the underlying cause
+      (brand-new domain, low crawl-priority allocation) is unchanged from yesterday's conclusion.
+      Once Google reflects it, `/generateur-examen-bac-libanais` in particular should start
+      competing more fairly for "bac libanais"-style queries instead of ceding that impression to
+      a blog post that doesn't even target it as its primary topic. Requesting indexing for the 3
+      non-indexed pages in the GSC UI (flagged 2026-09-27, still a human-only action via the read-only
+      API tools available) remains the fastest complementary lever if a human has 2 minutes.
 - [x] **2026-09-27 — investigated why organic traffic reads as ~zero (founder request, GA4↔GSC
       just linked; GA4's own 28d numbers: 816 sessions, 809 Direct, only 6 Organic Search).
       Real GSC numbers (`sc-domain:imtihan.live`, 28d 2026-08-30→2026-09-27): 10 clicks / 573
