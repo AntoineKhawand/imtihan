@@ -638,57 +638,94 @@ export const bacFrancais: Curriculum = {
         physics: [
           {
             id: "ter-fr-phys-mechanics",
-            name: { fr: "Mécanique — mouvements", en: "Mechanics — movements" },
+            name: { fr: "Mouvement et interactions — dynamique", en: "Motion and interactions — dynamics" },
             objectives: [
-              "Appliquer 2e loi de Newton",
-              "Étudier chutes avec frottements",
-              "Résoudre mouvement dans champ gravitationnel",
+              "Décrire un mouvement (vecteurs vitesse et accélération, repère de Frenet, mouvement circulaire uniforme)",
+              "Appliquer la 2e loi de Newton et étudier l'équilibre d'un système",
+              "Étudier un mouvement dans un champ uniforme ou dans un champ de gravitation",
+            ],
+          },
+          {
+            id: "ter-fr-phys-fluids",
+            name: { fr: "Écoulement d'un fluide", en: "Fluid flow" },
+            objectives: [
+              "Appliquer la poussée d'Archimède",
+              "Étudier un écoulement permanent",
+              "Utiliser le débit volumique d'un fluide incompressible",
             ],
           },
           {
             id: "ter-fr-phys-energy",
             name: { fr: "Énergie — conversions et transferts", en: "Energy — conversions and transfers" },
             objectives: [
-              "Bilan énergétique",
-              "Rendement d'une conversion",
+              "Décrire le modèle du gaz parfait et son équation d'état",
+              "Effectuer un bilan d'énergie interne sur un système",
+              "Étudier un transfert thermique (flux thermique, résistance thermique, loi de Newton)",
             ],
           },
           {
             id: "ter-fr-phys-waves",
-            name: { fr: "Ondes et signaux", en: "Waves and signals" },
+            name: { fr: "Phénomènes ondulatoires", en: "Wave phenomena" },
             objectives: [
-              "Analyser ondes mécaniques et lumineuses",
+              "Analyser ondes mécaniques et lumineuses (intensité sonore, atténuation)",
               "Appliquer effet Doppler",
               "Étudier diffraction et interférences",
+            ],
+          },
+          {
+            id: "ter-fr-phys-photons",
+            name: { fr: "Images et lumière — photons", en: "Images and light — photons" },
+            objectives: [
+              "Décrire la lumière par un flux de photons",
+              "Étudier l'effet photoélectrique",
+              "Modéliser une lunette astronomique et l'absorption/émission de photons",
+            ],
+          },
+          {
+            id: "ter-fr-phys-circuits",
+            name: { fr: "Dynamique d'un système électrique", en: "Dynamics of an electrical system" },
+            objectives: [
+              "Relier intensité du courant et charge électrique",
+              "Utiliser la relation charge-tension d'un condensateur",
+              "Modéliser la charge et la décharge d'un circuit RC",
             ],
           },
         ],
         chemistry: [
           {
+            id: "ter-fr-chem-analysis",
+            name: { fr: "Analyser un système chimique par des méthodes physiques et chimiques", en: "Analyzing a chemical system via physical and chemical methods" },
+            objectives: [
+              "Réaliser et exploiter un titrage pH-métrique ou conductimétrique",
+              "Utiliser la loi de Beer-Lambert (spectrophotométrie UV-visible)",
+              "Exploiter la conductance/conductivité (loi de Kohlrausch) et la spectroscopie IR",
+            ],
+          },
+          {
             id: "ter-fr-chem-equilibrium",
             name: { fr: "Équilibres chimiques", en: "Chemical equilibria" },
             objectives: [
               "Déterminer quotient de réaction",
-              "Prévoir sens d'évolution",
-              "Étudier acides et bases en solution",
+              "Prévoir sens d'évolution (transformation spontanée ou forcée, système oxydant-réducteur)",
+              "Étudier la force des acides et des bases en solution",
             ],
           },
           {
             id: "ter-fr-chem-kinetics",
             name: { fr: "Cinétique chimique", en: "Chemical kinetics" },
             objectives: [
-              "Suivi temporel d'une réaction",
-              "Identifier catalyseurs",
-              "Déterminer temps de demi-réaction",
+              "Modéliser l'évolution temporelle d'un système (suivi macroscopique et microscopique)",
+              "Identifier catalyseurs et déterminer temps de demi-réaction",
+              "Étudier une décroissance radioactive (loi de décroissance, activité)",
             ],
           },
           {
             id: "ter-fr-chem-organic",
             name: { fr: "Chimie organique — stratégies de synthèse", en: "Organic chemistry — synthesis strategies" },
             objectives: [
-              "Nommer molécules organiques",
-              "Identifier groupes caractéristiques",
-              "Proposer mécanismes simples",
+              "Choisir une stratégie de synthèse organique (sélectivité, protection de groupes caractéristiques)",
+              "Optimiser une étape de synthèse (rendement, économie d'atomes)",
+              "Élaborer une stratégie de synthèse organique multi-étapes",
             ],
           },
         ],
