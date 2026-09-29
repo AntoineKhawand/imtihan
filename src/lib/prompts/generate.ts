@@ -1,4 +1,5 @@
 import type { ExamContext } from "@/types/exam";
+import type { ChapterExemplarGroup } from "@/types/schoolBank";
 import { buildChaptersSummary, getChapter } from "@/data/curricula";
 
 // ---------------------------------------------------------------------------
@@ -755,6 +756,40 @@ function buildChapterDistribution(context: ExamContext): string {
 }
 
 // ---------------------------------------------------------------------------
+// School Bank exemplars — "example of a previously well-received exercise"
+// ---------------------------------------------------------------------------
+
+/**
+ * Formats previously-shared School Bank exercises (see
+ * src/lib/schoolBank.ts's getChapterExemplars(), fetched by the caller —
+ * this function stays pure/synchronous like every other prompt builder, per
+ * CLAUDE.md §5) into a clearly-labeled reference block.
+ *
+ * No-op (returns "") when `groups` is empty or every group has zero
+ * exercises — the expected common case for a long time post-launch, since
+ * most chapters will have nothing shared yet. Explicitly frames each
+ * exercise as an EXAMPLE, not an instruction to copy, so the model doesn't
+ * just regurgitate the same exercise every time a chapter happens to have
+ * one shared exemplar.
+ */
+export function buildExemplarsPrompt(groups: ChapterExemplarGroup[]): string {
+  const nonEmpty = groups.filter((g) => g.exercises.length > 0);
+  if (nonEmpty.length === 0) return "";
+
+  const blocks = nonEmpty.map((group) => {
+    const examples = group.exercises
+      .map(
+        (ex) =>
+          `  - Example of a previously well-received exercise for this chapter (difficulty: ${ex.difficulty}, ${ex.points} pts):\n    ${ex.statement}`
+      )
+      .join("\n");
+    return `"${group.chapterName}" [id: ${group.chapterId}]:\n${examples}`;
+  });
+
+  return `SCHOOL BANK EXEMPLARS (for inspiration ONLY — do NOT copy verbatim, do NOT reuse the same numbers/context/wording; generate fresh, original content that is merely similar in spirit and rigor):\n${blocks.join("\n\n")}`;
+}
+
+// ---------------------------------------------------------------------------
 // User prompt builder
 // ---------------------------------------------------------------------------
 
@@ -764,6 +799,7 @@ export function buildGenerateUserPrompt(
   chaptersSummary?: string,
   teacherStylePrompt?: string,
   hasDocument?: boolean,
+  exemplarsPrompt?: string,
 ): string {
   const isUniversity = context.curriculumId === "university";
 
@@ -799,6 +835,7 @@ export function buildGenerateUserPrompt(
     ? `\nEXERCISE POINT VALUES (MANDATORY — set by the teacher, do not redistribute):\n${pointsPerExercise!.map((p, i) => `- Exercise ${i + 1} → exactly ${p} points`).join("\n")}`
     : "";
 
+  const exemplarsStr = exemplarsPrompt ? `\n${exemplarsPrompt}\n` : "";
   const teacherNotesStr = context.teacherNotes ? `\nTeacher notes:\n${context.teacherNotes}` : "";
   const templateStr = context.templateType === "modern"
     ? "\nTEMPLATE: Use the standard Modern (Standard) layout. Ignore the visual layout of any uploaded documents — use them for content only."
@@ -818,6 +855,7 @@ Total points: ${context.totalPoints} (points must sum to exactly ${context.total
 Difficulty : ${difficultyBreakdown}
 ${pointsBreakdown}
 ${chapterDistribution}
+${exemplarsStr}
 ${teacherNotesStr}
 ${templateStr}
 ${visualStr}

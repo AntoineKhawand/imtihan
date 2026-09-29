@@ -18,7 +18,11 @@ Since the previous version of this plan (2026-09-22), the organization went from
 **BOTTOM LINE**
 The product is feature-complete for MVP scope. Automation is running, not just proposed. What's left before this is fully trustworthy without a human watching every PR: two founder decisions (Appendix), and fixing the QA live-verification tooling gap so "code review looks correct" and "actually confirmed working in a browser" stop being different things.
 
-## 2. Where We Stand — 2026-09-27
+## 2. Where We Stand — 2026-09-29 update
+
+Six of eight departments shipped real, reviewed work tonight (`nightly/2026-09-29`, 8 commits — `qa` and `marketing` correctly sat out: `qa`'s two verification paths were both unavailable tonight, and `marketing`'s backlog is fully resolved). Engineering built a real feature (School Bank exemplars now inform generation prompts); content-curriculum closed the largest remaining gap in the Bac Français physics-chemistry audit; design and database each found and fixed real drift/staleness that no prior pass had caught; security empirically confirmed a prior fix instead of re-trusting a code review. Full detail in each domain doc's 2026-09-29 entry.
+
+**One recurring operational issue worth attention, not another one-off:** three separate teams tonight (`seo-growth`, `design`, and — per its own log — `qa` on 2026-09-27) found their dispatch was missing an MCP tool (`gsc`, `chrome-devtools`) that's listed in their own agent frontmatter and in `CLAUDE.md` §15's team table. Each one correctly refused to fake the missing capability and fell back to real alternative work instead of stalling — but this is now a pattern, not a fluke, and is quietly costing real backlog progress (the screenshot-verification pass on several dark-mode fixes is still outstanding after 10+ nights, entirely because of this). Worth someone checking the dispatch tool-provisioning path directly rather than each team re-discovering the same gap independently.
 
 **Product**
 

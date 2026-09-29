@@ -425,6 +425,102 @@ fixed); all of `terminale-fr-spe-pc` (3 physics + 3 chemistry chapters); non-MVP
 these this session — this pass was scoped to the 3 specific leads queued from 2026-09-24/09-25, not a
 fresh read of the unaudited sections.
 
+## 2026-09-29 — Bac Français pre-2019-reform audit: `terminale-fr-spe-pc` — 8 confirmed real gaps found and fixed
+
+Picked up the largest remaining piece of the open backlog item ("Audit `bac-francais.ts` chapters
+against the current BO programme edition"), per this run's specific instruction: audit
+`terminale-fr-spe-pc` (Terminale spécialité Physique-Chimie) — previously entirely unaudited across
+2026-09-24/25/27.
+
+**Primary source attempted, blocked as usual:** `education.gouv.fr/bo/20/Special2/MENE2001798N.htm`
+(the URL supplied by the task) returned HTTP 403 on direct `WebFetch`, same as every prior session's
+direct BO fetches. Also discovered via `WebSearch` that this specific URL is actually the note de
+service on the **exam format/évaluation périmètre** ("Épreuve de l'enseignement de spécialité
+physique-chimie... à compter de la session 2021"), not the programme content itself — the real
+programme-content arrêté is a different BO page, **BO spécial n°8 du 25 juillet 2019**
+(`education.gouv.fr/bo/19/Special8/MENE1921249A.htm`, arrêté du 19-7-2019). That URL also returned
+HTTP 403 on `WebFetch`. Flagging this distinction for future sessions citing "the BO source" for this
+subject — the exam-format note and the programme-content arrêté are two different documents.
+
+**Verification method:** with both primary-source URLs blocked, used 2-3 independent secondary
+sources per claim (same convergent-sources discipline as every prior entry in this file), most
+substantively `sherpas.com/blog/programme-physique-chimie-en-terminale/` and
+`annabac.com/terminale-generale/physique-chimie`, which independently produced near-identical
+4-theme/sub-topic breakdowns (`cours-thales.fr` and `missiongrandeecole.fr` independently confirmed
+just the 4 top-level theme names: Constitution et transformations de la matière, Mouvement et
+interactions, L'énergie: conversions et transferts, Ondes et signaux — matching the 2 detailed sources).
+
+**Findings — all fixed, all additive or corrective, no chapter `id`s renamed (grepped `src/` first;
+only `bac-francais.ts` itself references any of these ids, so edits are safe):**
+
+1. **Missing chapter — fluid mechanics.** "Écoulement d'un fluide" (Archimedes' principle, permanent
+   flow, incompressible fluid volumetric flow rate) is a real, named sub-theme of "Mouvement et
+   interactions" in both sources but had zero representation anywhere in the file. Added
+   `ter-fr-phys-fluids`.
+2. **Missing chapter — ideal gas / thermal transfer.** "Décrire un système thermodynamique: exemple
+   du modèle du gaz parfait" (perfect gas model, state equation) and thermal-transfer content
+   (thermal flux, thermal resistance, Newton's law of cooling) are real sub-themes of "L'énergie:
+   conversions et transferts" that the existing `ter-fr-phys-energy` chapter's objectives ("bilan
+   énergétique," "rendement d'une conversion") didn't cover at all. Added these as new objectives on
+   the existing chapter rather than a new chapter (same theme, doesn't warrant a split).
+3. **Missing chapter — photons/light.** "Former des images, décrire la lumière par un flux de
+   photons" (photoelectric effect, astronomical-telescope optical model, photon absorption/emission)
+   is a real, distinct sub-theme of "Ondes et signaux," entirely absent. Added `ter-fr-phys-photons`.
+4. **Missing chapter — RC electrical circuits.** "Étudier la dynamique d'un système électrique"
+   (current/charge relationship, capacitor charge-tension relation, RC circuit charge/discharge
+   model) is the third named sub-theme of "Ondes et signaux," entirely absent. Added
+   `ter-fr-phys-circuits`.
+5. **Missing chapter — chemical analysis methods.** "Déterminer la composition d'un système par des
+   méthodes physiques et chimiques" (pH measurement, Beer-Lambert/UV-vis spectrophotometry,
+   conductimetry/loi de Kohlrausch, IR spectroscopy, pH-metric and conductimetric titration) is one
+   of the four named sub-themes of "Constitution et transformations de la matière" and was completely
+   absent from the file despite titration being extremely heavily examined content. Added
+   `ter-fr-chem-analysis`.
+6. **Content correction — `ter-fr-chem-organic`'s objectives were Première-level, not the real
+   Terminale focus.** The existing objectives ("Nommer molécules organiques," "Identifier groupes
+   caractéristiques," "Proposer mécanismes simples") describe nomenclature/functional-group/mechanism
+   content that belongs to the Première spécialité programme, not Terminale's actual
+   "Élaborer des stratégies en synthèse organique" theme, whose real named sub-topics (per both
+   sources) are synthesis-pathway strategy, step optimization (yield, atom economy), and multi-step
+   synthesis strategy — none of which involve basic nomenclature. Replaced the three objectives with
+   the real strategy-focused content. Chapter `id`/name unchanged.
+7. **Minor additive correction — redox explicitly missing from `ter-fr-chem-equilibrium`.** Annabac's
+   breakdown lists "Sens d'évolution d'un système oxydant-réducteur" as a distinct named sub-topic
+   alongside acid-base; the existing objectives only mentioned acid-base explicitly. Added a redox
+   mention to the existing "prévoir sens d'évolution" objective (not a new chapter — same theme).
+8. **Minor additive correction — radioactive decay missing from `ter-fr-chem-kinetics`.** Sherpas
+   lists "Radioactive decay" as a real sub-topic under the same "Modéliser l'évolution temporelle
+   d'un système" theme as chemical kinetics; the existing chapter had no mention of it at all. Added
+   as a third objective on the existing chapter.
+
+**Also lightly touched, not a content-accuracy fix:** renamed `ter-fr-phys-mechanics`'s display name
+from "Mécanique — mouvements" to "Mouvement et interactions — dynamique" and `ter-fr-phys-waves`'s
+from "Ondes et signaux" to "Phénomènes ondulatoires" (the real theme name "Ondes et signaux" now
+covers 3 chapters — waves, photons, circuits — so the umbrella name moved to the section comment,
+each chapter got its actual named sub-topic as its display name instead). No objective content was
+removed from either chapter, only reworded/expanded (mechanics gained an explicit kinematics/Frenet
+objective; waves objectives unchanged in substance).
+
+**Physics chapter count: 3 → 6. Chemistry chapter count: 3 → 4.** This reflects real programme
+breadth that was previously significantly under-represented, not scope creep — all 8 findings are
+sourced to named sub-themes in 2+ independent, mutually-consistent secondary compilations.
+
+**Not independently primary-source-quoted:** as with every prior session in this file, `WebFetch` on
+both candidate `education.gouv.fr` BO URLs returned HTTP 403 — nothing above is a verbatim primary
+quote; all of it rests on 2-4-source convergent secondary corroboration, per this team's standing
+methodology.
+
+**Verification:** `npx tsc --noEmit --skipLibCheck` clean after all edits. Left uncommitted for
+review. Not yet reviewed by `qa`.
+
+**Remaining unaudited scope, unchanged from 2026-09-27:** `premiere-fr-spe-math`'s exponential/suites
+chapters and its non-MVP subjects (french, history-geography, philosophy, ses); all of
+`terminale-fr-spe-math`'s remaining 5 chapters (limits, dérivation/primitives, logarithm, integrals,
+geometry-space — probability was fixed 2026-09-27); non-MVP-subject levels (`terminale-fr-spe-svt`,
+`terminale-fr-spe-nsi`, `terminale-fr-spe-ses`) — out of MVP scope per CLAUDE.md §9, skip rather than
+audit. `terminale-fr-spe-pc` (this session's scope) is now fully audited against the real 2019-reform
+programme's 4-theme structure.
+
 ## Backlog (pick one per Wednesday, highest priority first)
 
 ### Data accuracy audits (grounded in `docs/DATA_SOURCING.md`)
@@ -519,6 +615,21 @@ fresh read of the unaudited sections.
       absence from `terminale-fr-spe-math` is correct, not a gap. Still unaudited: `premiere-fr-spe-math`'s
       exponential/suites chapters and non-MVP subjects; `terminale-fr-spe-math`'s other 5 chapters; all
       of `terminale-fr-spe-pc`; non-MVP-subject levels (SVT, NSI, SES).
+      **2026-09-29: `terminale-fr-spe-pc` fully audited — 8 real gaps found and fixed.** See the
+      dated section above for full detail. Both candidate primary BO source URLs (the exam-format
+      note `MENE2001798N` supplied by the task, and the actual programme-content arrêté
+      `MENE1921249A`) returned HTTP 403 on `WebFetch` as usual; findings rest on 2-4-source convergent
+      secondary corroboration. Added 4 missing chapters (`ter-fr-phys-fluids` fluid mechanics,
+      `ter-fr-phys-photons` photons/photoelectric effect, `ter-fr-phys-circuits` RC circuits,
+      `ter-fr-chem-analysis` titration/spectroscopy/conductimetry analysis methods — the last being
+      especially high-value since titration is heavily examined and was entirely unrepresented);
+      added missing objectives to 3 existing chapters (ideal gas/thermal transfer on
+      `ter-fr-phys-energy`, redox on `ter-fr-chem-equilibrium`, radioactive decay on
+      `ter-fr-chem-kinetics`); and corrected `ter-fr-chem-organic`'s objectives, which described
+      Première-level nomenclature/mechanism content instead of Terminale's real synthesis-strategy
+      focus. Physics chapters 3→6, chemistry chapters 3→4. No chapter `id`s renamed. Still unaudited:
+      `premiere-fr-spe-math`'s exponential/suites chapters and non-MVP subjects; `terminale-fr-spe-math`'s
+      other 5 chapters; non-MVP-subject levels (SVT, NSI, SES).
 - [x] **2026-09-19, partial:** Audit `ib.ts` command-term usage in `src/lib/prompts/generate.ts`
       against the current IBO command term glossary edition — see the dated section above for full
       detail. ~15 of ~30 terms spot-checked via convergent secondary sources (no `WebFetch` this
@@ -530,18 +641,21 @@ fresh read of the unaudited sections.
 ### Exemplar-bank build-out (no extra AI cost)
 - [x] **Blocker above resolved 2026-09-24** — dead `schoolBank.ts` deleted; only `bank/page.tsx`'s
       inline implementation remains (not consolidated into a shared module).
-- [ ] Write `getChapterExemplars(curriculumId, levelId, subject, chapterId)` — no `src/lib/schoolBank.ts`
-      module exists anymore, so this needs a fresh home (e.g. a new `src/lib/schoolBank.ts` written
-      against the current `"schoolBank"`/`"schoolSlug"` schema, or inline next to `bank/page.tsx`'s
-      logic) — queries School Bank exercises tagged with a chapter, returns up to 2, ranked by recency.
-- [ ] Wire `getChapterExemplars()` into `buildChaptersSummary()` (`src/data/curricula/index.ts`)
-      or directly into `src/lib/prompts/generate.ts` — inject as "Example of a previously
-      well-received exercise for this chapter:" context, clearly labeled as an example, not an
-      instruction to copy verbatim (avoid the model just repeating the same exercise every time).
-      Guard against near-zero-data chapters (most chapters will have 0 shared exercises for a long
-      time post-launch) — the feature should be a no-op, not an error, when no exemplar exists.
-- [ ] Add a lightweight regression test (Playwright or unit) confirming generation still succeeds
-      when a chapter has zero exemplars (the common case pre-launch) and when it has one.
+- [x] **2026-09-29 (nightly-ops)** Wrote `getChapterExemplars(curriculumId, levelId, subject, chapterId)`
+      in a fresh `src/lib/schoolBank.ts` — queries the real `schoolBank` collection
+      (`curriculumId`/`subject`/`exercise.chapterIds array-contains chapterId`, via `adminDb`, using the
+      composite index `firestore.indexes.json` already has for `/api/tools/chapter-performance`), sorts
+      by `sharedAt` in JS (not a Firestore `orderBy`, to avoid needing a new composite index — see the
+      module's own comment), returns up to 2 exemplars.
+- [x] **2026-09-29 (nightly-ops)** Wired `getChapterExemplars()` directly into `src/lib/prompts/generate.ts`
+      (new pure `buildExemplarsPrompt()`, same convention as `buildTeacherStylePrompt()`) and
+      `src/app/api/generate/route.ts` (fetches for up to 8 selected chapters in parallel, skipped for
+      university mode and regenerate/adjustment passes). Injected as a clearly-labeled "SCHOOL BANK
+      EXEMPLARS (for inspiration ONLY — do NOT copy verbatim...)" block. Confirmed no-op (empty string,
+      no block at all) when a chapter has 0 exemplars — the expected case for a long time post-launch.
+- [x] **2026-09-29 (nightly-ops)** Added 10 Vitest tests (`src/__tests__/schoolBank-exemplars.test.ts`)
+      confirming prompt generation succeeds with 0, 1, and 2 exemplars. Full detail + a real discrepancy
+      from this checklist's own client-SDK assumption: `ROADMAP.md`'s 2026-09-29 entry.
 
 ### Secondary signal (also no extra AI cost)
 - [ ] Track chapter-coverage misses (`chapterCoverage[].missing` in

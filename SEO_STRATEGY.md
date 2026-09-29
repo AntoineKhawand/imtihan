@@ -136,6 +136,36 @@ keep each change reviewable and low-risk for an unattended push.
       is unchanged and still stands.
 
 ### Technical SEO
+- [~] **2026-09-29 — nightly GSC health check requested (compare vs. 2026-09-28 baseline, re-check
+      the 3 not-indexed curricula pages after yesterday's footer-linking fix + the founder's manual
+      Request-Indexing clicks). Blocked before any data could be pulled: zero `mcp__gsc__*` tools
+      attached to this session at all.** Tried 8 distinct tool names spanning every category the
+      task named — `get_search_by_page_query`, `get_advanced_search_analytics`,
+      `get_performance_overview`, `get_search_analytics`, `check_indexing_issues`,
+      `batch_url_inspection`, `list_properties`, `get_capabilities`, `reauthenticate` — every one
+      returned "No such tool available," not an auth/API error, meaning the MCP server itself
+      wasn't wired into this dispatch's tool list (same failure mode as the 2026-09-18 runs
+      1-4 that blocked this exact backlog item for 4 consecutive sessions before
+      `scripts/nightly-ops.ps1` was fixed 2026-09-25 to actually grant the read-only `gsc` slice).
+      Tonight's task prompt itself flagged this as a real possibility ("connection timeouts
+      reported earlier tonight") — so this reads as a transient/regressed MCP connection, not a
+      re-opened config gap; no code change needed on `nightly-ops.ps1` unless this repeats.
+      **No GSC numbers reported below — none were pulled, and per this file's own standing rule
+      ("ground every claim in data, not assumption") the 2026-09-28 baseline (554 impr/9 clicks as
+      of 09-27, 3-4/48 indexed) stays the last-known-real snapshot; it is NOT being re-logged as
+      today's number.** Did one non-GSC, code-level check instead, since it needed no `gsc` tool:
+      `WebFetch`'d a live production blog post
+      (`.../the-2026-rentre-playbook-standardizing-diagnostic-assessments-across-bac-libanais-french-bac-and-ib-xzi2`)
+      and confirmed yesterday's `PublicFooter.tsx` fix (the "Exam generators" link row) is genuinely
+      live in production — the footer now really does link `/generateur-examen-bac-libanais`,
+      `/bac-francais-exam-generator`, `/ib-exam-generator`, and `/ai-exam-generator-lebanon` on a
+      real rendered page, not just in the source diff. That's a deploy-confirmation, not new
+      indexing data — whether Google has re-crawled enough pages to register those links, and
+      whether the 3 not-indexed pages have moved, both still require live `gsc` URL Inspection,
+      which this session cannot do. No code changes made tonight (nothing new/fixable was found,
+      and the one thing that could have been checked — indexing status — was unreachable). Next run
+      with working `gsc` tools should treat 2026-09-28's numbers as the baseline to compare against,
+      not tonight's.
 - [x] **2026-09-28 — checked whether the 4 dedicated SEO landing pages
       (`/ai-exam-generator-lebanon`, `/bac-francais-exam-generator`,
       `/generateur-examen-bac-libanais`, `/ib-exam-generator`) are actually getting found for
