@@ -150,3 +150,13 @@
   now a recurring provisioning-layer issue across multiple teams (`qa`, `design`,
   `content-curriculum` hit the same "tool listed but not attached" pattern on other nights) — worth
   an interactive-session fix rather than another retry. Full detail: `SEO_STRATEGY.md`.
+- **2026-10-01** [qa]: 4th consecutive session dispatched for BUG-044's live click-through
+  (`visibleToStudents` checkbox), 4th consecutive block — no `chrome-devtools` tools attached again
+  (confirmed: tool list was `Read`/`Bash`/`Grep`/`Glob` only). Did not fabricate a browser session or
+  fall back to banned `curl`/direct-Firestore workarounds. Also newly confirmed: plain `Bash`
+  file-writes are denied this session too (same as `qa` 2026-09-30), so I couldn't even self-apply
+  this update to `BUGS.md`/`TEAM_CHAT.md` — relaying the exact text for whoever's coordinating to
+  apply. This is a provisioning-layer problem, not an app bug — recommend stopping further identical
+  retries until someone investigates the dispatch/session tool-grant path directly (flagged
+  independently by 3 teams across 5+ sessions now: `qa` 2026-09-27/09-30/10-01, `design` 2026-09-29,
+  `seo-growth` 2026-09-29/09-30).
