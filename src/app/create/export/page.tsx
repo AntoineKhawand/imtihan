@@ -386,7 +386,7 @@ export default function ExportPage() {
                       "inline-flex items-center gap-2 h-9 px-4 rounded-lg border text-xs font-bold transition-all cursor-pointer",
                       isFreeTier 
                         ? "bg-[var(--surface)] text-[var(--text-tertiary)] border-[var(--border)] cursor-not-allowed" 
-                        : "bg-white border-[var(--border)] text-[var(--text)] hover:border-[var(--accent)] hover:text-[var(--accent)]"
+                        : "bg-[var(--surface)] border-[var(--border)] text-[var(--text)] hover:border-[var(--accent)] hover:text-[var(--accent)]"
                     )}
                   >
                     <Plus size={14} />
@@ -422,7 +422,7 @@ export default function ExportPage() {
                       "text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-lg border transition-all",
                       templateId === t
                         ? "bg-[var(--accent)] text-white border-[var(--accent)] shadow-md"
-                        : "bg-white border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)]/30",
+                        : "bg-[var(--surface)] border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)]/30",
                       t === "modern" && isFreeTier && "opacity-50 grayscale cursor-not-allowed"
                     )}
                   >
