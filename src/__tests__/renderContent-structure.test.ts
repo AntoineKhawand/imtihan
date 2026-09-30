@@ -134,4 +134,26 @@ describe("renderContent — BUG-038 regression (KaTeX stretchy SVG corruption)",
     const html = renderContent("First line.\nSecond line.");
     expect(html).toContain("First line.<br />Second line.");
   });
+
+  // Residual finding from QA's 2026-09-27 live verification of the BUG-038
+  // fix above: the original fix (suppressing <br /> inside an svg block)
+  // fully closed the "Expected path command" error, but left a subtler one
+  // ("Expected number" in a path's d attribute, no visible defect) — KaTeX's
+  // own \vec path template spans multiple lines, same as \sqrt's, so
+  // suppressing <br /> without putting anything back glues the number
+  // before the line break directly onto the number after it, corrupting the
+  // path's argument count. A single space is safe SVG path whitespace and
+  // fixes the concatenation without reintroducing <br />.
+  it("never concatenates two numbers together inside a \\vec SVG path's d attribute", () => {
+    const html = renderContent(
+      "Étape 1: on applique la relation vectorielle $\\vec{F} = m\\vec{a}$.\nÉtape 2: donc $\\vec{v} = \\vec{v_0} + \\vec{a}t$.\nRésultat final ci-dessous."
+    );
+    const pathAttrs = [...html.matchAll(/<path\s+d="([^"]*)"/g)].map((m) => m[1]);
+    expect(pathAttrs.length).toBeGreaterThan(0);
+    for (const d of pathAttrs) {
+      expect(d).not.toContain("<br");
+    }
+    // The prose around the math should still get its line breaks.
+    expect(html).toContain("<br />");
+  });
 });

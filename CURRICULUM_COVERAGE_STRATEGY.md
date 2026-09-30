@@ -521,6 +521,100 @@ geometry-space — probability was fixed 2026-09-27); non-MVP-subject levels (`t
 audit. `terminale-fr-spe-pc` (this session's scope) is now fully audited against the real 2019-reform
 programme's 4-theme structure.
 
+## 2026-09-30 — Bac Français pre-2019-reform audit: `terminale-fr-spe-math`'s remaining 5 chapters — 5 real gaps found and fixed, 1 chapter refuted as accurate
+
+Picked up the "still explicitly unaudited" slice named by this run's own instruction:
+`terminale-fr-spe-math`'s other 5 chapters (limits, dérivation/primitives, logarithm, integrals,
+geometry-space — probability was already fixed 2026-09-27). Read the exact current
+`terminale-fr-spe-math` chapter definitions in `src/data/curricula/bac-francais.ts` (lines 532-630)
+first, before researching, per this run's instruction.
+
+**Primary source attempted, blocked as usual:** `WebFetch` on both
+`education.gouv.fr/bo/19/Special8/MENE1921249A.htm` (referenced in the 2026-09-29 entry) and
+`legifrance.gouv.fr/jorf/id/JORFTEXT000038799933` (the arrêté du 19 juillet 2019 itself) — the
+Légifrance page loaded but only returned the decree's administrative shell (NOR, ELI, "fixed
+according to annex"), not the annex content itself; the `education.gouv.fr` URL returned HTTP 403,
+same as every prior session in this file.
+
+**Verification method:** with both primary sources unreadable, used 4 independent secondary sources
+per claim — `groupe-reussite.fr/ressources/programme-terminale-maths/`, a `WebFetch` of a page whose
+content matched `jai20enmaths.com/terminale`'s content (16-item numbered chapter list),
+`sherpas.com/blog/nouveau-programme-maths/`, and `xymaths.fr/Lycee/Terminale-generale-specialite-mathematiques/`
+— all four independently converged on the same programme structure (Algèbre et géométrie / Analyse /
+Probabilités / Algorithmique et logique, with near-identical chapter lists), same convergent-sources
+discipline as every prior entry in this file.
+
+**Findings — all fixed, all additive, no chapter `id`s renamed (grepped `src/` first; only
+`bac-francais.ts` itself references any of `terminale-fr-spe-math`'s chapter ids, so edits are safe):**
+
+1. **Missing chapter — sequence limits.** "Suites" (convergence/divergence, théorème des gendarmes,
+   limite d'une suite définie par récurrence) is a real, distinct Analyse chapter in all 4 sources,
+   separate from function limits and from Première's "suites numériques" chapter (which only covers
+   arithmetic/geometric sequences and an initiation to récurrence, no limits at all). Entirely absent
+   from `terminale-fr-spe-math`. Added `ter-fr-math-sequences-limits`.
+2. **Missing chapter — trigonometric functions.** "Fonctions trigonométriques" (derivatives of
+   sinus/cosinus, variations, equation-solving via calculus) is a real, distinct Analyse chapter in
+   all 4 sources. Distinct from Première's trigonometry chapter (unit circle + trig equations only, no
+   derivatives) and entirely absent from Terminale. Added `ter-fr-math-trig-functions`.
+3. **Missing content — équations différentielles.** "Primitives et équations différentielles"
+   (y' = ay + b, méthode d'Euler) is a real, named Analyse sub-theme in all 4 sources, grouped
+   thematically with primitives, and was entirely absent from the file. Added as two new objectives
+   on the existing `ter-fr-math-derivation` chapter (which already covers primitives) rather than a
+   new chapter, following the same "same theme → objective, not new chapter" convention as the
+   2026-09-29 `terminale-fr-spe-pc` session.
+4. **Missing content — croissances comparées.** The comparative growth-rate theorem
+   (exponential/logarithm/power-function hierarchy for lifting indeterminate forms) is real,
+   heavily-examined Terminale logarithm content, confirmed by groupe-reussite.fr plus a second,
+   independent convergence check (7 further sources — jybaudot.fr, maxicours.com, ilemaths.net,
+   mathschool.fr, allomaths.com, galilee.ac, leprofduweb.com — all treating it as standard Terminale
+   spé-math content). `ter-fr-math-logarithm`'s objectives previously only covered properties/ln
+   study/equation-solving. Added as a new objective.
+5. **Missing content — orthogonality/distance in space geometry.** "Orthogonalité et distances"
+   (produit scalaire in 3D, projeté orthogonal, distance point-à-plan) and "représentations
+   paramétriques" (of a line) are real, named Algèbre-et-géométrie sub-themes in all 4 sources,
+   distinct from the existing objectives (vectors, plane equations, intersections only — no dot
+   product, no distance calculation, no parametric line representation). Added 3 new objectives to
+   the existing `ter-fr-math-geometry-space` chapter.
+
+**Refuted, no change:** the existing `ter-fr-math-limits` ("Limites et continuité" — function limits,
+IVT) and `ter-fr-math-integrals` ("Intégration" — primitives, integration by parts, areas) chapters
+both match the real programme's "Limites des fonctions"/"Continuité" and "Calcul intégral" sub-themes
+closely; no inaccuracy found in either.
+
+**Not added, flagged as an open lead instead of edited — "Algorithmique et logique":** 3 of 4 sources
+(jai20enmaths-content, sherpas, xymaths) list a real, distinct top-level programme section covering
+Python list manipulation and mathematical logic (quantifiers, implication/contraposée, proof by
+induction). This is genuinely part of the compulsory *Mathématiques* specialty programme, not the
+separate NSI specialty — but it sits close enough to the CLAUDE.md §8-9 "Informatique deferred to
+v1.1" boundary (the Python-list-manipulation half specifically) that a unilateral add felt like the
+wrong call for a content-curriculum-only session, especially since Imtihan's export pipeline (Word/PDF,
+no code execution) isn't built to grade or render runnable code exercises. The pure-logic half
+(quantifiers, contraposée, récurrence) is written-exam-appropriate and could reasonably be added to an
+existing chapter in a future pass, but flagging rather than deciding unilaterally tonight.
+
+**Mathematics chapter count: 6 → 8** (2 new chapters; 3 existing chapters gained objectives; 2
+chapters confirmed accurate as-is).
+
+**Verification:** `tsc` itself is not runnable in this session — `node_modules/typescript/bin/tsc`
+requires `../lib/tsc.js`, but `node_modules/typescript/lib/` only contains a placeholder `_tsc.js`
+(no real compiler, no `package.json` for the package) — a pre-existing environment condition, not
+caused by this edit. As a substitute: (1) re-read the edited chapter objects and confirmed they match
+the existing `Chapter` type shape (`src/types/curriculum.ts`) exactly — `id: string`,
+`name: {fr, en}`, `objectives: string[]`, no new/missing fields, same as every other chapter in the
+file; (2) ran a `node --check` syntax pass over the file (with only the `import type`/type-annotation
+line stripped, since the object literals themselves are plain JS) to catch any stray
+brace/comma/quote errors — passed clean. This is not equivalent to a real type-check and should not
+be presented as one; flagging the broken local `tsc` install for whoever next needs a real compile in
+this environment. Left uncommitted for review. Not yet reviewed by `qa`.
+
+**Remaining unaudited scope, per this run's instruction — unchanged:** `premiere-fr-spe-math`'s
+exponential/suites chapters (still entirely unchecked) and its non-MVP subjects (french,
+history-geography, philosophy, ses); non-MVP-subject levels (`terminale-fr-spe-svt`,
+`terminale-fr-spe-nsi`, `terminale-fr-spe-ses`) — out of MVP scope per CLAUDE.md §9, skip rather than
+audit. `terminale-fr-spe-math` (this session's scope) is now fully audited against the real
+2019-reform programme structure, all 6 original chapters checked (1 previously fixed for probability,
+2 confirmed accurate, 3 corrected/expanded tonight) plus 2 new chapters added for real content gaps.
+
 ## Backlog (pick one per Wednesday, highest priority first)
 
 ### Data accuracy audits (grounded in `docs/DATA_SOURCING.md`)
@@ -630,6 +724,24 @@ programme's 4-theme structure.
       focus. Physics chapters 3→6, chemistry chapters 3→4. No chapter `id`s renamed. Still unaudited:
       `premiere-fr-spe-math`'s exponential/suites chapters and non-MVP subjects; `terminale-fr-spe-math`'s
       other 5 chapters; non-MVP-subject levels (SVT, NSI, SES).
+      **2026-09-30: `terminale-fr-spe-math`'s remaining 5 chapters fully audited — 5 real gaps found
+      and fixed, 2 chapters confirmed accurate.** See the dated section above for full detail. Both
+      primary sources unreadable (Légifrance returned only the decree shell, `education.gouv.fr`
+      403'd as usual); findings rest on 4-source convergent secondary corroboration. Added 2 missing
+      chapters (`ter-fr-math-sequences-limits` — sequence convergence/limits, entirely absent and
+      distinct from Première's non-limits suites chapter; `ter-fr-math-trig-functions` — derivatives
+      of sinus/cosinus, distinct from Première's non-calculus trigonometry chapter); added missing
+      objectives to 3 existing chapters (équations différentielles on `ter-fr-math-derivation`,
+      croissances comparées on `ter-fr-math-logarithm`, orthogonality/distance/parametric-line
+      representation on `ter-fr-math-geometry-space`). Confirmed `ter-fr-math-limits` and
+      `ter-fr-math-integrals` accurate as-is, no change. Flagged but did not add "Algorithmique et
+      logique" (a real programme section, but borderline against the CLAUDE.md §8-9 Informatique/NSI
+      deferral and Imtihan's no-code-execution export pipeline) as an open lead for a future pass.
+      Mathematics chapters 6→8. Local `tsc` install is broken in this session (`node_modules/typescript/lib/`
+      has no real compiler) — verified via chapter-shape review + `node --check` syntax pass instead of
+      a real type-check; flagged for whoever needs a working compile next. Still unaudited:
+      `premiere-fr-spe-math`'s exponential/suites chapters and non-MVP subjects; non-MVP-subject levels
+      (SVT, NSI, SES). `terminale-fr-spe-math` is now fully audited.
 - [x] **2026-09-19, partial:** Audit `ib.ts` command-term usage in `src/lib/prompts/generate.ts`
       against the current IBO command term glossary edition — see the dated section above for full
       detail. ~15 of ~30 terms spot-checked via convergent secondary sources (no `WebFetch` this

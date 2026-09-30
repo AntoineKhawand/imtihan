@@ -136,6 +136,52 @@ keep each change reviewable and low-risk for an unattended push.
       is unchanged and still stands.
 
 ### Technical SEO
+- [~] **2026-09-30 — direct continuation of the 2026-09-29 GSC health check, still blocked the same
+      way.** Checked tool availability first, as instructed: this session's tool list is
+      Read/Edit/Write/Bash/Grep/Glob/WebSearch/WebFetch only — no `mcp__gsc__*` tool of any kind is
+      present (not even listed to try and fail; they're simply absent from the toolset), so
+      `get_search_by_page_query`/`batch_url_inspection`/etc. were never attempted as live calls —
+      there's nothing to invoke. This is the identical failure mode as 2026-09-29 (also "zero gsc
+      tools attached"), not the 2026-09-27/09-28 pattern (tools present, calls succeeded). Per this
+      doc's own rule ("ground every claim in data, not assumption"), **no GSC numbers are reported
+      below, and 2026-09-27's 9 clicks / 554 impressions / CTR 1.6% / avg pos 5.8 (28d) remains the
+      last-known-real baseline** for whoever runs next with working tools — NOT the 2026-09-28
+      per-page-query pull (that was a narrower, page-scoped query, not a comparable aggregate).
+      **Did the same non-GSC fallback as 2026-09-29, but went further** (confirmed the fix is live,
+      not just deployed):
+      - `WebFetch`'d all 3 previously not-indexed curricula pages directly
+        (`/bac-francais-exam-generator`, `/generateur-examen-bac-libanais`, `/ib-exam-generator`):
+        all 3 render correctly (title/H1 match their target queries, unchanged from 2026-09-28's
+        on-page check) and all 3 now genuinely carry the 2026-09-28 `PublicFooter.tsx` "Exam
+        generators" link row in their own rendered footer (Bac Libanais / Bac Français / IB
+        Diploma / Lebanon AI Generator, all 4 as `<a href>`s) — confirms the footer fix isn't just
+        present on other pages, it's present on these 3 pages themselves too, i.e. now
+        cross-linking each other, not just receiving inbound links from elsewhere.
+      - `WebFetch`'d `sitemap.xml`: still 48 URLs, all 3 curricula pages present (unchanged from
+        baseline — ruling out an accidental sitemap regression as an alternative explanation if
+        indexing hasn't moved).
+      - `WebFetch`'d `robots.txt`: unchanged disallow list, none of the 4 landing pages or `/blog`
+        blocked.
+      - Re-verified the `...-sx7l` FAQ post (2026-09-27's applied fix): the visible 3-Q&A FAQ
+        section is still live, and its own footer also now has the "Exam generators" row.
+      - Tried `WebSearch` with `site:imtihan.live` queries for these pages as a cheap indirect
+        indexing signal, explicitly **not trusting the result**: it returned GitHub PR pages and
+        generic unrelated content, not real Google-index results — this tool doesn't reflect actual
+        Google indexing status, so it's logged here only to save a future run from trying the same
+        dead end, not as evidence either way.
+      **Net: everything checkable without `gsc` is confirmed correct and live** (deploy + on-page +
+      sitemap + robots all clean); **whether Google has actually re-crawled and flipped any of the 3
+      pages to indexed is still unknown** — that requires live URL Inspection, which remains
+      unreachable this session. No code changes made (nothing broken was found to fix). Tool
+      attachment for `gsc` has now failed 2 of the last 3 nightly runs (09-29, 09-30) after working
+      on 09-27/09-28 — this reads as a real regression in `scripts/nightly-ops.ps1`'s `gsc` grant (or
+      the underlying MCP server's availability), not routine flakiness; worth an interactive-session
+      check of the tool-attachment config before assuming the next unattended run will have it
+      either. Next run with working `gsc` tools should still treat 2026-09-27 as the last real
+      baseline and prioritize: (1) `batch_url_inspection` on the 3 curricula pages, (2) a fresh 28d
+      aggregate pull to compare against 554 impr/9 clicks, (3) query/position check on the `...-sx7l`
+      post to see if the FAQ move (40→70/100 GEO score, applied 2026-09-27) shows up in impressions
+      or position yet.
 - [~] **2026-09-29 — nightly GSC health check requested (compare vs. 2026-09-28 baseline, re-check
       the 3 not-indexed curricula pages after yesterday's footer-linking fix + the founder's manual
       Request-Indexing clicks). Blocked before any data could be pulled: zero `mcp__gsc__*` tools
