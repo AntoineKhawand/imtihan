@@ -542,12 +542,23 @@ export const bacFrancais: Curriculum = {
             ],
           },
           {
+            id: "ter-fr-math-sequences-limits",
+            name: { fr: "Suites — limites", en: "Sequences — limits" },
+            objectives: [
+              "Étudier la convergence ou la divergence d'une suite",
+              "Utiliser le théorème de comparaison (théorème des gendarmes)",
+              "Étudier le sens de variation et la limite d'une suite définie par récurrence",
+            ],
+          },
+          {
             id: "ter-fr-math-derivation",
             name: { fr: "Dérivation et primitives", en: "Differentiation and antiderivatives" },
             objectives: [
               "Dériver composées",
               "Déterminer primitives",
               "Étudier convexité",
+              "Résoudre une équation différentielle du type y' = ay + b",
+              "Utiliser la méthode d'Euler pour approcher une solution",
             ],
           },
           {
@@ -557,6 +568,16 @@ export const bacFrancais: Curriculum = {
               "Maîtriser propriétés de ln",
               "Étudier la fonction ln",
               "Résoudre équations et inéquations",
+              "Étudier les croissances comparées entre exponentielle, logarithme et fonctions puissances",
+            ],
+          },
+          {
+            id: "ter-fr-math-trig-functions",
+            name: { fr: "Fonctions trigonométriques", en: "Trigonometric functions" },
+            objectives: [
+              "Calculer les dérivées des fonctions sinus et cosinus",
+              "Étudier les variations d'une fonction trigonométrique",
+              "Résoudre des problèmes utilisant la dérivation de fonctions trigonométriques",
             ],
           },
           {
@@ -585,6 +606,9 @@ export const bacFrancais: Curriculum = {
               "Utiliser vecteurs dans l'espace",
               "Déterminer équations de plans",
               "Résoudre problèmes d'intersections",
+              "Calculer le produit scalaire de deux vecteurs de l'espace et étudier l'orthogonalité",
+              "Déterminer la distance d'un point à un plan",
+              "Déterminer une représentation paramétrique d'une droite",
             ],
           },
         ],
