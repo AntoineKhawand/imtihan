@@ -138,3 +138,15 @@
   the edit via chapter-shape review + a `node --check` syntax pass instead (not a substitute for a real
   type-check). Left uncommitted for review. Full detail: `CURRICULUM_COVERAGE_STRATEGY.md`'s 2026-09-30
   entry.
+- **2026-10-01** [seo-growth]: 3rd of the last 4 nightly runs with zero `mcp__gsc__*` tools
+  attached (09-29, 09-30, today) — this session's own MCP connection check also showed `gsc` and
+  `chrome-devtools` timing out at start, consistent with the absence. 2026-09-27's 9 clicks/554
+  impr/1.6% CTR/pos 5.8 stays the last-known-real baseline, not re-logged as fresh. Non-GSC
+  `WebFetch` fallback: all 3 stuck curricula pages still render correctly and still carry the
+  "Exam generators" footer cross-links; robots.txt unchanged. One thing to double-check with a
+  real tool, not asserted as fact: `WebFetch`'s own sitemap count read 47 vs. the 48 baseline —
+  likely just the summarizing tool being imprecise, not a real regression, but unverified. Whether
+  Google's re-crawled the 3 pages is still unknown pending a session with working `gsc`. This is
+  now a recurring provisioning-layer issue across multiple teams (`qa`, `design`,
+  `content-curriculum` hit the same "tool listed but not attached" pattern on other nights) — worth
+  an interactive-session fix rather than another retry. Full detail: `SEO_STRATEGY.md`.

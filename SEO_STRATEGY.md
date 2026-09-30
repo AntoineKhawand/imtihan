@@ -136,6 +136,40 @@ keep each change reviewable and low-risk for an unattended push.
       is unchanged and still stands.
 
 ### Technical SEO
+- [~] **2026-10-01 — 3rd of the last 4 nightly runs blocked on the same GSC tool-attachment gap
+      (2026-09-29, 2026-09-30, now today; 2026-09-27/09-28 were the only 2 that worked).** Checked
+      tool availability first, as instructed: zero `mcp__gsc__*` tools of any kind are present in
+      this session's toolset (not erroring, simply absent — identical failure mode to 09-29/09-30,
+      not the 09-27/09-28 pattern where calls succeeded). This session's own MCP connection check
+      also reported `gsc` and `chrome-devtools` both timing out at session start, consistent with
+      the absence. **No GSC numbers pulled or reported — 2026-09-27's 9 clicks / 554 impressions /
+      CTR 1.6% / avg pos 5.8 (28d) remains the last-known-real baseline**, not re-logged as fresh
+      data. Did the same non-GSC fallback as 09-29/09-30 via `WebFetch`:
+      - All 3 previously not-indexed curricula pages (`/bac-francais-exam-generator`,
+        `/generateur-examen-bac-libanais`, `/ib-exam-generator`) still render correctly — title/H1
+        match target queries, unchanged — and all 3 still carry the "Exam generators" footer link
+        row cross-linking each other, matching the 2026-09-30 confirmation.
+      - `sitemap.xml`: all 3 curricula pages still present. One caveat worth flagging rather than
+        asserting as a regression: `WebFetch`'s own count this session read **47** URL entries vs.
+        the 48 recorded in every prior baseline — `WebFetch` summarizes fetched content through a
+        model rather than returning a raw byte-exact count, so a single off-by-one from this tool
+        isn't reliable evidence of an actual sitemap change (no `<url>` entries were individually
+        diffed). Flagging for whoever next has either `gsc` tools or a way to fetch the raw XML
+        directly (e.g. `curl`) to confirm the real count rather than trusting either number as-is.
+      - `robots.txt`: unchanged disallow list (`/create`, `/dashboard`, `/bank`, `/community`,
+        `/auth/`, `/api/`, `/admin`, `/scanner`, `/print`, `/analytics`, `/test-auth`,
+        `/test-wysiwyg`, `/account`, `/teacher/`) — none of the 4 landing pages or `/blog` blocked.
+      **Net: everything checkable without `gsc` is confirmed correct and live**; **whether Google
+      has actually re-crawled/flipped any of the 3 pages to indexed is still unknown** — needs live
+      `batch_url_inspection`, unreachable again this session. No code changes made. This is now the
+      3rd distinct run this week hitting "tool present in agent frontmatter/CLAUDE.md but not
+      actually attached to the session" (also hit `qa`, `design`, `content-curriculum` on other
+      dates per `TEAM_CHAT.md`) — looks like a persistent provisioning-layer issue, not one-off
+      flakiness; worth an interactive-session check of `scripts/nightly-ops.ps1`'s `gsc`/
+      `chrome-devtools` grant and the underlying MCP server's health before assuming the next run
+      will have it. Next run with working `gsc` tools: treat 2026-09-27 as the last real baseline
+      and prioritize (1) `batch_url_inspection` on the 3 curricula pages, (2) a fresh 28d aggregate
+      to compare against 554 impr/9 clicks, (3) query/position check on the `...-sx7l` FAQ post.
 - [~] **2026-09-30 — direct continuation of the 2026-09-29 GSC health check, still blocked the same
       way.** Checked tool availability first, as instructed: this session's tool list is
       Read/Edit/Write/Bash/Grep/Glob/WebSearch/WebFetch only — no `mcp__gsc__*` tool of any kind is
