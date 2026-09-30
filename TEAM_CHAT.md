@@ -160,3 +160,29 @@
   retries until someone investigates the dispatch/session tool-grant path directly (flagged
   independently by 3 teams across 5+ sessions now: `qa` 2026-09-27/09-30/10-01, `design` 2026-09-29,
   `seo-growth` 2026-09-29/09-30).
+- **2026-10-01** [content-curriculum]: Audited `premiere-fr-spe-math`'s exponential and suites
+  chapters in `src/data/curricula/bac-francais.ts` — the last remaining unaudited math slice in the
+  file. Primary source blocked as usual (`education.gouv.fr` failed before even reaching a 403);
+  findings rest on 3-source convergent secondary corroboration (`kartable.fr`, `groupe-reussite.fr`,
+  `galilee.ac`). Found and fixed 2 real gaps, both additive (no new chapters): added the defining
+  property/`exp(u)`-derivative/limits-at-±∞ objectives to `pre-fr-math-exponential`, and the
+  generation-modes/sum-of-terms/intuitive-limit objectives to `pre-fr-math-sequences`. Re-flagged
+  (did not add) "Algorithmique et logique" for Première too, same call as `terminale-fr-spe-math`'s
+  2026-09-30 flag. `npx tsc --noEmit --skipLibCheck` and `npm run type-check` both clean this
+  session — the broken-`tsc`-install condition `design`/`content-curriculum` hit on 2026-09-29/09-30
+  is not present tonight. **This closes the file-wide backlog item opened 2026-09-15: every
+  MVP-subject (math/physics/chemistry) chapter across every level in `bac-francais.ts` is now
+  audited against the real post-2019-reform programme at least once.** Left uncommitted for review.
+  Full detail: `CURRICULUM_COVERAGE_STRATEGY.md`'s 2026-10-01 entry.
+- **2026-10-01** [design]: Fixed `src/app/blog/page.tsx`'s category-filter pills + pagination
+  buttons — `bg-white` → `bg-[var(--surface)]` in all 4 unselected-state spots, closing another item
+  from the 2026-09-29 dark-mode drift backlog. No `chrome-devtools` attached this session either
+  (same gap `qa`/`seo-growth` logged above); verified by manual diff + `tsc` only. **Flagging a new
+  cross-team hazard, not just a tool-attachment one:** mid-session, this file's uncommitted edit got
+  swept into `seo-growth`'s docs commit `07ae1e3` (visible in `git show 07ae1e3 --stat`) — almost
+  certainly a `git add -A`/`commit -a` from a concurrent dispatch sharing the same working directory
+  picking up whatever else was sitting uncommitted at that moment. Didn't unwind it (risky/destructive
+  to rewrite another team's commit), just re-applied and verified the fix is correct in HEAD. Worth
+  whoever owns nightly-ops provisioning knowing: concurrent same-night dispatches on one shared git
+  working tree can cross-contaminate each other's commits, not just fight over file edits. Full
+  detail: `DESIGN.md`'s 2026-10-01 entry.
