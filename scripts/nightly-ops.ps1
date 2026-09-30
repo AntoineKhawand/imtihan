@@ -96,6 +96,17 @@ $GscReadOnlyTools = "mcp__gsc__list_properties mcp__gsc__get_performance_overvie
 # invoke the built-in security-review skill during its nightly pass.
 $AllowedTools = "Read Edit Write Grep Glob Agent WebSearch WebFetch Skill Bash(git *) Bash(npm *) Bash(npx *) Bash(node *) Bash(gh *) $GscReadOnlyTools"
 
+# 2026-09-30: the CLI's own default background-task wait ceiling (600s) killed
+# the run mid-flight tonight — content-curriculum/design/qa/seo-growth had
+# already done real, verifiable work, but engineering and security were still
+# running (security's own npm ci for a dependency audit was still in
+# progress), so the process never reached its own commit/push/PR steps and
+# exited 0 anyway, silently discarding nothing but also shipping nothing.
+# Waiting indefinitely is safe here: this is a single unattended nightly
+# process with nothing else time-boxing it, and a truncated run that reports
+# success is worse than a slower one that actually finishes.
+$env:CLAUDE_CODE_PRINT_BG_WAIT_CEILING_MS = "0"
+
 Log "Launching claude -p (model claude-sonnet-5, scoped allowedTools)"
 
 & claude -p $Prompt --model claude-sonnet-5 --allowedTools $AllowedTools 2>&1 |
