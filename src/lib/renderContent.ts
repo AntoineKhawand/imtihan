@@ -621,6 +621,23 @@ export function renderContent(raw: string): string {
       const nextIsHtmlOrPlaceholder = isBlockHtmlStart(nextReal) || /%%(VISUAL|MERMAID|PTABLE|DOC)_\d+%%/.test(nextReal);
       if (prevReal && nextReal && !prevIsHtmlOrPlaceholder && !nextIsHtmlOrPlaceholder && !insideSvg) {
         finalHtml += "<br />";
+      } else if (insideSvg) {
+        // This "blank line" is just a run of whitespace inside a KaTeX SVG
+        // <path d="..."> value (e.g. two consecutive embedded newlines in
+        // the stretchy-glyph geometry data — confirmed present in KaTeX's
+        // own \vec path, not just \sqrt). Dropping it entirely (as the
+        // `continue` below would otherwise do with nothing appended) glues
+        // the numeric token before it directly onto the one after it,
+        // silently turning e.g. "...11\n10.667..." into "...1110.667...".
+        // That's a real number, so it doesn't produce the original BUG-038
+        // symptom (no `<br` ever appears in the attribute), but it does
+        // corrupt the path's geometry and can misalign the argument count
+        // for later path commands, which is the most plausible explanation
+        // for the residual "Expected number" console error QA found after
+        // the original fix. A single space is semantically identical
+        // whitespace for SVG path data and harmless anywhere else inside an
+        // svg element.
+        finalHtml += " ";
       }
       continue;
     }
@@ -637,6 +654,15 @@ export function renderContent(raw: string): string {
 
       if (!isPrevHtml && !isCurrHtml && !isPlaceholder && !wasPlaceholder && !isShortMath && !insideSvg) {
         finalHtml += "<br />";
+      } else if (insideSvg) {
+        // Same reasoning as the blank-line branch above: the newline that
+        // `.split("\n")` consumed between the previous line and this one was
+        // itself the only separator between two numbers in an SVG path's `d`
+        // attribute (KaTeX's own multi-line path-geometry template strings,
+        // e.g. \sqrt and \vec both have this). Suppressing `<br />` without
+        // putting anything back concatenates the two numbers into one wrong
+        // token instead of just avoiding the corruption.
+        finalHtml += " ";
       }
     }
     finalHtml += line;
