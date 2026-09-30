@@ -411,9 +411,12 @@ export const bacFrancais: Curriculum = {
             id: "pre-fr-math-exponential",
             name: { fr: "Fonction exponentielle", en: "Exponential function" },
             objectives: [
-              "Utiliser les propriétés algébriques",
-              "Étudier la fonction exponentielle",
-              "Résoudre équations et inéquations",
+              "Définir la fonction exponentielle comme l'unique fonction dérivable sur ℝ telle que f' = f et f(0) = 1",
+              "Utiliser les propriétés algébriques (produit, quotient, puissance)",
+              "Étudier le signe, les variations et la courbe représentative de la fonction exponentielle",
+              "Calculer la dérivée d'une fonction composée du type exp(u), notamment t ↦ e^(at)",
+              "Étudier les limites de la fonction exponentielle en +∞ et en −∞",
+              "Résoudre équations et inéquations du type exp(x) = a, exp(x) < a",
             ],
           },
           {
@@ -428,8 +431,11 @@ export const bacFrancais: Curriculum = {
             id: "pre-fr-math-sequences",
             name: { fr: "Suites numériques", en: "Numerical sequences" },
             objectives: [
-              "Étudier suites arithmétiques et géométriques",
+              "Générer une suite de façon explicite, par récurrence, par un algorithme ou par un motif géométrique",
+              "Étudier suites arithmétiques et géométriques (terme général, sens de variation)",
+              "Calculer la somme de termes consécutifs d'une suite arithmétique ou d'une suite géométrique",
               "Raisonner par récurrence (initiation)",
+              "Conjecturer, à partir d'exemples, la limite finie ou infinie d'une suite",
             ],
           },
           {
