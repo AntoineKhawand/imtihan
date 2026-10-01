@@ -30,6 +30,8 @@ Track issues here during development. Format:
 **Also found, same pass:** Word export (`src/app/api/export/route.ts`) had the identical gap for the *new* `[PLOT:]` tag specifically — unlike `/print`, it would have shown the raw literal `[PLOT: sin(x)]` bracket text in the exported .docx, a real visual regression versus the old `[GRAPH:]`-tag behavior it replaces (which Word export already had a labelled-box handler for). That part **was** fixed in the same commit as the inline-plot feature (see ROADMAP) — only the `/print`/PDF path remains open.
 **Found by:** engineering (2026-10-01, while tracing the inline-`[PLOT:]`-tag feature through every export path per the task's own "trace through an e2e-relevant flow" requirement).
 
+**Also noted (2026-10-01, independent review):** the orphaned-mount fix applied to the main exercise statement (`useMemo` around `renderContent(exercise.statement)` in `ExerciseCard.tsx`) was **not** applied to `sq.statement` (sub-questions) or `opt.text` (MCQ options), both rendered via unmemoized `renderContent()` calls in the same component. If the AI ever places a `[PLOT: ...]` tag inside a sub-question's text rather than the top-level statement, that plot's mount could be silently orphaned by an unrelated re-render, same mechanism as the bug already fixed for the main statement. Low severity — this is new functionality, not a regression, and the common case (top-level statement) is handled — but worth closing in the same pass as BUG-051's `/print` fix rather than separately.
+
 ---
 
 ## BUG-050: Concurrent same-night team dispatches sharing one git working tree can cross-contaminate each other's commits via broad staging (`git add -A`/`git commit -a`)
