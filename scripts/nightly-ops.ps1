@@ -37,6 +37,28 @@ function Log($msg) {
     Add-Content -Path $LogFile -Value "$(Get-Date -Format o)  $msg" -Encoding UTF8
 }
 
+# 2026-10-01: the founder asked to be told every night when this fires and
+# what it's doing, without depending on a Claude Code session being open at
+# midnight (nothing guarantees that). A native Windows balloon notification
+# is independent of any session — it fires whether or not anyone's watching.
+# Wrapped in try/catch and never touches $LASTEXITCODE: a notification
+# failure must never abort or mask the real run underneath it.
+function Notify($title, $message) {
+    try {
+        Add-Type -AssemblyName System.Windows.Forms
+        $icon = New-Object System.Windows.Forms.NotifyIcon
+        $icon.Icon = [System.Drawing.SystemIcons]::Information
+        $icon.Visible = $true
+        $icon.BalloonTipTitle = $title
+        $icon.BalloonTipText = $message
+        $icon.ShowBalloonTip(20000)
+        Start-Sleep -Seconds 1
+        $icon.Dispose()
+    } catch {
+        Log "Notify() failed (non-fatal, run continues): $_"
+    }
+}
+
 function RunGit {
     param([string[]]$GitArgs)
     $output = & git @GitArgs 2>&1
@@ -48,6 +70,7 @@ function RunGit {
 
 Set-Location $RepoDir
 Log "=== Nightly ops run started ==="
+Notify "Imtihan Nightly Ops" "Tonight's run just started. Log: $LogFile"
 
 # Refuse to run against a dirty working tree rather than risk discarding
 # or colliding with in-progress local work.
@@ -55,6 +78,7 @@ $dirty = git status --porcelain
 if ($dirty) {
     Log "ABORT: working tree is not clean, refusing to touch it. Uncommitted changes:"
     Log ($dirty -join "`n")
+    Notify "Imtihan Nightly Ops - ABORTED" "Working tree was dirty, run skipped. Check the log."
     exit 1
 }
 
@@ -69,6 +93,7 @@ try {
     RunGit @("pull", "--ff-only", "origin", "master")
 } catch {
     Log "ABORT: git sync failed: $_"
+    Notify "Imtihan Nightly Ops - ABORTED" "git sync failed, run skipped. Check the log."
     exit 1
 }
 
@@ -111,5 +136,29 @@ Log "Launching claude -p (model claude-sonnet-5, scoped allowedTools)"
 
 & claude -p $Prompt --model claude-sonnet-5 --allowedTools $AllowedTools 2>&1 |
     ForEach-Object { Log $_ }
+$ExitCode = $LASTEXITCODE
 
-Log "=== Nightly ops run finished, exit code $LASTEXITCODE ==="
+Log "=== Nightly ops run finished, exit code $ExitCode ==="
+
+# Tell the founder what actually happened, not just that the process ended —
+# exit code 0 alone was misleading on 2026-09-30 (the run was truncated
+# before it ever reached its own PR-creation step, yet still exited 0).
+# Checking for a real PR against tonight's branch name is a direct,
+# unambiguous answer to "did anything actually ship" instead of leaving that
+# to be inferred from the exit code.
+$TodayBranch = "nightly/$(Get-Date -Format 'yyyy-MM-dd')"
+try {
+    $PrJson = & gh pr list --head $TodayBranch --state open --json url,title 2>&1
+    $PrList = $PrJson | ConvertFrom-Json
+} catch {
+    $PrList = $null
+}
+
+if ($PrList -and $PrList.Count -gt 0) {
+    $PrUrl = $PrList[0].url
+    Notify "Imtihan Nightly Ops - done" "PR opened: $PrUrl"
+} elseif ($ExitCode -ne 0) {
+    Notify "Imtihan Nightly Ops - finished with errors" "Exit code $ExitCode, no PR opened. Check the log: $LogFile"
+} else {
+    Notify "Imtihan Nightly Ops - finished, no PR" "Run completed but no PR was opened for $TodayBranch. Check the log: $LogFile"
+}
