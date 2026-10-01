@@ -19,6 +19,19 @@ Track issues here during development. Format:
 
 ## Open Issues
 
+## BUG-055: `canvas`'s native install script (and 4 other dependencies' install scripts) are unapproved under npm's new `allowScripts` supply-chain gate — currently advisory-only, but a future npm version will block them by default
+**Status:** Fixed (preemptively) 2026-10-01
+**Severity:** Low today, would have been High (silent feature regression) once npm enforces this
+**Area:** Build / Deploy
+
+**Description:** A real `vercel build` log (founder-provided) showed: `npm warn install-scripts 5 packages have install scripts not yet covered by allowScripts: @firebase/util@1.12.1, canvas@3.2.3, protobufjs@7.5.5, re2@1.24.0, unrs-resolver@1.11.1`. This is npm's newer supply-chain security feature (an `allowScripts` field in `package.json`, managed via `npm approve-scripts` in npm v11+ — not available in this machine's local npm 10.8.2, confirmed via `npm approve-scripts --help`) that requires explicitly trusting a package's install/postinstall scripts. Per npm's own current docs, this is **advisory only today** — scripts still run by default, a warning is just printed — but "a future release will block unreviewed install scripts" by default.
+**Why this matters specifically for `canvas`:** today's BUG-051 fix (real server-side math-plot rendering in Word export) depends on `canvas`'s native binary actually building successfully at install time. Verified today (founder-directed, live test against this PR's actual Vercel preview deployment, not just locally) that it currently works correctly in production — a real embedded PNG chart was confirmed in a docx fetched from the live Vercel preview URL. But if a future npm version enforcing `allowScripts` ships before this is addressed, `canvas`'s install script would silently stop running, its native binary would never get built, and the dynamic `import("canvas")` in `src/app/api/export/route.ts` would start failing at runtime — not breaking exports (the mandatory try/catch fallback to the text-label box still applies), but silently regressing every new Math/Physics/physique-chimie Word export back to a text label, with nothing surfacing the regression to anyone (the fallback only `console.error`s).
+**Fix:** Added an `allowScripts` field to `package.json` pinning all 5 flagged packages (exact versions from the log) to `true`. Checked each is a legitimate, already-relied-upon transitive dependency before approving, not a blanket rubber-stamp: `@firebase/util`/`canvas` are direct/core deps; `protobufjs` is pulled in via `firebase-admin` → `@google-cloud/firestore` → `@grpc/grpc-js` (confirmed via `npm ls protobufjs`); `re2` via `firebase-tools` → `superstatic` (dev/CI tooling only, confirmed via `npm ls re2`); `unrs-resolver` via `eslint-config-next` → `eslint-import-resolver-typescript` (lint-time only, confirmed via `npm ls unrs-resolver`). None are new or unvetted — all are scripts that already run today; this just formalizes the trust explicitly so a future npm version doesn't silently withdraw it.
+**Verification:** `package.json` re-validated as parseable JSON; `npm run type-check` clean. Not re-tested against a live Vercel build after this change (that would need a new deploy) — the field is inert under the current npm version (advisory-only), so no behavior change is expected or observable today; its effect is purely future-proofing.
+**Found by:** founder (shared a real `vercel build` log), investigated and fixed same session.
+
+---
+
 ## BUG-054: `MathPlot.tsx` (now the default render path for every new Math/Physics/physique-chimie exercise, not a rare legacy fallback) was hardcoded light-only and non-responsive
 **Status:** Fixed 2026-10-01
 **Severity:** Medium
