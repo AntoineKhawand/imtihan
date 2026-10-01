@@ -5,7 +5,181 @@ import {
   AlignmentType, BorderStyle, Table, TableRow, TableCell, WidthType,
   ImageRun, TableBorders, VerticalAlign
 } from "docx";
+import { create, all } from "mathjs";
 import { fixBoxedMath } from "@/lib/renderContent";
+
+// mathjs has no native addon — safe as a normal static import (already
+// proven server-side elsewhere, see src/lib/scientific.ts). `canvas` is the
+// one with native-binding risk; it is deliberately NOT imported here at the
+// top level — see renderMathPlotPng()'s own comment.
+const mathInstance = create(all);
+
+/**
+ * Default plot domain for server-side rendering — must match what the
+ * teacher actually saw on screen in MathPlot.tsx, not an invented range.
+ * MathPlot.tsx calls function-plot with its own defaults (width=600,
+ * height=400, no explicit xAxis/yAxis domain). Confirmed by reading
+ * function-plot's source (node_modules/function-plot/dist/chart.js,
+ * `internalVars()`/`initializeAxes()`): margins are fixed at
+ * {left:40,right:20,top:20,bottom:20} (no title in our usage), so inner
+ * width/height = 540/360; xDomain defaults to [-6,6] (DEFAULT xLimit=12);
+ * yDomain is then computed as yLimit = innerHeight*xDiff/innerWidth =
+ * 360*12/540 = 8, so yDomain = [-4,4]. Hardcoded here rather than
+ * re-derived at runtime since MathPlot.tsx never overrides width/height.
+ */
+const PLOT_X_DOMAIN: [number, number] = [-6, 6];
+const PLOT_Y_DOMAIN: [number, number] = [-4, 4];
+const PLOT_CANVAS_WIDTH = 600;
+const PLOT_CANVAS_HEIGHT = 400;
+
+/**
+ * Mirrors MathPlot.tsx's own "y = "/"f(x) = " prefix stripping, then makes
+ * common implicit-multiplication shorthand (e.g. "2x", "2(x+1)") parseable
+ * by mathjs — unlike function-plot's own, more permissive parser
+ * (built-in-math-eval, see function-plot's package.json), mathjs requires an
+ * explicit "*". Best-effort only: deliberately simple regexes, not a full
+ * reimplementation of function-plot's parser. Anything this doesn't handle
+ * correctly still fails safely via renderMathPlotPng()'s try/catch.
+ */
+function preprocessEquationForMathjs(raw: string): string {
+  let eq = raw.replace(/^(y|f\(x\))\s*=\s*/i, "").trim();
+  eq = eq.replace(/(\d)([a-zA-Z(])/g, "$1*$2");
+  eq = eq.replace(/(\))([a-zA-Z0-9(])/g, "$1*$2");
+  return eq;
+}
+
+/**
+ * Renders a real function-plot PNG for a `[PLOT: equation]` tag, server-side,
+ * for Word export. Unlike the `[IMAGE:]`/`[GRAPH:]`/`[VISUAL:]` tags handled
+ * below (which route through a third-party AI image service and
+ * deliberately do NOT get a real-image fallback, after that service proved
+ * unreliable on Vercel in production), a function plot's equation is fully
+ * ours to compute — no third-party service involved — which is what makes a
+ * real fix viable here without reintroducing that earlier risk.
+ *
+ * `canvas` (node-canvas) is a native addon never previously exercised
+ * anywhere in this codebase, including on Vercel's serverless runtime —
+ * genuinely unverified there. It is dynamically imported here (NOT a static
+ * top-level `import`) specifically so that a native-binding load failure on
+ * an unexpected runtime rejects this one call instead of crashing the whole
+ * route module at cold start for every `/api/export` request, including
+ * ones with no plot at all. The caller MUST treat any rejection from this
+ * function as a soft failure and fall back to the existing text-label box —
+ * never let a rendering failure produce a broken, blank, or half-generated
+ * document.
+ */
+async function renderMathPlotPng(equation: string): Promise<Buffer> {
+  const { createCanvas } = await import("canvas");
+
+  const expr = preprocessEquationForMathjs(equation);
+  const compiled = mathInstance.compile(expr);
+
+  const width = PLOT_CANVAS_WIDTH;
+  const height = PLOT_CANVAS_HEIGHT;
+  const margin = { left: 40, right: 20, top: 20, bottom: 30 };
+  const plotW = width - margin.left - margin.right;
+  const plotH = height - margin.top - margin.bottom;
+  const [xMin, xMax] = PLOT_X_DOMAIN;
+  const [yMin, yMax] = PLOT_Y_DOMAIN;
+
+  const toPx = (x: number) => margin.left + ((x - xMin) / (xMax - xMin)) * plotW;
+  const toPy = (y: number) => margin.top + plotH - ((y - yMin) / (yMax - yMin)) * plotH;
+
+  const canvas = createCanvas(width, height);
+  const ctx = canvas.getContext("2d");
+
+  // Background
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(0, 0, width, height);
+
+  // Plot-area border
+  ctx.strokeStyle = "#d1d5db";
+  ctx.lineWidth = 1;
+  ctx.strokeRect(margin.left, margin.top, plotW, plotH);
+
+  // Gridlines at every integer — light gray, like function-plot's own grid
+  ctx.strokeStyle = "#e5e7eb";
+  for (let x = Math.ceil(xMin); x <= Math.floor(xMax); x++) {
+    const px = toPx(x);
+    ctx.beginPath();
+    ctx.moveTo(px, margin.top);
+    ctx.lineTo(px, margin.top + plotH);
+    ctx.stroke();
+  }
+  for (let y = Math.ceil(yMin); y <= Math.floor(yMax); y++) {
+    const py = toPy(y);
+    ctx.beginPath();
+    ctx.moveTo(margin.left, py);
+    ctx.lineTo(margin.left + plotW, py);
+    ctx.stroke();
+  }
+
+  // Origin axes — darker, matching function-plot's own distinction between
+  // gridlines and its .x.origin/.y.origin axis lines
+  ctx.strokeStyle = "#6b7280";
+  ctx.lineWidth = 1.5;
+  if (xMin <= 0 && xMax >= 0) {
+    const px = toPx(0);
+    ctx.beginPath(); ctx.moveTo(px, margin.top); ctx.lineTo(px, margin.top + plotH); ctx.stroke();
+  }
+  if (yMin <= 0 && yMax >= 0) {
+    const py = toPy(0);
+    ctx.beginPath(); ctx.moveTo(margin.left, py); ctx.lineTo(margin.left + plotW, py); ctx.stroke();
+  }
+
+  // Integer tick labels (skip 0, drawn once at the origin crossing)
+  ctx.fillStyle = "#6b7280";
+  ctx.font = "11px sans-serif";
+  const xAxisPy = (yMin <= 0 && yMax >= 0) ? toPy(0) : margin.top + plotH;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "top";
+  for (let x = Math.ceil(xMin); x <= Math.floor(xMax); x++) {
+    if (x === 0) continue;
+    ctx.fillText(String(x), toPx(x), Math.min(xAxisPy + 4, height - 14));
+  }
+  const yAxisPx = (xMin <= 0 && xMax >= 0) ? toPx(0) : margin.left;
+  ctx.textAlign = "right";
+  ctx.textBaseline = "middle";
+  for (let y = Math.ceil(yMin); y <= Math.floor(yMax); y++) {
+    if (y === 0) continue;
+    ctx.fillText(String(y), Math.max(yAxisPx - 4, margin.left - 2), toPy(y));
+  }
+
+  // Sampled curve — steelblue, matching function-plot's own default palette
+  // (node_modules/function-plot/dist/globals.js) for visual continuity with
+  // what the teacher already saw on screen in MathPlot.tsx.
+  const SAMPLES = 400;
+  const breakThreshold = (yMax - yMin) * 5; // asymptote/out-of-domain cutoff
+  ctx.strokeStyle = "#4682b4";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  let drawing = false;
+  for (let i = 0; i <= SAMPLES; i++) {
+    const x = xMin + ((xMax - xMin) * i) / SAMPLES;
+    let y = NaN;
+    try {
+      const raw: unknown = compiled.evaluate({ x });
+      if (typeof raw === "number") y = raw;
+    } catch {
+      y = NaN;
+    }
+    if (!Number.isFinite(y) || Math.abs(y) > breakThreshold) {
+      drawing = false;
+      continue;
+    }
+    const px = toPx(x);
+    const py = toPy(y);
+    if (!drawing) {
+      ctx.moveTo(px, py);
+      drawing = true;
+    } else {
+      ctx.lineTo(px, py);
+    }
+  }
+  ctx.stroke();
+
+  return canvas.toBuffer("image/png");
+}
 
 
 /**
@@ -80,25 +254,54 @@ async function processContentBlocks(
     
     // Handle [PLOT: equation] — the inline mathematical function plot tag
     // (src/lib/renderContent.ts, ExerciseCard.tsx's "Insert chart" action).
-    // function-plot/D3 is a browser-only (canvas/SVG) library — there's no
-    // server-side renderer for it here, same constraint as the IMAGE/GRAPH/
-    // VISUAL box below, so this renders a clearly-labelled text box instead
-    // of leaving the raw `[PLOT: ...]` tag visible as literal bracket text.
+    // Tries a real, server-rendered PNG of the actual curve first
+    // (renderMathPlotPng, mathjs + canvas — see that function's own comment
+    // on why canvas is dynamically imported and must fail soft); falls back
+    // to the original clearly-labelled text box — exactly the prior,
+    // text-only behavior — if rendering isn't possible for any reason
+    // (no equation / unparseable equation / canvas failing to load on this
+    // runtime / any other error). This fallback is a hard requirement, not
+    // optional cleanup: a rendering failure must never produce a broken,
+    // blank, or half-generated document.
     const plotMatch = line.match(/\[PLOT:\s*(.*?)\]/i);
     if (plotMatch) {
       flushParagraph();
       const equation = plotMatch[1].trim();
       const plotLabel = baseOptions.lang === "fr" ? "📈 Graphique" : baseOptions.lang === "ar" ? "📈 رسم بياني" : "📈 Graph";
-      blocks.push(new Paragraph({
-        children: [new TextRun({ text: plotLabel, bold: true, size: 18, color: "1a5e3f" })],
-        spacing: { before: 240, after: 60 },
-      }));
+
+      let renderedPng: Buffer | null = null;
       if (equation) {
+        try {
+          renderedPng = await renderMathPlotPng(equation);
+        } catch (e) {
+          console.error("[/api/export] MathPlot PNG rendering failed, falling back to text box:", e);
+          renderedPng = null;
+        }
+      }
+
+      if (renderedPng) {
         blocks.push(new Paragraph({
-          children: [new TextRun({ text: `f(x) = ${equation}`, italics: true, size: 18, color: "374151" })],
-          spacing: { after: 240 },
-          indent: { left: 360 },
+          children: [new TextRun({ text: plotLabel, bold: true, size: 18, color: "1a5e3f" })],
+          spacing: { before: 240, after: 100 },
+          alignment: AlignmentType.CENTER,
         }));
+        blocks.push(new Paragraph({
+          children: [new ImageRun({ type: "png", data: renderedPng, transformation: { width: 450, height: 300 } })],
+          alignment: AlignmentType.CENTER,
+          spacing: { after: 200 },
+        }));
+      } else {
+        blocks.push(new Paragraph({
+          children: [new TextRun({ text: plotLabel, bold: true, size: 18, color: "1a5e3f" })],
+          spacing: { before: 240, after: 60 },
+        }));
+        if (equation) {
+          blocks.push(new Paragraph({
+            children: [new TextRun({ text: `f(x) = ${equation}`, italics: true, size: 18, color: "374151" })],
+            spacing: { after: 240 },
+            indent: { left: 360 },
+          }));
+        }
       }
       continue;
     }
