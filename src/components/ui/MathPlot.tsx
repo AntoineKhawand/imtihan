@@ -35,7 +35,20 @@ export function MathPlot({ equation, title, width = 600, height = 400 }: MathPlo
       });
     } catch (err) {
       console.error("MathPlot error:", err);
-      containerRef.current.innerHTML = `<div class="p-4 text-xs text-red-500 bg-red-50 rounded-lg">Error plotting "${equation}": ${err}</div>`;
+      // `equation` is attacker-controllable (teacher-editable mathPlots entry,
+      // or the AI-authored inline [PLOT: equation] tag — both untrusted), and
+      // `err`'s message can itself echo back fragments of the offending
+      // input (e.g. "unexpected token '<'"). Never interpolate either into
+      // innerHTML directly — build the error node with real DOM APIs and
+      // set text via textContent so any HTML/script in the string is
+      // rendered as inert text, not parsed/executed.
+      const container = containerRef.current;
+      container.innerHTML = "";
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      const errorEl = document.createElement("div");
+      errorEl.className = "p-4 text-xs text-red-500 bg-red-50 rounded-lg";
+      errorEl.textContent = `Error plotting "${equation}": ${errorMessage}`;
+      container.appendChild(errorEl);
     }
   }, [equation, title, width, height]);
 
