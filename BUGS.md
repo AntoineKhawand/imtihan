@@ -19,6 +19,36 @@ Track issues here during development. Format:
 
 ## Open Issues
 
+## BUG-054: `MathPlot.tsx` (now the default render path for every new Math/Physics/physique-chimie exercise, not a rare legacy fallback) was hardcoded light-only and non-responsive
+**Status:** Fixed 2026-10-01
+**Severity:** Medium
+**Area:** UI
+
+**Description:** `src/components/ui/MathPlot.tsx` had two real problems, both flagged by `design`'s 2026-10-01 review of `7fccb92` and confirmed (not guessed) by reading `function-plot`'s installed source:
+1. **Dark mode:** the outer wrapper used hardcoded `bg-white`/`text-gray-700`/`text-gray-500`/`text-gray-400` instead of this codebase's CSS custom-property tokens. More importantly, `function-plot` draws axes/ticks/grid/origin-lines as raw SVG with its own hardcoded `stroke="black"` presentation attributes (confirmed in `node_modules/function-plot/dist/chart.js` ~line 384/403/525-529) layered on top of d3-axis's own `fill="currentColor"` tick-label text (`node_modules/d3-axis/src/axis.js`) — so a blind wrapper-only token swap would have left axis lines/labels black-on-near-black in dark mode (app's dark `--surface` is `#161616`).
+2. **Responsive sizing:** the root `<svg>` was a fixed 600×400px with no `viewBox` and no responsive CSS (confirmed via source — `function-plot` has no such option), sitting inside the component's own `overflow-hidden` wrapper — cropped rather than scaled at the 375px breakpoint required by `CLAUDE.md` §14.
+
+**Root cause:** This component was written once as a rarely-hit legacy fallback (`Exercise.mathPlots` stacked block) and never revisited for theming/responsiveness; `7fccb92`'s new inline `[PLOT:]` tag made it the default render path for every Math/Physics exercise going forward, raising its severity without changing its code.
+**Fix:** (1) Wrapper tokens swapped to `bg-[var(--surface)]`/`text-[var(--text-secondary)]`/`text-[var(--text-tertiary)]`. For the library-drawn SVG internals: added scoped global CSS (`.mathplot-canvas .function-plot { color: var(--text-secondary); } .mathplot-canvas .function-plot .axis path, .axis line, .x.origin, .y.origin { stroke: var(--text-tertiary); }`) — a CSS stylesheet rule overrides an SVG presentation attribute in the cascade regardless of specificity, so this repaints the hardcoded black strokes without touching the library; setting `color` on the root lets every `fill="currentColor"` tick label inherit it for free. The plotted curve itself uses `function-plot`'s own named palette (steelblue/red/`#05b378`/orange/...), not black, so it needed no override. This card was deliberately **not** forced to always-light like `/print` — the CSS override was judged sufficient instead of that fallback. (2) After `functionPlot()` renders, the generated `<svg>` is post-processed: `viewBox="0 0 {width} {height}"` set, fixed `width`/`height` attributes removed, replaced with CSS `width:100%;height:auto;max-width:{width}px` (caps upscaling past native resolution).
+**Not live-verified** (no `chrome-devtools`/browser tool attached this dispatch) — founder to confirm dark-mode contrast and 375px scaling live; `design`/`qa` should re-check with their own tools next time either is attached.
+**Found by:** design (2026-10-01, `DESIGN.md`'s `7fccb92` review — flagged, not fixed, per design's own cross-team boundary that a visual change implying a scope decision isn't theirs to make unilaterally).
+**Fixed by:** engineering (2026-10-01).
+
+---
+
+## BUG-053: Math-plot feature (`7fccb92`) gated "Insert chart" and the AI's `[PLOT:]` instruction on exactly `mathematics`/`physics`, missing `physique-chimie`
+**Status:** Fixed 2026-10-01
+**Severity:** Low
+**Area:** UI | Generation
+
+**Description:** `src/components/ui/ExerciseCard.tsx`'s `PLOTTABLE_SUBJECTS` and `src/lib/prompts/generate.ts`'s matching MATHEMATICAL PLOTS instruction both checked only `context.subject === "mathematics" || context.subject === "physics"`, silently excluding `"physique-chimie"` — Bac Français's real MVP combined Physics-Chemistry subject (`src/types/curriculum.ts`'s `Subject` union) — from both the "Insert chart" action and the AI ever being told about the `[PLOT:]` tag, even though a function plot is just as meaningful there as for physics alone.
+**Root cause:** The two gates were written consistently with each other but both simply omitted the third relevant `Subject` value.
+**Fix:** Added `"physique-chimie"` to `PLOTTABLE_SUBJECTS` (`ExerciseCard.tsx`) and to the `isPlottableSubject` check in `generate.ts`. Checked `variantExam.ts`/`translateExam.ts`'s `[PLOT:]`-preservation instructions for the same duplicated check — confirmed neither gates on subject at all (both unconditionally preserve any `[PLOT:]` tag already present), so no change needed there.
+**Found by:** design (2026-10-01, `DESIGN.md`'s `7fccb92` review — flagged as a scope question for engineering/founder, not design's call to make unilaterally).
+**Fixed by:** engineering (2026-10-01), founder-approved.
+
+---
+
 ## BUG-052: `MathPlot.tsx`'s error-handling branch interpolated the raw, attacker-controllable `equation` (and exception message) straight into `innerHTML` — a DOM XSS reachable via the new inline `[PLOT:]` tag (and pre-existing via the legacy `mathPlots` array)
 **Status:** Fixed 2026-10-01
 **Severity:** High
