@@ -170,11 +170,24 @@ export async function POST(request: NextRequest) {
         const message = await anthropic.messages.create({
           model: CLAUDE_MODEL,
           max_tokens: 2000,
-          system: systemPrompt,
+          // Cache the static system prompt — buildAnalyzeSystemPrompt() takes
+          // no arguments, so this block is byte-identical across EVERY
+          // analyze request (an even broader cache key than /api/generate's
+          // per (language, curriculum, subject) scope). Same pattern as
+          // src/app/api/generate/route.ts. The per-request content
+          // (teacher description, curricula reference, uploaded document)
+          // stays in the user message, which is never cached.
+          system: [
+            {
+              type: "text" as const,
+              text: systemPrompt,
+              cache_control: { type: "ephemeral" } as any,
+            },
+          ],
           messages: [{ role: "user", content: content }],
         }, {
           headers: {
-            "anthropic-beta": "pdfs-2024-09-25"
+            "anthropic-beta": "prompt-caching-2024-07-31,pdfs-2024-09-25"
           }
         });
 

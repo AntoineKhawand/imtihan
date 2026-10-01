@@ -114,8 +114,29 @@ export async function POST(request: NextRequest) {
     const message = await anthropic.messages.create({
       model: GENERATE_MODEL,
       max_tokens: 600,
-      system: systemPrompt,
+      // Cache the static system prompt — buildRegenerateFragmentSystemPrompt()
+      // only varies by (context.curriculumId, context.language), so it's
+      // reused across every quick-edit request for that pair, regardless of
+      // the specific fragment/exercise being edited (which stays in the user
+      // prompt, dynamic). Same pattern as src/app/api/generate/route.ts.
+      // Note: this particular prompt is short enough that it likely sits
+      // below Anthropic's minimum cacheable block size for Sonnet (~1024
+      // tokens) today, so it may not actually produce a cache hit yet — but
+      // cache_control is harmless when a block is too small (no error, no
+      // behavior change), and this keeps the shape consistent/future-proof
+      // if the prompt grows.
+      system: [
+        {
+          type: "text" as const,
+          text: systemPrompt,
+          cache_control: { type: "ephemeral" } as any,
+        },
+      ],
       messages: [{ role: "user", content: userPrompt }],
+    }, {
+      headers: {
+        "anthropic-beta": "prompt-caching-2024-07-31",
+      },
     });
     const textBlock = message.content.find((b) => b.type === "text");
     const replacement = textBlock && textBlock.type === "text" ? textBlock.text.trim() : "";

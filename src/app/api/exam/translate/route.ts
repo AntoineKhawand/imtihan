@@ -141,8 +141,25 @@ export async function POST(request: NextRequest) {
         const message = await anthropic.messages.create({
           model: GENERATE_MODEL,
           max_tokens: maxTokens,
-          system: systemPrompt,
+          // Cache the static system prompt — buildTranslateExamSystemPrompt()
+          // only varies by targetLanguage (3 possible values), so the same
+          // block is reused across every translation request into that
+          // language, regardless of the exam being translated. The actual
+          // exam content (dynamic, different every call) lives entirely in
+          // the user prompt below, so it's never part of the cached block.
+          // Same pattern as src/app/api/generate/route.ts.
+          system: [
+            {
+              type: "text" as const,
+              text: systemPrompt,
+              cache_control: { type: "ephemeral" } as any,
+            },
+          ],
           messages: [{ role: "user", content: userPrompt }],
+        }, {
+          headers: {
+            "anthropic-beta": "prompt-caching-2024-07-31",
+          },
         });
         const textBlock = message.content.find((b) => b.type === "text");
         if (textBlock && textBlock.type === "text" && textBlock.text) {

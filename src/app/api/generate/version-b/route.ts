@@ -148,8 +148,27 @@ export async function POST(request: NextRequest) {
         const message = await anthropic.messages.create({
           model: GENERATE_MODEL,
           max_tokens: maxTokens,
-          system: systemPrompt,
+          // Cache the static system prompt — buildVariantExamSystemPrompt()
+          // only varies by context.language (it deliberately excludes
+          // curriculum/chapter grounding, see variantExam.ts's own scope
+          // note), so this block is reused across every Version B request in
+          // that language regardless of curriculum/subject — an even
+          // broader cache key than /api/generate's (language, curriculum,
+          // subject) scope. The actual Version A exercises being varied
+          // (dynamic, different every call) live entirely in the user
+          // prompt. Same pattern as src/app/api/generate/route.ts.
+          system: [
+            {
+              type: "text" as const,
+              text: systemPrompt,
+              cache_control: { type: "ephemeral" } as any,
+            },
+          ],
           messages: [{ role: "user", content: userPrompt }],
+        }, {
+          headers: {
+            "anthropic-beta": "prompt-caching-2024-07-31",
+          },
         });
         const textBlock = message.content.find((b) => b.type === "text");
         if (textBlock && textBlock.type === "text" && textBlock.text) {
