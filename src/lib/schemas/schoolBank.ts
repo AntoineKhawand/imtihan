@@ -9,10 +9,20 @@ import { z } from "zod";
  * merely trying to read an exemplar).
  *
  * Deliberately minimal — only the fields getChapterExemplars() actually
- * reads (statement/difficulty/points/chapterIds/sharedAt). Ignores
- * everything else on the doc (solution, contributor, schoolSlug, ...).
+ * reads (statement/difficulty/points/chapterIds/sharedAt/schoolSlug).
+ * Ignores everything else on the doc (solution, contributor, ...).
+ *
+ * `schoolSlug` IS read (not ignored) — getChapterExemplars() uses it to
+ * scope exemplars to the requesting teacher's own school, matching every
+ * other schoolBank read/write in the app (src/app/bank/page.tsx,
+ * src/app/student/practice/page.tsx). Without this, a query keyed only on
+ * curriculumId/subject/chapterIds would surface any school's shared
+ * exercise content, verbatim, as prompt context for a completely unrelated
+ * teacher — a real cross-tenant content leak, not the "cross-teacher
+ * within a school" scoping schoolBank documents everywhere else.
  */
 export const SchoolBankExemplarDocSchema = z.object({
+  schoolSlug: z.string().optional().default(""),
   exercise: z.object({
     statement: z.string().min(1),
     difficulty: z.enum(["easy", "medium", "hard"]),
