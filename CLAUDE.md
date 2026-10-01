@@ -203,7 +203,8 @@ If a request implies scope creep, flag it and point back to this section.
 2. Check `ARCHITECTURE.md` for deeper technical rationale.
 3. Check `ROADMAP.md` for what's planned vs. done.
 4. Check `BUGS.md` for known issues before reporting a new one.
-5. Ask for approval. Don't silently rewrite core decisions.
+5. Check `METRICS.md` for real, dated numbers (traffic, test health, open issues) before guessing at current state.
+6. Ask for approval. Don't silently rewrite core decisions.
 
 ## 14. Definition of Done for Any Feature
 

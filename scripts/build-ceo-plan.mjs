@@ -45,21 +45,24 @@ const OUTPUT_DOCX = path.join(
 const ACCENT = "1A5E3F"; // Imtihan's emerald accent — CLAUDE.md §8
 
 function parseInlineRunOptions(text) {
-  // Splits on **bold** and `code` spans, preserving plain-text segments.
-  // Returns plain option objects (not TextRun instances) so callers can
-  // merge in their own overrides (color, italics, ...) without needing to
-  // read a constructed TextRun's options back out — docx-js's TextRun
-  // doesn't expose its config as a public `.options` property, so spreading
-  // one silently produces an empty run (no `text`), which is what caused
-  // every heading and every table header cell to render as blank.
+  // Splits on **bold**, *italic*, and `code` spans, preserving plain-text
+  // segments. Returns plain option objects (not TextRun instances) so
+  // callers can merge in their own overrides (color, italics, ...) without
+  // needing to read a constructed TextRun's options back out — docx-js's
+  // TextRun doesn't expose its config as a public `.options` property, so
+  // spreading one silently produces an empty run (no `text`), which is what
+  // caused every heading and every table header cell to render as blank.
+  // **bold** is tried before *italic* in the alternation (both anchored at
+  // the same `\*`), so a bold span is never swallowed by the italic pattern.
   const runs = [];
-  const re = /(\*\*(.+?)\*\*)|(`(.+?)`)/g;
+  const re = /(\*\*(.+?)\*\*)|(\*(.+?)\*)|(`(.+?)`)/g;
   let last = 0;
   let m;
   while ((m = re.exec(text)) !== null) {
     if (m.index > last) runs.push({ text: text.slice(last, m.index) });
     if (m[2] !== undefined) runs.push({ text: m[2], bold: true });
-    else if (m[4] !== undefined) runs.push({ text: m[4], font: "Consolas" });
+    else if (m[4] !== undefined) runs.push({ text: m[4], italics: true });
+    else if (m[6] !== undefined) runs.push({ text: m[6], font: "Consolas" });
     last = re.lastIndex;
   }
   if (last < text.length) runs.push({ text: text.slice(last) });

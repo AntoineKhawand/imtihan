@@ -4,8 +4,8 @@
 Running the business end-to-end with an eight-department AI agent organization
 
 Prepared for: Antoine El Khawand, Founder & CEO
-Date: 2026-09-27
-Status: Live — nightly automation is switched on and has produced its first real PRs
+Date: 2026-10-01
+Status: Live — nightly automation runs every night; both founder decisions blocking it are now resolved
 
 This is the tracked source for `Imtihan-CEO-Operating-Plan.docx`. Edit this file, then regenerate the `.docx` with `node scripts/build-ceo-plan.mjs`.
 
@@ -13,41 +13,46 @@ This is the tracked source for `Imtihan-CEO-Operating-Plan.docx`. Edit this file
 
 Imtihan is a solo-founder, pre-launch SaaS product that generates curriculum-aligned exams for Lebanese, French, and IB teachers, targeting a Q3 2026 launch. Work runs through an eight-department AI agent organization — Engineering, SEO & Growth, Content & Curriculum, QA, Design, Marketing, Database, and Security — coordinating through a standing async channel (`TEAM_CHAT.md`), a single founder-decision inbox (`FOUNDER_DECISIONS.md`), and a structured cross-team planning workflow (`team-sync`).
 
-Since the previous version of this plan (2026-09-22), the organization went from proposed to running: nightly automation is live on a Windows Scheduled Task, has produced real dated PRs, and a security department was added and has already caught two real, shipped-but-unverified bugs before they reached production unreviewed. Five of the six decisions blocking automation in the last plan are now answered and applied. What's left is smaller and more specific: one unauthenticated-routes cost-exposure decision, one pricing-copy mismatch, and a QA tooling gap that is now blocking live browser verification of Pro-tier features across multiple sessions in a row.
+Since the last version of this plan (2026-09-27), the organization has run for five more real nights, not just one. Both decisions that were blocking full trust in automation are now resolved: the unauthenticated-routes cost exposure was fixed per-route (not a blanket policy), and the Version A/B pricing-copy mismatch is fixed. `FOUNDER_DECISIONS.md` currently has **zero open items** — the first time that's been true since this model started.
 
 **BOTTOM LINE**
-The product is feature-complete for MVP scope. Automation is running, not just proposed. What's left before this is fully trustworthy without a human watching every PR: two founder decisions (Appendix), and fixing the QA live-verification tooling gap so "code review looks correct" and "actually confirmed working in a browser" stop being different things.
+The product is feature-complete for MVP scope, and every founder decision on file is answered. What's left isn't decisions — it's reliability: the automation itself hit a real timeout bug and a real account usage-limit cutoff this week, a recurring QA/SEO tooling-attachment gap is now four sessions deep, and this machine ran critically low on memory during one of those failures. None of that is a business question. It's infrastructure that needs attention before this can run fully unattended with confidence.
 
-## 2. Where We Stand — 2026-09-29 update
+## 2. Where We Stand — 2026-10-01 update
 
-Six of eight departments shipped real, reviewed work tonight (`nightly/2026-09-29`, 8 commits — `qa` and `marketing` correctly sat out: `qa`'s two verification paths were both unavailable tonight, and `marketing`'s backlog is fully resolved). Engineering built a real feature (School Bank exemplars now inform generation prompts); content-curriculum closed the largest remaining gap in the Bac Français physics-chemistry audit; design and database each found and fixed real drift/staleness that no prior pass had caught; security empirically confirmed a prior fix instead of re-trusting a code review. Full detail in each domain doc's 2026-09-29 entry.
+**The two decisions blocking full trust in this model are both closed.** Checked actual code before deciding (not a blanket policy): three of five flagged "unauthenticated AI-cost" routes had zero real callers anywhere in the app and were simply gated behind login; the one genuinely public demo (the scanner) got a real per-IP rate limiter; the one free, zero-cost proxy was left public with just an input cap. Version A/B's Free-plan copy now matches its Pro-only gate.
 
-**One recurring operational issue worth attention, not another one-off:** three separate teams tonight (`seo-growth`, `design`, and — per its own log — `qa` on 2026-09-27) found their dispatch was missing an MCP tool (`gsc`, `chrome-devtools`) that's listed in their own agent frontmatter and in `CLAUDE.md` §15's team table. Each one correctly refused to fake the missing capability and fell back to real alternative work instead of stalling — but this is now a pattern, not a fluke, and is quietly costing real backlog progress (the screenshot-verification pass on several dark-mode fixes is still outstanding after 10+ nights, entirely because of this). Worth someone checking the dispatch tool-provisioning path directly rather than each team re-discovering the same gap independently.
+**Security earned its keep twice more this week, on features engineering had already shipped and believed were correct:**
+- **BUG-048:** a malformed request to the new Version B route could trigger a full, billed AI call that crashed *after* the call completed but *before* quota was charged — a free, repeatable way to run up API costs. Found and fixed same day.
+- **BUG-049, more serious:** the new "School Bank exemplar" feature — built to make AI-generated exams better by referencing previously-shared exercises — had no school-scoping at all. Any teacher generating an exam could get *another school's* shared exercise content fed verbatim into their own AI prompt. No malicious actor required; this fired for any two unrelated schools under completely normal use. Found by security's own review, fixed same day.
+
+Both of these are exactly what the security department exists to catch, and both were caught before a real user could have found them.
+
+**Automation itself had a rough week — worth being direct about, not smoothing over:**
+- The wrapper's own PowerShell logging was broken for several nights without anyone noticing (fixed 2026-09-27).
+- Once logging was fixed, a new failure appeared: the CLI's own 600-second background-task timeout killed a run mid-flight while a team's `npm ci` was still in progress — the process exited with a "success" code having shipped nothing. Fixed by removing the ceiling.
+- The very next scheduled run hit a *different* wall: the Claude account's own session usage limit, after running for over an hour. This isn't a bug to fix in our own code — it's a real resource ceiling on how much unattended work one account can do in one sitting.
+- During the same incident, this machine was found to have **0.82GB of free RAM out of 15.45GB total** — almost certainly the same root cause behind a separate, recurring problem: `gsc` and `chrome-devtools` MCP tools failing to attach to dispatched sessions on 4+ nights now, blocking QA and SEO from doing real verification work.
+- **Fixed this week:** the founder is now notified directly by a native Windows notification every time the scheduler starts and finishes — with the real outcome (a PR link, or an explicit "no PR" / "finished with errors") instead of a silent exit code. This was built and manually verified working before being trusted.
 
 **Product**
 
-- MVP remains feature-complete per `ROADMAP.md`. Of 49 logged issues since this operating model started, only one (BUG-036, a Free/Pro marketing-copy mismatch) is still genuinely open.
-- Version A/B generation — flagged in the last plan as weaker than its own marketing copy claimed — is now a real second AI-generated exam variant, not a reorder. A structural safety net (`mergeVariantExercise`) force-copies every gradable field (points, difficulty, chapter coverage) from Version A in code, so fairness is a guarantee, not a prompt hope.
-- School Bank's consent gap (a share action was silently also exposing full solutions to students) is fixed with an explicit opt-in.
-- The three Firestore index deploys that were blocking the "My School" tab and the whole School Bank feature are deployed. Both features are live.
+- Of ~50 logged issues since this model started, the literal open-bug count is **zero** — BUG-036 (the last one, a Free/Pro copy mismatch) is fixed, and BUG-048/BUG-049 were caught and fixed the same day they were introduced. **BUG-026 fully closed today (2026-10-01):** `/teacher/students` was confirmed broken live this morning (`firestore.rules` had never actually been deployed, despite the fix sitting on disk for days). The founder ran `firebase deploy --only firestore:rules,firestore:indexes`, it was verified live against the Firebase Console (rules + both composite indexes), and the founder then confirmed the actual UI works end-to-end with a real teacher account. Nothing left open on this one.
+- Content-curriculum closed a real milestone: **every MVP-subject chapter (math/physics/chemistry) across every level in the Bac Français curriculum data has now been audited against the real post-2019-reform programme at least once** — a multi-week backlog item, now done.
+- Two real orphaned-page SEO bugs were found and fixed: `/about` had zero internal links anywhere in the app, and the four dedicated exam-generator landing pages were only ever linked from the homepage hero, explaining why 3 of 4 weren't indexed. Both fixed; whether Google has re-crawled them is still unconfirmed (the same `gsc` tool-attachment gap above).
 
 **Trust & brand**
 
-- The three live blog posts lost in an earlier test-harness incident (BUG-029) were replaced with fresh, source-verified articles and confirmed live — the root-cause rule (never call a real production API/Admin SDK directly, from any team, in any dispatch) is now written into `CLAUDE.md` itself, not just one script's own prompt.
-- Font, accent color, and pricing/quota decisions from the last plan are all made, applied, and verified live on production (not just code-reviewed).
-- The blog-auto-publish cron was migrated from Gemini to Claude-primary (with Gemini fallback) after a founder-reported generation error; confirmed working live.
+- Two Facebook Sharing Debugger warnings (missing `og:type`, missing `fb:app_id`) are fixed and verified live — the founder created a real Facebook Developer App for the second one.
+- Google Analytics now has Search Console linked, and real conversion tracking (`sign_up`, `exam_generated`) beyond bare pageviews, chosen deliberately by the founder rather than tracking everything by default.
 
-**Security — the newest department, already earning its keep**
-
-- Security's first full-codebase pass found and fixed three real vulnerabilities (an auth bypass on several admin-style routes, an XSS gap, an outdated Next.js version).
-- A GitHub CodeQL scan surfaced 14 open findings; the two critical ones (a request-forgery gap in the diagram-export route) are fixed. The rest are lower-severity and mostly confirmed-safe patterns already covered by existing escaping.
-- When engineering shipped the real Version A/B feature, security's adversarial review caught a real, verified bug within hours: a malformed request could trigger a full billed AI call that crashed before quota was charged — a genuine, repeatable free-cost exploit. Fixed same day. This is exactly the review discipline this operating model exists to run.
+**The honest traffic number, not spun:** 816 sessions in the last 28 days measured, 99.1% direct, 0.7% organic search. The real explanation — confirmed by security/SEO review, not assumed — is that this is a brand-new domain with no backlinks or authority yet, which no amount of clean technical SEO fixes on their own. Real growth needs actual backlinks and the founder's own personal outreach to real teacher communities (two real, active Lebanese French-teacher associations were identified: ALEF and ANEFL), not another agent-side fix. A Product Hunt launch is in preparation as a secondary, lower-effort channel specifically for the backlink, not expected to move the needle on real Lebanese-teacher adoption by itself.
 
 **What's genuinely blocking full trust in automation today**
 
-- Two founder decisions remain open (full detail in the Appendix): the unauthenticated AI-cost routes, and the Version A/B pricing-copy mismatch (this second one may already be answered by the time you read this — check `FOUNDER_DECISIONS.md`).
-- QA has now been blocked from live browser verification of a Pro-tier feature across four consecutive dispatches — first by credential/device-limit issues (now fixed), then by a missing browser-tooling connection in the dispatch itself. This means "the code looks correct" is currently doing more work than it should before something ships to real users.
-- The nightly Scheduled Task ran silently broken for several nights (a PowerShell logging incompatibility swallowed every log write and made every run look like a failure) before being caught and fixed today. It is now producing real output again, but this is a reminder that unattended automation needs its own health-check, not just trust that it's working.
+- QA has now been blocked from live browser verification of Pro-tier features across **five consecutive dispatches** by a missing `chrome-devtools` tool grant — this is now confirmed likely tied to the machine memory issue above, not a dispatch-config bug.
+- A new cross-team hazard was found this week, not yet fixed: a concurrent same-night dispatch's own commit swept up *another team's* uncommitted file edit, most likely via a `git add -A`/`commit -a` on a shared working directory. Nothing was lost (caught and re-verified), but multiple dispatches sharing one git working tree on the same night is a real structural risk, not just a tool-attachment one.
+- No metrics dashboard exists yet. The pricing decision was made on founder judgment, not real conversion/cost data — this is the single clearest remaining gap between "a decision was made" and "a decision was made with numbers behind it."
 
 ## 3. Organization — The Agent Room
 
@@ -64,36 +69,37 @@ Eight departments now exist, each with its own scope, tools, and a written domai
 | Database | Firestore schema, security rules, indexes | DATABASE.md |
 | Security | Security review, dependency vulnerabilities, adversarial access-control testing | SECURITY.md |
 
-**Security was the one department added since the last plan** — split out once it became clear that reviewing whether a fix is actually safe is a distinct skill from designing the fix in the first place. It has already justified itself: the Version A/B quota-bypass bug above was caught by security review on the same day engineering shipped the feature, not weeks later by a real user finding it.
+Security has now paid for itself twice over in one week alone (BUG-048, BUG-049) — both real, both caught same-day, both the exact class of bug a single department working in isolation would have shipped unreviewed.
 
-**Still not added, and why:**
+**Still not added, and why — unchanged from the last plan:**
 
-- **Sales.** Imtihan is still a self-serve product — a teacher signs up and pays without talking to a human. The trigger to add this department is unchanged: a real "school/Institutions" tier being approved and priced.
-- **Legal & Compliance.** Still a founder responsibility. Unchanged reasoning: the product handles minors' data across three markets, which needs a human accountable, not an agent. Trigger: before real user data flows in at launch.
-- **Customer Success & Growth Analytics**, both proposed in the last plan, are still not stood up. This is worth revisiting — the pricing/quota question this plan flagged as blocked on real numbers is still being decided by founder judgment call rather than a metrics dashboard, which is exactly the gap Growth Analytics was proposed to close.
+- **Sales.** Still self-serve. Trigger: a real "school/Institutions" tier being approved and priced.
+- **Legal & Compliance.** Still a founder responsibility — minors' data across three markets needs a human accountable. Trigger: before real user data flows in at launch.
+- **Customer Success & Growth Analytics.** Still not stood up. This is now the most overdue gap on this list — the pricing decision, the Product Hunt launch, and every growth conversation this week has been judgment-call-driven because no metrics dashboard exists to ground it in real numbers.
 
 ## 4. Operating Model — How the Business Runs Itself
 
-**The nightly cycle is live, not proposed.** A Windows Scheduled Task fires `scripts/nightly-ops.ps1` every night at midnight, which dispatches departments on their next safe, unblocked, verifiable task and opens one dated PR (`nightly/YYYY-MM-DD`) for founder review each morning. It has now produced real, mergeable PRs — including one that fixed its own logging bug, and one that caught a performance/DoS issue in same-night engineering work before it shipped unreviewed.
+**The nightly cycle runs every night, and now tells you so directly.** A Windows Scheduled Task fires `scripts/nightly-ops.ps1` at midnight; as of this week, it sends a real Windows notification the moment it starts and another when it finishes with the real outcome — a PR link, or an honest "no PR" if nothing shipped. This replaces having to ask "did anything happen last night?" after the fact.
 
-**What actually happened when it ran for real, worth learning from:**
+**What actually happened this week, worth learning fromःand not glossing over:**
 
-- The first few nights, the wrapper's own log-writing broke silently (a PowerShell version incompatibility), so every run *looked* like a failure with no record of what happened. Automation needs a health-check that alerts on "no log produced," not just "log shows an error."
-- A test run of the wrapper, while other work was in flight, found and fixed a real quadratic-complexity bug in same-day engineering code (BUG-047) — a concrete example of the cross-team review model catching something a single department working alone would have missed.
-- Documents get updated by whichever team touches them last; a couple of purely cosmetic collisions (an auto-generated framework notice getting swept into a commit, a stray debug log file) have shown up and been caught before committing, not after.
+- A truncated run that still exits with a "success" code is worse than a slow run that finishes — the 600-second timeout bug proved this directly: real work from four teams sat uncommitted and silently unshipped until manually recovered the next day.
+- Unattended automation can run into the same resource ceilings a human would — an account usage limit, a memory-starved machine — and "the script has no bug" doesn't mean "the run succeeded." The new notification is the fix for *knowing* this quickly; the underlying resource ceilings still need the founder's attention when they recur.
+- Multiple subagents sharing one git working directory on the same night is a real, now-documented risk (see §2) — not yet fixed, flagged for whoever next touches nightly-ops provisioning.
 
-**The one rule that hasn't changed:** departments fix, document, and flag. They do not decide pricing, launch timing, brand identity, legal risk, or anything that deploys to production infrastructure. Every real decision that mattered this week — the security-risk acceptance on BUG-026, the pricing number, the Version A/B direction, the School Bank consent design — went through this exact path: flagged in `FOUNDER_DECISIONS.md`, decided by the founder, then implemented and verified.
+**The one rule that hasn't changed:** departments fix, document, and flag. They do not decide pricing, launch timing, brand identity, legal risk, or anything that deploys to production infrastructure. `FOUNDER_DECISIONS.md` is empty right now because every real decision this model has surfaced has gone through exactly this path and gotten a real answer — not because nothing came up.
 
 ## 5. Roadmap
 
 **Phase 0 — Pre-Launch Hardening (in progress)**
-- [x] Resolve the founder decisions blocking automation from the last plan (5 of 6 answered and applied).
-- [x] Deploy the Firestore index fixes (BUG-013/045) — done, both dependent features confirmed live.
-- [x] Resolve the font/accent/pricing decisions and verify each live.
-- [ ] Resolve the two remaining open founder decisions (Appendix).
-- [ ] Close the QA live-verification tooling gap — this is now the single biggest gap between "reviewed" and "confirmed working."
-- [ ] A legal-pages accuracy pass against what the product actually does today, given student data is involved — not yet started.
-- [ ] Stand up Growth Analytics' first metrics dashboard before real traffic arrives — not yet started.
+- [x] Resolve every founder decision blocking automation (0 open as of this week).
+- [x] Deploy the Firestore index fixes — done, dependent features confirmed live.
+- [x] Resolve font/accent/pricing/Version-A-B-copy decisions and verify each live.
+- [x] Close the orphaned-page SEO gaps (`/about`, the 4 exam-generator landing pages).
+- [ ] Fix the QA/SEO `chrome-devtools`/`gsc` tool-attachment gap — now 4-5 sessions deep, likely tied to machine memory pressure.
+- [ ] Investigate and resolve this machine's memory pressure directly (0.82GB free observed) — the probable root cause of the tool-attachment gap above.
+- [ ] A legal-pages accuracy pass against what the product actually does today, given student data is involved — still not started.
+- [ ] Stand up Growth Analytics' first metrics dashboard — still not started, now the most overdue item on this list.
 
 **Phase 1 — Launch (Q3 2026)**
 - Go-live checklist signed off by the founder.
@@ -113,48 +119,53 @@ Eight departments now exist, each with its own scope, tools, and a written domai
 
 ## 6. Go-To-Market — Sales & Marketing
 
-Unchanged in shape from the last plan, still sized for what Imtihan actually is: a bootstrapped, self-serve, pre-revenue-data product. Organic search, GEO/AI-answer-engine visibility, and content marketing remain the primary channels. No paid advertising and no outbound sales motion until there's a real cost-per-acquisition number to spend against. Community-led growth in Lebanese teacher groups still runs through the founder personally, not an agent — agents prepare collateral, they don't show up in the room.
+Unchanged in shape: a bootstrapped, self-serve, pre-revenue-data product. No paid advertising, no outbound sales motion until there's a real cost-per-acquisition number to spend against.
 
-The outreach to real K-12 schools that was drafted this week (English/French pilot-invite emails for real teacher contacts) is the first real test of this channel outside pure organic search — worth tracking as its own data point once responses come in.
+**Two real channels in motion this week, both the founder's own to execute, not an agent's:**
+- **School outreach:** 25 personalized, ready-to-send emails are drafted — 8 to individual teacher contacts (from the founder's own Apollo export), 17 to real schools and their official administrative contacts (12 AEFE/Bac Français schools, 5 IB schools), each paired with the correct French or English draft. Still waiting on the founder to actually send them.
+- **Teacher-community engagement:** two real, active Lebanese French-teacher associations identified (ALEF, ANEFL) — the highest-trust channel this plan has identified, and one that has to run through the founder personally, not an agent.
+- **Product Hunt:** a full launch kit (tagline, description, maker's comment, screenshots) is prepared. The founder correctly declined the "Hypership" live-feature-building challenge that would have been required to launch on a specific date, given the product already has real paying users — choosing a different date instead rather than accepting that risk.
 
 ## 7. Metrics & KPIs
 
-Still not owned by a dedicated department (Growth Analytics remains unstood-up — see §3). What's measurable today without it:
+Still not owned by a dedicated department — see §3. A real, living dashboard now exists (`METRICS.md`, started 2026-10-01), with every number dated and sourced rather than assumed. What's measurable today:
 
 | Metric | Current state |
 |---|---|
-| Open bug count | 1 (BUG-036), down from double digits at the last plan |
-| Test suite size / pass rate | 183 tests, 100% passing as of the last full run |
-| CodeQL open findings | 14 found this week; 2 critical fixed same-day, rest triaged |
-| Firestore index backlog | 0 — all three pending deploys are live |
-| QA live-verification success rate on Pro-tier features | 0 of 4 recent attempts — this is the metric that most needs fixing next |
+| Open bug count (literal "Open" status) | **0**, and BUG-026's rules/indexes deploy gap (the one lingering "fix on disk" item) is now closed and verified live as of today — see `METRICS.md` |
+| Test suite size / pass rate | 250 tests, 100% passing as of the last full run |
+| Firestore index backlog | 0 — all pending deploys are live |
+| QA live-verification success rate on Pro-tier features | 0 of 5 recent attempts — the single most overdue reliability gap on this list |
+| Organic search sessions (28d) | 6 of 816 total (0.7%) — real number, not yet expected to move without real backlinks |
+| GA4 conversion events tracked | 2 (`sign_up`, `exam_generated`) — added this week, not yet marked as GA4 key events since no real production traffic has fired them yet |
 
-The unit-economics number this plan has flagged twice now (AI cost per exam vs. revenue per Pro user) still doesn't exist as a tracked number. It's still the single clearest gap between "the pricing decision was made" and "the pricing decision was made with real data."
+The unit-economics number this plan has flagged three times now (AI cost per exam vs. revenue per Pro user) still doesn't exist as a tracked number.
 
 ## 8. Risk Register & Governance
 
 | Risk | Severity | Status |
 |---|---|---|
 | Student PII exposure via self-declared school field (BUG-026) | High | Risk accepted for now (no real schools onboarded yet); has a documented expiry — must be revisited before the first real school |
-| Unauthenticated routes that call paid AI APIs with no rate limit | Medium–High | Flagged by security 2026-09-25, still open — direct, unbounded cost exposure, not a data leak |
-| QA cannot live-verify Pro-tier features | Medium | New this week — four consecutive blocked sessions; root causes (credentials, device limits, missing browser-tooling access) each identified but the pattern itself needs a structural fix |
-| Version A/B Free-plan marketing copy vs. Pro-only gate | Medium (trust) | Still open (BUG-036) — may be resolved by the time this is read |
+| QA/SEO `chrome-devtools`/`gsc` tool-attachment failures | Medium–High | 4-5 consecutive sessions blocked; now suspected tied to this machine's own memory pressure (0.82GB free observed) — needs direct investigation, not another retry |
+| Unattended automation hitting real resource ceilings (timeouts, account usage limits) | Medium | Timeout fixed; usage-limit ceiling is a real constraint, not a bug — now surfaced immediately via the new notification instead of discovered a day later |
+| Concurrent same-night dispatches sharing one git working tree | Medium | Newly found this week (one team's commit swept up another's uncommitted edit); not yet fixed |
+| No Growth Analytics / metrics dashboard | Medium | Unchanged for weeks — every pricing/growth decision still runs on founder judgment, not real numbers |
 | Unsupervised AI blog cron, no review step | Medium (brand/SEO) | Accepted as-is per founder decision 2026-09-23 |
-| Nightly automation's own health-check | Low–Medium | Was silently broken for several days without alerting; fixed, but no monitoring yet confirms "a run happened and produced a log" automatically |
 
-**Governance, updated:** the mechanism keeps working under real load, not just in the proposal stage. This week alone, security caught an unsafe fix on the same day it shipped, marketing's own draft claims were flagged rather than published unchecked, and a subagent's self-reported "I updated the docs" claim was caught as false by checking `git status` rather than trusted at face value. That last one is worth keeping as a standing practice: verify a subagent's report against the actual working tree before trusting it, every time.
+**Governance, updated:** `FOUNDER_DECISIONS.md` sitting empty this week is the clearest evidence yet that the mechanism works — every real business/security/brand call surfaced this month got flagged, not guessed at, and got a real answer. The remaining risks above are now almost entirely infrastructure and reliability, not business judgment calls — a genuinely different, and in some ways easier, problem than the one this plan was written to solve five weeks ago.
 
 ## 9. Immediate Action Plan (Next 14 Days)
 
-1. Answer the two open items in `FOUNDER_DECISIONS.md` (Appendix below).
-2. Fix the QA browser-tooling gap so live verification of Pro-tier features stops being blocked session after session.
-3. Add a health-check to the nightly automation itself — confirm each morning that a log was actually produced, not just that no error was reported.
-4. Stand up a first version of the metrics dashboard this plan has flagged twice now, even a minimal one — the pricing decision deserves real numbers before the next time it's revisited.
-5. Start the legal-pages accuracy pass before real user (and minor) data starts flowing in.
+1. Investigate this machine's memory pressure directly — it's the likely root cause behind both the tool-attachment gap and one outright stalled nightly run this week.
+2. Send the 25 drafted outreach emails (8 teachers, 17 schools) — nothing is blocking this except the founder's own time.
+3. Reach out personally to ALEF and ANEFL — the single highest-trust growth channel identified so far.
+4. Decide and execute the Product Hunt launch date (Hypership declined; pick a normal weekday instead).
+5. **Done** — stand up a first version of the metrics dashboard: `METRICS.md`, 2026-10-01. Keep it fresh: the GSC/GA4 numbers in it are already a few days stale pending the `gsc` tool-attachment fix.
+6. Fix the concurrent-dispatch git-collision risk before it causes real damage instead of a near-miss.
+7. **Done, fully closed** — checked the live Firebase Console Rules tab directly (2026-10-01), found `firestore.rules` had never been deployed; founder ran `firebase deploy --only firestore:rules,firestore:indexes` himself, it was re-verified live (new rules published, both composite indexes `Enabled`), and the founder confirmed `/teacher/students` now works with a real teacher account. Nothing left on this item.
 
 ## Appendix — Founder Decisions Needed Right Now
 
-*(Live detail always lives in `FOUNDER_DECISIONS.md` — this is a snapshot as of 2026-09-27.)*
+*(Live detail always lives in FOUNDER_DECISIONS.md — this is a snapshot as of 2026-10-01.)*
 
-1. **Unauthenticated, cost-incurring AI routes.** Five routes call a paid AI API or proxy a third-party service with no sign-in requirement and no rate limiting — a direct, unbounded cost exposure, not a data leak. Options: require sign-in on all of them; keep them public but rate-limit by IP (the libraries are already installed, just unused); or accept the exposure pre-launch given current traffic and revisit before any paid marketing push.
-2. **Version A/B pricing-copy mismatch.** The Free-plan marketing copy still lists "Version A/B generation" as included, while the real feature (now a genuine AI-generated second variant, not a reorder) is Pro-gated. Needs the copy and the gate to agree — whichever direction is correct.
+**None.** For the first time since this operating model started, `FOUNDER_DECISIONS.md`'s Open section is empty. Everything that previously needed a founder call — the unauthenticated routes, the Version A/B copy mismatch, pricing, fonts, the accent color, Firestore deploys — has a real, applied answer on file.
