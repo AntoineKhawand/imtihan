@@ -28,8 +28,8 @@ import {
   Sparkles,
 } from "lucide-react";
 
-/** Subjects where an inline function plot ([PLOT: equation] in the statement) is a meaningful action — see src/lib/prompts/generate.ts's MATHEMATICAL PLOTS instruction, which is gated the same way. */
-const PLOTTABLE_SUBJECTS: readonly Subject[] = ["mathematics", "physics"];
+/** Subjects where an inline function plot ([PLOT: equation] in the statement) is a meaningful action — see src/lib/prompts/generate.ts's MATHEMATICAL PLOTS instruction, which is gated the same way. Includes "physique-chimie" (Bac Français's combined Physics-Chemistry subject) alongside "physics" since a function plot is just as meaningful there. */
+const PLOTTABLE_SUBJECTS: readonly Subject[] = ["mathematics", "physics", "physique-chimie"];
 
 const DIFFICULTY_CONFIG = {
   easy: { label: "Easy", color: "text-emerald-600 bg-emerald-50 dark:bg-emerald-950/30", dot: "bg-emerald-500" },

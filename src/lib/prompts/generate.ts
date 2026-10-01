@@ -517,12 +517,13 @@ export function buildGenerateSystemPrompt(context: ExamContext): string {
   const fewShotText = fewShotExample ? `FORMAT REFERENCE — study this real exam example before generating:\n${fewShotExample}\n` : "";
 
   // MATHEMATICAL PLOTS — only relevant when a numeric function plot is a
-  // meaningful thing to ask for (Math, Physics). Deliberately omitted from
-  // the prompt entirely for other subjects (Chemistry, humanities, ...)
-  // rather than left in as dead instruction text. See ExerciseCard.tsx's
-  // "Insert chart" action and renderContent.ts's `[PLOT:]` handling, which
-  // this instruction feeds.
-  const isPlottableSubject = context.subject === "mathematics" || context.subject === "physics";
+  // meaningful thing to ask for (Math, Physics, Bac Français's combined
+  // Physics-Chemistry "physique-chimie"). Deliberately omitted from the
+  // prompt entirely for other subjects (Chemistry, humanities, ...) rather
+  // than left in as dead instruction text. See ExerciseCard.tsx's
+  // "Insert chart" action (PLOTTABLE_SUBJECTS, gated identically) and
+  // renderContent.ts's `[PLOT:]` handling, which this instruction feeds.
+  const isPlottableSubject = context.subject === "mathematics" || context.subject === "physics" || context.subject === "physique-chimie";
   const mathPlotsInstruction = isPlottableSubject
     ? `    - **MATHEMATICAL PLOTS**: For mathematical functions (e.g. $f(x) = \\sin(x)$), DO NOT use Mermaid and DO NOT use [GRAPH:]/[IMAGE:]/[VISUAL:] (those route through an AI image model, which cannot accurately draw a function curve). Instead, insert the tag \`[PLOT: sin(x)]\` directly inside the \`statement\`, exactly where it belongs — right after the sub-question or sentence that asks for the graph, never bunched at the top or bottom of the statement. The equation must use standard mathematical notation compatible with function-plot/D3 (e.g. "x^2", "sin(x)", "exp(x) - 1"). Do NOT use the legacy \`mathPlots\` array field for new exercises — it only exists for backward compatibility with older exams.\n`
     : "";
