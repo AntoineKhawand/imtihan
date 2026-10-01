@@ -37,7 +37,7 @@ Both of these are exactly what the security department exists to catch, and both
 
 **Product**
 
-- Of ~50 logged issues since this model started, the open-bug count is **zero** — BUG-036 (the last open one, a Free/Pro copy mismatch) is fixed, and BUG-048/BUG-049 were caught and fixed the same day they were introduced.
+- Of ~50 logged issues since this model started, the literal open-bug count is **zero** — BUG-036 (the last one, a Free/Pro copy mismatch) is fixed, and BUG-048/BUG-049 were caught and fixed the same day they were introduced. **One real caveat found this week, not yet in any prior version of this plan:** BUG-026 (`/teacher/students` showing "No students yet" for every teacher) needs both a Firestore rules deploy and an indexes deploy to actually work — only the indexes half is confirmed. There's no way to confirm the rules half from the repo; it needs the founder to check the Firebase Console directly. Until confirmed, this feature is likely still broken live for every teacher.
 - Content-curriculum closed a real milestone: **every MVP-subject chapter (math/physics/chemistry) across every level in the Bac Français curriculum data has now been audited against the real post-2019-reform programme at least once** — a multi-week backlog item, now done.
 - Two real orphaned-page SEO bugs were found and fixed: `/about` had zero internal links anywhere in the app, and the four dedicated exam-generator landing pages were only ever linked from the homepage hero, explaining why 3 of 4 weren't indexed. Both fixed; whether Google has re-crawled them is still unconfirmed (the same `gsc` tool-attachment gap above).
 
@@ -128,11 +128,11 @@ Unchanged in shape: a bootstrapped, self-serve, pre-revenue-data product. No pai
 
 ## 7. Metrics & KPIs
 
-Still not owned by a dedicated department — see §3. What's measurable today without it:
+Still not owned by a dedicated department — see §3. A real, living dashboard now exists (`METRICS.md`, started 2026-10-01), with every number dated and sourced rather than assumed. What's measurable today:
 
 | Metric | Current state |
 |---|---|
-| Open bug count | **0** — down from 1 last week, down from double digits at the start |
+| Open bug count (literal "Open" status) | **0** — down from 1 last week, down from double digits at the start. 1 bug (BUG-026) is in an ambiguous "fix on disk, deploy unconfirmed" state — see `METRICS.md` |
 | Test suite size / pass rate | 250 tests, 100% passing as of the last full run |
 | Firestore index backlog | 0 — all pending deploys are live |
 | QA live-verification success rate on Pro-tier features | 0 of 5 recent attempts — the single most overdue reliability gap on this list |
@@ -160,11 +160,12 @@ The unit-economics number this plan has flagged three times now (AI cost per exa
 2. Send the 25 drafted outreach emails (8 teachers, 17 schools) — nothing is blocking this except the founder's own time.
 3. Reach out personally to ALEF and ANEFL — the single highest-trust growth channel identified so far.
 4. Decide and execute the Product Hunt launch date (Hypership declined; pick a normal weekday instead).
-5. Stand up a first version of the metrics dashboard — now the most overdue item in this entire plan, flagged three plans running.
+5. **Done** — stand up a first version of the metrics dashboard: `METRICS.md`, 2026-10-01. Keep it fresh: the GSC/GA4 numbers in it are already a few days stale pending the `gsc` tool-attachment fix.
 6. Fix the concurrent-dispatch git-collision risk before it causes real damage instead of a near-miss.
+7. Confirm directly (Firebase Console) whether `firestore.rules` was ever deployed — `/teacher/students` is likely still broken for every teacher until this is confirmed.
 
 ## Appendix — Founder Decisions Needed Right Now
 
-*(Live detail always lives in `FOUNDER_DECISIONS.md` — this is a snapshot as of 2026-10-01.)*
+*(Live detail always lives in FOUNDER_DECISIONS.md — this is a snapshot as of 2026-10-01.)*
 
 **None.** For the first time since this operating model started, `FOUNDER_DECISIONS.md`'s Open section is empty. Everything that previously needed a founder call — the unauthenticated routes, the Version A/B copy mismatch, pricing, fonts, the accent color, Firestore deploys — has a real, applied answer on file.
