@@ -13,7 +13,7 @@ A living dashboard of real, verifiable numbers — flagged as the single most ov
 | Test suite size | 250 tests, 21 files | 2026-10-01 | `npx vitest run --no-file-parallelism` (default parallel run hits worker-pool timeouts on this machine under memory pressure — see Known Gaps) |
 | Test pass rate | 100% (250/250) | 2026-10-01 | same run |
 | Open bugs (literal "Open" status) | 0 | 2026-10-01 | `BUGS.md`, 50 total logged issues |
-| Bugs in an ambiguous/unconfirmed state | 1 (BUG-026) | 2026-10-01 | See Known Gaps — real risk this feature is still broken live |
+| Bugs confirmed broken live (fix on disk, not deployed) | 0 — BUG-026 deployed and fully verified (incl. real teacher UI check) | 2026-10-01 | Founder ran the deploy, confirmed live via Firebase Console, then confirmed the UI itself works for a real teacher |
 | CodeQL open findings | 14 found 2026-09-27; 2 critical (SSRF) fixed same day, rest triaged as lower-severity/already-covered | 2026-09-27 | GitHub code scanning |
 | `npm audit` vulnerabilities | 20 (1 low, 12 moderate, 6 high, 1 critical) | 2026-09-30 | `npm audit --omit=dev` — unchanged since 2026-09-27; `npm audit fix` itself crashes on this repo (npm 10.8.2 resolver bug, confirmed from a clean `npm ci`, not stale cache) |
 | Firestore composite index backlog | 0 confirmed deployed (the 3 that were explicitly tracked) | 2026-09-27 | Founder ran `firebase deploy --only firestore:indexes`; see Known Gaps for the 2 indexes whose deploy status is inferred, not confirmed |
@@ -48,6 +48,6 @@ A living dashboard of real, verifiable numbers — flagged as the single most ov
 
 ## Known gaps in this dashboard itself
 
-- **BUG-026 (`/teacher/students`) is likely still broken in production.** Its fix needs both a `firestore.rules` deploy and the matching composite indexes. Only the indexes deploy is confirmed (2026-09-27); nothing in this repo can confirm whether `firestore.rules` was ever separately deployed — that needs a direct Firebase Console check by the founder (Firestore → Rules tab, compare against this repo's `firestore.rules`). Until confirmed, every teacher viewing their student list likely still sees a false "No students yet."
+- ~~BUG-026 (`/teacher/students`) broken in production~~ — **RESOLVED 2026-10-01.** Founder ran `firebase deploy --only firestore:rules,firestore:indexes`; verified live via the Firebase Console (rules + both indexes), then confirmed end-to-end with a real teacher account. Closed.
 - **`gsc` and `chrome-devtools` MCP tools have failed to attach to nightly dispatches on 4-6 recent sessions**, blocking fresh Search Console pulls and live QA browser verification. Traced to this machine running critically low on memory (0.82GB free of 15.45GB observed 2026-10-01) — not a code or config bug. The GSC/traffic numbers above are stale until this is resolved.
 - **Default `vitest run` (parallel) currently fails with worker-pool timeouts** on this machine — same memory-pressure root cause. `--no-file-parallelism` works reliably; use it until the underlying memory issue is resolved.

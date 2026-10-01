@@ -37,7 +37,7 @@ Both of these are exactly what the security department exists to catch, and both
 
 **Product**
 
-- Of ~50 logged issues since this model started, the literal open-bug count is **zero** — BUG-036 (the last one, a Free/Pro copy mismatch) is fixed, and BUG-048/BUG-049 were caught and fixed the same day they were introduced. **One real caveat found this week, not yet in any prior version of this plan:** BUG-026 (`/teacher/students` showing "No students yet" for every teacher) needs both a Firestore rules deploy and an indexes deploy to actually work — only the indexes half is confirmed. There's no way to confirm the rules half from the repo; it needs the founder to check the Firebase Console directly. Until confirmed, this feature is likely still broken live for every teacher.
+- Of ~50 logged issues since this model started, the literal open-bug count is **zero** — BUG-036 (the last one, a Free/Pro copy mismatch) is fixed, and BUG-048/BUG-049 were caught and fixed the same day they were introduced. **BUG-026 fully closed today (2026-10-01):** `/teacher/students` was confirmed broken live this morning (`firestore.rules` had never actually been deployed, despite the fix sitting on disk for days). The founder ran `firebase deploy --only firestore:rules,firestore:indexes`, it was verified live against the Firebase Console (rules + both composite indexes), and the founder then confirmed the actual UI works end-to-end with a real teacher account. Nothing left open on this one.
 - Content-curriculum closed a real milestone: **every MVP-subject chapter (math/physics/chemistry) across every level in the Bac Français curriculum data has now been audited against the real post-2019-reform programme at least once** — a multi-week backlog item, now done.
 - Two real orphaned-page SEO bugs were found and fixed: `/about` had zero internal links anywhere in the app, and the four dedicated exam-generator landing pages were only ever linked from the homepage hero, explaining why 3 of 4 weren't indexed. Both fixed; whether Google has re-crawled them is still unconfirmed (the same `gsc` tool-attachment gap above).
 
@@ -132,7 +132,7 @@ Still not owned by a dedicated department — see §3. A real, living dashboard 
 
 | Metric | Current state |
 |---|---|
-| Open bug count (literal "Open" status) | **0** — down from 1 last week, down from double digits at the start. 1 bug (BUG-026) is in an ambiguous "fix on disk, deploy unconfirmed" state — see `METRICS.md` |
+| Open bug count (literal "Open" status) | **0**, and BUG-026's rules/indexes deploy gap (the one lingering "fix on disk" item) is now closed and verified live as of today — see `METRICS.md` |
 | Test suite size / pass rate | 250 tests, 100% passing as of the last full run |
 | Firestore index backlog | 0 — all pending deploys are live |
 | QA live-verification success rate on Pro-tier features | 0 of 5 recent attempts — the single most overdue reliability gap on this list |
@@ -162,7 +162,7 @@ The unit-economics number this plan has flagged three times now (AI cost per exa
 4. Decide and execute the Product Hunt launch date (Hypership declined; pick a normal weekday instead).
 5. **Done** — stand up a first version of the metrics dashboard: `METRICS.md`, 2026-10-01. Keep it fresh: the GSC/GA4 numbers in it are already a few days stale pending the `gsc` tool-attachment fix.
 6. Fix the concurrent-dispatch git-collision risk before it causes real damage instead of a near-miss.
-7. Confirm directly (Firebase Console) whether `firestore.rules` was ever deployed — `/teacher/students` is likely still broken for every teacher until this is confirmed.
+7. **Done, fully closed** — checked the live Firebase Console Rules tab directly (2026-10-01), found `firestore.rules` had never been deployed; founder ran `firebase deploy --only firestore:rules,firestore:indexes` himself, it was re-verified live (new rules published, both composite indexes `Enabled`), and the founder confirmed `/teacher/students` now works with a real teacher account. Nothing left on this item.
 
 ## Appendix — Founder Decisions Needed Right Now
 

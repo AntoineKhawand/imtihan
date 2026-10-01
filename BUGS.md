@@ -19,6 +19,19 @@ Track issues here during development. Format:
 
 ## Open Issues
 
+## BUG-050: Concurrent same-night team dispatches sharing one git working tree can cross-contaminate each other's commits via broad staging (`git add -A`/`git commit -a`)
+**Status:** Fixed 2026-10-01
+**Severity:** Medium
+**Area:** Ops / nightly automation
+
+**Description:** `design` found, mid-session on 2026-10-01, that its own uncommitted edit to `TEAM_CHAT.md` got swept into `seo-growth`'s unrelated docs commit `07ae1e3` (visible in `git show 07ae1e3 --stat`) during the same nightly run. Nothing was lost — `design` caught it, re-applied, and verified the fix landed correctly in `HEAD` — but the mechanism is a real structural risk, not a one-off fluke: `scripts/nightly-ops.ps1` launches one `claude -p` orchestrator session that dispatches multiple teams via the `Agent` tool, and the Agent tool's own general guidance explicitly encourages running independent dispatches concurrently ("send them in a single message with multiple tool uses so they run concurrently"). When multiple teams are mid-edit on the same shared working directory at once, any commit step that stages broadly (`git add -A` or `git commit -a`) — rather than only the specific files the team being committed actually reported changing — will pick up whatever else happens to be dirty at that exact moment, silently attributing one team's uncommitted work to a different team's commit message. `TEAM_CHAT.md` is especially exposed since every team writes to it.
+**Root cause:** `scripts/nightly-ops-prompt.md`'s step 5 (commit each reviewed team's change) never specified *how* to stage — a broad stage is the natural default and is exactly what happened.
+**Fix:** `scripts/nightly-ops-prompt.md` step 5 now explicitly forbids `git add -A`/`git commit -a`, and requires: `git status --porcelain` first to see what's actually dirty, stage only the exact paths the team being committed reported touching, then `git diff --cached --stat` to confirm the staged set matches before committing — and to stop and investigate rather than commit through it if an unexpected path shows up dirty. This doesn't make dispatches fully isolated (they still share one working tree; a true fix would need per-team worktrees or strictly serialized dispatch, a larger change not taken here), but it closes the actual mechanism that caused this incident.
+**Found by:** design (2026-10-01, caught mid-session while fixing an unrelated `blog/page.tsx` dark-mode drift item), logged via `TEAM_CHAT.md`.
+**Verification:** Prompt-text change only, no application code touched; nothing to type-check or test. Re-read the edited instruction against the exact incident description to confirm it would have prevented this specific case (yes — `TEAM_CHAT.md` would not have been among the paths `seo-growth`'s own docs commit was told to stage).
+
+---
+
 ## BUG-049: `getChapterExemplars()` (School Bank exemplar prompt-injection, `/api/generate`) queried across ALL schools, not just the requesting teacher's own — cross-tenant content leak
 **Status:** Fixed 2026-10-01
 **Severity:** Medium
@@ -495,7 +508,7 @@ These are intentional constraints in MVP — document here to avoid re-opening a
 
 ## BUG-026: `/teacher/students` has shown "No students yet" for every teacher since the feature was built — `firestore.rules` never permitted the query it makes
 
-**Status:** Fix on disk. Indexes half likely deployed (unconfirmed); rules half NOT confirmed deployed. Feature status therefore UNCONFIRMED — see 2026-09-29 update.
+**Status:** FIXED AND DEPLOYED (2026-10-01) — confirmed live. See 2026-10-01 updates below.
 **Severity:** High
 **Area:** Data / Auth
 **Reported:** 2026-09-18
@@ -517,6 +530,30 @@ Two separate things to untangle here, reasoned from repo state alone (no live ch
 - **Rules:** There is no equivalent mechanism or repo-state signal for this. `firestore.rules` is a completely separate deploy target (`firestore:rules`), and nothing in `FOUNDER_DECISIONS.md`, `TEAM_CHAT.md`, or this repo's history says it was ever run. Repo state alone cannot distinguish "rules deployed" from "rules not deployed" — there is no local artifact that reflects live Firebase project state. This must be confirmed by the founder directly (e.g. via the Firebase Console's Rules tab, checking the published rules' last-updated timestamp/content against this repo's `firestore.rules`), not inferred.
 
 **Net effect: do not mark this bug Fixed.** Even if this bug's indexes are live (likely), the `list` rules this bug's whole fix depends on (`student_profiles`/`student_attempts` teacher-scoped `list` access) are unconfirmed, and per this bug's own Fix note both halves are required together for `/teacher/students` to actually work — an indexes-only deploy with no matching rules would still fail, just with a "Missing or insufficient permissions" error instead of a "query requires an index" error (i.e. back to this bug's original symptom, not fixed). Reworded the Status/Fixed lines above to reflect this precisely instead of leaving the old blanket "not yet deployed, needs both" text unchanged (which was accurate before 2026-09-27 but is now ambiguous, since one of the two prerequisites plausibly did happen as a side effect of an unrelated deploy). **Ask for the founder:** a one-line confirmation of whether `firestore.rules` was ever separately deployed (Console → Firestore → Rules tab, compare against this repo's `firestore.rules`) would fully resolve this — a fact-check, not a new decision, so not added to `FOUNDER_DECISIONS.md`.
+
+**Update (2026-10-01, founder-directed live check via Firebase Console):** Read the actually-published rules directly off `https://console.firebase.google.com/project/imtihan-app/firestore/databases/-default-/security/rules` (read-only view, no deploy action taken). The live rules are still the OLD pre-fix version:
+
+```
+match /student_profiles/{uid} {
+  allow read, write: if request.auth != null && request.auth.uid == uid;
+}
+match /student_attempts/{attemptId} {
+  allow read, update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
+  allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+}
+```
+
+No `requesterProfile()`/`isTeacher()` helpers, no `allow list` block on either collection — i.e. none of this bug's Fix (described above) is live. This settles the open question definitively: `firestore.rules` was never deployed. Every teacher loading `/teacher/students` today still gets `FirebaseError: Missing or insufficient permissions` on both queries, swallowed by the page's `try/catch`, rendering the false "No students yet" empty state exactly as originally reported on 2026-09-18 — two weeks of this feature silently not working. The indexes question is now moot until rules are fixed (both are required together per this bug's own Fix note).
+
+**Action needed from the founder (not performed by any agent, per this repo's standing rule against deploying or touching production Firebase state):** run `firebase deploy --only firestore:rules,firestore:indexes` (or paste `firestore.rules`'s `student_profiles`/`student_attempts` blocks into the Console's Rules editor and publish), then reload `/teacher/students` as a real teacher account to confirm.
+
+**Update (2026-10-01, founder ran the deploy):** Founder ran `firebase deploy --only firestore:rules,firestore:indexes` himself (`firebase use production` → `imtihan-app`, then the deploy — CLI reported "Deploy complete!", rules compiled with no errors). Re-checked the live Firebase Console directly afterward to confirm, not just trusting the CLI's exit message:
+- **Rules tab:** new published version timestamped today 12:17 PM, containing `requesterProfile()`/`isTeacher()` and the teacher-scoped `allow list` blocks on both `student_profiles` and `student_attempts` — matches `firestore.rules` on disk exactly.
+- **Indexes tab:** both `student_attempts` (userId ASC, timestamp DESC) and `student_profiles` (schoolName ASC, createdAt DESC) show **Status: Enabled**.
+
+Both halves of this bug's fix are now confirmed live. **Status: Fixed.**
+
+**Update (2026-10-01, founder verified the UI):** Founder confirmed `/teacher/students` now works end-to-end with a real teacher account and real students. Fully closed — no remaining open item on this bug. The risk-acceptance note on the self-declared `school` field (tracked separately, see `FOUNDER_DECISIONS.md` #1) still stands and has its own expiry condition — unaffected by this deploy.
 
 **Also noted, explicitly out of scope for this fix:** `src/app/dashboard/page.tsx`'s `fetchStudentResultsForExam()` (teacher dashboard's per-exam student-results view) queries `student_attempts` filtered by `exerciseId` — a different access pattern (scoping by which exam a teacher owns, not by school) that neither the old nor this new rule set covers; it was already silently broken by the same root cause (no matching rule) before this fix, and still is after it. Flagging it here rather than fixing it now since it needs its own rule design (cross-referencing exam ownership under `users/{uid}/exams/{examId}`), which is a separate piece of work.
 **Testing:** QA has a draft e2e test for this page ready but did not add it to the suite — it's designed to fail until the rule is actually deployed, and deploying isn't engineering's call to make. Add it once Antoine confirms the deploy.
