@@ -326,7 +326,7 @@ export function renderContent(raw: string): string {
   // Then, handle naked blocks that start with a Mermaid keyword.
   // We are now more aggressive: if a line starts with a Mermaid keyword, we take everything 
   // until the next blank line or the next structural marker.
-  const nakedMermaidRegex = new RegExp(`(\\n|^)(${patternStr})([\\s\\S]*?)(?=\\n\\n|\\n\\*\\*|\\n[0-9]\\.|\\n\\[(?:IMAGE|GRAPH|VISUAL)|$)`, "g");
+  const nakedMermaidRegex = new RegExp(`(\\n|^)(${patternStr})([\\s\\S]*?)(?=\\n\\n|\\n\\*\\*|\\n[0-9]\\.|\\n\\[(?:IMAGE|GRAPH|VISUAL|PLOT)|$)`, "g");
   text = text.replace(nakedMermaidRegex, (_match, prefix, keyword, content) => {
     const idx = mermaidBlocks.length;
     const rawContent = (keyword + content).trim();
@@ -338,6 +338,36 @@ export function renderContent(raw: string): string {
 
   // 2. Identify and placeholder-ize [IMAGE:] [GRAPH:] [VISUAL:] tags
   const visualBlocks: string[] = [];
+
+  // 2.0 Identify and placeholder-ize [PLOT: equation] tags — a mathematical
+  // function plot, rendered client-side via the real `MathPlot` component
+  // (function-plot/D3, mounted into this placeholder div by ExerciseCard
+  // after the HTML is injected — see its own effect). Deliberately NOT
+  // routed through the [IMAGE:]/[GRAPH:]/[VISUAL:] AI-image path below: an
+  // AI image model cannot accurately draw a mathematical curve, so doing
+  // that would regress plot accuracy (see src/lib/prompts/generate.ts's
+  // MATHEMATICAL PLOTS instruction). The placeholder only carries the raw
+  // equation string in `data-mathplot` — no image request is made.
+  const mathPlotBlocks: string[] = [];
+  text = text.replace(/\[PLOT:\s*([\s\S]*?)\]/gi, (_match, equation) => {
+    const idx = mathPlotBlocks.length;
+    const eq = (equation ?? "").trim();
+    const safeEq = escapeHtml(eq);
+    // Same quote-only escaping convention as the IMAGE/VISUAL/MERMAID blocks
+    // below for `data-content` — it must decode (via getAttribute) back to
+    // byte-identical `_match` text so the shared "remove-visual" click
+    // handler in ExerciseCard.tsx can find and strip it from the statement.
+    const rawToReplace = _match.replace(/"/g, "&quot;");
+    const html =
+      `<div class="relative group my-6" data-raw="${escapeHtml(_match)}" contenteditable="false">` +
+      `<button data-action="remove-visual" data-type="plot" data-content="${rawToReplace}" class="absolute top-2 right-2 z-20 w-6 h-6 rounded-full bg-white/90 backdrop-blur-sm border border-red-100 text-red-500 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center hover:bg-red-50 shadow-sm" title="Remove Plot">` +
+      `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>` +
+      `</button>` +
+      `<div class="imtihan-mathplot-mount" data-mathplot="${safeEq}"></div>` +
+      `</div>`;
+    mathPlotBlocks.push(html);
+    return `%%MATHPLOT_${idx}%%`;
+  });
 
   // NEW: Catch-all for naked charts (xychart-beta or blocks starting with axis definitions)
   // This handles the case where the AI outputs a chart config without backticks.
@@ -617,8 +647,8 @@ export function renderContent(raw: string): string {
       // having to duplicate that logic itself.
       const prevReal = i > 0 ? htmlLines[i - 1].trim() : "";
       const nextReal = i < htmlLines.length - 1 ? htmlLines[i + 1].trim() : "";
-      const prevIsHtmlOrPlaceholder = isBlockHtmlEnd(prevReal) || /%%(VISUAL|MERMAID|PTABLE|DOC)_\d+%%/.test(prevReal);
-      const nextIsHtmlOrPlaceholder = isBlockHtmlStart(nextReal) || /%%(VISUAL|MERMAID|PTABLE|DOC)_\d+%%/.test(nextReal);
+      const prevIsHtmlOrPlaceholder = isBlockHtmlEnd(prevReal) || /%%(VISUAL|MERMAID|PTABLE|DOC|MATHPLOT)_\d+%%/.test(prevReal);
+      const nextIsHtmlOrPlaceholder = isBlockHtmlStart(nextReal) || /%%(VISUAL|MERMAID|PTABLE|DOC|MATHPLOT)_\d+%%/.test(nextReal);
       if (prevReal && nextReal && !prevIsHtmlOrPlaceholder && !nextIsHtmlOrPlaceholder && !insideSvg) {
         finalHtml += "<br />";
       } else if (insideSvg) {
@@ -648,8 +678,8 @@ export function renderContent(raw: string): string {
       const isCurrHtml = isBlockHtmlStart(currLine);
       // Don't add <br /> if we are moving between tags or if it's a placeholder line
       // OR if the current line is a standalone math symbol (like an arrow)
-      const isPlaceholder = line.includes("%%VISUAL_") || line.includes("%%MERMAID_") || line.includes("%%PTABLE_") || line.includes("%%DOC_");
-      const wasPlaceholder = htmlLines[i-1].includes("%%VISUAL_") || htmlLines[i-1].includes("%%MERMAID_") || htmlLines[i-1].includes("%%PTABLE_") || htmlLines[i-1].includes("%%DOC_");
+      const isPlaceholder = line.includes("%%VISUAL_") || line.includes("%%MERMAID_") || line.includes("%%PTABLE_") || line.includes("%%DOC_") || line.includes("%%MATHPLOT_");
+      const wasPlaceholder = htmlLines[i-1].includes("%%VISUAL_") || htmlLines[i-1].includes("%%MERMAID_") || htmlLines[i-1].includes("%%PTABLE_") || htmlLines[i-1].includes("%%DOC_") || htmlLines[i-1].includes("%%MATHPLOT_");
       const isShortMath = line.trim().startsWith("<span class=\"katex") && line.trim().length < 200;
 
       if (!isPrevHtml && !isCurrHtml && !isPlaceholder && !wasPlaceholder && !isShortMath && !insideSvg) {
@@ -690,9 +720,13 @@ export function renderContent(raw: string): string {
     finalHtml = finalHtml.split(`%%DOC_${i}%%`).join(docHtml);
   });
 
-  // 4. Put Visual/Mermaid blocks back LAST
+  // 4. Put Visual/Mermaid/MathPlot blocks back LAST
   visualBlocks.forEach((visualHtml, i) => {
     finalHtml = finalHtml.split(`%%VISUAL_${i}%%`).join(visualHtml);
+  });
+
+  mathPlotBlocks.forEach((plotHtml, i) => {
+    finalHtml = finalHtml.split(`%%MATHPLOT_${i}%%`).join(plotHtml);
   });
 
   mermaidBlocks.forEach((block, i) => {

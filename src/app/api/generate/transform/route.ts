@@ -7,7 +7,7 @@ import { verifySession } from "@/lib/firebase-admin";
 
 const RequestSchema = z.object({
   exercise: z.any(),
-  type: z.enum(["table", "visual", "image", "plot"]),
+  type: z.enum(["table", "visual", "image", "plot", "insertPlot"]),
   language: z.string(),
   prompt: z.string().optional(),
 });
@@ -75,6 +75,22 @@ export async function POST(request: NextRequest) {
       - BLANK GRID: If the user wants a grid for the student to draw on (e.g. prompt "blank grid", "for student", "empty"), add an empty string "" to mathPlots.
       - FORMAT: Use standard mathematical notation compatible with function-plot/D3 (e.g., x^2, sin(x), exp(x)).
       - Keep the rest of the JSON exactly the same.`;
+    } else if (type === "insertPlot") {
+      // The "Insert chart" per-exercise action (ExerciseCard.tsx, Math/Physics
+      // only) — unlike "plot" above (the legacy mathPlots-array mechanism,
+      // still supported for backward compatibility with already-generated
+      // exams), this inserts the real inline `[PLOT: equation]` tag directly
+      // into the statement text, at the point it's actually relevant — see
+      // src/lib/renderContent.ts's own `[PLOT:]` handling and
+      // src/lib/prompts/generate.ts's MATHEMATICAL PLOTS instruction for new
+      // generations, which this mirrors for an already-generated exercise.
+      const plotReq = prompt ? `The user wants: "${prompt}"` : `Identify the main function or quantity in this exercise that's naturally suited to a graph.`;
+      instruction = `- Task: Insert an inline mathematical function plot into the exercise's existing 'statement'.
+      - ${plotReq}
+      - OUTPUT: Insert the tag \`[PLOT: equation]\` directly into the 'statement' text, placed exactly where it belongs — right after the sub-question (or sentence) that asks for or refers to the graph, not bunched at the top or bottom.
+      - FORMAT: The equation must use standard mathematical notation compatible with function-plot/D3 (e.g. "x^2", "sin(x)", "exp(x) - 1").
+      - Do NOT add anything to a "mathPlots" array — this is a different, inline mechanism. Do NOT use [IMAGE:]/[GRAPH:]/[VISUAL:] for this — those route through an AI image model, which cannot accurately draw a function curve.
+      - PRESERVATION: Keep every word of the original statement — only insert the one \`[PLOT: ...]\` tag at the appropriate point.`;
     }
 
     const isTable = type === "table";

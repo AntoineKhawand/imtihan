@@ -19,6 +19,19 @@ Track issues here during development. Format:
 
 ## Open Issues
 
+## BUG-051: `/print` (PDF export) has no rendering mechanism at all for either `Exercise.mathPlots` (legacy) or the new inline `[PLOT: equation]` tag — a Math/Physics exam's function plot never appears in the printed/PDF output
+**Status:** Open
+**Severity:** Medium
+**Area:** Export | UI
+
+**Description:** `src/app/print/page.tsx` renders every exercise field through `renderContent()` + `dangerouslySetInnerHTML`, same as `ExerciseCard.tsx`, but — confirmed by grep, pre-existing, not introduced by the 2026-10-01 inline-plot change below — it never reads `exercise.mathPlots` at all (no `<MathPlot>` rendering anywhere in that file, unlike `ExerciseCard.tsx`'s own fixed-block rendering of the same array). The new inline `[PLOT: equation]` mechanism (see this file's own ROADMAP entry) makes this gap more visible going forward rather than introducing it: `renderContent()` now emits a `<div data-mathplot="...">` mount placeholder for `[PLOT:]` tags in `/print`'s HTML output too, but since `/print` has no equivalent to `ExerciseCard.tsx`'s new `createRoot`-mounting `useEffect`, that div stays empty — no raw bracket text (a clean, if silent, degradation), but also no visible graph in the PDF a teacher actually hands to students.
+**Root cause:** `/print`'s component was never given the same `MathPlot`-mounting treatment as `ExerciseCard.tsx`, for either the legacy array or the new tag.
+**Fix (not yet applied):** Add the same `[data-mathplot]` → `createRoot(...).render(<MathPlot .../>)` mounting effect used in `ExerciseCard.tsx` to `/print/page.tsx`, and decide whether to also backfill `exercise.mathPlots` rendering there for already-saved exams (currently invisible in print/PDF too).
+**Also found, same pass:** Word export (`src/app/api/export/route.ts`) had the identical gap for the *new* `[PLOT:]` tag specifically — unlike `/print`, it would have shown the raw literal `[PLOT: sin(x)]` bracket text in the exported .docx, a real visual regression versus the old `[GRAPH:]`-tag behavior it replaces (which Word export already had a labelled-box handler for). That part **was** fixed in the same commit as the inline-plot feature (see ROADMAP) — only the `/print`/PDF path remains open.
+**Found by:** engineering (2026-10-01, while tracing the inline-`[PLOT:]`-tag feature through every export path per the task's own "trace through an e2e-relevant flow" requirement).
+
+---
+
 ## BUG-050: Concurrent same-night team dispatches sharing one git working tree can cross-contaminate each other's commits via broad staging (`git add -A`/`git commit -a`)
 **Status:** Fixed 2026-10-01
 **Severity:** Medium

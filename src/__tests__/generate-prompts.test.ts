@@ -412,6 +412,39 @@ describe("buildGenerateSystemPrompt — curriculum/language branch selection", (
 });
 
 // ---------------------------------------------------------------------------
+// src/lib/prompts/generate.ts — MATHEMATICAL PLOTS instruction, gated to
+// Math/Physics only (see ExerciseCard.tsx's "Insert chart" action and
+// src/lib/renderContent.ts's [PLOT:] handling, which this instruction feeds).
+// ---------------------------------------------------------------------------
+
+describe("buildGenerateSystemPrompt — MATHEMATICAL PLOTS gating", () => {
+  it("instructs the inline [PLOT: equation] tag for mathematics", () => {
+    const prompt = buildGenerateSystemPrompt(baseContext({ subject: "mathematics" }));
+    expect(prompt).toContain("MATHEMATICAL PLOTS");
+    expect(prompt).toContain("[PLOT: sin(x)]");
+    expect(prompt).toMatch(/Do NOT use the legacy `mathPlots` array/);
+  });
+
+  it("instructs the inline [PLOT: equation] tag for physics", () => {
+    const prompt = buildGenerateSystemPrompt(baseContext({ subject: "physics" }));
+    expect(prompt).toContain("MATHEMATICAL PLOTS");
+    expect(prompt).toContain("[PLOT:");
+  });
+
+  it("omits the MATHEMATICAL PLOTS instruction entirely for non-plottable subjects (e.g. chemistry)", () => {
+    const prompt = buildGenerateSystemPrompt(baseContext({ subject: "chemistry" }));
+    expect(prompt).not.toContain("MATHEMATICAL PLOTS");
+    expect(prompt).not.toContain("[PLOT:");
+  });
+
+  it("omits the MATHEMATICAL PLOTS instruction for humanities subjects (e.g. history)", () => {
+    const prompt = buildGenerateSystemPrompt(baseContext({ subject: "history" }));
+    expect(prompt).not.toContain("MATHEMATICAL PLOTS");
+    expect(prompt).not.toContain("[PLOT:");
+  });
+});
+
+// ---------------------------------------------------------------------------
 // src/lib/prompts/generate.ts — buildRegenerateExercisePrompt
 // ---------------------------------------------------------------------------
 

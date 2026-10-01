@@ -516,6 +516,17 @@ export function buildGenerateSystemPrompt(context: ExamContext): string {
 
   const fewShotText = fewShotExample ? `FORMAT REFERENCE — study this real exam example before generating:\n${fewShotExample}\n` : "";
 
+  // MATHEMATICAL PLOTS — only relevant when a numeric function plot is a
+  // meaningful thing to ask for (Math, Physics). Deliberately omitted from
+  // the prompt entirely for other subjects (Chemistry, humanities, ...)
+  // rather than left in as dead instruction text. See ExerciseCard.tsx's
+  // "Insert chart" action and renderContent.ts's `[PLOT:]` handling, which
+  // this instruction feeds.
+  const isPlottableSubject = context.subject === "mathematics" || context.subject === "physics";
+  const mathPlotsInstruction = isPlottableSubject
+    ? `    - **MATHEMATICAL PLOTS**: For mathematical functions (e.g. $f(x) = \\sin(x)$), DO NOT use Mermaid and DO NOT use [GRAPH:]/[IMAGE:]/[VISUAL:] (those route through an AI image model, which cannot accurately draw a function curve). Instead, insert the tag \`[PLOT: sin(x)]\` directly inside the \`statement\`, exactly where it belongs — right after the sub-question or sentence that asks for the graph, never bunched at the top or bottom of the statement. The equation must use standard mathematical notation compatible with function-plot/D3 (e.g. "x^2", "sin(x)", "exp(x) - 1"). Do NOT use the legacy \`mathPlots\` array field for new exercises — it only exists for backward compatibility with older exams.\n`
+    : "";
+
   const stepWord = context.language === "french" ? "Étape"
     : context.language === "arabic" ? "الخطوة"
     : "Step";
@@ -645,10 +656,7 @@ BARÈME (mandatory for every exercise):
 LAYOUT & CONTENT QUALITY:
 - **Markdown Tables**: Use standard Markdown table syntax for data comparisons, experimental results, or organized information.
 - **Graphs & Diagrams**: You cannot generate static image files (PNG/JPG). Instead, you MUST use Mermaid code blocks (\`\`\`mermaid ... \`\`\`) for logical diagrams (flowcharts, sequence diagrams).
-    - **MATHEMATICAL PLOTS**: For mathematical functions (e.g. $f(x) = \\sin(x)$), DO NOT use Mermaid. Instead:
-        1. Add the equation (e.g. "sin(x)") to the \`mathPlots\` array.
-        2. Or use the tag \`[GRAPH: sin(x)]\` inside the \`statement\` to generate an AI-assisted visual.
-    - Use \`flowchart TD\` for logical flows, processes, and experiments.
+${mathPlotsInstruction}    - Use \`flowchart TD\` for logical flows, processes, and experiments.
     - If a visual is absolutely too complex for Mermaid, use a LaTeX \`picture\` environment or a high-quality Markdown Table.
     - **NO NAKED DIAGRAMS**: Always wrap Mermaid code in triple backticks. Do not use generic keywords like "chart" without backticks.
 - **Layout Consistency**: If the user provided a reference document (Teacher notes or grounding data), observe its structure (e.g., header style, question numbering) and attempt to mimic it in the text output.

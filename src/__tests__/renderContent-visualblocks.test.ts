@@ -128,6 +128,42 @@ describe("renderContent — [VARIATION:]/[TABLE_VAR:] tables", () => {
   });
 });
 
+describe("renderContent — [PLOT: equation] tags", () => {
+  // [PLOT:] is deliberately a SEPARATE mechanism from [IMAGE:]/[GRAPH:]/
+  // [VISUAL:] above — those route through the AI-image endpoint
+  // (/api/image/generate), which cannot accurately draw a function curve.
+  // [PLOT:] instead emits a bare mount-point div (`data-mathplot`) that
+  // ExerciseCard.tsx portals the real `MathPlot` (function-plot) component
+  // into after render — renderContent() itself never calls any image API
+  // for this tag.
+  it("converts a [PLOT: equation] tag into a data-mathplot mount div, not an image request", () => {
+    const html = renderContent("Solve for x: [PLOT: sin(x)]");
+    expect(html).toContain('data-mathplot="sin(x)"');
+    expect(html).toContain("imtihan-mathplot-mount");
+    expect(html).not.toContain("/api/image/generate");
+    expect(html).not.toContain("%%MATHPLOT_");
+  });
+
+  it("preserves the exact equation text for later re-mounting, including caret/exponent syntax", () => {
+    const html = renderContent("[PLOT: x^2 - 3*x + 2]");
+    expect(html).toContain('data-mathplot="x^2 - 3*x + 2"');
+  });
+
+  it("includes a remove button wired to the same shared remove-visual click handler as other visual blocks", () => {
+    const html = renderContent("[PLOT: cos(x)]");
+    expect(html).toContain('data-action="remove-visual"');
+    expect(html).toContain('data-type="plot"');
+    expect(html).toContain('data-content="[PLOT: cos(x)]"');
+  });
+
+  it("does not collide with a naked mermaid block immediately followed by a [PLOT:] tag", () => {
+    const md = "Consider the flow:\ngraph TD\nA-->B\nC-->D\n[PLOT: x^2]";
+    const html = renderContent(md);
+    expect(html).toContain("/api/visual/mermaid?code=");
+    expect(html).toContain('data-mathplot="x^2"');
+  });
+});
+
 describe("fixBoxedMath — unbalanced braces (bail-out branch)", () => {
   it("bails out and returns the remaining text unchanged when \\boxed{ is never closed", () => {
     const input = "Answer: \\boxed{x = 5, unterminated content here";

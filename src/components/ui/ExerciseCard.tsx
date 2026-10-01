@@ -1,9 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
+import { createRoot, type Root } from "react-dom/client";
 import { cn } from "@/lib/utils";
 import { renderContent } from "@/lib/renderContent";
 import type { Exercise } from "@/types/exam";
+import type { Subject } from "@/types/curriculum";
 import { MathPlot } from "./MathPlot";
 import {
   RefreshCw,
@@ -26,6 +28,9 @@ import {
   Sparkles,
 } from "lucide-react";
 
+/** Subjects where an inline function plot ([PLOT: equation] in the statement) is a meaningful action — see src/lib/prompts/generate.ts's MATHEMATICAL PLOTS instruction, which is gated the same way. */
+const PLOTTABLE_SUBJECTS: readonly Subject[] = ["mathematics", "physics"];
+
 const DIFFICULTY_CONFIG = {
   easy: { label: "Easy", color: "text-emerald-600 bg-emerald-50 dark:bg-emerald-950/30", dot: "bg-emerald-500" },
   medium: { label: "Medium", color: "text-amber-600 bg-amber-50 dark:bg-amber-950/30", dot: "bg-amber-500" },
@@ -45,12 +50,14 @@ interface ExerciseCardProps {
   exercise: Exercise;
   index: number;
   language: "french" | "english" | "arabic";
+  /** The parent exam's context.subject — gates the "Insert chart" action to Math/Physics, same as the generation prompt's own MATHEMATICAL PLOTS instruction. */
+  subject?: Subject;
   onRegenerate: (id: string, targetDifficulty?: "easy" | "medium" | "hard") => Promise<void>;
   onRemove: (id: string) => void;
   onEdit?: (exercise: Exercise) => void;
   onUpdate?: (exercise: Exercise) => void;
   onSaveToBank?: (exercise: Exercise) => void;
-  onTransform?: (id: string, type: "table" | "visual" | "image" | "plot", prompt?: string) => Promise<void>;
+  onTransform?: (id: string, type: "table" | "visual" | "image" | "plot" | "insertPlot", prompt?: string) => Promise<void>;
   isRegenerating?: boolean;
   savedToBank?: boolean;
   defaultShowSolution?: boolean;
@@ -60,6 +67,7 @@ export function ExerciseCard({
   exercise,
   index,
   language,
+  subject,
   onRegenerate,
   onRemove,
   onEdit,
@@ -206,7 +214,58 @@ export function ExerciseCard({
 
   const difficulty = DIFFICULTY_CONFIG[exercise.difficulty] ?? DIFFICULTY_CONFIG.medium;
   const exerciseLabel = language === "french" ? "Exercice" : "Exercise";
-  
+  const canInsertPlot = !!subject && PLOTTABLE_SUBJECTS.includes(subject);
+  const [insertingPlot, setInsertingPlot] = useState(false);
+
+  // Mount the real `MathPlot` (function-plot/D3, client-only) component into
+  // every `<div data-mathplot="...">` placeholder renderContent() emits for
+  // an inline `[PLOT: equation]` tag. dangerouslySetInnerHTML only produces
+  // a static HTML string, so the interactive plot can't be part of that
+  // string — instead we give each placeholder its own React root (there's
+  // no existing precedent for this in the codebase, so this is the pattern
+  // going forward for mixing a client component into rendered-HTML output)
+  // and portal `MathPlot` into it, exactly mirroring the legacy fixed-block
+  // `exercise.mathPlots` rendering just above, but positioned wherever the
+  // AI placed the tag in the statement instead of stacked at the top.
+  const contentRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const container = contentRef.current;
+    if (!container) return;
+    const mounts = container.querySelectorAll<HTMLDivElement>("[data-mathplot]");
+    const roots: Root[] = [];
+    mounts.forEach((el) => {
+      const equation = el.getAttribute("data-mathplot") ?? "";
+      const root = createRoot(el);
+      root.render(<MathPlot equation={equation} />);
+      roots.push(root);
+    });
+    return () => {
+      roots.forEach((root) => root.unmount());
+    };
+  }, [exercise.statement, exercise.subQuestions, exercise.options]);
+
+  // Memoized so the DOM subtree containing a `[PLOT:]` mount point is only
+  // rebuilt when the statement text itself actually changes — not on every
+  // unrelated re-render (toggling the actions menu, the Corrigé panel,
+  // etc.). Without this, a statement that also contains an [IMAGE:]/
+  // [GRAPH:]/[VISUAL:] tag (which embeds a fresh random seed on every
+  // renderContent() call) would produce a different HTML string on every
+  // re-render, making React replace the whole subtree via a raw
+  // `element.innerHTML =` write — which would silently orphan the
+  // MathPlot root mounted below (the effect wouldn't re-run, since its own
+  // dependency, `exercise.statement`, hadn't changed) and leave a blank
+  // mount div in its place.
+  const statementHtml = useMemo(() => renderContent(exercise.statement), [exercise.statement]);
+
+  async function handleInsertPlot() {
+    if (!onTransform || insertingPlot) return;
+    setInsertingPlot(true);
+    try {
+      await onTransform(exercise.id, "insertPlot");
+    } finally {
+      setInsertingPlot(false);
+    }
+  }
 
   function handleRemovePlot(idx: number) {
     if (!onUpdate || !exercise.mathPlots) return;
@@ -216,10 +275,10 @@ export function ExerciseCard({
 
   function handleClearVisuals() {
     if (!onUpdate) return;
-    // Remove Mermaid blocks and [IMAGE/GRAPH/VISUAL] tags
+    // Remove Mermaid blocks and [IMAGE/GRAPH/VISUAL/PLOT] tags
     const cleanStatement = exercise.statement
       .replace(/```mermaid[\s\S]*?```/g, "")
-      .replace(/\[(?:IMAGE|GRAPH|VISUAL):[\s\S]*?\]/gi, "")
+      .replace(/\[(?:IMAGE|GRAPH|VISUAL|PLOT):[\s\S]*?\]/gi, "")
       .trim();
     
     onUpdate({
@@ -364,6 +423,16 @@ export function ExerciseCard({
                     Edit
                   </button>
                 )}
+                {onTransform && canInsertPlot && (
+                  <button
+                    onClick={() => { handleInsertPlot(); setShowActions(false); }}
+                    disabled={insertingPlot}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-[var(--text-secondary)] hover:text-[var(--text)] hover:bg-[var(--bg-subtle)] rounded-lg transition-colors disabled:opacity-50"
+                  >
+                    <LineChart size={13} />
+                    {insertingPlot ? "Inserting chart…" : "Insert chart"}
+                  </button>
+                )}
                 {onSaveToBank && (
                   <button
                     onClick={() => { onSaveToBank(exercise); setShowActions(false); }}
@@ -395,7 +464,7 @@ export function ExerciseCard({
       </div>
 
       <div className={cn("p-6 pt-0 space-y-6", language === "arabic" && "text-right")} dir={language === "arabic" ? "rtl" : "ltr"}>
-        <div className="space-y-4">
+        <div className="space-y-4" ref={contentRef}>
           {/* Math Plots */}
           {exercise.mathPlots && exercise.mathPlots.length > 0 && (
             <div className="space-y-4">
@@ -416,7 +485,7 @@ export function ExerciseCard({
 
           <div
             className="text-[15px] text-[var(--text)] leading-relaxed"
-            dangerouslySetInnerHTML={{ __html: renderContent(exercise.statement) }}
+            dangerouslySetInnerHTML={{ __html: statementHtml }}
             onClick={(e) => {
               const target = e.target as HTMLElement;
               const button = target.closest('button[data-action="remove-visual"]');

@@ -75,6 +75,7 @@ The following fields MUST be copied through completely unchanged — byte-for-by
 - ALL mhchem chemistry notation: anything inside \\ce{...} (itself always wrapped in $...$) is copied through EXACTLY as-is.
 - ALL Markdown table syntax (the pipe/dash grid itself — "|", "---") is copied through exactly; only translate the natural-language prose INSIDE table cells, never the table structure, and never any $...$-wrapped math inside a cell.
 - ALL \`\`\`mermaid ... \`\`\` code blocks are copied through EXACTLY as-is, including the triple backticks and the word "mermaid" — never translate node labels or syntax inside a Mermaid block. (If a Mermaid block genuinely contains plain human-language labels as node text, you may translate only that label text, but never the Mermaid keywords/arrows/structure — when in doubt, leave the block untouched.)
+- ALL inline \`[PLOT: equation]\` tags inside "statement" (e.g. \`[PLOT: sin(x)]\`) are copied through EXACTLY as-is, including the brackets and the equation — this is a machine-readable plot directive (function-plot/D3 notation), not prose; never translate, reformat, or move it.
 
 =====================================================================
 WHAT YOU DO TRANSLATE (and ONLY these — natural-language prose)

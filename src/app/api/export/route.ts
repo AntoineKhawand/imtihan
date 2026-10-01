@@ -78,6 +78,31 @@ async function processContentBlocks(
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i].trim();
     
+    // Handle [PLOT: equation] — the inline mathematical function plot tag
+    // (src/lib/renderContent.ts, ExerciseCard.tsx's "Insert chart" action).
+    // function-plot/D3 is a browser-only (canvas/SVG) library — there's no
+    // server-side renderer for it here, same constraint as the IMAGE/GRAPH/
+    // VISUAL box below, so this renders a clearly-labelled text box instead
+    // of leaving the raw `[PLOT: ...]` tag visible as literal bracket text.
+    const plotMatch = line.match(/\[PLOT:\s*(.*?)\]/i);
+    if (plotMatch) {
+      flushParagraph();
+      const equation = plotMatch[1].trim();
+      const plotLabel = baseOptions.lang === "fr" ? "📈 Graphique" : baseOptions.lang === "ar" ? "📈 رسم بياني" : "📈 Graph";
+      blocks.push(new Paragraph({
+        children: [new TextRun({ text: plotLabel, bold: true, size: 18, color: "1a5e3f" })],
+        spacing: { before: 240, after: 60 },
+      }));
+      if (equation) {
+        blocks.push(new Paragraph({
+          children: [new TextRun({ text: `f(x) = ${equation}`, italics: true, size: 18, color: "374151" })],
+          spacing: { after: 240 },
+          indent: { left: 360 },
+        }));
+      }
+      continue;
+    }
+
     // Handle [IMAGE: ...] / [GRAPH: ...] / [VISUAL: ...]
     // We do NOT use external image services (Pollinations etc.) — they are
     // unreliable on Vercel and cause blank images in the exported document.

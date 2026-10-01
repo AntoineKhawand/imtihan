@@ -100,7 +100,15 @@ export interface Exercise {
   chapterIds: string[];
   /** Estimated time for a student to solve, in minutes */
   estimatedMinutes: number;
-  /** Optional mathematical function plots */
+  /**
+   * Legacy mathematical function plots — a flat list rendered as one fixed
+   * block stacked above the statement, regardless of which sub-question each
+   * equation belongs to. Kept only for backward compatibility with exams
+   * already generated/saved before the inline `[PLOT: equation]` tag
+   * mechanism (see src/lib/renderContent.ts and ExerciseCard.tsx's "Insert
+   * chart" action) — new generations use the inline tag instead, which
+   * positions the plot exactly where it's relevant in the statement.
+   */
   mathPlots?: string[];
 }
 
