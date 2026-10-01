@@ -336,28 +336,28 @@ export function ExerciseCard({
             <div className="flex items-center bg-[var(--bg-subtle)]/50 rounded-lg border border-[var(--border)] p-0.5 mr-1">
               <button
                 onClick={() => setTableConfig({ columns: 0, rows: 0, headers: "", data: "" })}
-                className="w-7 h-7 rounded-md flex items-center justify-center text-[var(--text-tertiary)] hover:text-[var(--accent)] hover:bg-white transition-all"
+                className="w-7 h-7 rounded-md flex items-center justify-center text-[var(--text-tertiary)] hover:text-[var(--accent)] hover:bg-[var(--surface)] transition-all"
                 title="Format as Table"
               >
                 <Table size={13} />
               </button>
               <button
                 onClick={() => { setTransformType("plot"); setTransformPrompt(""); }}
-                className="w-7 h-7 rounded-md flex items-center justify-center text-[var(--text-tertiary)] hover:text-[var(--accent)] hover:bg-white transition-all"
+                className="w-7 h-7 rounded-md flex items-center justify-center text-[var(--text-tertiary)] hover:text-[var(--accent)] hover:bg-[var(--surface)] transition-all"
                 title="Add Math Plot (SVG)"
               >
                 <LineChart size={13} />
               </button>
               <button
                 onClick={() => { setTransformType("visual"); setTransformPrompt(""); }}
-                className="w-7 h-7 rounded-md flex items-center justify-center text-[var(--text-tertiary)] hover:text-[var(--accent)] hover:bg-white transition-all"
+                className="w-7 h-7 rounded-md flex items-center justify-center text-[var(--text-tertiary)] hover:text-[var(--accent)] hover:bg-[var(--surface)] transition-all"
                 title="Add Diagram (Mermaid)"
               >
                 <ImageIcon size={13} />
               </button>
               <button
                 onClick={() => { setTransformType("image"); setTransformPrompt(""); }}
-                className="w-7 h-7 rounded-md flex items-center justify-center text-[var(--text-tertiary)] hover:text-[var(--accent)] hover:bg-white transition-all"
+                className="w-7 h-7 rounded-md flex items-center justify-center text-[var(--text-tertiary)] hover:text-[var(--accent)] hover:bg-[var(--surface)] transition-all"
                 title="Generate AI Illustration"
               >
                 <Sparkles size={12} />
@@ -365,7 +365,7 @@ export function ExerciseCard({
               <div className="w-px h-4 bg-[var(--border)] mx-1" />
               <button
                 onClick={handleClearVisuals}
-                className="w-7 h-7 rounded-md flex items-center justify-center text-[var(--text-tertiary)] hover:text-[var(--danger)] hover:bg-red-50 transition-all"
+                className="w-7 h-7 rounded-md flex items-center justify-center text-[var(--text-tertiary)] hover:text-[var(--danger)] hover:bg-red-50 dark:hover:bg-red-950/20 transition-all"
                 title="Clear all visuals (Plots, Diagrams, Images)"
               >
                 <Trash2 size={12} />
