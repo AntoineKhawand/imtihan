@@ -3,7 +3,7 @@ import { z } from "zod";
 import { withRetryAndFallback, geminiErrorMessage, isRetryableError } from "@/lib/gemini";
 import { getAnthropicClient, isAnthropicConfigured, GENERATE_MODEL, GENERATE_MAX_TOKENS } from "@/lib/anthropic";
 import { buildGenerateSystemPrompt, buildGenerateUserPrompt, buildExemplarsPrompt } from "@/lib/prompts/generate";
-import { getChapterExemplars } from "@/lib/schoolBank";
+import { getChapterExemplars, schoolSlugFrom } from "@/lib/schoolBank";
 import { sanitizeError, createSecurityHeaders } from "@/lib/security";
 import * as admin from "firebase-admin";
 import { adminDb, verifySession } from "@/lib/firebase-admin";
@@ -385,9 +385,26 @@ export async function POST(request: NextRequest) {
     // regenerate/edit pass, not a fresh exam) skips this the same way it
     // already skips teacher-style lookup above, since exemplars matter most
     // for a first full generation.
+    //
+    // Scoped to the requesting teacher's own school (schoolSlug, derived
+    // from userData.school the same way src/app/bank/page.tsx does) —
+    // schoolBank is documented everywhere else as cross-teacher *within a
+    // school*, not global; without this guard, any teacher's shared exercise
+    // content would surface as prompt "inspiration" for any other school
+    // on the platform. A teacher with no school configured yields an empty
+    // slug, so getChapterExemplars() short-circuits to [] rather than
+    // silently going unscoped.
     const MAX_EXEMPLAR_CHAPTERS = 8;
     let exemplarsPrompt = "";
-    if (context.curriculumId !== "university" && !isAdjustment && context.chapterIds.length > 0) {
+    const requesterSchoolSlug = schoolSlugFrom(
+      typeof userData.school === "string" ? userData.school : ""
+    );
+    if (
+      context.curriculumId !== "university" &&
+      !isAdjustment &&
+      context.chapterIds.length > 0 &&
+      requesterSchoolSlug
+    ) {
       try {
         const chapterIdsToQuery = context.chapterIds.slice(0, MAX_EXEMPLAR_CHAPTERS);
         const groups = await Promise.all(
@@ -398,7 +415,8 @@ export async function POST(request: NextRequest) {
               context.curriculumId,
               context.levelId,
               context.subject,
-              chapterId
+              chapterId,
+              requesterSchoolSlug
             );
             return { chapterName, chapterId, exercises };
           })

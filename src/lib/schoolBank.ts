@@ -46,12 +46,34 @@ function millisOf(value: unknown): number {
 }
 
 /**
+ * Mirrors src/app/bank/page.tsx's own schoolSlugFrom() exactly. Duplicated
+ * rather than imported: that file is a "use client" component and this
+ * module is adminDb/server-only (see the file-level comment above on why
+ * the two Firestore SDKs can't share one import graph). Keep in sync if the
+ * slugging rule ever changes.
+ */
+export function schoolSlugFrom(name: string): string {
+  return name.trim().toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+}
+
+/**
  * Returns up to 2 exercises from the `schoolBank` collection tagged with
  * `chapterId` (matched against the doc's `exercise.chapterIds` array),
- * scoped to the same curriculum + subject, most-recently-shared first.
- * Returns [] on any failure (missing index, permissions, malformed docs) —
- * this is advisory prompt context, never worth failing a real exam
- * generation request over.
+ * scoped to the same curriculum + subject + the requesting teacher's own
+ * school, most-recently-shared first. Returns [] on any failure (missing
+ * index, permissions, malformed docs) — this is advisory prompt context,
+ * never worth failing a real exam generation request over.
+ *
+ * `schoolSlug` is required and matched in JS against each candidate doc's
+ * own `schoolSlug` field (not a Firestore `.where()`, to avoid needing a
+ * new composite index — same technique already used below for sharedAt
+ * ordering). Without this, any teacher on the platform would see any other
+ * school's shared exercise content surfaced as "inspiration" in their own
+ * generation prompt — schoolBank is documented everywhere else
+ * (src/app/bank/page.tsx, src/app/student/practice/page.tsx) as
+ * cross-teacher *within a school*, not global. An empty `schoolSlug` (a
+ * teacher with no school configured) always returns [], matching
+ * bank/page.tsx's own `if (!schoolName) return [];` guard.
  *
  * `levelId` is accepted for signature symmetry with getChapter()/
  * buildChaptersSummary() (chapterId alone is not guaranteed globally unique
@@ -63,8 +85,10 @@ export async function getChapterExemplars(
   curriculumId: string,
   levelId: string,
   subject: string,
-  chapterId: string
+  chapterId: string,
+  schoolSlug: string
 ): Promise<ChapterExemplar[]> {
+  if (!schoolSlug) return [];
   try {
     // Composite index already exists for exactly this shape — see
     // firestore.indexes.json's schoolBank entry (curriculumId ASC, subject
@@ -90,6 +114,7 @@ export async function getChapterExemplars(
     for (const doc of snap.docs) {
       const parsed = SchoolBankExemplarDocSchema.safeParse(doc.data());
       if (!parsed.success) continue; // malformed/legacy doc — skip, don't crash
+      if (parsed.data.schoolSlug !== schoolSlug) continue; // different school — not this teacher's to see
       candidates.push({
         millis: millisOf(parsed.data.sharedAt),
         exemplar: {

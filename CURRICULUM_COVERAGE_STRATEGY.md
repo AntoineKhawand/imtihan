@@ -615,6 +615,86 @@ audit. `terminale-fr-spe-math` (this session's scope) is now fully audited again
 2019-reform programme structure, all 6 original chapters checked (1 previously fixed for probability,
 2 confirmed accurate, 3 corrected/expanded tonight) plus 2 new chapters added for real content gaps.
 
+## 2026-10-01 — Bac Français post-2019-reform audit: `premiere-fr-spe-math`'s exponential and suites chapters — 2 real gaps found and fixed
+
+Picked up the last remaining unaudited slice of the math curriculum named by this run's own
+instruction and reconfirmed across the 2026-09-27/09-29/09-30 entries: `pre-fr-math-exponential`
+("Fonction exponentielle") and `pre-fr-math-sequences` ("Suites numériques") in
+`src/data/curricula/bac-francais.ts` (lines ~411-434 before edit). Read the exact current chapter
+definitions first, per this run's instruction.
+
+**Primary source attempted, blocked as usual:** `WebFetch` on `education.gouv.fr/bo/19/Special1/MENE1900037A.htm`
+(the BO spécial n°1 du 22 janvier 2019 itself, where this programme is published) returned a domain
+verification failure before even reaching a 403 — same practical outcome as every prior session's
+403/annex-shell-only result. `education.gouv.fr/media/23684/download` (a candidate direct-PDF URL)
+and `lyceedautet.fr`'s hosted programme-summary PDF both failed too — the lycée PDF fetched but
+returned only binary/compressed PDF stream data, not extractable text.
+
+**Verification method:** with primary sources unreadable, required 2+ independent secondary sources
+to converge before treating a finding as confirmed, per this session's fallback standard. For each
+chapter, 3 independent sources converged: a `WebSearch` synthesis (drawing on `coursmathsaix.fr`,
+`galilee.ac`, `groupe-reussite.fr`), a direct `WebFetch` of `kartable.fr`'s "Suites numériques" course
+page, a direct `WebFetch` of `groupe-reussite.fr/ressources/programme-premiere-maths/`, and a direct
+`WebFetch` of `galilee.ac`'s "Fonction exponentielle" fiche — all mutually consistent on the specific
+wording and scope described below, no contradictions between sources.
+
+**Findings — both fixed, both additive (existing correct objectives kept, not removed), no chapter
+`id`s renamed (grepped `src/`; only `bac-francais.ts` itself references `pre-fr-math-exponential`/
+`pre-fr-math-sequences`, so edits are safe):**
+
+1. **`pre-fr-math-exponential` — missing 3 real sub-objectives.** All 3 sources converge that the
+   Première spécialité maths "Fonction exponentielle" chapter opens with the defining
+   existence/uniqueness property — the exponential is introduced as *the unique function f
+   derivable on ℝ with f′ = f and f(0) = 1* — and includes two calculus additions specific to the
+   2019 reform: the derivative of a composite `exp(u)` (equivalently `t ↦ e^(at)`, explicitly linked
+   to geometric sequences per `groupe-reussite.fr`), and the function's limits at +∞ (→ +∞) and −∞
+   (→ 0, horizontal asymptote). The existing objectives ("Utiliser les propriétés algébriques",
+   "Étudier la fonction exponentielle", "Résoudre équations et inéquations") were accurate but too
+   vague to capture any of these three — a generated exam could plausibly skip the defining property,
+   the composite-derivative rule, and the limit behavior entirely, all of which are standard,
+   frequently-examined content. Added 3 new objectives (defining property, `exp(u)` derivative,
+   limits at ±∞); kept the 3 existing ones, reworded "Étudier la fonction exponentielle" into the more
+   specific "Étudier le signe, les variations et la courbe représentative de la fonction
+   exponentielle" (same substance, not a content change).
+2. **`pre-fr-math-sequences` — missing 3 real sub-objectives.** All 3 sources converge on close to
+   identical wording: "Générer une suite de façon explicite, par récurrence, par un algorithme ou par
+   un motif géométrique, calculer le terme général et une somme de termes pour les suites
+   arithmétiques et géométriques, étudier le sens de variation, conjecturer une limite." The existing
+   objectives ("Étudier suites arithmétiques et géométriques", "Raisonner par récurrence (initiation)")
+   omitted three real, named sub-themes: the explicit list of generation modes (explicit formula,
+   recurrence, algorithm, geometric pattern), the sum of consecutive terms for arithmetic/geometric
+   sequences (a standard formula students are examined on), and the intuitive/graphical approach to
+   conjecturing a sequence's limit (finite or infinite) — the last being a genuine 2019-reform addition
+   to Première (the formal ε-based limit definition stays Terminale-only, already captured by
+   `ter-fr-math-sequences-limits` added 2026-09-30; this is the earlier, intuitive/conjectural
+   version). Added 3 new objectives; kept the 2 existing ones.
+
+**Not added, re-flagged — "Algorithmique et logique":** re-checked per this run's instruction. The
+2026-09-30 entry already flagged this as a real, named top-level programme section (Python list
+manipulation, quantifiers/logic, proof by induction) that sits close to the CLAUDE.md §8-9
+"Informatique deferred to v1.1" boundary. Nothing found this session changes that judgment — if
+anything, the Première "Suites" sources reinforce it: "générer une suite ... par un algorithme"
+appears as one clause *inside* the suites chapter's own objectives (captured above), not as a
+separate assessable chapter, and Imtihan's export pipeline still doesn't execute or grade runnable
+code. Left un-added, same call as 2026-09-30, for the founder or a future pass to decide rather than
+a unilateral add.
+
+**Mathematics chapter count for `premiere-fr-spe-math`: unchanged (7 chapters) — both findings were
+additive objectives on existing chapters, not new chapters.**
+
+**Verification:** `npx tsc --noEmit --skipLibCheck` and `npm run type-check` both clean after the
+edit (the broken-`tsc`-install condition flagged 2026-09-30 is no longer present this session). Left
+uncommitted for review. Not yet reviewed by `qa`.
+
+**Remaining unaudited scope:** `premiere-fr-spe-math`'s non-MVP subjects (french, history-geography,
+philosophy, ses) — out of MVP scope per CLAUDE.md §9, skip rather than audit. Non-MVP-subject levels
+(`terminale-fr-spe-svt`, `terminale-fr-spe-nsi`, `terminale-fr-spe-ses`) — same. **With this session's
+fix, every MVP-subject (mathematics, physics, chemistry) chapter across every level in
+`bac-francais.ts` (`premiere-fr-spe-math`, `terminale-fr-spe-math`, `terminale-fr-spe-pc`) has now
+been audited against the real post-2019-reform programme at least once** — the backlog item first
+opened 2026-09-15 is closed. "Algorithmique et logique" remains an open lead, flagged not decided,
+across both Première and Terminale spé-math.
+
 ## Backlog (pick one per Wednesday, highest priority first)
 
 ### Data accuracy audits (grounded in `docs/DATA_SOURCING.md`)
@@ -678,7 +758,7 @@ audit. `terminale-fr-spe-math` (this session's scope) is now fully audited again
       full line-by-line audit of those levels (plus Bac Français and IB per the other two backlog
       items below) is left for future Wednesday runs — one curriculum/level slice per run keeps
       diffs reviewable.
-- [ ] Audit `bac-francais.ts` chapters against the current BO programme edition — flag anything
+- [x] Audit `bac-francais.ts` chapters against the current BO programme edition — flag anything
       that looks like it's from a pre-2019-reform programme. **Partial progress 2026-09-15:** the
       three `premiere-fr-spe-math` chapters "Second degré"/"Dérivation"/"Trigonométrie" were
       spot-checked against secondary compilations of the 2019-reform BO spécial n°1 programme and
@@ -742,6 +822,21 @@ audit. `terminale-fr-spe-math` (this session's scope) is now fully audited again
       a real type-check; flagged for whoever needs a working compile next. Still unaudited:
       `premiere-fr-spe-math`'s exponential/suites chapters and non-MVP subjects; non-MVP-subject levels
       (SVT, NSI, SES). `terminale-fr-spe-math` is now fully audited.
+      **2026-10-01: `premiere-fr-spe-math`'s exponential and suites chapters audited — 2 real gaps
+      found and fixed, both additive objectives, no new chapters.** See the dated section above for
+      full detail. Primary source (`education.gouv.fr/bo/19/Special1/...`) failed before even
+      reaching a 403; findings rest on 3-source convergent secondary corroboration (`kartable.fr`,
+      `groupe-reussite.fr`, `galilee.ac`, plus a `WebSearch` synthesis). Added 3 objectives to
+      `pre-fr-math-exponential` (defining property f′=f/f(0)=1, derivative of composite exp(u),
+      limits at ±∞) and 3 to `pre-fr-math-sequences` (generation modes, sum of consecutive terms,
+      intuitive limit conjecture) — all additive, existing correct objectives kept. Re-flagged, did
+      not add, "Algorithmique et logique" for Première too, same judgment as 2026-09-30's Terminale
+      flag. `npx tsc --noEmit --skipLibCheck` and `npm run type-check` both clean (local `tsc` install
+      is no longer broken this session). **This closes the backlog item first opened 2026-09-15:
+      every MVP-subject (math/physics/chemistry) chapter across every level in `bac-francais.ts` has
+      now been audited against the real post-2019-reform programme at least once.** Still unaudited,
+      out of MVP scope per CLAUDE.md §9 (skip, not a gap): non-MVP subjects within French levels
+      (french, history-geography, philosophy, ses) and non-MVP-subject levels (SVT, NSI, SES).
 - [x] **2026-09-19, partial:** Audit `ib.ts` command-term usage in `src/lib/prompts/generate.ts`
       against the current IBO command term glossary edition — see the dated section above for full
       detail. ~15 of ~30 terms spot-checked via convergent secondary sources (no `WebFetch` this

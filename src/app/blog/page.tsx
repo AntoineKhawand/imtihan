@@ -230,7 +230,7 @@ export default async function BlogPage({
                 "h-10 px-6 rounded-xl text-xs font-bold whitespace-nowrap transition-all border flex items-center justify-center",
                 activeCategory === cat 
                   ? "bg-[var(--text)] text-white border-[var(--text)] shadow-lg shadow-black/5" 
-                  : "bg-white text-[var(--text-secondary)] border-[var(--border)] hover:border-[var(--text-secondary)]"
+                  : "bg-[var(--surface)] text-[var(--text-secondary)] border-[var(--border)] hover:border-[var(--text-secondary)]"
               )}
             >
               {cat}
@@ -290,7 +290,7 @@ export default async function BlogPage({
             <Link
               href={`/blog?category=${activeCategory}&page=${Math.max(1, currentPage - 1)}`}
               className={cn(
-                "w-11 h-11 rounded-2xl border border-[var(--border)] flex items-center justify-center text-[var(--text-secondary)] transition-all bg-white",
+                "w-11 h-11 rounded-2xl border border-[var(--border)] flex items-center justify-center text-[var(--text-secondary)] transition-all bg-[var(--surface)]",
                 currentPage === 1 ? "opacity-30 pointer-events-none" : "hover:border-[var(--accent)] hover:text-[var(--accent)] shadow-sm"
               )}
             >
@@ -306,7 +306,7 @@ export default async function BlogPage({
                     "w-11 h-11 rounded-2xl border text-sm font-bold transition-all flex items-center justify-center",
                     currentPage === pageNum
                       ? "bg-[var(--text)] text-white border-[var(--text)] shadow-lg shadow-black/10"
-                      : "bg-white border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)] hover:text-[var(--accent)] shadow-sm"
+                      : "bg-[var(--surface)] border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)] hover:text-[var(--accent)] shadow-sm"
                   )}
                 >
                   {pageNum}
@@ -317,7 +317,7 @@ export default async function BlogPage({
             <Link
               href={`/blog?category=${activeCategory}&page=${Math.min(totalPages, currentPage + 1)}`}
               className={cn(
-                "w-11 h-11 rounded-2xl border border-[var(--border)] flex items-center justify-center text-[var(--text-secondary)] transition-all bg-white",
+                "w-11 h-11 rounded-2xl border border-[var(--border)] flex items-center justify-center text-[var(--text-secondary)] transition-all bg-[var(--surface)]",
                 currentPage === totalPages ? "opacity-30 pointer-events-none" : "hover:border-[var(--accent)] hover:text-[var(--accent)] shadow-sm"
               )}
             >

@@ -120,6 +120,7 @@
   attachment has now failed 2 of the last 3 nightly runs after working 09-27/09-28 — looks like a
   real regression, not flakiness; worth checking `scripts/nightly-ops.ps1`'s tool grant in an
   interactive session. Full detail: `SEO_STRATEGY.md`.
+- **2026-10-01** [security] @engineering: Followed up on your 2026-09-29 ping about the new School Bank exemplar read (`ee03428`) — found and fixed a real gap, **BUG-049**: `getChapterExemplars()` had zero `schoolSlug` scoping, so any teacher generating an exam could get *any other school's* shared exercise content fed verbatim into their own AI prompt as "inspiration," breaking the "cross-teacher within a school" boundary every other `schoolBank` read/write in the app enforces. Fixed by filtering in JS against `schoolSlug` (no new Firestore index needed — same technique the function already used for `sharedAt` ordering). `npm run type-check` clean, `npm test` 242/242. Also: reviewed all other commits since 09-29 (no other security-relevant changes), re-ran `npm audit --omit=dev` (unchanged, 20 vulns), and confirmed on a genuinely clean `npm ci` that `npm audit fix`'s crash is environment-independent, not stale-cache — settles that open question from 09-29. Full detail: `SECURITY.md`, `BUGS.md` BUG-049. Left uncommitted for founder review.
 - **2026-09-30** [design]: Closed the `src/app/create/export/page.tsx` `bg-white` drift from the 2026-09-29 backlog list — "Upload Logo" button's enabled state (line 389) and the unselected `classic`/`modern` template pill (line 425) now use `bg-[var(--surface)]`, matching their already-correct sibling states. Whole-file re-grep found no other stray `bg-white`/`text-gray-*`/`border-gray-*` in this file. `npm run type-check` clean. No `chrome-devtools` this session — verified by manual diff review only, not a live screenshot. Left uncommitted for review. Full detail: `DESIGN.md`'s 2026-09-30 entry.
 - **2026-09-30** [qa]: Dispatched to close BUG-044's remaining live-verification item (`visibleToStudents` checkbox click-through) — blocked before starting, not a pass/fail. This session's tool list was `Read`/`Bash`/`Grep`/`Glob` only, no `chrome-devtools`, and no `Edit`/`Write` either (a plain `Bash` file-append was also denied) — could not drive a browser and could not write its own findings to `BUGS.md`, so `@orchestrator` applied the update on qa's behalf. Did not fabricate a browser session or fall back to `curl` (can't exercise Firebase's session-cookie auth flow). Code-review-only secondary evidence says the fix looks internally consistent (see `BUGS.md` BUG-044's 2026-09-30 update for specifics) but that's not proof of live behavior — item stays open. This is the 4th distinct session this week (qa 2026-09-27, design + seo-growth 2026-09-29, qa 2026-09-30) hitting a documented-tool-grant-vs-actually-attached mismatch — same root cause flagged repeatedly, still not fixed at the provisioning layer.
 - **2026-09-30** [content-curriculum]: Audited `terminale-fr-spe-math`'s remaining 5 chapters (limits,
@@ -139,3 +140,51 @@
   the edit via chapter-shape review + a `node --check` syntax pass instead (not a substitute for a real
   type-check). Left uncommitted for review. Full detail: `CURRICULUM_COVERAGE_STRATEGY.md`'s 2026-09-30
   entry.
+- **2026-10-01** [seo-growth]: 3rd of the last 4 nightly runs with zero `mcp__gsc__*` tools
+  attached (09-29, 09-30, today) — this session's own MCP connection check also showed `gsc` and
+  `chrome-devtools` timing out at start, consistent with the absence. 2026-09-27's 9 clicks/554
+  impr/1.6% CTR/pos 5.8 stays the last-known-real baseline, not re-logged as fresh. Non-GSC
+  `WebFetch` fallback: all 3 stuck curricula pages still render correctly and still carry the
+  "Exam generators" footer cross-links; robots.txt unchanged. One thing to double-check with a
+  real tool, not asserted as fact: `WebFetch`'s own sitemap count read 47 vs. the 48 baseline —
+  likely just the summarizing tool being imprecise, not a real regression, but unverified. Whether
+  Google's re-crawled the 3 pages is still unknown pending a session with working `gsc`. This is
+  now a recurring provisioning-layer issue across multiple teams (`qa`, `design`,
+  `content-curriculum` hit the same "tool listed but not attached" pattern on other nights) — worth
+  an interactive-session fix rather than another retry. Full detail: `SEO_STRATEGY.md`.
+- **2026-10-01** [qa]: 4th consecutive session dispatched for BUG-044's live click-through
+  (`visibleToStudents` checkbox), 4th consecutive block — no `chrome-devtools` tools attached again
+  (confirmed: tool list was `Read`/`Bash`/`Grep`/`Glob` only). Did not fabricate a browser session or
+  fall back to banned `curl`/direct-Firestore workarounds. Also newly confirmed: plain `Bash`
+  file-writes are denied this session too (same as `qa` 2026-09-30), so I couldn't even self-apply
+  this update to `BUGS.md`/`TEAM_CHAT.md` — relaying the exact text for whoever's coordinating to
+  apply. This is a provisioning-layer problem, not an app bug — recommend stopping further identical
+  retries until someone investigates the dispatch/session tool-grant path directly (flagged
+  independently by 3 teams across 5+ sessions now: `qa` 2026-09-27/09-30/10-01, `design` 2026-09-29,
+  `seo-growth` 2026-09-29/09-30).
+- **2026-10-01** [content-curriculum]: Audited `premiere-fr-spe-math`'s exponential and suites
+  chapters in `src/data/curricula/bac-francais.ts` — the last remaining unaudited math slice in the
+  file. Primary source blocked as usual (`education.gouv.fr` failed before even reaching a 403);
+  findings rest on 3-source convergent secondary corroboration (`kartable.fr`, `groupe-reussite.fr`,
+  `galilee.ac`). Found and fixed 2 real gaps, both additive (no new chapters): added the defining
+  property/`exp(u)`-derivative/limits-at-±∞ objectives to `pre-fr-math-exponential`, and the
+  generation-modes/sum-of-terms/intuitive-limit objectives to `pre-fr-math-sequences`. Re-flagged
+  (did not add) "Algorithmique et logique" for Première too, same call as `terminale-fr-spe-math`'s
+  2026-09-30 flag. `npx tsc --noEmit --skipLibCheck` and `npm run type-check` both clean this
+  session — the broken-`tsc`-install condition `design`/`content-curriculum` hit on 2026-09-29/09-30
+  is not present tonight. **This closes the file-wide backlog item opened 2026-09-15: every
+  MVP-subject (math/physics/chemistry) chapter across every level in `bac-francais.ts` is now
+  audited against the real post-2019-reform programme at least once.** Left uncommitted for review.
+  Full detail: `CURRICULUM_COVERAGE_STRATEGY.md`'s 2026-10-01 entry.
+- **2026-10-01** [design]: Fixed `src/app/blog/page.tsx`'s category-filter pills + pagination
+  buttons — `bg-white` → `bg-[var(--surface)]` in all 4 unselected-state spots, closing another item
+  from the 2026-09-29 dark-mode drift backlog. No `chrome-devtools` attached this session either
+  (same gap `qa`/`seo-growth` logged above); verified by manual diff + `tsc` only. **Flagging a new
+  cross-team hazard, not just a tool-attachment one:** mid-session, this file's uncommitted edit got
+  swept into `seo-growth`'s docs commit `07ae1e3` (visible in `git show 07ae1e3 --stat`) — almost
+  certainly a `git add -A`/`commit -a` from a concurrent dispatch sharing the same working directory
+  picking up whatever else was sitting uncommitted at that moment. Didn't unwind it (risky/destructive
+  to rewrite another team's commit), just re-applied and verified the fix is correct in HEAD. Worth
+  whoever owns nightly-ops provisioning knowing: concurrent same-night dispatches on one shared git
+  working tree can cross-contaminate each other's commits, not just fight over file edits. Full
+  detail: `DESIGN.md`'s 2026-10-01 entry.
