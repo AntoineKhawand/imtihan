@@ -9,7 +9,7 @@ import { Select } from "@/components/ui/FormElements";
 import { cn, SUBJECT_LABELS, LANGUAGE_LABELS, EXAM_TYPE_LABELS } from "@/lib/utils";
 import { CURRICULA, SUBJECT_GROUPS, GEOGRAPHIC_SUBJECTS } from "@/data/curricula";
 import { Globe } from "lucide-react";
-import type { ExamContext } from "@/types/exam";
+import type { ExamContext, ExamContextWarning } from "@/types/exam";
 import type { CurriculumId, Subject } from "@/types/curriculum";
 import { StepIndicator, StepLabel } from "@/app/create/page";
 import { Logo } from "@/components/ui/Logo";
@@ -36,10 +36,14 @@ const DURATION_OPTIONS = [
 
 export default function ConfirmPage() {
   const router = useRouter();
-  const [context, setContext] = useState<(ExamContext & { warnings?: string[]; confidence?: number }) | null>(null);
+  const [context, setContext] = useState<(ExamContext & { warnings?: ExamContextWarning[]; confidence?: number }) | null>(null);
   const [loading, setLoading] = useState(true);
   const [dismissedWarnings, setDismissedWarnings] = useState<number[]>([]);
   const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
+  /** Snapshot of the AI's original field values, taken once on load — lets us
+   *  detect "teacher reverted this field back" vs. "still different" so a
+   *  dismissed warning can reappear if they undo their edit. */
+  const [originalValues, setOriginalValues] = useState<Record<string, unknown> | null>(null);
 
   useEffect(() => {
     const raw = sessionStorage.getItem("imtihan_context");
@@ -54,7 +58,7 @@ export default function ConfirmPage() {
         setUploadedFileName(fileName);
       }
 
-      setContext({
+      const initial = {
         ...parsed,
         // If they uploaded a file, default to 'uploaded' template mode if not already chosen
         templateType: parsed.templateType ?? (fileName ? "uploaded" : "modern"),
@@ -62,7 +66,9 @@ export default function ConfirmPage() {
         exerciseCount: parsed.exerciseCount ?? 3,
         // Pre-fill instructions if they chose uploaded but have no prefs yet
         layoutPreferences: parsed.layoutPreferences ?? (fileName ? `Mimic the header, logo, and general visual layout of the uploaded document "${fileName}".` : ""),
-      }); 
+      };
+      setContext(initial);
+      setOriginalValues(initial);
     }
     catch { router.replace("/create"); }
     finally { setLoading(false); }
@@ -73,8 +79,26 @@ export default function ConfirmPage() {
     if (context) sessionStorage.setItem("imtihan_context", JSON.stringify(context));
   }, [context]);
 
+  /** Auto-dismiss a field's AI note when the teacher edits that field away from
+   *  the AI's original value, and bring it back if they revert the edit. */
+  function reconcileWarningsForField(field: string, newValue: unknown) {
+    setDismissedWarnings((prevDismissed) => {
+      if (!context?.warnings || !originalValues) return prevDismissed;
+      let next = prevDismissed;
+      context.warnings.forEach((w, i) => {
+        if (w.field !== field) return;
+        const original = originalValues[field];
+        const changed = JSON.stringify(newValue) !== JSON.stringify(original);
+        if (changed && !next.includes(i)) next = [...next, i];
+        else if (!changed && next.includes(i)) next = next.filter((idx) => idx !== i);
+      });
+      return next;
+    });
+  }
+
   function update<K extends keyof ExamContext>(key: K, value: ExamContext[K]) {
     setContext((prev) => prev ? { ...prev, [key]: value } : prev);
+    reconcileWarningsForField(key as string, value);
   }
 
   /** The points-per-exercise values to actually display: the teacher's own edited breakdown when it still matches exerciseCount, otherwise a fresh even split. */
@@ -183,7 +207,7 @@ export default function ConfirmPage() {
                 dismissedWarnings.includes(i) ? null : (
                   <div key={i} className="flex items-start gap-3 px-3.5 py-3 rounded-xl bg-[var(--bg-subtle)] border border-[var(--border)]">
                     <AlertTriangle size={13} className="text-[var(--warning)] flex-shrink-0 mt-0.5" />
-                    <p className="text-xs text-[var(--text-secondary)] leading-relaxed flex-1">{w}</p>
+                    <p className="text-xs text-[var(--text-secondary)] leading-relaxed flex-1">{w.message}</p>
                     <button
                       onClick={() => setDismissedWarnings((prev) => [...prev, i])}
                       className="text-[var(--text-tertiary)] hover:text-[var(--text)] transition-colors flex-shrink-0 mt-0.5"
@@ -206,6 +230,9 @@ export default function ConfirmPage() {
                   const newCurr = CURRICULA[newCurrId];
                   const firstLevel = newCurr?.levels?.[0]?.id ?? "";
                   setContext((prev) => prev ? { ...prev, curriculumId: newCurrId, levelId: firstLevel, chapterIds: [] } : prev);
+                  reconcileWarningsForField("curriculumId", newCurrId);
+                  reconcileWarningsForField("levelId", firstLevel);
+                  reconcileWarningsForField("chapterIds", []);
                 }} />
               <Select label="Level" value={context.levelId} options={levelOptions}
                 onChange={(e) => update("levelId", e.target.value)} />

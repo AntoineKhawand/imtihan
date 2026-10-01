@@ -30,7 +30,7 @@ You must return ONLY a valid JSON object — no prose, no markdown fences, no pr
   "totalPoints": number,
   "difficultyMix": { "easy": number, "medium": number, "hard": number },
   "teacherNotes": string,
-  "warnings": string[],
+  "warnings": [{ "field": string, "message": string }],
   "confidence": number,
   "layoutPreferences": string,
   "visualPreference": string,
@@ -41,9 +41,9 @@ Rules:
 - difficultyMix values must sum to exactly 1.0. Default when not specified: { easy: 0.20, medium: 0.45, hard: 0.35 } — exams should skew medium-to-hard unless the teacher explicitly asks for something easier
 - duration is in minutes (e.g. 1h = 60, 2h = 120)
 - totalPoints: use 20 for Bac Libanais/Français, 100 for IB, best judgment for university
-- chapterIds: <curriculum_reference> lists real "CHAPTER_ID: ..." values for every subject that has defined chapters. When the resolved curriculum/level/subject has any listed, you MUST select chapterIds ONLY from those exact real CHAPTER_ID strings — match them to what the teacher described by meaning, never invent your own slug and never kebab-case the teacher's own wording (an id that doesn't appear verbatim in <curriculum_reference> is worse than an empty array). Only fall back to inferring a short kebab-case identifier from the teacher's description when NO CHAPTER_ID values are listed at all for that subject — and in that case, add a note to "warnings" saying chapter matching isn't backed by defined curriculum data yet. For university, always return [].
+- chapterIds: <curriculum_reference> lists real "CHAPTER_ID: ..." values for every subject that has defined chapters. When the resolved curriculum/level/subject has any listed, you MUST select chapterIds ONLY from those exact real CHAPTER_ID strings — match them to what the teacher described by meaning, never invent your own slug and never kebab-case the teacher's own wording (an id that doesn't appear verbatim in <curriculum_reference> is worse than an empty array). Only fall back to inferring a short kebab-case identifier from the teacher's description when NO CHAPTER_ID values are listed at all for that subject — and in that case, add a note to "warnings" (field: "chapterIds") saying chapter matching isn't backed by defined curriculum data yet. For university, always return [].
 - confidence: 0.0–1.0 reflecting how sure you are about the parsed context
-- warnings: array of strings describing anything you had to guess or that the teacher should verify
+- warnings: an array of { field, message } objects — one per thing you had to guess or that the teacher should verify. "field" MUST be exactly one of these ExamContext field names (never invent a different one): "curriculumId", "levelId", "subject", "chapterIds", "language", "examType", "duration", "exerciseCount", "totalPoints", "difficultyMix", "teacherNotes", "layoutPreferences", "visualPreference", "geographicContext". "message" is the human-readable note describing what you guessed and why. Only add a warning when you actually inferred/guessed that field — don't pad the array.
 - layoutPreferences: If a document is uploaded, describe its visual style in 1-2 sentences. If no doc, leave empty string.
 - visualPreference: If the teacher explicitly asks for graphs, diagrams, curves, or specific visual elements, describe them here in 1-2 sentences.
 - geographicContext: Detect the country or region mentioned in the description (e.g. "Lebanon", "France", "United States"). If none mentioned, default based on curriculum (Bac Libanais = Lebanon, Bac Français = France, IB = Global). Always return a specific string.`;

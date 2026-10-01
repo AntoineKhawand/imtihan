@@ -54,7 +54,15 @@ const ExamContextSchema = z.object({
   layoutPreferences: z.string().default(""),
   visualPreference: z.string().default(""),
   geographicContext: z.string().default("Global"),
-  warnings: z.array(z.string()).default([]),
+  // Gemini/Claude occasionally returns the old flat-string shape despite the
+  // prompt — coerce a bare string into { field: "general", message } instead
+  // of dropping the note entirely.
+  warnings: z.array(
+    z.union([
+      z.object({ field: z.string().default("general"), message: z.string() }),
+      z.string().transform((message) => ({ field: "general", message })),
+    ])
+  ).default([]),
   confidence: z.coerce.number().min(0).max(1).default(0.8),
 });
 
@@ -289,7 +297,7 @@ export async function POST(request: NextRequest) {
       ctx.chapterIds = ["general"];
       ctx.warnings = [
         ...ctx.warnings,
-        "Chapters could not be identified from your description. Please select them on the next screen.",
+        { field: "chapterIds", message: "Chapters could not be identified from your description. Please select them on the next screen." },
       ];
       ctx.confidence = Math.min(ctx.confidence, 0.6);
     }
