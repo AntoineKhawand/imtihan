@@ -211,5 +211,19 @@
   it was connected — tested directly (`list_pages`, `new_page`) before trusting the note. FAQ is
   drafted and ready to paste into `/admin` → Blog → Manage Existing Posts for `...-27p8` by whoever
   gets a real browser session next. Full detail: `SEO_STRATEGY.md`.
+- **2026-10-02** [design]: Closed out the rest of the 2026-09-29 `bg-white`/hardcoded-light
+  backlog: `exam/[id]/page.tsx` (Well Done screen's card/text + anti-cheat overlay's white circle,
+  plus a drive-by on its error screen), `dashboard/page.tsx` zebra striping,
+  `ExerciseEditor.tsx`'s view-mode toggle, `RenewalBanner.tsx`'s PENDING badge — all `bg-white` →
+  `bg-[var(--surface)]`/token equivalents. `ExerciseCard.tsx`'s toolbar buttons turned out to be
+  the same set `design` already fixed 2026-10-01, re-confirmed via grep (zero `hover:bg-white`
+  left), no new action needed there. **This closes the entire 2026-09-29 backlog list.** Confirming
+  `seo-growth`'s finding above independently: `chrome-devtools` tools are genuinely listed/callable
+  this session but every invocation (`list_pages`, `new_page`) was explicitly
+  **permission-denied**, not just absent — a more specific signal than the "not attached" gap logged
+  nightly since 2026-09-27. No live screenshot verification was possible; fell back to code-only
+  review (including a re-read of `MathPlot.tsx`'s BUG-053/BUG-054 fix, which reads correct but is
+  still not live-verified — now 2 sessions running on that specific gap). `npm run type-check`
+  clean. Left uncommitted for review. Full detail: `DESIGN.md`'s 2026-10-02 entry.
 - **2026-10-04** [engineering] (scheduled unit-test dispatch): Added 25 new Vitest tests (287→312), no app code touched. Closed 6 real previously-unexercised branches in `src/lib/prompts/*` (`variantExam.ts`/`translateExam.ts` language-fallback, `variantExam.ts`'s missing-`points` fallback, `generate.ts`'s `visualPreference`/`extraContext`/`teacherStylePrompt` blocks) — overall branch coverage 44.87%→45.6%. Also logged a new real, unfixed finding: **BUG-056** — `preprocessEquationForMathjs()` (`src/app/api/export/route.ts`, BUG-051's math-plot PNG renderer) never inserts implicit multiplication between a letter and `(`, so `mathjs` throws on equations like `"x(x+1)"` and Word export silently falls back to the old text-box (confirmed by actually running `mathjs`, not just reading the regex) — low severity, the try/catch fallback already in place means no crash, just a missed graph. Same regex pair is duplicated in `MathPlot.tsx` line 21, not independently checked. PR opened against `master` (`unit-tests/2026-10-04`). `qa`/`security` not needed — test-only change, no user-facing flow or API/auth code touched. Full detail: `ROADMAP.md`'s 2026-10-04 entry, `BUGS.md` BUG-056.
 - **2026-10-04** [founder-directed review, renumbered]: This branch's own `BUG-056` (the `mathjs` DoS in math-plot export, found by an interrupted 2026-10-02 nightly dispatch) collided with the unit-test dispatch's `BUG-056` above (a different, real, lower-severity `preprocessEquationForMathjs()` parsing gap) — both picked the same next-available number independently since neither branch could see the other's uncommitted/unmerged work. Renumbered the DoS fix to **BUG-057** to avoid two different bugs sharing one ID; no content changed, see `BUGS.md`.
