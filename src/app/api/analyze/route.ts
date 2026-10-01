@@ -54,7 +54,15 @@ const ExamContextSchema = z.object({
   layoutPreferences: z.string().default(""),
   visualPreference: z.string().default(""),
   geographicContext: z.string().default("Global"),
-  warnings: z.array(z.string()).default([]),
+  // Gemini/Claude occasionally returns the old flat-string shape despite the
+  // prompt — coerce a bare string into { field: "general", message } instead
+  // of dropping the note entirely.
+  warnings: z.array(
+    z.union([
+      z.object({ field: z.string().default("general"), message: z.string() }),
+      z.string().transform((message) => ({ field: "general", message })),
+    ])
+  ).default([]),
   confidence: z.coerce.number().min(0).max(1).default(0.8),
 });
 
@@ -170,11 +178,24 @@ export async function POST(request: NextRequest) {
         const message = await anthropic.messages.create({
           model: CLAUDE_MODEL,
           max_tokens: 2000,
-          system: systemPrompt,
+          // Cache the static system prompt — buildAnalyzeSystemPrompt() takes
+          // no arguments, so this block is byte-identical across EVERY
+          // analyze request (an even broader cache key than /api/generate's
+          // per (language, curriculum, subject) scope). Same pattern as
+          // src/app/api/generate/route.ts. The per-request content
+          // (teacher description, curricula reference, uploaded document)
+          // stays in the user message, which is never cached.
+          system: [
+            {
+              type: "text" as const,
+              text: systemPrompt,
+              cache_control: { type: "ephemeral" } as any,
+            },
+          ],
           messages: [{ role: "user", content: content }],
         }, {
           headers: {
-            "anthropic-beta": "pdfs-2024-09-25"
+            "anthropic-beta": "prompt-caching-2024-07-31,pdfs-2024-09-25"
           }
         });
 
@@ -276,7 +297,7 @@ export async function POST(request: NextRequest) {
       ctx.chapterIds = ["general"];
       ctx.warnings = [
         ...ctx.warnings,
-        "Chapters could not be identified from your description. Please select them on the next screen.",
+        { field: "chapterIds", message: "Chapters could not be identified from your description. Please select them on the next screen." },
       ];
       ctx.confidence = Math.min(ctx.confidence, 0.6);
     }

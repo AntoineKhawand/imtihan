@@ -1,11 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { createRoot, type Root } from "react-dom/client";
 import { useRouter } from "next/navigation";
 import { SUBJECT_LABELS } from "@/lib/utils";
 import { getSchoolSettings } from "@/lib/storage";
 import type { ExamContext, Exercise } from "@/types/exam";
 import { renderContent } from "@/lib/renderContent";
+import { MathPlot } from "@/components/ui/MathPlot";
 import "katex/dist/katex.min.css";
 
 export default function PrintPage() {
@@ -14,6 +16,59 @@ export default function PrintPage() {
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [templateId, setTemplateId] = useState("classic");
   const [schoolSettings, setSchoolSettings] = useState<{ schoolName?: string; teacherName?: string; schoolLogo?: string }>({});
+  const printRootRef = useRef<HTMLDivElement>(null);
+
+  // Mounts the real `MathPlot` (function-plot/D3, client-only) component into
+  // every `<div data-mathplot="...">` placeholder renderContent() emits for
+  // an inline `[PLOT: equation]` tag — same mechanism ExerciseCard.tsx
+  // already uses (dangerouslySetInnerHTML only produces a static HTML
+  // string, so the interactive plot can't be part of that string; instead
+  // each placeholder gets its own React root portaled in here). Scoped to
+  // the whole print root rather than per-exercise since this page has no
+  // per-exercise component boundary — a `[PLOT:]` tag in either the main
+  // exercise statement or the corrigé would be caught by one scan (BUG-051).
+  useEffect(() => {
+    const container = printRootRef.current;
+    if (!container) return;
+    const mounts = container.querySelectorAll<HTMLDivElement>("[data-mathplot]");
+    const roots: Root[] = [];
+    mounts.forEach((el) => {
+      const equation = el.getAttribute("data-mathplot") ?? "";
+      const root = createRoot(el);
+      root.render(<MathPlot equation={equation} />);
+      roots.push(root);
+    });
+    return () => {
+      roots.forEach((root) => root.unmount());
+    };
+  }, [exercises]);
+
+  // Memoized per-exercise so a `[PLOT:]` mount point's DOM subtree is only
+  // rebuilt when that exercise's own statement text actually changes — not
+  // on every unrelated re-render of this page (e.g. `schoolSettings`
+  // loading after the exercises are already set). Without this, a statement
+  // that also contains a [IMAGE:]/[GRAPH:]/[VISUAL:] tag (which embeds a
+  // fresh random seed on every renderContent() call) would produce a
+  // different HTML string on re-render, replacing the subtree via a raw
+  // `element.innerHTML =` write and silently orphaning any MathPlot root
+  // mounted below it — same mechanism already fixed in ExerciseCard.tsx,
+  // extended here to this page's own statement/sub-question rendering
+  // (BUG-051's addendum).
+  const statementHtmlById = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const ex of exercises) map.set(ex.id, renderContent(ex.statement));
+    return map;
+  }, [exercises.map((ex) => `${ex.id}:${ex.statement}`).join("\u0000")]);
+
+  const subQuestionHtmlByKey = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const ex of exercises) {
+      (ex.subQuestions ?? []).forEach((sq, sqIdx) => {
+        map.set(`${ex.id}:${sqIdx}`, renderContent(sq.statement));
+      });
+    }
+    return map;
+  }, [exercises.map((ex) => (ex.subQuestions ?? []).map((sq) => sq.statement).join(",")).join("\u0000")]);
 
   useEffect(() => {
     const ctxRaw = sessionStorage.getItem("imtihan_context");
@@ -77,6 +132,7 @@ export default function PrintPage() {
 
   return (
     <div
+      ref={printRootRef}
       dir={isArabic ? "rtl" : "ltr"}
       className="bg-white text-black min-h-screen p-8 mx-auto max-w-[210mm]"
       style={{ fontFamily }}
@@ -172,9 +228,22 @@ export default function PrintPage() {
             <h2 className="text-base font-bold mb-2" style={{ color: primaryColor }}>
               {exerciseWord} {ex.number} <span className="text-xs font-normal" style={{ color: "#5c5c5c" }}>({ex.points} {pointsWord})</span>
             </h2>
+
+            {/* Legacy mathPlots array — rendered as plain JSX (not through
+                dangerouslySetInnerHTML), same as ExerciseCard.tsx's own
+                fixed-block rendering, so no portal/mounting trick is needed
+                here: MathPlot can just be a normal React child. */}
+            {ex.mathPlots && ex.mathPlots.length > 0 && (
+              <div className="space-y-4 mb-3">
+                {ex.mathPlots.map((plot, pIdx) => (
+                  <MathPlot key={pIdx} equation={plot} />
+                ))}
+              </div>
+            )}
+
             <div
               className="text-sm leading-relaxed mb-3"
-              dangerouslySetInnerHTML={{ __html: renderContent(ex.statement) }}
+              dangerouslySetInnerHTML={{ __html: statementHtmlById.get(ex.id) ?? "" }}
             />
 
             {ex.subQuestions && ex.subQuestions.length > 0 && (
@@ -182,7 +251,7 @@ export default function PrintPage() {
                 {ex.subQuestions.map((sq, sqIdx) => (
                   <div key={sqIdx} className="flex gap-2 text-sm">
                     <span className="font-semibold flex-shrink-0" style={{ color: primaryColor }}>{sq.label}</span>
-                    <span dangerouslySetInnerHTML={{ __html: renderContent(sq.statement) }} />
+                    <span dangerouslySetInnerHTML={{ __html: subQuestionHtmlByKey.get(`${ex.id}:${sqIdx}`) ?? "" }} />
                     <span className="text-xs text-gray-400 flex-shrink-0">({sq.points} pts)</span>
                   </div>
                 ))}

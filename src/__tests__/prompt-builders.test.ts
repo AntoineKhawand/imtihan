@@ -326,6 +326,16 @@ describe("buildTranslateExamSystemPrompt", () => {
     expect(prompt).toContain("NEVER change a number");
     expect(prompt).toContain("copied through EXACTLY as-is, character for character");
   });
+
+  // The inline [PLOT: equation] tag (src/lib/renderContent.ts,
+  // ExerciseCard.tsx's "Insert chart" action) lives inside "statement" — a
+  // field that IS translated prose — so the translator needs explicit
+  // guidance not to translate/alter the machine-readable equation inside it.
+  it("instructs the translator to copy [PLOT: equation] tags through unchanged", () => {
+    const prompt = buildTranslateExamSystemPrompt("french");
+    expect(prompt).toMatch(/\[PLOT: equation\]/);
+    expect(prompt).toMatch(/never translate, reformat, or move it/);
+  });
 });
 
 describe("buildTranslateExamUserPrompt", () => {

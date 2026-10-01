@@ -460,6 +460,47 @@ export default function GeneratePage() {
     setEditingExercise(null);
   }
 
+  /**
+   * Per-exercise AI-transform action — reuses /api/generate/transform, the
+   * same "edit this exercise's statement in place" plumbing already backing
+   * the (currently-unwired) table/visual/image/plot quick actions in
+   * ExerciseCard.tsx's header icon row. "Insert chart" (ExerciseCard.tsx's
+   * dropdown action, Math/Physics only) calls this with type "insertPlot" to
+   * ask the AI to insert a `[PLOT: equation]` tag at the right point in the
+   * existing statement — see src/lib/renderContent.ts's own handling of that
+   * tag and src/app/api/generate/transform/route.ts's "insertPlot" case.
+   */
+  async function handleTransform(
+    id: string,
+    type: "table" | "visual" | "image" | "plot" | "insertPlot",
+    prompt?: string
+  ) {
+    if (!context) return;
+    const target = exercises.find((e) => e.id === id);
+    if (!target) return;
+    try {
+      const res = await fetch("/api/generate/transform", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ exercise: target, type, language: context.language, prompt }),
+      });
+      const data = await res.json().catch(() => null);
+      if (!res.ok || !data?.success || !data?.exercise) {
+        showToast(typeof data?.error === "string" ? data.error : "Failed to update the exercise. Please try again.", "error");
+        return;
+      }
+      setExercises((prev) => {
+        const next = prev.map((e) =>
+          e.id === id ? { ...(data.exercise as Exercise), id: e.id, number: e.number } : e
+        );
+        persistExercises(next);
+        return next;
+      });
+    } catch {
+      showToast("Network error. Please try again.", "error");
+    }
+  }
+
   function handleSaveToBank(exercise: Exercise) {
     if (!context || savedIds.has(exercise.id)) return;
     const entry: BankExercise = {
@@ -711,10 +752,12 @@ export default function GeneratePage() {
                     exercise={exercise}
                     index={i}
                     language={context?.language ?? "french"}
+                    subject={context?.subject}
                     onRegenerate={handleRegenerate}
                     onRemove={handleRemove}
                     onEdit={handleEdit}
                     onSaveToBank={handleSaveToBank}
+                    onTransform={handleTransform}
                     savedToBank={savedIds.has(exercise.id)}
                     isRegenerating={regeneratingId === exercise.id}
                   />

@@ -100,7 +100,15 @@ export interface Exercise {
   chapterIds: string[];
   /** Estimated time for a student to solve, in minutes */
   estimatedMinutes: number;
-  /** Optional mathematical function plots */
+  /**
+   * Legacy mathematical function plots — a flat list rendered as one fixed
+   * block stacked above the statement, regardless of which sub-question each
+   * equation belongs to. Kept only for backward compatibility with exams
+   * already generated/saved before the inline `[PLOT: equation]` tag
+   * mechanism (see src/lib/renderContent.ts and ExerciseCard.tsx's "Insert
+   * chart" action) — new generations use the inline tag instead, which
+   * positions the plot exactly where it's relevant in the statement.
+   */
   mathPlots?: string[];
 }
 
@@ -133,12 +141,24 @@ export interface Exam {
   tags: string[];
 }
 
+/**
+ * A single AI note about a field it had to guess or infer — tied to the
+ * specific ExamContext field it concerns so the UI can auto-dismiss it when
+ * the teacher edits that field, and bring it back if they revert the edit.
+ */
+export interface ExamContextWarning {
+  /** An ExamContext key, e.g. "duration", "chapterIds", "subject" */
+  field: string;
+  /** Human-readable note shown to the teacher */
+  message: string;
+}
+
 /** Validation result from /api/analyze */
 export interface AnalyzeResult {
   success: boolean;
   context?: ExamContext;
   /** Warnings — things Claude inferred but isn't 100% sure about */
-  warnings?: string[];
+  warnings?: ExamContextWarning[];
   /** Errors — reasons we couldn't produce a context */
   errors?: string[];
 }

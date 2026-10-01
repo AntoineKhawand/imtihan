@@ -82,6 +82,28 @@ describe("buildAnalyzeSystemPrompt", () => {
     expect(prompt).toMatch(/sum to exactly 1\.0/);
     expect(prompt).toContain("easy: 0.20, medium: 0.45, hard: 0.35");
   });
+
+  // Regression test: warnings used to be a flat string[], with no link between
+  // a warning and the ExamContext field it concerns. It's now a per-field
+  // { field, message } shape so the UI (src/app/create/confirm/page.tsx) can
+  // auto-dismiss a warning when the teacher edits the field it's about.
+  it("declares warnings as an array of { field, message } objects, not plain strings", () => {
+    const prompt = buildAnalyzeSystemPrompt();
+    expect(prompt).toContain('"warnings": [{ "field": string, "message": string }],');
+  });
+
+  it("restricts warning field names to real ExamContext keys", () => {
+    const prompt = buildAnalyzeSystemPrompt();
+    expect(prompt).toMatch(/"field" MUST be exactly one of these ExamContext field names/i);
+    for (const field of [
+      '"curriculumId"', '"levelId"', '"subject"', '"chapterIds"', '"language"',
+      '"examType"', '"duration"', '"exerciseCount"', '"totalPoints"',
+      '"difficultyMix"', '"teacherNotes"', '"layoutPreferences"',
+      '"visualPreference"', '"geographicContext"',
+    ]) {
+      expect(prompt).toContain(field);
+    }
+  });
 });
 
 // ---------------------------------------------------------------------------

@@ -697,6 +697,18 @@ across both Première and Terminale spé-math.
 
 ## Backlog (pick one per Wednesday, highest priority first)
 
+**Reprioritized 2026-10-01 (founder-directed):** founder asked about daily curriculum re-ingestion
+from source books; declined (the 2026-09-04 cost/benefit reasoning above still holds, and literally
+ingesting textbook text daily is also a copyright problem, not just a cost one) in favor of keeping
+weekly audits but **prioritizing the two curricula with known, named open gaps next**, ahead of any
+new secondary-signal work: (1) `bac-libanais.ts` EB9/Seconde/Première-S — only spot-checked, never
+line-by-line audited (Terminale-S is the only fully-audited level); (2) `ib.ts`'s actual chapter
+content — only the command-term glossary in `generate.ts` has been touched, the curriculum chapter
+data itself has never had an equivalent pass. Bac Français is the one curriculum that's actually
+fully closed (every MVP-subject chapter, every level, as of 2026-10-01). University sourcing
+(`docs/DATA_SOURCING.md`'s dawrat approach) has no completed audit logged yet either — lower
+priority than the two above since it's "free-form" by design, not chapter-gated the same way.
+
 ### Data accuracy audits (grounded in `docs/DATA_SOURCING.md`)
 - [x] **2026-09-19:** Audited the `COMMAND_TERMS["ib-english"]` IB command-term glossary in
       `src/lib/prompts/generate.ts` (lines 71–117) against the current IBO Diploma Programme

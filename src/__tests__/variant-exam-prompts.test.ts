@@ -100,6 +100,17 @@ describe("buildVariantExamSystemPrompt", () => {
     const prompt = buildVariantExamSystemPrompt(baseContext());
     expect(prompt).toContain('{ "exercises": [ ... ] }');
   });
+
+  // The inline [PLOT: equation] tag mechanism (src/lib/renderContent.ts,
+  // ExerciseCard.tsx's "Insert chart" action) lives inside "statement" — a
+  // field Version B IS allowed to rewrite — so the model needs explicit
+  // guidance to keep the tag's format intact while updating its equation.
+  it("instructs the model to preserve the [PLOT: ...] tag format while updating its equation to match new numbers", () => {
+    const prompt = buildVariantExamSystemPrompt(baseContext());
+    expect(prompt).toMatch(/\[PLOT: equation\]/);
+    expect(prompt).toMatch(/keep the exact `\[PLOT: \.\.\.\]` bracket syntax/);
+    expect(prompt).toMatch(/Never delete the tag/);
+  });
 });
 
 describe("buildVariantExamUserPrompt", () => {

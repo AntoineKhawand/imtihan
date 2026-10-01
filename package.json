@@ -3,6 +3,13 @@
   "version": "0.1.0",
   "private": true,
   "description": "AI-powered exam generator for Lebanese teachers — Bac Libanais, Bac Français, IB, and University",
+  "allowScripts": {
+    "@firebase/util@1.12.1": true,
+    "canvas@3.2.3": true,
+    "protobufjs@7.5.5": true,
+    "re2@1.24.0": true,
+    "unrs-resolver@1.11.1": true
+  },
   "scripts": {
     "predev": "node scripts/generate-static-routes.mjs",
     "dev": "next dev --turbopack",
