@@ -257,6 +257,27 @@ export function ExerciseCard({
   // mount div in its place.
   const statementHtml = useMemo(() => renderContent(exercise.statement), [exercise.statement]);
 
+  // Same orphaned-mount concern as `statementHtml` above, extended to
+  // sub-questions and MCQ options (BUG-051's addendum): both are rendered
+  // via their own separate `dangerouslySetInnerHTML` node inside the same
+  // `contentRef` subtree, so if either field's rendered HTML changes on an
+  // unrelated re-render (e.g. a [IMAGE:]/[GRAPH:]/[VISUAL:] tag's embedded
+  // random seed regenerating), that specific node's innerHTML gets replaced
+  // — silently orphaning any `[PLOT:]` MathPlot root mounted inside it, even
+  // though the effect that mounted it never re-ran (its own dependency,
+  // `exercise.subQuestions`/`exercise.options`, may not have "changed" in a
+  // way React treats as new work). Keyed on each item's own label+text
+  // (not the array reference) so an unrelated re-render that creates a new
+  // array reference with identical content doesn't force a recompute either.
+  const subQuestionHtml = useMemo(
+    () => new Map((exercise.subQuestions ?? []).map((sq) => [sq.label, renderContent(sq.statement)])),
+    [(exercise.subQuestions ?? []).map((sq) => `${sq.label}:${sq.statement}`).join("\u0000")]
+  );
+  const optionHtml = useMemo(
+    () => new Map((exercise.options ?? []).map((opt) => [opt.label, renderContent(opt.text)])),
+    [(exercise.options ?? []).map((opt) => `${opt.label}:${opt.text}`).join("\u0000")]
+  );
+
   async function handleInsertPlot() {
     if (!onTransform || insertingPlot) return;
     setInsertingPlot(true);
@@ -527,7 +548,7 @@ export function ExerciseCard({
                   </span>
                   <span
                     className="leading-relaxed flex-1"
-                    dangerouslySetInnerHTML={{ __html: renderContent(opt.text) }}
+                    dangerouslySetInnerHTML={{ __html: optionHtml.get(opt.label) ?? "" }}
                   />
                 </div>
               ))}
@@ -545,7 +566,7 @@ export function ExerciseCard({
                   <div className="flex-1">
                     <span
                       className="text-sm text-[var(--text)] leading-relaxed"
-                      dangerouslySetInnerHTML={{ __html: renderContent(sq.statement) }}
+                      dangerouslySetInnerHTML={{ __html: subQuestionHtml.get(sq.label) ?? "" }}
                     />
                     <span className={cn("text-xs text-[var(--text-tertiary)]", language === "arabic" ? "mr-2" : "ml-2")}>({sq.points} pts)</span>
                   </div>
