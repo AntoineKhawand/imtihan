@@ -35,7 +35,7 @@ A living dashboard of real, verifiable numbers — flagged as the single most ov
 
 | Channel | Status |
 |---|---|
-| School outreach emails | 25 drafted (8 individual teachers, 17 schools), 0 confirmed sent — waiting on the founder |
+| School outreach emails | 17 of 25 sent (the full school batch: 12 AEFE/French-network + 5 IB schools) — confirmed by founder 2026-10-01. The remaining 8, to individual teacher contacts from the founder's own Apollo export, are still drafted but not yet sent. |
 | Teacher-community outreach (ALEF, ANEFL) | Identified as real, active associations; not yet contacted |
 | Product Hunt launch | Launch kit prepared (tagline, description, screenshots, maker's comment); Hypership challenge declined; launch date not yet confirmed |
 

@@ -122,7 +122,7 @@ Security has now paid for itself twice over in one week alone (BUG-048, BUG-049)
 Unchanged in shape: a bootstrapped, self-serve, pre-revenue-data product. No paid advertising, no outbound sales motion until there's a real cost-per-acquisition number to spend against.
 
 **Two real channels in motion this week, both the founder's own to execute, not an agent's:**
-- **School outreach:** 25 personalized, ready-to-send emails are drafted — 8 to individual teacher contacts (from the founder's own Apollo export), 17 to real schools and their official administrative contacts (12 AEFE/Bac Français schools, 5 IB schools), each paired with the correct French or English draft. Still waiting on the founder to actually send them.
+- **School outreach:** the 17-school batch (12 AEFE/Bac Français schools, 5 IB schools) is confirmed sent by the founder as of 2026-10-01 — each with a real contact, personalized subject line, and a link to imtihan.live. The remaining 8 drafts, to individual teacher contacts from the founder's own Apollo export, are still waiting to go out.
 - **Teacher-community engagement:** two real, active Lebanese French-teacher associations identified (ALEF, ANEFL) — the highest-trust channel this plan has identified, and one that has to run through the founder personally, not an agent.
 - **Product Hunt:** a full launch kit (tagline, description, maker's comment, screenshots) is prepared. The founder correctly declined the "Hypership" live-feature-building challenge that would have been required to launch on a specific date, given the product already has real paying users — choosing a different date instead rather than accepting that risk.
 
@@ -157,7 +157,7 @@ The unit-economics number this plan has flagged three times now (AI cost per exa
 ## 9. Immediate Action Plan (Next 14 Days)
 
 1. Investigate this machine's memory pressure directly — it's the likely root cause behind both the tool-attachment gap and one outright stalled nightly run this week.
-2. Send the 25 drafted outreach emails (8 teachers, 17 schools) — nothing is blocking this except the founder's own time.
+2. **Partially done** — the 17-school batch is sent (2026-10-01). Still to send: the 8 drafts to individual teacher contacts.
 3. Reach out personally to ALEF and ANEFL — the single highest-trust growth channel identified so far.
 4. Decide and execute the Product Hunt launch date (Hypership declined; pick a normal weekday instead).
 5. **Done** — stand up a first version of the metrics dashboard: `METRICS.md`, 2026-10-01. Keep it fresh: the GSC/GA4 numbers in it are already a few days stale pending the `gsc` tool-attachment fix.
