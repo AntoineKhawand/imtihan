@@ -49,6 +49,47 @@ function preprocessEquationForMathjs(raw: string): string {
 }
 
 /**
+ * Security gate for renderMathPlotPng(). `equation` ultimately comes from
+ * AI-generated or teacher-edited exercise content reaching this route with
+ * no auth check — mathjs's default `all` import does NOT allow arbitrary
+ * code execution (constructor/prototype access and `import()` are blocked
+ * by mathjs itself, verified by hand), but it DOES expose matrix/range/
+ * combinatorics functions that are computationally unbounded relative to
+ * input length. Confirmed empirically: the 16-character expression
+ * "(1:1:100000000)" alone takes ~50 SECONDS to evaluate once — and
+ * renderMathPlotPng() calls evaluate() 400 times (once per sample point),
+ * synchronously, blocking the event loop the whole time. Since this is a
+ * plain function-of-x plotter, not a general calculator, the fix is an
+ * allowlist of the function/constant names a real plot equation actually
+ * needs (matches what src/lib/prompts/generate.ts's MATHEMATICAL PLOTS
+ * instruction tells the AI to produce — sin/cos/exp/sqrt/etc.) rather than
+ * trying to denylist every expensive mathjs builtin (ones/zeros/random/
+ * matrix/concat/range-colon-syntax/combinations/permutations/...). Same
+ * "reject unsafe input before it reaches the expensive call" shape as the
+ * already-fixed BUG-047 (src/__tests__/_tmp-bug047-dos-timing.test.ts).
+ */
+const SAFE_PLOT_EXPR_CHARS = /^[0-9a-zA-Z\s+\-*/^().,]*$/;
+const MAX_PLOT_EXPR_LEN = 200;
+const ALLOWED_PLOT_FUNCTIONS = new Set([
+  "x",
+  "sin", "cos", "tan", "asin", "acos", "atan", "atan2",
+  "sinh", "cosh", "tanh", "asinh", "acosh", "atanh",
+  "sqrt", "cbrt", "abs", "exp", "log", "log2", "log10", "log1p",
+  "pow", "min", "max", "floor", "ceil", "round", "sign", "mod",
+  "pi", "e", "tau",
+]);
+
+export function isSafePlotExpression(expr: string): boolean {
+  if (!expr || expr.length > MAX_PLOT_EXPR_LEN) return false;
+  if (!SAFE_PLOT_EXPR_CHARS.test(expr)) return false;
+  const tokens = expr.match(/[a-zA-Z_]+/g) || [];
+  for (const token of tokens) {
+    if (!ALLOWED_PLOT_FUNCTIONS.has(token.toLowerCase())) return false;
+  }
+  return true;
+}
+
+/**
  * Renders a real function-plot PNG for a `[PLOT: equation]` tag, server-side,
  * for Word export. Unlike the `[IMAGE:]`/`[GRAPH:]`/`[VISUAL:]` tags handled
  * below (which route through a third-party AI image service and
@@ -72,6 +113,9 @@ async function renderMathPlotPng(equation: string): Promise<Buffer> {
   const { createCanvas } = await import("canvas");
 
   const expr = preprocessEquationForMathjs(equation);
+  if (!isSafePlotExpression(expr)) {
+    throw new Error(`Rejected unsafe plot expression (not in the function-of-x allowlist): ${expr}`);
+  }
   const compiled = mathInstance.compile(expr);
 
   const width = PLOT_CANVAS_WIDTH;
