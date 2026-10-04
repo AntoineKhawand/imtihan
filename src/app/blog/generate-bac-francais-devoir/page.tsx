@@ -48,7 +48,7 @@ export default function FrenchBacDevoirBlogPage() {
             "@type": "Article",
             headline: title,
             description: metadata.description,
-            author: { "@type": "Person", name: "Marc Dupont" },
+            author: { "@type": "Organization", name: "Imtihan" },
             publisher: {
               "@type": "Organization",
               name: "Imtihan",
@@ -118,10 +118,10 @@ export default function FrenchBacDevoirBlogPage() {
           </article>
 
           <BlogAuthor
-            name="Marc Dupont"
-            role="Professeur de Physique-Chimie"
-            avatarText="MD"
-            bio="Marc enseigne la Physique-Chimie au sein du réseau AEFE depuis plus de 10 ans. Il participe régulièrement aux jurys de correction du Baccalauréat Français."
+            name="Imtihan Editorial Team"
+            role="Imtihan"
+            avatarText="IM"
+            bio="Rédigé par l'équipe éditoriale d'Imtihan, en s'appuyant sur le programme réel du Bac Français que couvre le produit."
           />
           <BlogRelated currentSlug="generate-bac-francais-devoir" />
 

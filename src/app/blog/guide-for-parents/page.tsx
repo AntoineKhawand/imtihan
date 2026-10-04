@@ -48,7 +48,7 @@ export default function ParentsBlogPage() {
             "@type": "Article",
             headline: title,
             description: metadata.description,
-            author: { "@type": "Person", name: "Rima Kabbara" },
+            author: { "@type": "Organization", name: "Imtihan" },
             publisher: {
               "@type": "Organization",
               name: "Imtihan",
@@ -86,7 +86,7 @@ export default function ParentsBlogPage() {
 
             <BlogCallout
               title="Parent's Tip"
-              content="I used Imtihan to generate a practice Physics exam for my son in Grade 9. He realized he didn't actually understand RC circuits as well as he thought—it was much better to find out at home than in the real exam!"
+              content="A practice exam generated for a specific chapter — RC circuits, say — can surface a gap in understanding at home, well before it shows up on the real exam."
             />
 
             <h2 id="standards" className="text-2xl font-bold text-[var(--text)] mt-12 mb-4 serif">Bring the Official Standards Home</h2>
@@ -122,10 +122,10 @@ export default function ParentsBlogPage() {
           </article>
 
           <BlogAuthor
-            name="Rima Kabbara"
-            role="Educational Consultant & Parent"
-            avatarText="RK"
-            bio="Rima is a former school principal and a mother of three. She helps parents navigate the complexities of the Lebanese educational system with modern tools."
+            name="Imtihan Editorial Team"
+            role="Imtihan"
+            avatarText="IM"
+            bio="Written by the Imtihan editorial team, grounded in the Lebanese, French, and IB curricula the product is built around."
           />
           <BlogRelated currentSlug="guide-for-parents" />
 

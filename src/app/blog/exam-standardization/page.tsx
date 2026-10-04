@@ -48,7 +48,7 @@ export default function CoordinatorsBlogPage() {
             "@type": "Article",
             headline: title,
             description: metadata.description,
-            author: { "@type": "Person", name: "Jean-Pierre Saadeh" },
+            author: { "@type": "Organization", name: "Imtihan" },
             publisher: {
               "@type": "Organization",
               name: "Imtihan",
@@ -91,7 +91,7 @@ export default function CoordinatorsBlogPage() {
 
             <BlogCallout
               title="Coordinator's Tip"
-              content="I implemented Imtihan for all Grade 12 sections. Now, when I review exams, I know the difficulty is uniform across all 4 sections of Terminale SE. It saved me 5 hours of 'balancing' sessions every month."
+              content="Using the same generated baseline across every parallel section — rather than each teacher drafting independently — is what actually keeps difficulty uniform, without a manual 'balancing' pass afterward."
             />
 
             <h2 id="standardization" className="text-2xl font-bold text-[var(--text)] mt-12 mb-4 serif">Standardization Through AI</h2>
@@ -117,10 +117,10 @@ export default function CoordinatorsBlogPage() {
           </article>
 
           <BlogAuthor
-            name="Jean-Pierre Saadeh"
-            role="Director of Academics"
-            avatarText="JS"
-            bio="Jean-Pierre has led academic departments in prestigious Beirut schools for over 20 years. He focuses on institutional quality and teacher empowerment through technology."
+            name="Imtihan Editorial Team"
+            role="Imtihan"
+            avatarText="IM"
+            bio="Written by the Imtihan editorial team, grounded in the Lebanese, French, and IB curricula the product is built around."
           />
           <BlogRelated currentSlug="exam-standardization" />
 

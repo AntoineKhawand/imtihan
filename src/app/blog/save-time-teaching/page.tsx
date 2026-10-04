@@ -48,7 +48,7 @@ export default function ProductivityBlogPage() {
             "@type": "Article",
             headline: title,
             description: metadata.description,
-            author: { "@type": "Person", name: "Samer Haddad" },
+            author: { "@type": "Organization", name: "Imtihan" },
             publisher: {
               "@type": "Organization",
               name: "Imtihan",
@@ -88,7 +88,7 @@ export default function ProductivityBlogPage() {
 
             <BlogCallout
               title="Teacher's Tip"
-              content="I used to spend my entire Sunday morning drafting Math keys. Now, I generate the exam on Saturday night in 10 minutes, and my Sunday is completely free for my family."
+              content="Drafting a solution key from scratch is usually the single slowest part of Sunday exam prep. Generating the exam and corrigé together the night before, instead of writing the key separately afterward, is what gives most of that time back."
             />
 
             <h2 id="ways" className="text-2xl font-bold text-[var(--text)] mt-12 mb-4 serif">5 Ways to Save Time Today</h2>
@@ -125,10 +125,10 @@ export default function ProductivityBlogPage() {
           </article>
 
           <BlogAuthor
-            name="Samer Haddad"
-            role="Mathematics Teacher"
-            avatarText="SH"
-            bio="Samer is a dedicated math teacher with 10 years of experience in the Lebanese secondary curriculum. He specializes in integrating technology to improve student outcomes."
+            name="Imtihan Editorial Team"
+            role="Imtihan"
+            avatarText="IM"
+            bio="Written by the Imtihan editorial team, grounded in the Lebanese, French, and IB curricula the product is built around."
           />
           <BlogRelated currentSlug="save-time-teaching" />
 
