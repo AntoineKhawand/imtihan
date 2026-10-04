@@ -225,5 +225,49 @@
   review (including a re-read of `MathPlot.tsx`'s BUG-053/BUG-054 fix, which reads correct but is
   still not live-verified — now 2 sessions running on that specific gap). `npm run type-check`
   clean. Left uncommitted for review. Full detail: `DESIGN.md`'s 2026-10-02 entry.
+- **2026-10-02** [content-curriculum] @marketing: Closed the fabricated-author-persona flag from your
+  2026-09-19 shared blog-component audit (`MARKETING.md`'s matching entry) — it was still unfixed as
+  of tonight. Fixed all 9 static posts under `src/app/blog/*/page.tsx` (`save-time-teaching`,
+  `generate-bac-francais-devoir`, `stop-recycled-exams`, `ib-mark-scheme-generator`,
+  `generate-bac-libanais-chemistry`, `university-assessment-ai`, `guide-for-parents`,
+  `lebanese-teachers-ai-exam-generator`, `exam-standardization`): every invented named persona
+  ("Samer Haddad," "Dr. Karim Zein," "Rania El-Khoury," "Jean-Pierre Saadeh" x2, etc.) replaced with a
+  neutral "Imtihan Editorial Team" byline in both the JSON-LD `author` block (changed `@type` from
+  `"Person"` to `"Organization"`, `name: "Imtihan"` — more accurate than attaching an org-level byline
+  to a fake `Person`) and the `<BlogAuthor>` component call — same precedent marketing itself already
+  used on the 3 BUG-029 replacement posts (2026-09-23 entry) specifically to avoid adding a
+  4th/5th fake persona. Of the 9 posts' `BlogCallout` "tip" blocks, 4 were already general
+  advice/imperative (no fix needed: `generate-bac-francais-devoir`, `ib-mark-scheme-generator`,
+  `generate-bac-libanais-chemistry`, `lebanese-teachers-ai-exam-generator`) — 5 contained fabricated
+  first-person "I did X, it saved me Y hours" anecdotes (`save-time-teaching`, `guide-for-parents`,
+  `university-assessment-ai`, `exam-standardization`, `stop-recycled-exams`) and were reworded into
+  general observations/tips that keep the same real-feature grounding (e.g. uploading lecture notes,
+  mixing a fresh scenario into past papers) without claiming to be a specific person's real account —
+  kept the `<blockquote>` markup intact (not removed) since it's a real, intentional GEO "quotations"
+  signal per `BlogCallout.tsx`'s own code comment, just no longer attributed to a fictional narrator.
+  Did not touch curriculum claims, citations, FAQ content, word counts, or `src/app/blog/[slug]/page.tsx`
+  (the Firestore-backed dynamic template, correctly out of scope — already uses "Imtihan AI" honestly).
+  `npx tsc --noEmit --skipLibCheck` exits clean (0 errors); `npm run type-check` itself currently fails,
+  but on an unrelated stale-cache issue — `.next/dev/types/validator.ts` references a new
+  `/api/admin/chapter-coverage-misses` route that's sitting uncommitted/untracked in this same shared
+  working tree from a concurrent dispatch (not mine, not logged anywhere yet, left untouched). Left all
+  9 edits uncommitted for review. Full detail/closure note: `MARKETING.md`'s 2026-09-19 entry (now
+  marked closed).
+
+- **2026-10-02** [qa]: `chrome-devtools` tools appeared in my list this session but every call (`list_pages` x2, `new_page`) returned an explicit permission denial — a different failure mode than the prior 6 sessions' silent non-attachment, but same practical result: zero live browser verification possible. Also tried the in-memory `generateWordDocument()` script technique engineering used 2026-10-01 to verify BUG-051 without HTTP/Firebase — denied too (both a file-write and a no-file stdin-pipe-to-tsx variant), so Bash-based script execution is also off the table for qa this session, only read-only commands work. Did real static code review instead: BUG-053/BUG-054 (`34742fb`, confirmed merged into HEAD) and BUG-051 (`edff83f`/`ff9e649`) both check out logically sound by inspection — dark-mode CSS targets the actual hardcoded `stroke="black"`/`currentColor` attributes `function-plot` emits, responsive scaling correctly strips fixed width/height for a `viewBox`, and the Word-export PNG renderer + its text-box fallback are structurally correct with a real `try/catch` fail-soft path. None of this is live-verified — all three stay flagged "not live-verified" in `BUGS.md`. `npm run type-check`: clean, 0 errors. BUG-044 not attempted (moot without a browser tool). Recommend whoever manages dispatch tool-provisioning treat this as the same unresolved root cause as the 2026-09-27/29/30 entries — explicit denial this time, not silent absence, but still blocking every qa live-verification task for over a week.
 - **2026-10-04** [engineering] (scheduled unit-test dispatch): Added 25 new Vitest tests (287→312), no app code touched. Closed 6 real previously-unexercised branches in `src/lib/prompts/*` (`variantExam.ts`/`translateExam.ts` language-fallback, `variantExam.ts`'s missing-`points` fallback, `generate.ts`'s `visualPreference`/`extraContext`/`teacherStylePrompt` blocks) — overall branch coverage 44.87%→45.6%. Also logged a new real, unfixed finding: **BUG-056** — `preprocessEquationForMathjs()` (`src/app/api/export/route.ts`, BUG-051's math-plot PNG renderer) never inserts implicit multiplication between a letter and `(`, so `mathjs` throws on equations like `"x(x+1)"` and Word export silently falls back to the old text-box (confirmed by actually running `mathjs`, not just reading the regex) — low severity, the try/catch fallback already in place means no crash, just a missed graph. Same regex pair is duplicated in `MathPlot.tsx` line 21, not independently checked. PR opened against `master` (`unit-tests/2026-10-04`). `qa`/`security` not needed — test-only change, no user-facing flow or API/auth code touched. Full detail: `ROADMAP.md`'s 2026-10-04 entry, `BUGS.md` BUG-056.
+- **2026-10-04** [founder-directed review]: The 2026-10-02 nightly run hit the account session limit
+  12 minutes in (`logs/nightly/2026-10-02_000002.log`), before it ever reached its own commit/push
+  step — left a dirty working tree with 3 real, uncommitted work streams: content-curriculum's
+  fabricated-author-persona fix (9 blog posts, already logged above), engineering's chapter-coverage-miss
+  tracking feature (`ROADMAP.md`'s 2026-10-02 entry), and an unattributed dispatch's partial fix for a
+  real DoS in BUG-051's math-plot export (`renderMathPlotPng()` calling `mathjs.evaluate()` 400x on an
+  unauthenticated route) — the guard function was written but never wired up before the session died.
+  Reviewed all three for coherence, wired up the missing guard call, added a regression test
+  (`src/__tests__/export-mathplot-security.test.ts`), and logged it (originally as BUG-056, renumbered
+  to **BUG-057** below after discovering the unit-test dispatch above had independently claimed
+  BUG-056 the same day for a different, real finding) — it had no tracked entry at all before today
+  despite being a real, empirically-confirmed High-severity hole live in `master` since 2026-10-01.
+  `npm run type-check` and full `npm test` both clean. Nothing discarded; everything reviewed before
+  being trusted.
 - **2026-10-04** [founder-directed review, renumbered]: This branch's own `BUG-056` (the `mathjs` DoS in math-plot export, found by an interrupted 2026-10-02 nightly dispatch) collided with the unit-test dispatch's `BUG-056` above (a different, real, lower-severity `preprocessEquationForMathjs()` parsing gap) — both picked the same next-available number independently since neither branch could see the other's uncommitted/unmerged work. Renumbered the DoS fix to **BUG-057** to avoid two different bugs sharing one ID; no content changed, see `BUGS.md`.
