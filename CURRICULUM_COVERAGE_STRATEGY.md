@@ -877,12 +877,33 @@ priority than the two above since it's "free-form" by design, not chapter-gated 
       from this checklist's own client-SDK assumption: `ROADMAP.md`'s 2026-09-29 entry.
 
 ### Secondary signal (also no extra AI cost)
-- [ ] Track chapter-coverage misses (`chapterCoverage[].missing` in
+- [x] **2026-10-02 (nightly-ops)** Track chapter-coverage misses (`chapterCoverage[].missing` in
       `src/app/create/generate/page.tsx`) into a lightweight Firestore counter per
       curriculum/subject/chapter — chapters that are *frequently* missing coverage even after
       generation is a signal that either the chapter's objectives are too vague for the model to
       act on, or the model needs a stronger nudge for that topic. Surface as a simple report, not
       an automated prompt rewrite — a human should read the pattern before changing prompts.
+      **Result:** Same "zero exercises tagged to a selected chapter" signal the client already
+      computes, recomputed server-side in `src/app/api/generate/route.ts` right where the existing
+      `examsGenerated`/`system/stats` counters already increment (same batch, same
+      `FieldValue.increment(1)` pattern, `university` mode excluded — no fixed chapter list there,
+      same exclusion the client UI applies) — recorded once per real, non-adjustment generation
+      regardless of whether the teacher ever looks at the Step 4 warning. One doc per
+      `(curriculumId, subject, chapterId)` in a new `chapterCoverageMisses` collection (doc id
+      `curriculumId__subject__sanitizedChapterId`, chapterId capped at 20 tracked/request and
+      sanitized to a safe charset since, unlike `curriculumId`/`subject`, it's an unbounded string
+      at the Zod layer). No new subcollection schema, no Firestore rules change needed (the
+      catch-all deny-all rule already covers it, same as `rateLimits`). Read surface: new
+      `GET /api/admin/chapter-coverage-misses` (same `verifyIdToken`+`isAdmin` pattern as every
+      other admin route), plus a new read-only "Coverage" tab on `/admin` (top 50 by miss count,
+      chapter id/curriculum/subject/last-missed/count — raw chapter id shown, not resolved to a
+      display name, since that needs a `levelId` the counter doesn't track and isn't worth the
+      extra plumbing for a first pass). `npm run type-check` clean; `npm test` clean after a
+      transient vitest worker-pool timeout on the first run resolved on a clean re-run (same known
+      flake logged in `ROADMAP.md`'s 2026-09-29 entry). Not live-verified (no `chrome-devtools`
+      this dispatch, and this doesn't fire until a real generation completes with a real missing
+      chapter) — `qa` should verify a real generation still streams/completes normally, and that
+      the new `/admin` tab renders correctly once at least one miss exists.
 
 ## Notes for whoever (human or agent) picks the next item
 
