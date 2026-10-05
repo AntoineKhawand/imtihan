@@ -19,6 +19,22 @@ Track issues here during development. Format:
 
 ## Open Issues
 
+## BUG-058: `isValidIp()` (`src/lib/security.ts`) rejects standard compressed IPv6 addresses and never bounds IPv4 octets to 0–255 — found while writing unit tests, currently low-impact because the function is unused dead code
+**Status:** Open — found while writing unit tests, not fixed (test-writing dispatch, per CLAUDE.md §15's "never modify application code to make a test pass")
+**Severity:** Low
+**Area:** API | Security
+
+**Description:** `isValidIp()`'s two regexes have real correctness gaps, confirmed by actually running them (not just reading the source):
+1. `ipv6Regex = /^([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$/` only matches the fully-expanded 8-group form. Virtually all real-world IPv6 addresses use `::` shorthand (including the loopback address itself) — `isValidIp("::1")` and `isValidIp("2001:db8::8a2e:370:7334")` both return `false`.
+2. `ipv4Regex = /^(\d{1,3}\.){3}\d{1,3}$/` has no upper bound per octet — `isValidIp("999.999.999.999")` returns `true`.
+
+**Why this is low severity right now:** confirmed via `grep -rn "isValidIp" src` that this function has zero callers anywhere in the app today — same for `sanitizeFilename`, `sanitizePath`, `isValidUrl`, `isValidEmail`, `InputSchema`/`validateInput`, and `defaultSecurityConfig` in the same file (only `createSecurityHeaders` and `sanitizeError` are actually wired into live routes, per `security.ts`'s module-level comment in the new test file). So this is dead, unreachable code today — but it's named and shaped exactly like something that would get wired into `rateLimit.ts`'s `getClientIp()` output or an IP-based allow/deny list the day someone needs one, at which point either gap becomes a real bypass/false-rejection bug with no test in place to have caught it.
+**Suggested fix (not applied — out of scope for this dispatch):** For IPv6, either use a real parser (Node's own `net.isIPv6()` is already dependency-free and handles `::` correctly) instead of a hand-rolled regex, or extend the regex to support the compressed form. For IPv4, bound each group to `25[0-5]|2[0-4]\d|1?\d?\d` (0–255) instead of `\d{1,3}`.
+**Regression tests documenting current (buggy) behavior, so a future fix has something to flip green:** `src/__tests__/security-pure.test.ts`, `describe("isValidIp")`, the two `[KNOWN GAP]`-prefixed cases.
+**Found by:** engineering (2026-10-05, while writing unit tests for `src/lib/security.ts` — confirmed by actually running both regexes against real-world IPv4/IPv6 strings, not just reading them).
+
+---
+
 ## BUG-056: `renderMathPlotPng()`'s equation preprocessing (`preprocessEquationForMathjs`, Word export's server-side math-plot PNG, BUG-051) never inserts implicit multiplication between a letter and a following `(` — any equation shaped like `x(x+1)` makes `mathjs` throw, silently degrading to the pre-existing text-label-box fallback instead of rendering a real graph
 **Status:** Open — found while writing unit tests, not fixed (review-only dispatch)
 **Severity:** Low
