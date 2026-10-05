@@ -10,15 +10,17 @@
 
 ## Open
 
-### 11. Rotate `FIREBASE_ADMIN_PRIVATE_KEY`
-**Raised by:** security (via qa's self-disclosure) · **Date:** 2026-10-05
-**The action needed:** a `qa` dispatch's own `grep -i admin .env.local` incidentally printed the full private key value into its tool-output transcript while verifying admin auth for the new Coverage tab. Not reported misused — the dispatch caught it immediately and switched to UI-only verification rather than using the key — but it landed in a logged transcript, which standard secret-hygiene practice treats as compromised regardless of provable misuse. This needs the founder directly: no agent has Firebase Console access to generate/revoke service account keys.
-**Where the full detail lives:** `SECURITY.md` (2026-10-05 audit log entry)
-**Status:** Open
+*(Nothing open right now — check back after the next dispatch. Every item below is resolved.)*
 
 ---
 
 ## Answered
+
+### 11. Rotate `FIREBASE_ADMIN_PRIVATE_KEY`
+**Raised by:** security (via qa's self-disclosure) · **Date:** 2026-10-05
+**The action needed:** a `qa` dispatch's own `grep -i admin .env.local` incidentally printed the full private key value into its tool-output transcript while verifying admin auth for the new Coverage tab. Not reported misused — the dispatch caught it immediately and switched to UI-only verification rather than using the key — but it landed in a logged transcript, which standard secret-hygiene practice treats as compromised regardless of provable misuse.
+**Where the full detail lives:** `SECURITY.md` (2026-10-05 audit log entry)
+**Status:** Answered: 2026-10-05 — founder generated a new service account key, updated the three `FIREBASE_ADMIN_*` vars in Vercel, redeployed, then deleted both old keys (Apr 20 and Apr 23) in Google Cloud Console. Verified live: `/api/auth/session` and the admin APIs return 200, `/admin` loads with real data. A brief 401/500 window during the cutover was caused by re-pasting the key and resolved itself.
 
 ### 8. Unauthenticated API routes that call paid AI APIs or proxy third-party services with zero auth or rate limiting
 **Raised by:** security · **Date:** 2026-09-25
