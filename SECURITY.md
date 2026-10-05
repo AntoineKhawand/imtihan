@@ -105,6 +105,13 @@ Shannon uses Claude API credits. Monitor your usage at [console.anthropic.com](h
 
 ## Audit log
 
+### 2026-10-05 — Credential disclosure: `FIREBASE_ADMIN_PRIVATE_KEY` printed into a qa dispatch's tool output
+
+**What happened:** while verifying the new `/admin` Coverage tab, a `qa` dispatch ran `grep -i admin .env.local` intending to check `ADMIN_EMAILS` — the broad `-i admin` match also hit `FIREBASE_ADMIN_PRIVATE_KEY`, printing its full value into that dispatch's own tool-output transcript. The dispatch self-reported this immediately, stated the value was never used, executed, or passed to any script/API call, and switched to UI-only verification (not minting an Admin SDK token) for the rest of its task — consistent with the standing rule this repo already has against exactly that pattern (BUG-029).
+**Why this still matters despite not being misused:** the key landed in a transcript that persists on disk (this session's local logs). Standard secret-hygiene practice treats a credential as compromised the moment it appears somewhere it shouldn't have, independent of whether anyone can point to actual misuse — "it probably wasn't used for anything bad" is not the same bar as "this key is still safe to trust."
+**Action needed from the founder (not performed by any agent):** rotate `FIREBASE_ADMIN_PRIVATE_KEY` — generate a new service account key in Firebase Console → Project Settings → Service Accounts, update it in `.env.local` and in Vercel's production environment variables, and consider revoking the old service account key if Firebase's console allows per-key revocation separate from full service-account deletion.
+**Process note:** `.env.local` greps for a *specific* known variable name (e.g. `grep "^ADMIN_EMAILS="`) rather than a broad substring match (`grep -i admin`) would have avoided this — worth a quiet addition to whichever team's `.md` file covers routine env-var checks, not a code fix.
+
 ### 2026-09-25 — First-pass full sweep (security team's first-ever run)
 
 Scope matched the "first pass — full sweep" other teams ran when stood up: every `src/app/api/**/route.ts` for auth, `firestore.rules` cross-checked against BUG-026, tracked-file secret grep, XSS/injection review, `npm audit`, and the existing Shannon CI integration's actual run history/findings. Full technical detail is in `BUGS.md` (BUG-032/033/034); this is the audit-trail summary.
@@ -222,5 +229,6 @@ This sink pre-dates `7fccb92` — the legacy `exercise.mathPlots` array (freely 
 
 ## Open questions for the founder
 
+- **Rotate `FIREBASE_ADMIN_PRIVATE_KEY`.** A 2026-10-05 `qa` dispatch's own grep incidentally printed its full value into a tool-output transcript (see this file's 2026-10-05 audit-log entry). Not reported misused, but landed somewhere it shouldn't have — standard practice is to rotate rather than trust "probably fine."
 - **Unauthenticated, cost-incurring AI-proxy routes bypass the 1-free-exam quota entirely.** See `FOUNDER_DECISIONS.md` for the concrete scenario — this needs a product decision (require auth, add rate-limiting, or accept the cost exposure pre-launch), not a unilateral security fix, since some of these may be intentionally public for landing-page/try-it-free UX.
 - **Cron routes fail open if `CRON_SECRET` isn't set in the Vercel environment.** Not logged to `FOUNDER_DECISIONS.md` (this is a config-verification ask, not a risk-acceptance judgment call) — whoever manages Vercel env vars should confirm `CRON_SECRET` is actually set in production; if it is, there's nothing to do, if it isn't, every `/api/cron/*` route is unauthenticated today.

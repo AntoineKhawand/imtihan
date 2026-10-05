@@ -10,7 +10,11 @@
 
 ## Open
 
-*(Nothing open right now — check back after the next dispatch. Every item below is resolved.)*
+### 11. Rotate `FIREBASE_ADMIN_PRIVATE_KEY`
+**Raised by:** security (via qa's self-disclosure) · **Date:** 2026-10-05
+**The action needed:** a `qa` dispatch's own `grep -i admin .env.local` incidentally printed the full private key value into its tool-output transcript while verifying admin auth for the new Coverage tab. Not reported misused — the dispatch caught it immediately and switched to UI-only verification rather than using the key — but it landed in a logged transcript, which standard secret-hygiene practice treats as compromised regardless of provable misuse. This needs the founder directly: no agent has Firebase Console access to generate/revoke service account keys.
+**Where the full detail lives:** `SECURITY.md` (2026-10-05 audit log entry)
+**Status:** Open
 
 ---
 
