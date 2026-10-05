@@ -54,8 +54,38 @@ export function isValidEmail(email: string): boolean {
 }
 
 export function isValidIp(ip: string): boolean {
-  const ipv4Regex = /^(\d{1,3}\.){3}\d{1,3}$/;
-  const ipv6Regex = /^([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$/;
+  // IPv4: each octet must be bounded to 0-255 (rejects e.g. "999.999.999.999"
+  // or "256.1.1.1", which the old unbounded `\d{1,3}` regex incorrectly
+  // accepted — see BUG-058).
+  const octet = "(25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)";
+  const ipv4Regex = new RegExp(`^(${octet}\\.){3}${octet}$`);
+
+  // IPv6: supports the standard "::" zero-compression shorthand (e.g. "::1",
+  // "::", "2001:db8::1") as well as the fully-expanded 8-group form — the
+  // old regex only matched the latter, rejecting the loopback address and
+  // virtually every real-world IPv6 address (see BUG-058).
+  //
+  // Deliberately NOT supported (scope chosen for a rate-limiting/logging
+  // use case validating a raw client IP, not a general-purpose IPv6
+  // parser): embedded IPv4 (e.g. "::ffff:192.168.1.1") and zone IDs (e.g.
+  // "fe80::1%eth0"). Full RFC-correct IPv6 validation covering those is
+  // substantially more complex; whoever wires this up to a real caller
+  // (e.g. rateLimit.ts's getClientIp()) should confirm neither form shows
+  // up in practice before assuming full coverage.
+  const ipv6Regex = new RegExp(
+    "^(" +
+      "([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}|" + // fully expanded, 8 groups
+      "([0-9a-fA-F]{1,4}:){1,7}:|" + // trailing "::" (1 to 7 groups then "::")
+      "([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|" +
+      "([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|" +
+      "([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|" +
+      "([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|" +
+      "([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|" +
+      "[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|" + // 1 group then "::" + up to 6 groups
+      ":((:[0-9a-fA-F]{1,4}){1,7}|:)" + // leading "::" (covers "::" alone too)
+      ")$"
+  );
+
   return ipv4Regex.test(ip) || ipv6Regex.test(ip);
 }
 
