@@ -185,25 +185,36 @@ describe("isValidIp", () => {
   });
 
   // ---------------------------------------------------------------------
-  // Known gaps — documented here, NOT fixed (CLAUDE.md §15: never modify
-  // application code just to make a test pass; this module isn't currently
-  // wired to anything live — see file header — so severity is low, but the
-  // function is unsafe for its stated purpose if it's ever wired up, e.g.
-  // to validate rateLimit.ts's `getClientIp()` output before trusting it).
+  // BUG-058 (fixed 2026-10-05): these cases used to document two real
+  // regex gaps — the IPv6 regex rejected standard "::" shorthand (including
+  // the loopback address) and the IPv4 regex never bounded octets to
+  // 0-255. Both regexes were fixed in `src/lib/security.ts`; these
+  // assertions now lock in the correct behavior rather than the bug.
   // ---------------------------------------------------------------------
-  it("[KNOWN GAP] rejects standard compressed/shorthand IPv6 addresses (e.g. '::1', '::')", () => {
-    // Real-world IPv6 addresses almost always use "::" shorthand — the
-    // regex only accepts the fully-expanded 8-group form, so this function
-    // would reject the vast majority of real IPv6 traffic if it were ever
-    // used to validate a live request's address.
-    expect(isValidIp("::1")).toBe(false); // loopback — should arguably be true
-    expect(isValidIp("2001:db8::8a2e:370:7334")).toBe(false); // common shorthand form
+  it("accepts standard compressed/shorthand IPv6 addresses (e.g. '::1', '::')", () => {
+    expect(isValidIp("::1")).toBe(true); // loopback
+    expect(isValidIp("::")).toBe(true); // unspecified address
+    expect(isValidIp("2001:db8::8a2e:370:7334")).toBe(true); // common shorthand form
+    expect(isValidIp("2001:db8::1")).toBe(true); // common shorthand form
+    expect(isValidIp("fe80::1")).toBe(true); // link-local, shorthand
   });
 
-  it("[KNOWN GAP] accepts out-of-range IPv4 octets (no 0–255 bound checking)", () => {
-    // ipv4Regex is `(\d{1,3}\.){3}\d{1,3}` — any 1-3 digit group passes,
-    // so a clearly invalid address like 999.999.999.999 is reported valid.
-    expect(isValidIp("999.999.999.999")).toBe(true); // should arguably be false
+  it("rejects malformed IPv6-shaped strings (e.g. triple colon, too many groups)", () => {
+    expect(isValidIp(":::1")).toBe(false);
+    expect(isValidIp("1:2:3:4:5:6:7:8:9")).toBe(false); // 9 groups, too many
+    expect(isValidIp("12345::1")).toBe(false); // group longer than 4 hex digits
+  });
+
+  it("rejects out-of-range IPv4 octets (bounded 0-255 per octet)", () => {
+    expect(isValidIp("999.999.999.999")).toBe(false);
+    expect(isValidIp("256.0.0.0")).toBe(false);
+    expect(isValidIp("1.2.3.256")).toBe(false);
+  });
+
+  it("accepts the full valid IPv4 range boundaries", () => {
+    expect(isValidIp("0.0.0.0")).toBe(true);
+    expect(isValidIp("255.255.255.255")).toBe(true);
+    expect(isValidIp("255.255.255.0")).toBe(true);
   });
 });
 
