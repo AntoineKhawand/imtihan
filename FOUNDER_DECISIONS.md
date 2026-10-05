@@ -58,7 +58,7 @@
 ### 4. Pricing / quota number
 **Raised by:** marketing · **Date:** 2026-09-18
 **Full detail:** `MARKETING.md`
-**Status:** Answered: 2026-09-24 — confirmed 10/20 (matches what the backend already enforces). Option 1's pre-drafted diffs applied to `pricing/layout.tsx` and `upgrade/layout.tsx`; all six surfaces (2 page bodies, 2 metadata objects, 2 FAQ blocks) now agree.
+**Status:** Answered: 2026-09-24 — confirmed 10/20 (matches what the backend already enforces). Option 1's pre-drafted diffs applied to `pricing/layout.tsx` and `upgrade/layout.tsx`; all six surfaces (2 page bodies, 2 metadata objects, 2 FAQ blocks) now agree. **Re-audited 2026-10-05 (engineering):** an incoming task described this as still broken (self-contradicting `/pricing` page). Repo-wide grep + direct file read found that claim false — the 2026-09-24 fix is still fully live on `master`, zero remaining "100 exams"/"100 examens" instances in `src/app/pricing/` or `src/app/upgrade/`. The real gap was that `MARKETING.md`'s "Open questions" memo was never marked resolved after this fix shipped, so it still read as open 11 days later — that's now fixed (see `MARKETING.md`'s 2026-10-05 entry). No code change was needed or made.
 
 ### 10. School Bank sharing silently also publishes to students, including full solutions
 **Raised by:** qa (Pro-tier exploratory pass) · **Date:** 2026-09-26
