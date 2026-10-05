@@ -48,7 +48,7 @@ export default function LebaneseTeachersBlogPage() {
             "@type": "Article",
             headline: title,
             description: metadata.description,
-            author: { "@type": "Person", name: "Jean-Pierre Saadeh" },
+            author: { "@type": "Organization", name: "Imtihan" },
             publisher: {
               "@type": "Organization",
               name: "Imtihan",
@@ -121,10 +121,10 @@ export default function LebaneseTeachersBlogPage() {
           </article>
 
           <BlogAuthor
-            name="Jean-Pierre Saadeh"
-            role="Director of Academics"
-            avatarText="JS"
-            bio="Jean-Pierre has led academic departments in prestigious Beirut schools for over 20 years. He focuses on institutional quality and teacher empowerment through technology."
+            name="Imtihan Editorial Team"
+            role="Imtihan"
+            avatarText="IM"
+            bio="Written by the Imtihan editorial team, grounded in the Lebanese, French, and IB curricula the product is built around."
           />
           <BlogRelated currentSlug="lebanese-teachers-ai-exam-generator" />
 

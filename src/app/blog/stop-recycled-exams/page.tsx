@@ -48,7 +48,7 @@ export default function BlogPostPage() {
             "@type": "Article",
             headline: title,
             description: metadata.description,
-            author: { "@type": "Person", name: "Layla Mansour" },
+            author: { "@type": "Organization", name: "Imtihan" },
             publisher: {
               "@type": "Organization",
               name: "Imtihan",
@@ -95,7 +95,7 @@ export default function BlogPostPage() {
 
             <BlogCallout
               title="Teacher's Tip"
-              content="I started mixing one AI-generated scenario with one past paper question. The results were shocking—students who usually aced the past papers struggled with the fresh scenario, proving they were just memorizing steps."
+              content="Mixing one freshly generated scenario in among past-paper questions is a quick way to tell whether students actually understand the method, rather than having memorized the steps to one recycled problem."
             />
 
             <h2 id="burnout" className="text-2xl font-bold text-[var(--text)] mt-12 mb-4 serif">The Teacher's Burnout</h2>
@@ -127,10 +127,10 @@ export default function BlogPostPage() {
           </article>
 
           <BlogAuthor
-            name="Layla Mansour"
-            role="Head of Science Department"
-            avatarText="LM"
-            bio="Layla has over 15 years of experience coordinating Physics and Chemistry departments across Lebanon's top private schools. She is an early adopter of AI in the classroom."
+            name="Imtihan Editorial Team"
+            role="Imtihan"
+            avatarText="IM"
+            bio="Written by the Imtihan editorial team, grounded in the Lebanese, French, and IB curricula the product is built around."
           />
 
           <BlogRelated currentSlug="stop-recycled-exams" />

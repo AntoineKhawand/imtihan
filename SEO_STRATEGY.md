@@ -134,6 +134,77 @@ keep each change reviewable and low-risk for an unattended push.
       this post moved from **40/100 to 70/100**; site-wide average ticked up from 67 to 68 across
       37 posts. Re-flagging the cron-job editorial-review question from the original entry below
       is unchanged and still stands.
+- [~] **2026-10-02 — continued the 40/100 dynamic-post FAQ remediation (nightly run, `gsc` tools
+      confirmed absent as expected; `chrome-devtools` was NOT actually usable this session despite
+      the dispatch note claiming it was connected — see below).** Re-ran `npm run audit:geo` against
+      production first rather than trusting the 2026-09-27 `GEO_AUDIT_REPORT.md` (5 days stale, and
+      the blog-auto-publish cron adds new posts daily): 38 posts now in the sitemap (was 37),
+      average 68/100 (unchanged). **9 posts are at 40/100 today** — not the same 9 as 2026-09-27
+      (that cohort's `...-sx7l` is now the only one above 40, fixed to 70/100; the cron has since
+      generated new near-duplicate "May countdown/sprint" posts that replaced the others in the
+      40/100 band): `precision-under-pressure-master-the-may-revision-sprint-with-imtihan-27p8`,
+      `the-final-30-days-how-lebanons-top-educators-are-mastering-the-2026-exam-season-1b3z`,
+      `the-final-sprint-navigating-the-2026-exam-season-with-imtihans-precision-ai-hayn`,
+      `the-may-countdown-elevating-lebanese-exam-standards-in-the-age-of-ai-dm3l`,
+      `the-may-countdown-master-the-lebanese-bac-french-bac-and-ib-with-aiprecision-zd5d`,
+      `the-may-countdown-mastering-lebanons-official-exams-and-university-entrances-with-imtihan-wuz8`,
+      `the-may-countdown-mastering-the-final-sprint-for-the-bac-libanais-ib-and-bac-franais-with-imtihan-umb9`,
+      `the-may-countdown-precisionengineering-the-2026-lebanese-exam-season-dkbg`,
+      `the-may-squeeze-turning-exam-anxiety-into-peak-performance-with-imtihan-yyb4`.
+      **Selection signal, stated honestly:** no GSC data available tonight (as expected), and
+      grepped all of `src/` for every one of the 9 slugs — zero internal links to any of them from
+      anywhere in the app (expected; these are Firestore-only dynamic posts, never hardcoded-linked
+      like the curricula landing pages), so the "prefer one with internal links" tiebreaker the task
+      suggested doesn't actually differentiate any of the 9. Picked
+      **`precision-under-pressure-master-the-may-revision-sprint-with-imtihan-27p8`** purely because
+      it's first alphabetically among the 9 — no stronger signal was available, logging this plainly
+      rather than inventing one.
+      **Drafted a grounded 3-item FAQ**, after pulling the post's actual live rendered content via
+      `WebFetch` (not inventing anything — restates only claims already in the post's body: CRDP-aligned
+      Bac Libanais generation, Bac Français/IB diagrams + command-term awareness, university entrance
+      MCQ sets, and coordinator-level standardization):
+      ```
+      ## Frequently Asked Questions
+
+      **Q: Can Imtihan generate exams for the Bac Libanais, Bac Français, IB, and university entrance exams in one tool?**
+      Yes. The platform covers Bac Libanais exams aligned to CRDP/Ministry of Education standards,
+      Bac Français and IB assessments with diagrams and command-term-aware questions (Analyze,
+      Evaluate, Describe), and MCQ-style practice sets modeled on the pace of university entrance
+      exams for schools preparing students for AUB, LAU, USJ, and Lebanese University admissions.
+
+      **Q: Does Imtihan generate diagrams for Bac Français and IB exams, not just text questions?**
+      Yes. Teachers can request specific, labeled diagrams — such as a circuit for Physics —
+      generated to meet the visual standards expected in the Épreuves Terminales and IB Paper 1 & 2,
+      instead of sourcing or hand-drawing figures separately.
+
+      **Q: Can department heads and coordinators use Imtihan to standardize mock exams across multiple class sections?**
+      Yes. Coordinators can set a standardized exam template across an entire grade level, so every
+      section is measured against the same rigor and benchmark during the May revision period —
+      addressing the "Horizontal Consistency" challenge the post itself describes for Department
+      Heads.
+      ```
+      **Deliberately left out of the FAQ, flagging instead of amplifying:** the post's own body
+      (not written by me, pre-existing cron output) lists "Life Sciences (SVT)" as a generated
+      subject — per `CLAUDE.md` §8/§9, Biology/SVT is explicitly deferred to v1.1, not MVP scope.
+      This looks like a real curriculum-accuracy bug in the live post, same class as the 2 real
+      bugs `content-curriculum` found and fixed in static posts on 2026-09-19 — but fixing blog-post
+      body copy is `content-curriculum`'s domain, not mine, so I didn't touch the post body and
+      didn't let my FAQ repeat or reinforce the SVT claim. Flagging here for `content-curriculum`
+      (same cron-output-accuracy pattern, this time in a dynamic/Firestore post rather than a
+      static one).
+      **Not applied this run — tool was denied, not absent, worth distinguishing from every prior
+      "not attached" entry in this doc:** the dispatch note for tonight said `chrome-devtools`
+      tools were "genuinely connected this session (unlike recent nights)." Tested directly before
+      assuming that was true: `mcp__chrome-devtools__list_pages` and `mcp__chrome-devtools__new_page`
+      both returned an explicit **permission-denied** error (not "no such tool," not a connection
+      timeout) — a different failure mode than every previous "absent/not attached" entry in this
+      file (2026-09-29/09-30/10-01). Did not attempt to route around it (e.g. via `curl`/a script
+      hitting `PATCH /api/admin/blog/[id]` directly) — that path is explicitly banned per
+      `CLAUDE.md` §15/BUG-029 regardless of how narrow the gap looks. **The FAQ above is drafted and
+      ready to paste into the `/admin` → Blog → "Manage Existing Posts" panel for the
+      `...-27p8` post** by whoever next has a real, permitted `chrome-devtools` session (or by a
+      human directly) — same ready-to-apply handoff shape as the 2026-09-27 precedent. No before/after
+      GEO score to report since nothing was applied; current score for this post remains **40/100**.
 
 ### Technical SEO
 - [~] **2026-10-01 — 3rd of the last 4 nightly runs blocked on the same GSC tool-attachment gap

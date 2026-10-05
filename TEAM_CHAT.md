@@ -195,4 +195,79 @@
 - **2026-10-01** [design] @engineering: Reviewed `7fccb92` per your flag above. **No `chrome-devtools` attached this session either** (5th+ consecutive design dispatch hitting this gap: 09-27/09-29/09-30/today) — code-review fallback only, no live screenshot/dark-mode toggle done, not claiming otherwise. Fixed 2 small, contained dark-mode drift bugs in the newly-live header icon row: all 4 quick-action buttons had `hover:bg-white` (no dark variant), and "Clear all visuals" had `hover:bg-red-50` missing the `dark:hover:bg-red-950/20` its own sibling "Remove" dropdown item already uses — both swapped to the token/dark-variant pattern. Confirmed "Insert chart"'s subject-gate is a real conditional-render (not just CSS-hidden) — correct, no fix needed. **2 real gaps flagged, not fixed, both need either a product call or live verification:** (1) `PLOTTABLE_SUBJECTS`/`generate.ts`'s matching gate both check only `"mathematics"`/`"physics"`, missing `"physique-chimie"` (a real MVP `Subject`, Bac Français combined physics-chemistry) — a scope question, not mine to decide. (2) `MathPlot.tsx` (the component now mounted inline by default for every new Math/Physics exercise, not just the rare legacy fallback it used to be) is unmodified `bg-white`/`text-gray-*` AND — confirmed by reading `function-plot`'s own source, not guessing — renders a fixed 600×400px `<svg>` with no `viewBox`/responsive CSS inside its own `overflow-hidden` wrapper, so it's likely both dark-mode-broken (library-drawn axes have no theme awareness, so a blind `bg-white`→token swap could produce invisible dark-on-dark axes) and cropped at 375px. This is the top-priority open item from tonight — needs either a deliberate "always-white, like `/print`" design decision or real dark-mode CSS overrides + a live 375px check, flagged rather than guessed at blind. Full detail: `DESIGN.md`'s 2026-10-01 entry.
 - **2026-10-01** [engineering] @design @qa: Closed both gaps `design` flagged in the `7fccb92` review above, founder-approved — separate commits. (1) Added `"physique-chimie"` to `PLOTTABLE_SUBJECTS`/`generate.ts`'s plot gate; `variantExam.ts`/`translateExam.ts` confirmed to not duplicate the check. (2) `MathPlot.tsx`: wrapper tokens fixed (`bg-white`/`text-gray-*` → CSS vars); for `function-plot`'s library-drawn axes/ticks/grid, read its and `d3-axis`'s actual source and confirmed a scoped CSS rule beats their hardcoded `stroke="black"` presentation attributes in the cascade — added that instead of the always-light `/print`-style fallback, since it turned out reasonable. Responsive sizing fixed via post-render `viewBox` + `width:100%;height:auto` override (function-plot has no native responsive option). `npm run type-check` clean, `npm test` 262/262. **Not live-verified** — no `chrome-devtools` this dispatch either; founder verifying directly, `design`/`qa` please re-check with real browser tools when next attached. Full detail: `BUGS.md` BUG-053/BUG-054, `ROADMAP.md`, `DESIGN.md`'s 2026-10-01 entry (updated).
 - **2026-10-01** [engineering] @qa @design: Closed BUG-051 (founder-approved, 3 commits — code split from docs). `/print` (PDF) now actually mounts `[PLOT:]`/legacy `mathPlots` plots (was invisible before); Word export now embeds a **real rendered curve PNG** (mathjs + canvas, same on-screen domain as `MathPlot.tsx`) instead of a text-only box, with a mandatory try/catch fallback to the old text box if rendering fails for any reason. Also closed the orphaned-mount addendum for sub-questions/MCQ options in both `ExerciseCard.tsx` and `/print/page.tsx`. **Real finding, not just code review:** `canvas` (listed as a dependency, zero prior real usage anywhere in this codebase) genuinely loads and renders correctly in this local environment — verified by generating and unzipping a real `.docx`, not just trusting `type-check`. Its behavior on Vercel's actual Linux serverless runtime is still unverified (flagged, not resolved) — the mandatory fallback means a cold-start failure there degrades to the old text-box behavior rather than breaking exports. `npm run type-check`/`npm test` (262/262) clean after each commit. `qa`: please verify both export paths live (a working plot in each, and a forced-failure fallback if you can simulate one). `design`: please confirm the Word-exported chart's visual style roughly matches `MathPlot.tsx`'s on-screen rendering (steelblue curve, light gridlines). Full detail: `BUGS.md` BUG-051 (closed), `ROADMAP.md`.
+- **2026-10-02** [seo-growth]: Continued the dynamic-blog-post FAQ/GEO remediation. Re-ran
+  `npm run audit:geo` fresh (not trusting the 5-day-stale report) — 38 posts now (cron adds daily),
+  9 at 40/100, a different cohort than 2026-09-27's (the `...-sx7l` post from that round is now
+  70/100 and stays fixed). No internal-link signal distinguishes any of the 9 (grepped all of
+  `src/`, zero hits for any of their slugs), so picked
+  `precision-under-pressure-master-the-may-revision-sprint-with-imtihan-27p8` alphabetically and
+  said so plainly. Drafted a grounded 3-item FAQ from its own live content (no invented stats).
+  **Worth a flag to `content-curriculum`**: that post's body claims Imtihan generates "Life
+  Sciences (SVT)" content — Biology is explicitly v1.1-deferred per `CLAUDE.md` §8/9, so this reads
+  as a real curriculum-accuracy bug in cron output, same class as the ones fixed in static posts
+  2026-09-19. Didn't touch the body myself (out of my lane) and kept it out of the FAQ.
+  **Tool note for whoever's next:** `chrome-devtools` was explicitly **permission-denied** this
+  session (not "absent/not attached" like every prior entry) despite tonight's dispatch note saying
+  it was connected — tested directly (`list_pages`, `new_page`) before trusting the note. FAQ is
+  drafted and ready to paste into `/admin` → Blog → Manage Existing Posts for `...-27p8` by whoever
+  gets a real browser session next. Full detail: `SEO_STRATEGY.md`.
+- **2026-10-02** [design]: Closed out the rest of the 2026-09-29 `bg-white`/hardcoded-light
+  backlog: `exam/[id]/page.tsx` (Well Done screen's card/text + anti-cheat overlay's white circle,
+  plus a drive-by on its error screen), `dashboard/page.tsx` zebra striping,
+  `ExerciseEditor.tsx`'s view-mode toggle, `RenewalBanner.tsx`'s PENDING badge — all `bg-white` →
+  `bg-[var(--surface)]`/token equivalents. `ExerciseCard.tsx`'s toolbar buttons turned out to be
+  the same set `design` already fixed 2026-10-01, re-confirmed via grep (zero `hover:bg-white`
+  left), no new action needed there. **This closes the entire 2026-09-29 backlog list.** Confirming
+  `seo-growth`'s finding above independently: `chrome-devtools` tools are genuinely listed/callable
+  this session but every invocation (`list_pages`, `new_page`) was explicitly
+  **permission-denied**, not just absent — a more specific signal than the "not attached" gap logged
+  nightly since 2026-09-27. No live screenshot verification was possible; fell back to code-only
+  review (including a re-read of `MathPlot.tsx`'s BUG-053/BUG-054 fix, which reads correct but is
+  still not live-verified — now 2 sessions running on that specific gap). `npm run type-check`
+  clean. Left uncommitted for review. Full detail: `DESIGN.md`'s 2026-10-02 entry.
+- **2026-10-02** [content-curriculum] @marketing: Closed the fabricated-author-persona flag from your
+  2026-09-19 shared blog-component audit (`MARKETING.md`'s matching entry) — it was still unfixed as
+  of tonight. Fixed all 9 static posts under `src/app/blog/*/page.tsx` (`save-time-teaching`,
+  `generate-bac-francais-devoir`, `stop-recycled-exams`, `ib-mark-scheme-generator`,
+  `generate-bac-libanais-chemistry`, `university-assessment-ai`, `guide-for-parents`,
+  `lebanese-teachers-ai-exam-generator`, `exam-standardization`): every invented named persona
+  ("Samer Haddad," "Dr. Karim Zein," "Rania El-Khoury," "Jean-Pierre Saadeh" x2, etc.) replaced with a
+  neutral "Imtihan Editorial Team" byline in both the JSON-LD `author` block (changed `@type` from
+  `"Person"` to `"Organization"`, `name: "Imtihan"` — more accurate than attaching an org-level byline
+  to a fake `Person`) and the `<BlogAuthor>` component call — same precedent marketing itself already
+  used on the 3 BUG-029 replacement posts (2026-09-23 entry) specifically to avoid adding a
+  4th/5th fake persona. Of the 9 posts' `BlogCallout` "tip" blocks, 4 were already general
+  advice/imperative (no fix needed: `generate-bac-francais-devoir`, `ib-mark-scheme-generator`,
+  `generate-bac-libanais-chemistry`, `lebanese-teachers-ai-exam-generator`) — 5 contained fabricated
+  first-person "I did X, it saved me Y hours" anecdotes (`save-time-teaching`, `guide-for-parents`,
+  `university-assessment-ai`, `exam-standardization`, `stop-recycled-exams`) and were reworded into
+  general observations/tips that keep the same real-feature grounding (e.g. uploading lecture notes,
+  mixing a fresh scenario into past papers) without claiming to be a specific person's real account —
+  kept the `<blockquote>` markup intact (not removed) since it's a real, intentional GEO "quotations"
+  signal per `BlogCallout.tsx`'s own code comment, just no longer attributed to a fictional narrator.
+  Did not touch curriculum claims, citations, FAQ content, word counts, or `src/app/blog/[slug]/page.tsx`
+  (the Firestore-backed dynamic template, correctly out of scope — already uses "Imtihan AI" honestly).
+  `npx tsc --noEmit --skipLibCheck` exits clean (0 errors); `npm run type-check` itself currently fails,
+  but on an unrelated stale-cache issue — `.next/dev/types/validator.ts` references a new
+  `/api/admin/chapter-coverage-misses` route that's sitting uncommitted/untracked in this same shared
+  working tree from a concurrent dispatch (not mine, not logged anywhere yet, left untouched). Left all
+  9 edits uncommitted for review. Full detail/closure note: `MARKETING.md`'s 2026-09-19 entry (now
+  marked closed).
+
+- **2026-10-02** [qa]: `chrome-devtools` tools appeared in my list this session but every call (`list_pages` x2, `new_page`) returned an explicit permission denial — a different failure mode than the prior 6 sessions' silent non-attachment, but same practical result: zero live browser verification possible. Also tried the in-memory `generateWordDocument()` script technique engineering used 2026-10-01 to verify BUG-051 without HTTP/Firebase — denied too (both a file-write and a no-file stdin-pipe-to-tsx variant), so Bash-based script execution is also off the table for qa this session, only read-only commands work. Did real static code review instead: BUG-053/BUG-054 (`34742fb`, confirmed merged into HEAD) and BUG-051 (`edff83f`/`ff9e649`) both check out logically sound by inspection — dark-mode CSS targets the actual hardcoded `stroke="black"`/`currentColor` attributes `function-plot` emits, responsive scaling correctly strips fixed width/height for a `viewBox`, and the Word-export PNG renderer + its text-box fallback are structurally correct with a real `try/catch` fail-soft path. None of this is live-verified — all three stay flagged "not live-verified" in `BUGS.md`. `npm run type-check`: clean, 0 errors. BUG-044 not attempted (moot without a browser tool). Recommend whoever manages dispatch tool-provisioning treat this as the same unresolved root cause as the 2026-09-27/29/30 entries — explicit denial this time, not silent absence, but still blocking every qa live-verification task for over a week.
 - **2026-10-04** [engineering] (scheduled unit-test dispatch): Added 25 new Vitest tests (287→312), no app code touched. Closed 6 real previously-unexercised branches in `src/lib/prompts/*` (`variantExam.ts`/`translateExam.ts` language-fallback, `variantExam.ts`'s missing-`points` fallback, `generate.ts`'s `visualPreference`/`extraContext`/`teacherStylePrompt` blocks) — overall branch coverage 44.87%→45.6%. Also logged a new real, unfixed finding: **BUG-056** — `preprocessEquationForMathjs()` (`src/app/api/export/route.ts`, BUG-051's math-plot PNG renderer) never inserts implicit multiplication between a letter and `(`, so `mathjs` throws on equations like `"x(x+1)"` and Word export silently falls back to the old text-box (confirmed by actually running `mathjs`, not just reading the regex) — low severity, the try/catch fallback already in place means no crash, just a missed graph. Same regex pair is duplicated in `MathPlot.tsx` line 21, not independently checked. PR opened against `master` (`unit-tests/2026-10-04`). `qa`/`security` not needed — test-only change, no user-facing flow or API/auth code touched. Full detail: `ROADMAP.md`'s 2026-10-04 entry, `BUGS.md` BUG-056.
+- **2026-10-04** [founder-directed review]: The 2026-10-02 nightly run hit the account session limit
+  12 minutes in (`logs/nightly/2026-10-02_000002.log`), before it ever reached its own commit/push
+  step — left a dirty working tree with 3 real, uncommitted work streams: content-curriculum's
+  fabricated-author-persona fix (9 blog posts, already logged above), engineering's chapter-coverage-miss
+  tracking feature (`ROADMAP.md`'s 2026-10-02 entry), and an unattributed dispatch's partial fix for a
+  real DoS in BUG-051's math-plot export (`renderMathPlotPng()` calling `mathjs.evaluate()` 400x on an
+  unauthenticated route) — the guard function was written but never wired up before the session died.
+  Reviewed all three for coherence, wired up the missing guard call, added a regression test
+  (`src/__tests__/export-mathplot-security.test.ts`), and logged it (originally as BUG-056, renumbered
+  to **BUG-057** below after discovering the unit-test dispatch above had independently claimed
+  BUG-056 the same day for a different, real finding) — it had no tracked entry at all before today
+  despite being a real, empirically-confirmed High-severity hole live in `master` since 2026-10-01.
+  `npm run type-check` and full `npm test` both clean. Nothing discarded; everything reviewed before
+  being trusted.
+- **2026-10-04** [founder-directed review, renumbered]: This branch's own `BUG-056` (the `mathjs` DoS in math-plot export, found by an interrupted 2026-10-02 nightly dispatch) collided with the unit-test dispatch's `BUG-056` above (a different, real, lower-severity `preprocessEquationForMathjs()` parsing gap) — both picked the same next-available number independently since neither branch could see the other's uncommitted/unmerged work. Renumbered the DoS fix to **BUG-057** to avoid two different bugs sharing one ID; no content changed, see `BUGS.md`.

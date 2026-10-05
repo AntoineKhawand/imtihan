@@ -132,22 +132,22 @@ export default function StudentExamPage() {
   if (error) return <div className="min-h-screen flex flex-col items-center justify-center p-6 text-center">
     <AlertCircle size={48} className="text-red-500 mb-4" />
     <h1 className="text-xl font-bold mb-2">Oops!</h1>
-    <p className="text-gray-500">{error}</p>
+    <p className="text-[var(--text-secondary)]">{error}</p>
   </div>;
 
   if (submitted) return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-6 text-center bg-emerald-50">
+    <div className="min-h-screen flex flex-col items-center justify-center p-6 text-center bg-emerald-50 dark:bg-emerald-950/20">
       <CheckCircle2 size={64} className="text-emerald-500 mb-6 animate-bounce" />
-      <h1 className="text-3xl font-bold text-emerald-900 mb-2">Well Done!</h1>
-      <p className="text-emerald-700 mb-8 max-w-sm">Your answers have been securely submitted to your teacher.</p>
-      <div className="bg-white p-6 rounded-2xl shadow-xl border border-emerald-100 w-full max-w-xs">
-        <div className="flex justify-between text-sm mb-2 text-gray-500">
+      <h1 className="text-3xl font-bold text-emerald-900 dark:text-emerald-100 mb-2">Well Done!</h1>
+      <p className="text-emerald-700 dark:text-emerald-300 mb-8 max-w-sm">Your answers have been securely submitted to your teacher.</p>
+      <div className="bg-[var(--surface)] p-6 rounded-2xl shadow-xl border border-emerald-100 w-full max-w-xs">
+        <div className="flex justify-between text-sm mb-2 text-[var(--text-secondary)]">
           <span>Warnings:</span>
           <span className={warnings > 0 ? "text-red-500 font-bold" : "text-emerald-600 font-bold"}>{warnings}</span>
         </div>
-        <div className="flex justify-between text-sm text-gray-500">
+        <div className="flex justify-between text-sm text-[var(--text-secondary)]">
           <span>Time:</span>
-          <span className="font-bold text-gray-900">{Math.floor((exam.settings.timeLimit * 60 - timeLeft) / 60)}m { (exam.settings.timeLimit * 60 - timeLeft) % 60}s</span>
+          <span className="font-bold text-[var(--text)]">{Math.floor((exam.settings.timeLimit * 60 - timeLeft) / 60)}m { (exam.settings.timeLimit * 60 - timeLeft) % 60}s</span>
         </div>
       </div>
     </div>
@@ -223,7 +223,7 @@ export default function StudentExamPage() {
       {isTabBlurred && (
         <div className="fixed inset-0 z-[100] bg-red-600/90 backdrop-blur-xl flex items-center justify-center p-6 text-center animate-in fade-in duration-300">
           <div className="max-w-sm space-y-6">
-            <div className="w-20 h-20 rounded-full bg-white flex items-center justify-center mx-auto shadow-2xl">
+            <div className="w-20 h-20 rounded-full bg-[var(--surface)] flex items-center justify-center mx-auto shadow-2xl">
               <Shield size={40} className="text-red-600 animate-bounce" />
             </div>
             <div>

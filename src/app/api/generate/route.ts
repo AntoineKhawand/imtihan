@@ -129,6 +129,32 @@ function sanitizeExercise(raw: unknown, allowedChapterIds: Set<string>): unknown
 }
 
 /**
+ * Reads a `chapterIds: string[]` field off an already-sanitized exercise
+ * object (typed `unknown`/`any` upstream — the full-text re-parse at stream
+ * end produces plain parsed JSON, not a typed Exercise) without resorting to
+ * `any`. Returns [] for anything malformed rather than throwing — this only
+ * feeds the advisory coverage-miss counter below, never generation itself.
+ */
+function extractChapterIds(exercise: unknown): string[] {
+  if (typeof exercise !== "object" || exercise === null) return [];
+  const chapterIds = (exercise as Record<string, unknown>).chapterIds;
+  return Array.isArray(chapterIds) ? chapterIds.filter((cid): cid is string => typeof cid === "string") : [];
+}
+
+/**
+ * Firestore doc IDs can't contain "/" and have other edge-case restrictions;
+ * `chapterId` ultimately comes from the client's `ExamContext.chapterIds`
+ * (`z.array(z.string())` — no charset/length constraint at the schema layer,
+ * unlike curriculumId/subject which are bounded enums). Collapses anything
+ * outside a safe charset so a crafted chapterId can't produce an invalid or
+ * unexpectedly-colliding doc path. Returns "" (caller skips) if nothing safe
+ * remains.
+ */
+function safeChapterIdSegment(chapterId: string): string {
+  return chapterId.replace(/[^a-zA-Z0-9_-]/g, "_").slice(0, 80);
+}
+
+/**
  * Extract the first JSON array or object from a string, string-aware so
  * brackets inside string literals don't throw off the depth counter.
  * Exported for reuse by src/app/api/exam/translate/route.ts — AI JSON output
@@ -681,6 +707,45 @@ export async function POST(request: NextRequest) {
               },
               lastGenerationAt: admin.firestore.FieldValue.serverTimestamp()
             }, { merge: true });
+
+            // ── Chapter-coverage-miss counters (advisory, zero extra AI cost) ──
+            // Same "a chapter the teacher selected got zero exercises" signal the
+            // client already surfaces in src/app/create/generate/page.tsx's
+            // `chapterCoverage[].missing` UI, computed here server-side instead so
+            // it's recorded once per real generation regardless of whether the
+            // teacher ever looks at that UI. University mode has no fixed chapter
+            // list (same exclusion the client applies — see
+            // `context.curriculumId !== "university"` there), so skip it. See
+            // CURRICULUM_COVERAGE_STRATEGY.md's "Secondary signal" item: this is a
+            // pure counter for a human to read later, not an input to prompting.
+            if (context.curriculumId !== "university") {
+              const coveredChapterIds = new Set<string>();
+              for (const ex of allExercises) {
+                for (const cid of extractChapterIds(ex)) coveredChapterIds.add(cid);
+              }
+              // Cap how many chapters we write per request — ExamContextSchema's
+              // chapterIds has no max length, so without this a request naming an
+              // unreasonably long chapter list could fan out into that many writes.
+              const MAX_TRACKED_CHAPTERS = 20;
+              const missingChapterIds = context.chapterIds
+                .slice(0, MAX_TRACKED_CHAPTERS)
+                .filter((cid) => !coveredChapterIds.has(cid));
+
+              for (const chapterId of missingChapterIds) {
+                const safeId = safeChapterIdSegment(chapterId);
+                if (!safeId) continue;
+                const missRef = adminDb
+                  .collection("chapterCoverageMisses")
+                  .doc(`${context.curriculumId}__${context.subject}__${safeId}`);
+                batch.set(missRef, {
+                  curriculumId: context.curriculumId,
+                  subject: context.subject,
+                  chapterId,
+                  missCount: admin.firestore.FieldValue.increment(1),
+                  lastMissedAt: admin.firestore.FieldValue.serverTimestamp(),
+                }, { merge: true });
+              }
+            }
 
             batch.commit().catch((e) => console.error("[/api/generate] Failed to update stats:", e));
 

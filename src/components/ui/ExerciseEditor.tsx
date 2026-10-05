@@ -516,7 +516,7 @@ export function ExerciseEditor({ exercise, context, onSave, onClose }: ExerciseE
                   onClick={() => setViewMode(mode)}
                   className={cn(
                     "flex items-center gap-1.5 px-3 py-1 text-xs rounded-md transition-all",
-                    viewMode === mode ? "bg-white shadow-sm text-[var(--accent)] font-medium" : "text-[var(--text-tertiary)] hover:text-[var(--text)]"
+                    viewMode === mode ? "bg-[var(--surface)] shadow-sm text-[var(--accent)] font-medium" : "text-[var(--text-tertiary)] hover:text-[var(--text)]"
                   )}
                 >
                   {icon} {label}

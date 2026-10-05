@@ -877,7 +877,7 @@ function ExamRow({
                         {studentResults.map((r, i) => {
                           const pct = r.totalAttempts > 0 ? Math.round((r.correctCount / r.totalAttempts) * 100) : 0;
                           return (
-                            <tr key={r.userId} className={cn("border-b border-[var(--border)] last:border-0", i % 2 === 0 ? "bg-white" : "bg-[var(--bg-subtle)]/40")}>
+                            <tr key={r.userId} className={cn("border-b border-[var(--border)] last:border-0", i % 2 === 0 ? "bg-[var(--surface)]" : "bg-[var(--bg-subtle)]/40")}>
                               <td className="px-4 py-3">
                                 <p className="font-medium text-[var(--text)]">{r.displayName}</p>
                                 {r.email && <p className="text-[10px] text-[var(--text-tertiary)]">{r.email}</p>}

@@ -89,7 +89,7 @@ export function RenewalBanner() {
       </p>
       <div className="flex items-center gap-2">
         {requested ? (
-          <span className="text-[10px] font-bold text-amber-600 px-2 py-1 bg-white rounded border border-amber-100">PENDING</span>
+          <span className="text-[10px] font-bold text-amber-600 px-2 py-1 bg-[var(--surface)] rounded border border-amber-100">PENDING</span>
         ) : (
           <button
             onClick={handleRequest}

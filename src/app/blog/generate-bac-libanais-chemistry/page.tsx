@@ -67,7 +67,7 @@ export default function BacLibanaisChemistryBlogPage() {
             "@type": "Article",
             headline: title,
             description: metadata.description,
-            author: { "@type": "Person", name: "Rania El-Khoury" },
+            author: { "@type": "Organization", name: "Imtihan" },
             publisher: {
               "@type": "Organization",
               name: "Imtihan",
@@ -141,10 +141,10 @@ export default function BacLibanaisChemistryBlogPage() {
           </article>
 
           <BlogAuthor
-            name="Rania El-Khoury"
-            role="Chemistry Department Head"
-            avatarText="RK"
-            bio="Rania has been teaching Chemistry at leading French-Lebanese lycées in Beirut for 15 years. She is passionate about making sciences interactive and reducing teacher burnout."
+            name="Imtihan Editorial Team"
+            role="Imtihan"
+            avatarText="IM"
+            bio="Written by the Imtihan editorial team, grounded in the Lebanese Baccalaureate curriculum the product is built around."
           />
           <BlogRelated currentSlug="generate-bac-libanais-chemistry" />
 

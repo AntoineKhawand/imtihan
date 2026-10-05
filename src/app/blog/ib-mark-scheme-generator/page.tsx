@@ -48,7 +48,7 @@ export default function IbMarkSchemeBlogPage() {
             "@type": "Article",
             headline: title,
             description: metadata.description,
-            author: { "@type": "Person", name: "David Vance" },
+            author: { "@type": "Organization", name: "Imtihan" },
             publisher: {
               "@type": "Organization",
               name: "Imtihan",
@@ -119,10 +119,10 @@ export default function IbMarkSchemeBlogPage() {
           </article>
 
           <BlogAuthor
-            name="David Vance"
-            role="IB Science Coordinator"
-            avatarText="DV"
-            bio="David Vance has taught IB DP Physics and Chemistry in international schools for 12 years. He specializes in designing modern classroom assessment systems."
+            name="Imtihan Editorial Team"
+            role="Imtihan"
+            avatarText="IM"
+            bio="Written by the Imtihan editorial team, grounded in the IB curriculum and assessment criteria the product is built around."
           />
           <BlogRelated currentSlug="ib-mark-scheme-generator" />
 

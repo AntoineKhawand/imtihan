@@ -48,7 +48,7 @@ export default function UniversityBlogPage() {
             "@type": "Article",
             headline: title,
             description: metadata.description,
-            author: { "@type": "Person", name: "Dr. Karim Zein" },
+            author: { "@type": "Organization", name: "Imtihan" },
             publisher: {
               "@type": "Organization",
               name: "Imtihan",
@@ -86,7 +86,7 @@ export default function UniversityBlogPage() {
 
             <BlogCallout
               title="Professor's Tip"
-              content="I upload my lecture notes directly to Imtihan. It generates exam questions that use my exact notation and nomenclature, which prevents student confusion during finals."
+              content="Uploading your own lecture notes lets the generated questions match your exact notation and nomenclature, which avoids the student confusion a mismatched notation style can cause during finals."
             />
 
             <h2 id="no-fixed-list" className="text-2xl font-bold text-[var(--text)] mt-12 mb-4 serif">Why There's No Fixed University Chapter List</h2>
@@ -120,10 +120,10 @@ export default function UniversityBlogPage() {
           </article>
 
           <BlogAuthor
-            name="Dr. Karim Zein"
-            role="University Professor"
-            avatarText="KZ"
-            bio="Dr. Zein has been teaching Engineering and Physics at Lebanon's top universities for over a decade. He advocates for AI as a tool to enhance academic rigor."
+            name="Imtihan Editorial Team"
+            role="Imtihan"
+            avatarText="IM"
+            bio="Written by the Imtihan editorial team, drawing on the past-exam (dawrat) and syllabus sourcing standard the product's university mode is grounded in."
           />
           <BlogRelated currentSlug="university-assessment-ai" />
 
