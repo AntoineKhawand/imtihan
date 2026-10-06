@@ -46,6 +46,53 @@ describe("cleanLatexForWord — BUG-046", () => {
   });
 });
 
+// Previously-uncovered: cleanLatexForWord's \ce{...} chemistry-formula step
+// (step 1, before any of the \frac/\sqrt/\begin{} handling below) had zero
+// test coverage — this is the ONLY place in the function that produces
+// subscript notation for chemical formulas (e.g. "H2O" -> "H_{2}O"), used
+// for Chemistry/physique-chimie exam exports.
+describe("cleanLatexForWord — \\ce{} chemistry formula subscripting", () => {
+  it("adds a subscript after a single-letter element symbol followed by a count", () => {
+    expect(cleanLatexForWord("\\ce{H2O}")).toBe("H_{2}O");
+  });
+
+  it("adds a subscript after a two-letter element symbol followed by a count", () => {
+    expect(cleanLatexForWord("\\ce{CO2}")).toBe("CO_{2}");
+  });
+
+  it("subscripts every element+count pair in a multi-element formula", () => {
+    expect(cleanLatexForWord("\\ce{H2SO4}")).toBe("H_{2}SO_{4}");
+  });
+
+  it("leaves an element symbol with no trailing count unsubscripted", () => {
+    expect(cleanLatexForWord("\\ce{NaCl}")).toBe("NaCl");
+  });
+});
+
+// Previously-uncovered branches in convertBraceCommands: the \begin{aligned}
+// (non-"cases") ternary arm, an unbalanced \begin{cases} with no matching
+// \end{cases}, and an accent command (\tilde/\hat/\dot/\ddot/\bar) with no
+// following brace group.
+describe("convertBraceCommands — \\begin{aligned}, unbalanced \\begin{cases}, and bare accents", () => {
+  it("joins \\begin{aligned} rows with ' ; ' but does NOT wrap them in braces (unlike \\begin{cases})", () => {
+    const out = convertBraceCommands("\\begin{aligned} x = 1 \\\\ y = 2 \\end{aligned}");
+    expect(out).toBe("x = 1 ; y = 2");
+    expect(out).not.toContain("{");
+  });
+
+  it("leaves a \\begin{cases} block with no matching \\end{cases} entirely unchanged", () => {
+    const input = "\\begin{cases} x = 1 \\\\ y = 2";
+    expect(convertBraceCommands(input)).toBe(input);
+  });
+
+  it("leaves an accent command unchanged when it is not immediately followed by a brace group", () => {
+    // "\\tilde" here is followed by a space, not "{" — readBraceGroup bails
+    // out immediately, so the command must be left as literal text rather
+    // than silently dropped or crashing.
+    expect(convertBraceCommands("\\tilde x")).toBe("\\tilde x");
+  });
+});
+
 // Regression for BUG-047: unbalanced \frac{ / \sqrt{ was O(n^2) on an
 // unauthenticated route with no size cap.
 describe("convertBraceCommands — pathological input (BUG-047)", () => {

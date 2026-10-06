@@ -39,4 +39,14 @@ describe("export route — \\boxed{} math repair", () => {
     expect(fixBoxedMath(input)).toBe(input);
     expect(unwrapBoxed(input)).toBe("$x = 5$");
   });
+
+  it("returns the remaining text unchanged (including the literal \\boxed{ keyword) when the brace never closes", () => {
+    // Previously-untested branch: the brace-depth scan reaches the end of
+    // the string without depth ever returning to 0 (`closed` stays false).
+    // Rather than throwing or silently dropping content, unwrapBoxed must
+    // bail out and hand back everything from the unclosed \boxed{ onward,
+    // verbatim — same fail-soft posture as the rest of this export path.
+    const input = "Answer: \\boxed{x = 5";
+    expect(unwrapBoxed(input)).toBe(input);
+  });
 });

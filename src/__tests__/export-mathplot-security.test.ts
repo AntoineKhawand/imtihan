@@ -50,6 +50,15 @@ describe("isSafePlotExpression (BUG-051 mathjs DoS guard)", () => {
     expect(isSafePlotExpression("")).toBe(false);
   });
 
+  it("accepts a purely numeric/operator expression with no letters at all", () => {
+    // expr.match(/[a-zA-Z_]+/g) returns null (no letter tokens to check)
+    // when the equation is e.g. a constant or pure arithmetic — the `|| []`
+    // fallback must make this safe rather than throwing on a null token list.
+    expect(isSafePlotExpression("2+2*3")).toBe(true);
+    expect(isSafePlotExpression("(1+2)/3")).toBe(true);
+    expect(isSafePlotExpression("42")).toBe(true);
+  });
+
   it("empirically confirms the guard actually prevents the slow path (not just a unit assertion)", () => {
     // Mirrors _tmp-bug047-dos-timing.test.ts's style: prove the rejection
     // itself is cheap, so the guard can't become its own DoS vector.
