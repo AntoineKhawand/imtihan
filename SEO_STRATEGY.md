@@ -207,6 +207,37 @@ keep each change reviewable and low-risk for an unattended push.
       GEO score to report since nothing was applied; current score for this post remains **40/100**.
 
 ### Technical SEO
+- [x] **2026-10-05 — `METRICS.md`/`CEO_OPERATING_PLAN.md` GSC refresh (real duty going forward,
+      not a one-off; see standing-cadence note below).** `gsc` tools attached and worked cleanly
+      this session. Real 28d numbers: 18 clicks / 584 impressions / 3.08% CTR / avg pos 5.8 (was
+      9/554/1.6%/5.8 at the 2026-09-27 baseline — clicks and CTR roughly doubled, position flat).
+      `batch_url_inspection` on the same 9 tracked pages: **6 of 9 now indexed** (was 1 of 9
+      confirmed) — the 3 landing pages that had manual re-indexing requested 2026-09-28/30
+      (`/generateur-examen-bac-libanais`, `/ib-exam-generator`, `/bac-francais-exam-generator`) are
+      all now PASS/"Submitted and indexed" (crawled 2026-09-28), and each is already pulling real
+      on-topic non-brand query impressions that didn't exist before ("bac libanais" pos 5, "ib test
+      maker" 9 impr, "imtihan en francais"). This is a genuine, detectable result from both the
+      2026-09-30 footer-linking fix and the manual indexing requests — not just a status-field
+      flip. `/pricing`, `/about`, `/blog` are all still "URL is unknown to Google," never crawled,
+      over a week after the `/about`/`/pricing` footer-link fix (2026-09-27) shipped — that fix has
+      **not** produced a detectable change yet, unlike the landing-page fix. Action taken:
+      resubmitted `sitemap.xml` (50 URLs, 0 errors) via `gsc` tools to nudge a re-crawl of those 3;
+      if still unindexed next check, a human needs to click Request Indexing in the GSC UI for
+      them specifically (same lever that worked for the landing pages — the API has no
+      request-indexing method). GA4 numbers were **not** refreshed — no GA4 MCP tool is available
+      in this environment at all, so `METRICS.md`'s GA4 rows stay at their 2026-09-28 values,
+      explicitly marked stale. Full detail in `METRICS.md`'s "Traffic & acquisition" table and
+      `CEO_OPERATING_PLAN.md` §2/§7.
+      **Standing cadence, going forward:** this GSC refresh (performance overview + indexing check
+      on the same tracked pages) should run **weekly**, not nightly and not ad-hoc. A near-zero-
+      traffic pre-launch site's real numbers don't move meaningfully day-to-day (today's 28-day
+      aggregate barely shifted from a week-old baseline even with a real indexing win behind it),
+      so a nightly check would mostly just re-confirm the same number at the cost of a dispatch —
+      weekly is enough to catch real movement (like the landing-page indexing flip above) without
+      wasting runs. Whoever schedules this should treat "pull GSC numbers, update `METRICS.md`
+      and `CEO_OPERATING_PLAN.md`, check indexing on the same tracked page set, resubmit sitemap or
+      flag for manual Request-Indexing if any tracked page is still stuck" as one recurring
+      backlog item, not something that needs re-proposing each time.
 - [~] **2026-10-01 — 3rd of the last 4 nightly runs blocked on the same GSC tool-attachment gap
       (2026-09-29, 2026-09-30, now today; 2026-09-27/09-28 were the only 2 that worked).** Checked
       tool availability first, as instructed: zero `mcp__gsc__*` tools of any kind are present in
