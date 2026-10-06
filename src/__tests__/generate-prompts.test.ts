@@ -97,6 +97,14 @@ describe("getAllChapterIds", () => {
   it("returns an empty array for a nonexistent level", () => {
     expect(getAllChapterIds("bac-libanais", "not-a-real-level", "mathematics")).toEqual([]);
   });
+
+  it("returns an empty array for a valid level with no chapters defined for that subject", () => {
+    // Same real gap getChapter's own test above exercises ("nsi" has no
+    // chapters at terminale-s, Partial<Record<Subject, Chapter[]>>) — this
+    // closes the matching `level.chapters[subject] ?? []` fallback branch
+    // in getAllChapterIds itself, which no existing test reached directly.
+    expect(getAllChapterIds("bac-libanais", "terminale-s", "nsi")).toEqual([]);
+  });
 });
 
 describe("buildChaptersSummary", () => {
@@ -112,6 +120,15 @@ describe("buildChaptersSummary", () => {
 
   it("reports 'No chapters selected.' when none of the given ids match real chapters", () => {
     expect(buildChaptersSummary("bac-libanais", "terminale-s", "mathematics", ["hallucinated-chapter"]))
+      .toBe("No chapters selected.");
+  });
+
+  it("reports 'No chapters selected.' for a valid level whose chapters record has no entry at all for that subject", () => {
+    // Distinct from the "hallucinated-chapter" case above: here `nsi` has no
+    // `chapters[subject]` array whatsoever at terminale-s (not an array that
+    // simply fails to match), so this exercises the `level.chapters[subject]
+    // ?? []` fallback itself, not the subsequent `.filter()` finding nothing.
+    expect(buildChaptersSummary("bac-libanais", "terminale-s", "nsi", ["anything"]))
       .toBe("No chapters selected.");
   });
 
