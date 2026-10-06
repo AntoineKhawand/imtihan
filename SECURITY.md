@@ -230,6 +230,8 @@ This sink pre-dates `7fccb92` — the legacy `exercise.mathPlots` array (freely 
 
 ## Open questions for the founder
 
-- **Rotate `FIREBASE_ADMIN_PRIVATE_KEY`.** A 2026-10-05 `qa` dispatch's own grep incidentally printed its full value into a tool-output transcript (see this file's 2026-10-05 audit-log entry). Not reported misused, but landed somewhere it shouldn't have — standard practice is to rotate rather than trust "probably fine."
-- **Unauthenticated, cost-incurring AI-proxy routes bypass the 1-free-exam quota entirely.** See `FOUNDER_DECISIONS.md` for the concrete scenario — this needs a product decision (require auth, add rate-limiting, or accept the cost exposure pre-launch), not a unilateral security fix, since some of these may be intentionally public for landing-page/try-it-free UX.
 - **Cron routes fail open if `CRON_SECRET` isn't set in the Vercel environment.** Not logged to `FOUNDER_DECISIONS.md` (this is a config-verification ask, not a risk-acceptance judgment call) — whoever manages Vercel env vars should confirm `CRON_SECRET` is actually set in production; if it is, there's nothing to do, if it isn't, every `/api/cron/*` route is unauthenticated today.
+
+**Resolved, kept here only so the history isn't lost:**
+- ~~Rotate `FIREBASE_ADMIN_PRIVATE_KEY`~~ — done 2026-10-05, see this file's audit-log entry and `FOUNDER_DECISIONS.md` #11.
+- ~~Unauthenticated, cost-incurring AI-proxy routes~~ — answered 2026-09-27, per-route decision, see `FOUNDER_DECISIONS.md` #8.
