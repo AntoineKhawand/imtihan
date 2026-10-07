@@ -11,16 +11,30 @@ import { describe, it, expect } from "vitest";
 // code to make a test pass) — this is a verbatim inlined copy, same
 // technique `src/__tests__/qcm.test.ts` already uses for generate/route.ts's
 // own private helpers. Keep this in sync with route.ts if that function ever
-// changes; the comment there explicitly says it "mirrors MathPlot.tsx's own
-// 'y = '/'f(x) = ' prefix stripping" (src/components/ui/MathPlot.tsx line 21
-// has the identical regex pair), so any intentional behavior change should
-// be reflected in both places and in this test file.
+// changes; a near-identical (but not quite identical — see
+// src/__tests__/mathplot-equation.test.ts) fixup lives in
+// src/components/ui/MathPlot.tsx for the on-screen plot, so any intentional
+// behavior change here should be considered there too.
 // ---------------------------------------------------------------------------
 
+import { create, all } from "mathjs";
+
+const mathInstance = create(all);
+
+const KNOWN_FUNCTION_NAMES = new Set([
+  "sin", "cos", "tan", "asin", "acos", "atan", "atan2",
+  "sinh", "cosh", "tanh", "asinh", "acosh", "atanh",
+  "sqrt", "cbrt", "abs", "exp", "log", "log2", "log10", "log1p", "ln",
+  "pow", "min", "max", "floor", "ceil", "round", "sign", "mod",
+]);
+
 function preprocessEquationForMathjs(raw: string): string {
-  let eq = raw.replace(/^(y|f\(x\))\s*=\s*/i, "").trim();
+  let eq = raw.trim().replace(/^(y|f\(x\))\s*=\s*/i, "").trim();
   eq = eq.replace(/(\d)([a-zA-Z(])/g, "$1*$2");
   eq = eq.replace(/(\))([a-zA-Z0-9(])/g, "$1*$2");
+  eq = eq.replace(/([a-zA-Z]+)(\()/g, (match, name: string) =>
+    KNOWN_FUNCTION_NAMES.has(name.toLowerCase()) ? match : `${name}*(`
+  );
   return eq;
 }
 
@@ -83,45 +97,66 @@ describe("preprocessEquationForMathjs — implicit multiplication insertion", ()
   });
 });
 
-describe("preprocessEquationForMathjs — known gaps (documented, not fixed)", () => {
-  // Real, reproducible bug found while writing these tests (not previously
-  // documented in BUGS.md): a letter immediately followed by "(" is never
-  // given an inserted "*", unlike the symmetric ")"-then-letter case above.
-  // mathjs parses "x(x+1)" as a *function call* to a function named "x",
-  // not as multiplication — confirmed by actually compiling and evaluating
-  // the output with the real `mathjs` package (not just reading the regex):
-  // `create(all).compile("2*x(x+1) + 3").evaluate({ x: 2 })` throws
-  // "'x' is not a function; its value is: 2". Since `renderMathPlotPng()`
-  // (src/app/api/export/route.ts) wraps its whole rendering attempt in a
-  // try/catch per its own doc comment, this doesn't crash the export — it
-  // silently degrades to the pre-existing text-label-box fallback instead of
-  // ever rendering a real graph, for any equation shaped like "y = 2x(x+1)"
-  // or "f(x) = x(x-3)" (a plausible, simple factored-form equation a teacher
-  // or the AI could easily write). The same regex pair is duplicated in
-  // src/components/ui/MathPlot.tsx (line 21) for the on-screen plot, which
-  // uses function-plot's own parser rather than mathjs — not verified here
-  // whether that parser has the same gap.
-  it("leaves a letter directly followed by '(' unmultiplied — reproduces a real mathjs parse failure for 'x(x+1)'-shaped equations", () => {
-    expect(preprocessEquationForMathjs("y = 2x(x+1) + 3")).toBe("2*x(x+1) + 3");
-    // Not "2*x*(x+1) + 3", which is what a correct factored-form rewrite
-    // would need to produce for mathjs to parse it as multiplication.
+describe("preprocessEquationForMathjs — BUG-056 fix: letter directly followed by '(' ", () => {
+  // Previously a real, reproducible bug: a letter immediately followed by
+  // "(" never got an inserted "*", unlike the symmetric ")"-then-letter case
+  // above. mathjs parsed "x(x+1)" as a *function call* to a function named
+  // "x", not as multiplication. Now fixed via a known-function-name
+  // allow-list (KNOWN_FUNCTION_NAMES) so a bare variable like "x" still gets
+  // multiplied, while real function calls (sin, cos, sqrt, ...) are left
+  // alone (see the next describe block).
+  it("inserts '*' between a letter and a following '(' when the letter isn't a known function name — fixes the 'x(x+1)'-shaped parse failure", () => {
+    expect(preprocessEquationForMathjs("y = 2x(x+1) + 3")).toBe("2*x*(x+1) + 3");
+    expect(preprocessEquationForMathjs("x(x-3)")).toBe("x*(x-3)");
   });
 
-  // Separately: the prefix-stripping regex is anchored to the very start of
-  // the string (`^`), but `.trim()` is only applied AFTER that regex runs —
-  // so a raw equation with LEADING whitespace never matches the prefix at
-  // all, and the "y = " / "f(x) = " text is left in the output verbatim
-  // (silently fed to mathjs as part of the expression, which will fail to
-  // compile "y = 2*x" as a plain expression). This exact same ordering bug
-  // is independently duplicated in MathPlot.tsx line 21. In practice this
-  // looks unreachable via the main AI-generated pipeline — the inline
-  // `[PLOT: equation]` tag extraction regex in src/lib/renderContent.ts
-  // (`/\[PLOT:\s*([\s\S]*?)\]/gi`) already consumes any whitespace right
-  // after "PLOT:" before the equation is captured — but it IS reachable via
-  // the legacy, freely-editable `mathPlots` array text input in
-  // ExerciseEditor.tsx's `updatePlot()`, where a teacher could easily type
-  // or paste a leading space.
-  it("does not strip the prefix when the raw string has leading whitespace before it (trim() runs after, not before, the prefix regex)", () => {
-    expect(preprocessEquationForMathjs("  y = 2x")).toBe("y = 2*x");
+  it("the fixed-up expression actually compiles and evaluates with the real mathjs package (not just string-matches)", () => {
+    const expr = preprocessEquationForMathjs("y = 2x(x+1) + 3");
+    expect(mathInstance.compile(expr).evaluate({ x: 2 })).toBe(15);
+  });
+});
+
+describe("preprocessEquationForMathjs — no regression on genuine function calls", () => {
+  // A naive '([a-zA-Z])(\()' -> insert '*' rule would incorrectly rewrite
+  // "sin(x)" into "sin*(x)". Confirm the allow-list keeps every function
+  // name the generation prompt's MATHEMATICAL PLOTS instruction and
+  // isSafePlotExpression()'s own allow-list actually use intact, and that
+  // the result still compiles with the real mathjs package.
+  it("leaves known function calls unmultiplied", () => {
+    const cases: Array<[string, number]> = [
+      ["sin(x)", 0], ["cos(x)", 0], ["tan(x)", 0],
+      ["sqrt(x)", 4], ["log(x)", 2], ["exp(x)", 1], ["abs(x)", -3],
+      ["pow(x,3)", 2],
+    ];
+    for (const [raw, xval] of cases) {
+      const pre = preprocessEquationForMathjs(raw);
+      expect(pre).toBe(raw); // untouched — no spurious '*' inserted
+      expect(() => mathInstance.compile(pre).evaluate({ x: xval })).not.toThrow();
+    }
+  });
+
+  it("leaves 'ln(x)' unmultiplied even though mathjs itself has no built-in 'ln' (separate, pre-existing, out-of-scope gap — natural log is 'log' in mathjs)", () => {
+    expect(preprocessEquationForMathjs("ln(x)")).toBe("ln(x)");
+  });
+
+  it("still inserts '*' between adjacent known function calls (e.g. 'sin(x)cos(x)')", () => {
+    expect(preprocessEquationForMathjs("sin(x)cos(x)")).toBe("sin(x)*cos(x)");
+  });
+});
+
+describe("preprocessEquationForMathjs — BUG-056 fix: trim() before the prefix regex", () => {
+  // Previously the prefix-stripping regex was anchored to the very start of
+  // the string (`^`), but `.trim()` was only applied AFTER that regex ran —
+  // so a raw equation with LEADING whitespace never matched the prefix at
+  // all, and the "y = " / "f(x) = " text was left in the output verbatim.
+  // In practice this looks unreachable via the main AI-generated pipeline —
+  // the inline `[PLOT: equation]` tag extraction regex in
+  // src/lib/renderContent.ts (`/\[PLOT:\s*([\s\S]*?)\]/gi`) already consumes
+  // any whitespace right after "PLOT:" before the equation is captured —
+  // but it IS reachable via the legacy, freely-editable `mathPlots` array
+  // text input in ExerciseEditor.tsx's `updatePlot()`, where a teacher could
+  // easily type or paste a leading space. Same fix applied to MathPlot.tsx.
+  it("strips the prefix even when the raw string has leading whitespace before it", () => {
+    expect(preprocessEquationForMathjs("  y = 2x")).toBe("2*x");
   });
 });
