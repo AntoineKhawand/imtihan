@@ -22,9 +22,20 @@ $RepoDir    = "C:\Users\Administrateur\Downloads\imtihan\imtihan"
 # logon, and a freshly spawned process here still lacked it on PATH) —
 # prepend known install locations defensively instead of depending on the
 # session ever refreshing its environment block.
-$ExtraPath = "C:\Program Files\GitHub CLI"
-if ($env:PATH -notlike "*$ExtraPath*") {
-    $env:PATH = "$ExtraPath;$env:PATH"
+#
+# 2026-10-07: this exact gap silently broke the Oct 6 and Oct 7 runs —
+# `claude.cmd` lives in the npm global prefix (not on this PATH), so
+# `& claude -p ...` threw CommandNotFoundException. That error happens at
+# command-resolution time, before the pipeline (and its `2>&1`) ever runs,
+# so it never reached Log, and $LASTEXITCODE was left untouched from the
+# prior successful git call — the run silently did nothing but logged
+# "exit code 0" anyway. Confirmed by reproducing the same failure
+# interactively and fixing it by adding npm's global prefix here.
+$ExtraPaths = @("C:\Program Files\GitHub CLI", "$env:APPDATA\npm")
+foreach ($p in $ExtraPaths) {
+    if ($env:PATH -notlike "*$p*") {
+        $env:PATH = "$p;$env:PATH"
+    }
 }
 $PromptFile = Join-Path $RepoDir "scripts\nightly-ops-prompt.md"
 $LogDir     = Join-Path $RepoDir "logs\nightly"
