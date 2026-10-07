@@ -68,7 +68,7 @@ export function MathPlot({ equation, title, width = 600, height = 400 }: MathPlo
       container.innerHTML = "";
       const errorMessage = err instanceof Error ? err.message : String(err);
       const errorEl = document.createElement("div");
-      errorEl.className = "p-4 text-xs text-red-500 bg-red-50 rounded-lg";
+      errorEl.className = "p-4 text-xs text-red-500 dark:text-red-400 bg-red-50 dark:bg-red-950/30 rounded-lg";
       errorEl.textContent = `Error plotting "${equation}": ${errorMessage}`;
       container.appendChild(errorEl);
     }
