@@ -614,6 +614,20 @@ These are intentional constraints in MVP — document here to avoid re-opening a
 
 ---
 
+## BUG-059: Nightly automation (`scripts/nightly-ops.ps1`) silently did nothing for 2 consecutive nights (Oct 6, Oct 7) — exit code 0, zero output, no PR
+**Status:** Fixed
+**Severity:** Medium
+**Area:** Infra/Ops
+**Reported:** 2026-10-07 (founder: "i can't see the new PR")
+**Fixed:** 2026-10-07
+
+**Description:** The Oct 6 and Oct 7 nightly runs both finished in ~1 second with exit code 0 and zero captured output between "Launching claude -p" and "finished" in their own logs (`logs/nightly/2026-10-06_000006.log`, `logs/nightly/2026-10-07_000004.log`). No session transcript was created for either night, and no branch/PR was opened — the script reported success while doing nothing.
+**Root cause:** `claude.cmd` lives in the npm global prefix (`$env:APPDATA\npm`), which was not on the Scheduled Task's own cached PATH (same class of staleness the script already works around for GitHub CLI, just never applied to npm's global bin dir). `& claude -p ... 2>&1 | ForEach-Object { Log $_ }` threw `CommandNotFoundException` at command-resolution time — before the pipeline (and its `2>&1`) ever actually ran — so the error never reached `Log`, and `$LASTEXITCODE` was left at `0` from the prior successful `git pull`. Reproduced interactively: stripped the same PATH entries, confirmed `claude --version` failed, then confirmed the fix restores it.
+**Fix:** Extended the existing PATH-prepend workaround in `scripts/nightly-ops.ps1` (previously just `C:\Program Files\GitHub CLI`) to a list that also includes `$env:APPDATA\npm`.
+**Verification:** PowerShell parser confirms no syntax errors in the edited script. Reproduced the failure and the fix interactively (see commit `a920dee`, PR #74).
+
+---
+
 ## BUG-058: `isValidIp()` (`src/lib/security.ts`) rejected standard compressed IPv6 addresses and never bounded IPv4 octets to 0–255 — found while writing unit tests, low-impact at the time because the function was unused dead code
 **Status:** Fixed
 **Severity:** Low
