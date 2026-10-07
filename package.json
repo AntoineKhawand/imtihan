@@ -10,6 +10,11 @@
     "re2@1.24.0": true,
     "unrs-resolver@1.11.1": true
   },
+  "overrides": {
+    "sharp": "^0.35.5",
+    "source-map-js": "^1.2.2",
+    "@fastify/busboy": "^3.2.2"
+  },
   "scripts": {
     "predev": "node scripts/generate-static-routes.mjs",
     "dev": "next dev --turbopack",
