@@ -490,7 +490,7 @@ export default function AdminPage() {
     return (
       <div className="min-h-screen bg-[var(--bg)] pb-20">
         <div className="bg-[var(--surface)] border-b border-[var(--border)] px-4 sm:px-6 py-4">
-          <div className="max-w-7xl mx-auto w-full flex items-center gap-3">
+          <div className="w-full flex items-center gap-3">
             <div className="w-10 h-10 rounded-2xl bg-[var(--bg-subtle)] animate-pulse" />
             <div className="space-y-1.5">
               <div className="h-4 w-32 bg-[var(--bg-subtle)] rounded animate-pulse" />
@@ -498,8 +498,8 @@ export default function AdminPage() {
             </div>
           </div>
         </div>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-8">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div className="w-full px-4 sm:px-6 pt-8">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 mb-8">
             {[0, 1, 2, 3].map((i) => (
               <div key={i} className="bg-[var(--surface)] p-5 rounded-3xl border border-[var(--border)] shadow-sm">
                 <div className="h-2.5 w-20 bg-[var(--bg-subtle)] rounded animate-pulse mb-3" />
@@ -554,7 +554,7 @@ export default function AdminPage() {
       )}
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 w-64 bg-[var(--surface)] border-r border-[var(--border)] flex flex-col transition-transform md:translate-x-0",
+          "fixed inset-y-0 left-0 z-[60] w-64 bg-[var(--surface)] border-r border-[var(--border)] flex flex-col transition-transform md:translate-x-0",
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
@@ -581,12 +581,15 @@ export default function AdminPage() {
               key={id}
               onClick={() => { setActiveTab(id); setSidebarOpen(false); }}
               className={cn(
-                "h-10 px-3.5 rounded-xl text-sm font-bold transition-all flex items-center gap-3",
+                "relative h-10 px-3.5 rounded-xl text-sm font-bold transition-all flex items-center gap-3",
                 activeTab === id
                   ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400"
                   : "text-[var(--text-secondary)] hover:bg-[var(--bg-subtle)]"
               )}
             >
+              {activeTab === id && (
+                <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-[3px] rounded-full bg-emerald-600" />
+              )}
               <Icon size={16} className="shrink-0" />
               <span className="flex-1 text-left truncate">{label}</span>
               {id === "users" && pendingRequests > 0 && (
@@ -640,12 +643,12 @@ export default function AdminPage() {
           </div>
         </header>
 
-        <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 pt-8">
+        <div className="w-full px-4 sm:px-6 pt-8">
 
         {/* ── USERS TAB ── */}
         {activeTab === "users" && (
           <>
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
               <div className="bg-[var(--surface)] p-5 rounded-3xl border border-[var(--border)] shadow-sm">
                 <p className="text-[10px] font-black text-[var(--text-tertiary)] uppercase tracking-widest mb-1">Total Educators</p>
                 <h3 className="text-2xl font-black text-[var(--text)]">{users.length}</h3>
@@ -658,13 +661,13 @@ export default function AdminPage() {
                 <p className="text-[10px] font-black text-amber-500 uppercase tracking-widest mb-1">Requests</p>
                 <h3 className="text-2xl font-black text-amber-600">{users.filter(u => u.renewalRequested || u.resetRequested).length}</h3>
               </div>
-              <div className="bg-[var(--surface)] p-5 rounded-3xl border border-[var(--border)] shadow-sm hidden lg:block">
+              <div className="bg-[var(--surface)] p-5 rounded-3xl border border-[var(--border)] shadow-sm">
                 <p className="text-[10px] font-black text-blue-500 uppercase tracking-widest mb-1">Yearly Plans</p>
                 <h3 className="text-2xl font-black text-blue-600">{users.filter(u => u.planType === "yearly").length}</h3>
               </div>
             </div>
 
-            <div className="grid gap-4 lg:grid-cols-[1.4fr_1fr] mb-8">
+            <div className="grid gap-4 md:grid-cols-[1.4fr_1fr] mb-8">
               <div className="bg-[var(--surface)] p-5 sm:p-6 rounded-3xl border border-[var(--border)] shadow-sm">
                 <p className="text-sm font-black text-[var(--text)]">New educators</p>
                 <p className="text-xs text-[var(--text-tertiary)] font-medium mb-4">Signups per week, last 8 weeks</p>
@@ -720,9 +723,11 @@ export default function AdminPage() {
                   <BarChart3 size={24} className="mx-auto text-emerald-400 mb-2" />
                   <p className="text-[10px] text-emerald-300 font-bold uppercase tracking-widest mb-1">Global Generations</p>
                   <h4 className="text-5xl font-black text-white">{Object.values(statsData.subjects || {}).reduce((a, b) => a + b, 0)}</h4>
-                  <div className="flex items-center justify-center gap-1.5 mt-2 text-[10px] text-emerald-300/60 font-medium">
-                    <Clock size={12} /> Last updated: {new Date(statsData.lastUpdated).toLocaleTimeString()}
-                  </div>
+                  {!loading && (
+                    <div className="flex items-center justify-center gap-1.5 mt-2 text-[10px] text-emerald-300/60 font-medium">
+                      <Clock size={12} /> Last updated: {new Date(statsData.lastUpdated).toLocaleTimeString()}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -1233,7 +1238,7 @@ export default function AdminPage() {
         {/* ── SUBSCRIBERS TAB ── */}
         {activeTab === "subscribers" && (
           <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
               <div className="bg-[var(--surface)] p-5 rounded-3xl border border-[var(--border)] shadow-sm">
                 <p className="text-[10px] font-black text-[var(--text-tertiary)] uppercase tracking-widest mb-1">Total Subscribers</p>
                 <h3 className="text-2xl font-black text-[var(--text)]">{subscribers.length}</h3>
@@ -1242,7 +1247,7 @@ export default function AdminPage() {
                 <p className="text-[10px] font-black text-emerald-500 uppercase tracking-widest mb-1">Checklist Delivered</p>
                 <h3 className="text-2xl font-black text-emerald-600">{subscribers.filter(s => s.checklistSentAt).length}</h3>
               </div>
-              <div className="bg-[var(--surface)] p-5 rounded-3xl border border-[var(--border)] shadow-sm hidden lg:block">
+              <div className="bg-[var(--surface)] p-5 rounded-3xl border border-[var(--border)] shadow-sm">
                 <p className="text-[10px] font-black text-amber-500 uppercase tracking-widest mb-1">Send Failed / Pending</p>
                 <h3 className="text-2xl font-black text-amber-600">{subscribers.filter(s => !s.checklistSentAt).length}</h3>
               </div>
