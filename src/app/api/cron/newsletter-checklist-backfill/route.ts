@@ -61,9 +61,17 @@ export async function GET(request: NextRequest) {
           await docSnap.ref.update({ checklistSentAt: Date.now() });
           sent++;
         } else {
+          console.error(
+            "[cron/newsletter-checklist-backfill] send_rejected",
+            JSON.stringify({ uid: docSnap.id, error: result.error ?? null })
+          );
           errors++;
         }
-      } catch {
+      } catch (err) {
+        console.error(
+          "[cron/newsletter-checklist-backfill] send_threw",
+          JSON.stringify({ uid: docSnap.id, error: err instanceof Error ? err.message : String(err) })
+        );
         errors++;
       }
     }

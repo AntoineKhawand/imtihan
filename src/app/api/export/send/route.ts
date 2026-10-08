@@ -67,6 +67,15 @@ export async function POST(request: NextRequest) {
     });
 
     if (!result.ok) {
+      console.error(
+        "[api/export/send] brevo_rejected",
+        JSON.stringify({
+          subject: context.subject,
+          levelId: context.levelId,
+          curriculumId: context.curriculumId,
+          error: result.error ?? null,
+        })
+      );
       return NextResponse.json({ error: result.error || "Email failed" }, { status: 502 });
     }
 

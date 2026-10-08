@@ -118,6 +118,7 @@ function robustParse(text: string): unknown {
 // ---------------------------------------------------------------------------
 export async function POST(request: NextRequest) {
   try {
+    const startedAt = Date.now();
     // 0. Auth check
     const uid = await verifySession(request);
     if (!uid) {
@@ -301,6 +302,22 @@ export async function POST(request: NextRequest) {
       ];
       ctx.confidence = Math.min(ctx.confidence, 0.6);
     }
+
+    console.log(
+      "[api/analyze] request_completed",
+      JSON.stringify({
+        uid,
+        provider: providerName,
+        curriculumId: ctx.curriculumId,
+        levelId: ctx.levelId,
+        subject: ctx.subject,
+        language: ctx.language,
+        chapterCount: ctx.chapterIds.length,
+        warningCount: ctx.warnings.length,
+        confidence: ctx.confidence,
+        durationMs: Date.now() - startedAt,
+      })
+    );
 
     return NextResponse.json({ success: true, context: ctx });
   } catch (error) {

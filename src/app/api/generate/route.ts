@@ -297,6 +297,7 @@ export function robustParse(text: string): unknown {
 
 export async function POST(request: NextRequest) {
   try {
+    const startedAt = Date.now();
     const body = await request.json();
     const parsed = RequestSchema.safeParse(body);
 
@@ -352,6 +353,10 @@ export async function POST(request: NextRequest) {
       const msg = isPro
         ? `You have reached your monthly limit of ${limit} exams. Contact support if you need more.`
         : `You have reached your limit of ${baseLimit} free exam. Upgrade to Pro for 10 exams/month (or 20 with a yearly plan).`;
+      console.warn(
+        "[api/generate] quota_exceeded",
+        JSON.stringify({ uid, isPro: !!isPro, quotaUsed, limit, planType: userData.planType ?? null })
+      );
       return NextResponse.json(
         { success: false, errors: [msg] },
         { status: 429, headers: createSecurityHeaders() }
@@ -675,6 +680,18 @@ export async function POST(request: NextRequest) {
 
           // Guard: if AI returned nothing useful, don't burn quota
           if (totalExercises === 0) {
+            console.warn(
+              "[api/generate] empty_ai_result",
+              JSON.stringify({
+                uid,
+                provider: providerName,
+                curriculumId: context.curriculumId,
+                levelId: context.levelId,
+                subject: context.subject,
+                requestedExercises: context.exerciseCount,
+                accumulatedChars: accumulated.length,
+              })
+            );
             controller.enqueue(
               encoder.encode(`data: ${JSON.stringify({ done: true, error: "The AI returned no exercises. Please try again." })}\n\n`)
             );
@@ -760,6 +777,23 @@ export async function POST(request: NextRequest) {
               }))
             ).catch((e) => console.warn("[/api/generate] Failed to save teacher style:", e));
           }
+
+          console.log(
+            "[api/generate] request_completed",
+            JSON.stringify({
+              uid,
+              provider: providerName,
+              isAdjustment: !!isAdjustment,
+              requestedExercises: context.exerciseCount,
+              generatedExercises: totalExercises,
+              quotaCharged: !isAdjustment && generatedEnough,
+              curriculumId: context.curriculumId,
+              levelId: context.levelId,
+              subject: context.subject,
+              language: context.language,
+              durationMs: Date.now() - startedAt,
+            })
+          );
         } catch (err) {
           console.error(`[/api/generate] ${providerName} JSON parse failed. Provider: ${providerName}. Length:`, accumulated.length);
           console.error("[/api/generate] Parse error:", err);
