@@ -296,9 +296,17 @@ export async function GET(request: NextRequest) {
           await doc.ref.update({ newsletterSentAt: now });
           sent++;
         } else {
+          console.error(
+            "[cron/newsletter] send_rejected",
+            JSON.stringify({ uid: doc.id, error: result.error ?? null })
+          );
           errors++;
         }
-      } catch {
+      } catch (err) {
+        console.error(
+          "[cron/newsletter] send_threw",
+          JSON.stringify({ uid: doc.id, error: err instanceof Error ? err.message : String(err) })
+        );
         errors++;
       }
     }
