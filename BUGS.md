@@ -21,6 +21,18 @@ Track issues here during development. Format:
 
 ---
 
+## BUG-061: `websocket-driver` (critical — resource-limit bypass + message-corruption via compression, GHSA-mp7j-qc5w-4988 / GHSA-xv26-6w52-cph6) drifted in during BUG-060's own merge — new advisory against an already-installed version, not a regression from either merged branch
+**Status:** Open — logged, not yet fixed
+**Severity:** High
+**Area:** Dependencies
+**Reported:** 2026-10-08 (while resolving PR #76's merge conflict with `unit-tests/2026-10-07`, immediately after rebase + lockfile regeneration)
+
+**Description:** `npm audit --omit=dev` on the rebased `nightly/2026-10-08` branch (BUG-060's own PR) showed **23 vulnerabilities (2 low, 11 moderate, 9 high, 1 critical)** — one more high-severity finding than BUG-060's documented post-fix count of 22 (2 low, 11 moderate, 8 high, 1 critical). The new finding: `websocket-driver@<=0.7.4`, via `firebase@11.10.0 → @firebase/database@1.0.20 → faye-websocket@0.11.4 → websocket-driver@0.7.4` — confirmed via `npm ls websocket-driver`. `firebase` itself is unchanged by either merged branch; this is the exact same drift pattern BUG-060 already documents (a freshly-published advisory matching a dependency version that was already installed), caught immediately because a full test run happened to follow right after the merge, not because anything in this session's changes introduced it.
+**Not fixed yet:** out of scope for a merge-conflict-resolution pass — needs its own review (confirm a non-breaking fixed version exists within `@firebase/database`'s accepted range, same style of check BUG-060 did for its 3 fixes) rather than a blind override.
+**Found by:** orchestrator (2026-10-08, incidental — while verifying PR #76 post-rebase, not a scheduled drift check).
+
+---
+
 ## BUG-060: `npm audit --omit=dev` drifted from 20 to 25 vulnerabilities since 2026-10-01 — 3 had a safe non-breaking fix (fixed), 2 (node-forge/firebase-admin chain, katex) don't
 **Status:** Partially fixed 2026-10-08 (3 of 5 new findings resolved; 2 logged as backlog)
 **Severity:** High (the 3 fixed) / Low-Medium (the 2 remaining)
