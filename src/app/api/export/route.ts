@@ -33,18 +33,51 @@ const PLOT_CANVAS_WIDTH = 600;
 const PLOT_CANVAS_HEIGHT = 400;
 
 /**
+ * Function names mathjs's own parser recognizes as callable — used only to
+ * decide when preprocessEquationForMathjs() below must NOT insert an
+ * implicit-multiplication "*" before a "(" (e.g. "sin(x)" must stay
+ * "sin(x)", never become "sin*(x)"). Deliberately broader than
+ * ALLOWED_PLOT_FUNCTIONS (the separate BUG-057 security allow-list further
+ * down this file) — e.g. "ln" is included here so a teacher's "ln(x)" is
+ * never mangled by this regex, even though mathjs itself has no built-in
+ * "ln" (natural log is "log" in mathjs) and isSafePlotExpression() would
+ * reject it regardless of this fix; that mismatch is a separate,
+ * pre-existing, out-of-scope gap (BUG-056 is specifically about the
+ * letter-before-"(" multiplication bug, not about which functions mathjs
+ * actually implements).
+ */
+const KNOWN_FUNCTION_NAMES = new Set([
+  "sin", "cos", "tan", "asin", "acos", "atan", "atan2",
+  "sinh", "cosh", "tanh", "asinh", "acosh", "atanh",
+  "sqrt", "cbrt", "abs", "exp", "log", "log2", "log10", "log1p", "ln",
+  "pow", "min", "max", "floor", "ceil", "round", "sign", "mod",
+]);
+
+/**
  * Mirrors MathPlot.tsx's own "y = "/"f(x) = " prefix stripping, then makes
- * common implicit-multiplication shorthand (e.g. "2x", "2(x+1)") parseable
- * by mathjs — unlike function-plot's own, more permissive parser
+ * common implicit-multiplication shorthand (e.g. "2x", "2(x+1)", "x(x+1)")
+ * parseable by mathjs — unlike function-plot's own, more permissive parser
  * (built-in-math-eval, see function-plot's package.json), mathjs requires an
  * explicit "*". Best-effort only: deliberately simple regexes, not a full
  * reimplementation of function-plot's parser. Anything this doesn't handle
  * correctly still fails safely via renderMathPlotPng()'s try/catch.
+ *
+ * `.trim()` runs BEFORE the prefix-stripping regex (not only after it) so a
+ * raw equation with leading whitespace (e.g. "  y = 2x") still has its
+ * "y = " prefix recognized and removed (BUG-056) — the regex is anchored to
+ * `^` and previously never matched past leading whitespace.
  */
 function preprocessEquationForMathjs(raw: string): string {
-  let eq = raw.replace(/^(y|f\(x\))\s*=\s*/i, "").trim();
+  let eq = raw.trim().replace(/^(y|f\(x\))\s*=\s*/i, "").trim();
   eq = eq.replace(/(\d)([a-zA-Z(])/g, "$1*$2");
   eq = eq.replace(/(\))([a-zA-Z0-9(])/g, "$1*$2");
+  // Letter(s) directly followed by "(" — e.g. "x(x+1)" — is a genuine
+  // factored-form multiplication, NOT a function call, unless the letters
+  // spell a known mathjs function name (BUG-056: mathjs otherwise parses
+  // "x(...)" as a call to a function named "x" and throws).
+  eq = eq.replace(/([a-zA-Z]+)(\()/g, (match, name: string) =>
+    KNOWN_FUNCTION_NAMES.has(name.toLowerCase()) ? match : `${name}*(`
+  );
   return eq;
 }
 

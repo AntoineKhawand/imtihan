@@ -273,6 +273,18 @@ None of the above were touched tonight — flagging as a prioritized backlog for
 
 **This closes the entire 2026-09-29 dark-mode drift backlog list** (`exam/[id]/page.tsx` submission/lockout screens, `dashboard/page.tsx` zebra striping, `ExerciseCard.tsx` toolbar buttons — already closed 2026-10-01, `ExerciseEditor.tsx`, `RenewalBanner.tsx`). Only remaining open items in this file are the founder-flagged font/accent questions (both already answered, see below) and the newly-logged `MathPlot.tsx` error-state `bg-red-50` (minor, not urgent).
 
+### 2026-10-08 — Fix: `MathPlot.tsx` error-fallback branch missing dark variant (closes the 2026-10-02 flagged item)
+
+**Scope:** single, already-flagged fix — the 2026-10-02 entry above logged but didn't fix `MathPlot.tsx`'s error-fallback branch (`err instanceof Error` catch path, rendered when `function-plot` fails to parse an equation) using `bg-red-50` with no dark variant. This path is no longer "low-traffic": per the dispatch instructions, it's now the default render path for every new Math/Physics/Physique-Chimie exercise's `[PLOT: equation]` tag (BUG-053/BUG-054 context), so a malformed equation string renders this error card routinely, not rarely.
+
+**Fix (line 71):** `errorEl.className = "p-4 text-xs text-red-500 bg-red-50 rounded-lg"` → `"p-4 text-xs text-red-500 dark:text-red-400 bg-red-50 dark:bg-red-950/30 rounded-lg"`. Matched against `ConfirmDialog.tsx`'s existing static (non-hover) danger-surface convention (`bg-red-50 dark:bg-red-950/30 text-red-500 dark:text-red-400`, line 66) — same background/text color pairing as this branch already had in light mode, so reusing that exact pattern rather than inventing a new one.
+
+**Preserved the BUG-052 safe-DOM-construction fix:** only the `className` string's value changed — still `document.createElement("div")` + `.textContent` for the (attacker-controllable) equation/error-message content, no `innerHTML` template literal reintroduced.
+
+**Verification:** `npm run type-check` passes clean, no errors. No `chrome-devtools` tool available this session (consistent with this log's repeated note on this gap — tonight both `gsc` and `chrome-devtools` failed to connect) — this is a code-only review, same method as the 2026-10-02 pass, not a live screenshot/computed-style check. A live light/dark check of this specific error card (trigger via a malformed `[PLOT:]` equation) is still worth doing next time a working browser tool is attached.
+
+**This closes the last remaining open item from the 2026-10-02 entry.** Only the founder-flagged font/accent questions (both already answered, see below) remain as the section's historical context.
+
 ## Open questions for the founder
 
 - Accent color: **Answered 2026-09-24 — keep emerald `#1A5E3F`, no move to terracotta.**

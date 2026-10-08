@@ -10,6 +10,46 @@ interface MathPlotProps {
   height?: number;
 }
 
+/**
+ * Function names function-plot's parser (built-in-math-eval) recognizes as
+ * callable — used only to decide when the "(" fixup below must NOT insert an
+ * implicit-multiplication "*" (e.g. "sin(x)" must stay "sin(x)", never
+ * become "sin*(x)"). Kept in sync with the identical list in
+ * src/app/api/export/route.ts's KNOWN_FUNCTION_NAMES (BUG-056) — same
+ * purpose, two call sites.
+ */
+const KNOWN_FUNCTION_NAMES = new Set([
+  "sin", "cos", "tan", "asin", "acos", "atan", "atan2",
+  "sinh", "cosh", "tanh", "asinh", "acosh", "atanh",
+  "sqrt", "cbrt", "abs", "exp", "log", "log2", "log10", "log1p", "ln",
+  "pow", "min", "max", "floor", "ceil", "round", "sign", "mod",
+]);
+
+/**
+ * Strips the "y = "/"f(x) = " prefix function-plot's own parser (built-in-
+ * math-eval) doesn't understand, then fixes up the one implicit-
+ * multiplication gap that parser does NOT handle on its own: a letter
+ * directly followed by "(" — e.g. "x(x+1)" — which it parses as a function
+ * call to a function named "x" rather than multiplication (confirmed
+ * against the installed `built-in-math-eval` package: "x(x+1)" throws
+ * `symbol "x" must be a function`). Everything else (digit-letter,
+ * digit-paren, paren-letter adjacency, e.g. "2x", "2(x+1)", "(x+1)(x-1)")
+ * function-plot already handles natively and must NOT be touched here
+ * (BUG-056 — unlike mathjs in route.ts, this parser is more permissive by
+ * design, per function-plot's own package description).
+ *
+ * `.trim()` runs BEFORE the prefix-stripping regex (not only after it) so a
+ * raw equation with leading whitespace (e.g. "  y = 2x") still has its
+ * "y = " prefix recognized and removed — the regex is anchored to `^` and
+ * previously never matched past leading whitespace.
+ */
+function preprocessEquationForPlot(raw: string): string {
+  const stripped = raw.trim().replace(/^(y|f\(x\))\s*=\s*/i, "").trim();
+  return stripped.replace(/([a-zA-Z]+)(\()/g, (match, name: string) =>
+    KNOWN_FUNCTION_NAMES.has(name.toLowerCase()) ? match : `${name}*(`
+  );
+}
+
 export function MathPlot({ equation, title, width = 600, height = 400 }: MathPlotProps) {
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -18,7 +58,7 @@ export function MathPlot({ equation, title, width = 600, height = 400 }: MathPlo
 
     // If no equation, just render a grid
     const data = equation.trim() ? [{
-      fn: equation.replace(/^(y|f\(x\))\s*=\s*/i, "").trim(),
+      fn: preprocessEquationForPlot(equation),
       sampler: "builtIn" as const,
       graphType: "polyline" as const,
     }] : [];
@@ -68,7 +108,7 @@ export function MathPlot({ equation, title, width = 600, height = 400 }: MathPlo
       container.innerHTML = "";
       const errorMessage = err instanceof Error ? err.message : String(err);
       const errorEl = document.createElement("div");
-      errorEl.className = "p-4 text-xs text-red-500 bg-red-50 rounded-lg";
+      errorEl.className = "p-4 text-xs text-red-500 dark:text-red-400 bg-red-50 dark:bg-red-950/30 rounded-lg";
       errorEl.textContent = `Error plotting "${equation}": ${errorMessage}`;
       container.appendChild(errorEl);
     }
