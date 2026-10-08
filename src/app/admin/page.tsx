@@ -1,15 +1,24 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { FREE_EXAM_LIMIT } from "@/lib/utils";
-import { RefreshCw, Search, Calendar, Clock, ShieldCheck, User, Users, Zap, Sparkles, BarChart3, TrendingUp, FileText, ArrowRight, Mail, Send, CheckCircle2, XCircle, Check, RotateCcw, Trash2, AlertTriangle } from "lucide-react";
+import { RefreshCw, Search, Calendar, Clock, ShieldCheck, User, Users, Zap, Sparkles, BarChart3, TrendingUp, FileText, ArrowRight, Mail, Send, CheckCircle2, XCircle, Check, RotateCcw, Trash2, AlertTriangle, Menu, X, Bell, UserPlus, LogIn } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { AdminAreaChart } from "@/components/ui/AdminAreaChart";
 import type { BlogPostSummary, BlogPostDetail } from "@/types/blog";
+
+const NAV_ITEMS = [
+  { id: "users" as const, label: "Users", icon: User },
+  { id: "email" as const, label: "Email", icon: Mail },
+  { id: "blog" as const, label: "Blog", icon: FileText },
+  { id: "subscribers" as const, label: "Subscribers", icon: Users },
+  { id: "coverage" as const, label: "Coverage", icon: AlertTriangle },
+];
 
 const subjectMap: Record<string, string> = {
   mathematics: "Mathématiques", physics: "Physique", chemistry: "Chimie",
@@ -136,6 +145,32 @@ export default function AdminPage() {
   const [coverageMisses, setCoverageMisses] = useState<ChapterCoverageMiss[]>([]);
   const [loadingCoverage, setLoadingCoverage] = useState(false);
   const [coverageLoaded, setCoverageLoaded] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  // Real data only — computed from the already-fetched user list, nothing fabricated.
+  const weeklySignups = useMemo(() => {
+    const WEEK = 7 * 24 * 60 * 60 * 1000;
+    const now = Date.now();
+    const weekStart = now - (now % WEEK);
+    return Array.from({ length: 8 }, (_, i) => {
+      const start = weekStart - (7 - i) * WEEK;
+      const end = start + WEEK;
+      const value = users.filter(u => u.createdAt >= start && u.createdAt < end).length;
+      return { label: new Date(start).toLocaleDateString("en-GB", { day: "2-digit", month: "short" }), value };
+    });
+  }, [users]);
+
+  const recentActivity = useMemo(() => {
+    type Entry = { uid: string; email: string; displayName: string; kind: "signup" | "login"; at: number };
+    const entries: Entry[] = [];
+    for (const u of users) {
+      entries.push({ uid: u.uid, email: u.email, displayName: u.displayName, kind: "signup", at: u.createdAt });
+      if (u.lastLoginAt && u.lastLoginAt !== u.createdAt) {
+        entries.push({ uid: u.uid, email: u.email, displayName: u.displayName, kind: "login", at: u.lastLoginAt });
+      }
+    }
+    return entries.sort((a, b) => b.at - a.at).slice(0, 8);
+  }, [users]);
 
   async function fetchData() {
     if (!user) return;
@@ -504,44 +539,108 @@ export default function AdminPage() {
 
   const topSubjects = Object.entries(statsData.subjects || {}).sort(([, a], [, b]) => b - a).slice(0, 5);
 
+  const pendingRequests = users.filter(u => u.renewalRequested || u.resetRequested).length;
+  const activeTabLabel = NAV_ITEMS.find(n => n.id === activeTab)?.label ?? "Dashboard";
+
   return (
-    <div className="min-h-screen bg-[var(--bg)] text-[var(--text)] pb-20">
-      {/* Header */}
-      <div className="bg-[var(--surface)] border-b border-[var(--border)] sticky top-0 z-30 px-4 sm:px-6 py-4">
-        <div className="max-w-7xl mx-auto w-full flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-emerald-600 text-white flex items-center justify-center shadow-lg shadow-emerald-600/20">
-              <ShieldCheck size={20} />
-            </div>
-            <div>
-              <h1 className="text-xl font-black tracking-tight text-[var(--text)]">Admin Console</h1>
-              <p className="text-[10px] text-emerald-600 font-bold uppercase tracking-widest">Imtihan Intelligence</p>
-            </div>
+    <div className="min-h-screen bg-[var(--bg)] text-[var(--text)] flex">
+      {/* Sidebar — permanent on desktop, slide-over drawer on mobile */}
+      {sidebarOpen && (
+        <button
+          aria-label="Close navigation"
+          onClick={() => setSidebarOpen(false)}
+          className="fixed inset-0 z-40 bg-black/30 md:hidden"
+        />
+      )}
+      <aside
+        className={cn(
+          "fixed inset-y-0 left-0 z-50 w-64 bg-[var(--surface)] border-r border-[var(--border)] flex flex-col transition-transform md:translate-x-0",
+          sidebarOpen ? "translate-x-0" : "-translate-x-full"
+        )}
+      >
+        <div className="h-16 flex items-center gap-3 px-5 border-b border-[var(--border)] shrink-0">
+          <div className="w-9 h-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center shadow-sm shrink-0">
+            <ShieldCheck size={17} />
           </div>
-
-          <div className="flex items-center gap-1.5 bg-[var(--bg-subtle)] p-1 rounded-2xl border border-[var(--border)] w-full sm:w-auto">
-            {(["users", "email", "blog", "subscribers", "coverage"] as const).map((tab) => (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={cn(
-                  "h-9 px-4 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 flex-1 sm:flex-none capitalize",
-                  activeTab === tab ? "bg-[var(--surface)] text-emerald-600 shadow-sm border border-[var(--border)]" : "text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]"
-                )}
-              >
-                {tab === "users" && <User size={13} />}
-                {tab === "email" && <Mail size={13} />}
-                {tab === "blog" && <FileText size={13} />}
-                {tab === "subscribers" && <Users size={13} />}
-                {tab === "coverage" && <AlertTriangle size={13} />}
-                {tab}
-              </button>
-            ))}
+          <div className="min-w-0">
+            <p className="text-sm font-black tracking-tight text-[var(--text)] truncate">Admin Console</p>
+            <p className="text-[9px] text-emerald-600 font-bold uppercase tracking-widest">Imtihan</p>
           </div>
+          <button
+            onClick={() => setSidebarOpen(false)}
+            aria-label="Close navigation"
+            className="ml-auto md:hidden text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]"
+          >
+            <X size={18} />
+          </button>
         </div>
-      </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-8">
+        <nav className="flex-1 overflow-y-auto px-3 py-4 flex flex-col gap-1">
+          {NAV_ITEMS.map(({ id, label, icon: Icon }) => (
+            <button
+              key={id}
+              onClick={() => { setActiveTab(id); setSidebarOpen(false); }}
+              className={cn(
+                "h-10 px-3.5 rounded-xl text-sm font-bold transition-all flex items-center gap-3",
+                activeTab === id
+                  ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400"
+                  : "text-[var(--text-secondary)] hover:bg-[var(--bg-subtle)]"
+              )}
+            >
+              <Icon size={16} className="shrink-0" />
+              <span className="flex-1 text-left truncate">{label}</span>
+              {id === "users" && pendingRequests > 0 && (
+                <span className="text-[10px] font-black bg-amber-500 text-white rounded-full px-1.5 py-0.5 shrink-0">{pendingRequests}</span>
+              )}
+            </button>
+          ))}
+        </nav>
+
+        <div className="p-4 border-t border-[var(--border)] shrink-0">
+          <Link
+            href="/dashboard"
+            className="h-10 px-3.5 rounded-xl text-sm font-bold text-[var(--text-tertiary)] hover:bg-[var(--bg-subtle)] hover:text-[var(--text-secondary)] flex items-center gap-3 transition-colors"
+          >
+            <ArrowRight size={16} className="rotate-180 shrink-0" />
+            Back to app
+          </Link>
+        </div>
+      </aside>
+
+      {/* Content column */}
+      <div className="flex-1 min-w-0 md:pl-64 flex flex-col pb-20">
+        <header className="h-16 shrink-0 sticky top-0 z-30 bg-[var(--surface)]/90 backdrop-blur border-b border-[var(--border)] px-4 sm:px-6 flex items-center gap-3">
+          <button
+            onClick={() => setSidebarOpen(true)}
+            aria-label="Open navigation"
+            className="md:hidden text-[var(--text-secondary)] hover:text-[var(--text)]"
+          >
+            <Menu size={20} />
+          </button>
+          <h1 className="text-lg font-black tracking-tight truncate">{activeTabLabel}</h1>
+          <div className="ml-auto flex items-center gap-2">
+            <button
+              onClick={() => { setActiveTab("users"); setFilterType("requests"); }}
+              aria-label={`${pendingRequests} pending request${pendingRequests !== 1 ? "s" : ""}`}
+              className="relative h-9 w-9 rounded-xl flex items-center justify-center text-[var(--text-tertiary)] hover:bg-[var(--bg-subtle)] hover:text-[var(--text-secondary)] transition-colors"
+            >
+              <Bell size={17} />
+              {pendingRequests > 0 && (
+                <span className="absolute top-1 right-1.5 w-2 h-2 rounded-full bg-amber-500" />
+              )}
+            </button>
+            <div className="w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center text-xs font-black shrink-0 overflow-hidden">
+              {user?.photoURL ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={user.photoURL} alt="" className="w-full h-full object-cover" />
+              ) : (
+                (user?.displayName?.[0] || user?.email?.[0] || "A").toUpperCase()
+              )}
+            </div>
+          </div>
+        </header>
+
+        <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 pt-8">
 
         {/* ── USERS TAB ── */}
         {activeTab === "users" && (
@@ -562,6 +661,39 @@ export default function AdminPage() {
               <div className="bg-[var(--surface)] p-5 rounded-3xl border border-[var(--border)] shadow-sm hidden lg:block">
                 <p className="text-[10px] font-black text-blue-500 uppercase tracking-widest mb-1">Yearly Plans</p>
                 <h3 className="text-2xl font-black text-blue-600">{users.filter(u => u.planType === "yearly").length}</h3>
+              </div>
+            </div>
+
+            <div className="grid gap-4 lg:grid-cols-[1.4fr_1fr] mb-8">
+              <div className="bg-[var(--surface)] p-5 sm:p-6 rounded-3xl border border-[var(--border)] shadow-sm">
+                <p className="text-sm font-black text-[var(--text)]">New educators</p>
+                <p className="text-xs text-[var(--text-tertiary)] font-medium mb-4">Signups per week, last 8 weeks</p>
+                <AdminAreaChart data={weeklySignups} />
+              </div>
+              <div className="bg-[var(--surface)] p-5 sm:p-6 rounded-3xl border border-[var(--border)] shadow-sm flex flex-col">
+                <p className="text-sm font-black text-[var(--text)]">Recent activity</p>
+                <p className="text-xs text-[var(--text-tertiary)] font-medium mb-4">Latest signups and logins</p>
+                <ul className="flex flex-col gap-3.5 overflow-y-auto max-h-[220px]">
+                  {recentActivity.length === 0 ? (
+                    <li className="text-xs text-[var(--text-tertiary)] font-medium">No activity yet</li>
+                  ) : recentActivity.map((entry, i) => (
+                    <li key={`${entry.uid}-${entry.kind}-${i}`} className="flex items-start gap-2.5">
+                      <div className={cn(
+                        "w-7 h-7 rounded-lg flex items-center justify-center shrink-0 mt-0.5",
+                        entry.kind === "signup" ? "bg-emerald-50 text-emerald-600" : "bg-blue-50 text-blue-600"
+                      )}>
+                        {entry.kind === "signup" ? <UserPlus size={13} /> : <LogIn size={13} />}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs font-bold text-[var(--text)] truncate">
+                          {entry.displayName || entry.email}
+                          <span className="font-medium text-[var(--text-tertiary)]"> {entry.kind === "signup" ? "signed up" : "logged in"}</span>
+                        </p>
+                        <p className="text-[10px] text-[var(--text-tertiary)]">{formatDate(entry.at)}</p>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
               </div>
             </div>
 
@@ -1331,6 +1463,7 @@ export default function AdminPage() {
         onConfirm={handleDeleteUser}
         onCancel={() => !deleting && setDeleteTarget(null)}
       />
+      </div>
     </div>
   );
 }
