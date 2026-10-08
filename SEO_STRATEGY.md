@@ -207,6 +207,49 @@ keep each change reviewable and low-risk for an unattended push.
       GEO score to report since nothing was applied; current score for this post remains **40/100**.
 
 ### Technical SEO
+- [ ] **2026-10-08 (founder-reported snapshot — not yet independently re-pulled via `gsc`
+      tools this session; `gsc` has failed to connect most sessions recently, see the
+      2026-10-01 entry below) — 4 real action items from the founder's own GSC/GA4 numbers.**
+      Reported: GSC clicks 8 (was 4), impressions 198 (was 136), CTR 4% (was 2.9%), avg
+      position 6.4. **These look like a shorter window (likely 7-day) than the 28-day figures
+      this doc has been tracking (18/584/3.08%/5.8 as of 2026-10-05)** — whoever picks this up
+      should pull a fresh `gsc` snapshot (both 7d and 28d) if the tool connects, to reconcile
+      rather than treat the founder's numbers as a direct replacement for the tracked 28-day
+      baseline. GA4: 67 users (+43%), 70 sessions (+21%), 54% engagement, **0 key events**.
+      Channels: Direct 52, Organic Search 6, Social 5. Top queries, none with a single click
+      yet: `imtihan` (17 impr, pos 8.4), `ib test maker` (11 impr, pos 6.7), `imtihan en
+      francais` (7 impr, pos 9).
+      **Action 1 — rewrite a blog post's title + meta description for CTR** (37 impressions,
+      0 clicks, per the founder; he didn't name the specific post). First step: identify which
+      post via `get_search_by_page_query` (or equivalent) if `gsc` connects — don't guess. Then
+      rewrite title/meta with a clear, specific call to action, same pattern as the existing
+      AEO/GEO copy work logged above.
+      **Action 2 — strengthen two on-topic landing pages losing ground:**
+      `/generateur-examen-bac-libanais` (`src/app/generateur-examen-bac-libanais/page.tsx`,
+      current title `"Générateur d'Examen Bac Libanais IA | Imtihan"`) — this is a real
+      **regression**, not just a low number: the 2026-10-05 entry above logged "bac libanais"
+      at position **5**; the founder now reports **8.6**. Needs on-page work (content depth,
+      internal links, schema) — content-curriculum is already separately auditing this exact
+      page's underlying curriculum data (see `CURRICULUM_COVERAGE_STRATEGY.md`'s
+      bac-libanais.ts item), so coordinate rather than duplicate.
+      `/bac-francais-exam-generator` (`src/app/bac-francais-exam-generator/page.tsx`, current
+      title `"Générateur de Devoir Bac Français | Imtihan"`) for `imtihan en francais` (pos 9,
+      7 impressions, 0 clicks) — title/meta don't contain that exact phrase; consider working
+      "en français" into the title or an on-page heading since that's literally the query.
+      **Action 3 — push `/ib-exam-generator`** (`src/app/ib-exam-generator/page.tsx`, current
+      title `"IB Exam Generator: Chemistry & Physics | Imtihan"`), the best performer (`ib test
+      maker`, pos 6.7, 11 impressions) but still 0 clicks — same CTR-copy treatment as Action 1,
+      plus it's the best candidate for extra internal links from other pages (feed link equity
+      to the page already closest to ranking).
+      **GA4 "0 key events" is NOT a missing-code problem** — `sign_up` (fires on both
+      password and Google registration, `src/app/auth/register/page.tsx`) and `exam_generated`
+      (fires on exam-creation completion, `src/app/create/generate/page.tsx`) are both already
+      instrumented via `src/lib/analytics.ts` (measurement ID `G-7DZ1T3P599`), with unit test
+      coverage in `src/__tests__/analytics.test.ts`. "0 key events" almost certainly means these
+      events aren't marked as **Key events** in the GA4 Admin console itself (Admin → Events →
+      toggle "Mark as key event") — a dashboard setting only the founder can make, not a
+      nightly-dispatchable code task. Logged as a founder action in `FOUNDER_DECISIONS.md`
+      instead of assigned here.
 - [x] **2026-10-05 — `METRICS.md`/`CEO_OPERATING_PLAN.md` GSC refresh (real duty going forward,
       not a one-off; see standing-cadence note below).** `gsc` tools attached and worked cleanly
       this session. Real 28d numbers: 18 clicks / 584 impressions / 3.08% CTR / avg pos 5.8 (was

@@ -10,7 +10,15 @@
 
 ## Open
 
-*(Nothing open right now — check back after the next dispatch. Every item below is resolved.)*
+### 12. Mark `sign_up` and `exam_generated` as Key events in GA4
+**Raised by:** seo-growth (via orchestrator, reviewing the founder's own reported GA4 numbers) · **Date:** 2026-10-08
+**The decision needed:** Not really a decision — a GA4 Admin Console action only the founder (or whoever holds GA4 admin access) can take. GA4 is reporting 0 key events despite real traffic (67 users, 70 sessions). Confirmed this is **not** a missing-instrumentation bug: `sign_up` (`src/app/auth/register/page.tsx`) and `exam_generated` (`src/app/create/generate/page.tsx`) both already fire via `src/lib/analytics.ts` (`G-7DZ1T3P599`), with test coverage in `src/__tests__/analytics.test.ts`. The fix is in the GA4 Admin UI: **Admin → Events → find `sign_up` and `exam_generated` → toggle "Mark as key event."** Two clicks, a few minutes once events have fired at least once (they have, per the real GA4 numbers already showing up).
+**Where the full detail lives:** `SEO_STRATEGY.md`'s 2026-10-08 Technical SEO entry.
+**Status:** Open
+
+---
+
+*(Everything else below is resolved.)*
 
 ---
 

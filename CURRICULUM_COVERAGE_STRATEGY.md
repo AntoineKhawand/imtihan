@@ -697,6 +697,14 @@ across both Première and Terminale spé-math.
 
 ## Backlog (pick one per Wednesday, highest priority first)
 
+**2026-10-08 — extra urgency on the bac-libanais.ts audit already queued below:** founder-reported
+GSC numbers show `/generateur-examen-bac-libanais` sliding from position 5 to 8.6 for "bac
+libanais" (see `SEO_STRATEGY.md`'s 2026-10-08 Technical SEO entry for the full numbers and the
+on-page/SEO side of this — that's seo-growth's half; this doc's half is the underlying curriculum
+depth). Worth treating the queued `bac-libanais.ts` EB9/Seconde/Première-S audit as this week's
+pick rather than deferring it again, since there's now an external, measurable signal (not just
+"it hasn't been audited yet") pointing at exactly this curriculum.
+
 **Reprioritized 2026-10-01 (founder-directed):** founder asked about daily curriculum re-ingestion
 from source books; declined (the 2026-09-04 cost/benefit reasoning above still holds, and literally
 ingesting textbook text daily is also a copyright problem, not just a cost one) in favor of keeping
