@@ -1,5 +1,14 @@
 # Roadmap — Imtihan
 
+## Maintenance — 2026-10-10
+
+- Implemented on maintenance branch: isolated nightly execution, explicit preflight/failures, serialized work, locked installs; scheduler wake/catch-up registration pending an elevated Windows session.
+- Implemented: admin-only GA4 Analytics tab/API (7/28 completed days, private no-store, sanitized failures); reporting credentials and deployment remain required.
+- Dependency refresh: 23→12 production findings; no critical findings remain. Residual Firebase/Google SDK migrations remain planned.
+- Curriculum audit delivered in `docs/CURRICULUM_AUDIT_2026-10-10.md`; corrected EB9 statistics and missing AA HL shared topics. Remaining secondary and SL/AHL gaps are explicitly open.
+- Fresh traffic/indexing evidence replaces stale dashboard claims in `METRICS.md`. Cost per exam and revenue tracking remain planned.
+
+
 ## Legend
 - ✅ Done
 - 🔨 In progress
