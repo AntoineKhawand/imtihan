@@ -121,7 +121,7 @@ export const bacLibanais: Curriculum = {
             id: "eb9-math-statistics",
             name: { fr: "Statistiques", en: "Statistics" },
             objectives: [
-              "Calculer la moyenne, la médiane, l'étendue",
+              "Calculer la moyenne et la moyenne pondérée d’une série discrète",
               "Construire et interpréter des diagrammes",
             ],
           },
