@@ -103,6 +103,8 @@ src/
 
 ## 5. Prompting Philosophy
 
+Exam analysis defaults to 100% hard exercises within the selected syllabus; explicit teacher difficulty requests are preserved. Confirmation exposes difficulty presets. The generator has a replayable How to use guide on every stage. Chapter coverage uses daily selection and miss totals (chapterCoverageDaily), grouped by curriculum, level, subject and chapter; legacy miss-only counters are excluded from rates. See docs/GENERATOR_GUIDE_AND_COVERAGE.md for limits and rollout.
+
 Prompts live in `src/lib/prompts/` as versioned TypeScript files, not hardcoded strings inside route handlers. Each prompt:
 
 1. Has a **named export** describing its purpose: `buildAnalyzePrompt()`, `buildExerciseGenerationPrompt()`.

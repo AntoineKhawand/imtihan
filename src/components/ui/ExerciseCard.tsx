@@ -352,7 +352,7 @@ export function ExerciseCard({
         </div>
 
         {/* Action menu trigger */}
-        <div className="flex items-center gap-1.5 flex-shrink-0">
+        <div data-guide="visuals" className="flex items-center gap-1.5 flex-shrink-0">
           {onTransform && (
             <div className="flex items-center bg-[var(--bg-subtle)]/50 rounded-lg border border-[var(--border)] p-0.5 mr-1">
               <button

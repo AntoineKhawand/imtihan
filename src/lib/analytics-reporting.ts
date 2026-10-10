@@ -1,12 +1,8 @@
 /**
  * GA4 Data API (read-only) — server-side only.
  *
- * Standalone library. Nothing in the app imports this yet, and this task
- * deliberately does not add an API route, admin-page surface, or nightly-ops
- * wiring for it — see the task note this file was built against. It exists
- * so a future task can read real GA4 numbers (sessions, traffic sources,
- * `sign_up`/`exam_generated` conversion counts) the same way `seo-growth`
- * already reads real Search Console data.
+ * Used by the authenticated admin Analytics tab via /api/admin/analytics.
+ * Reports real GA4 sessions, channels and instrumented event counts.
  *
  * Auth follows the exact pattern already used for Firebase Admin in
  * `src/lib/firebase-admin.ts` (see CLAUDE.md §12's documented gotcha): a
@@ -196,7 +192,7 @@ export async function getAnalyticsSummary(
           },
         },
       ],
-    });
+    }, { timeout: 15_000 });
   } catch (err) {
     throw new AnalyticsReportingError(
       "GA4 Data API request failed. Check that the service account has Viewer " +

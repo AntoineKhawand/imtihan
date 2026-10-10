@@ -1,5 +1,16 @@
 # Security — Imtihan
 
+## 2026-10-10 maintenance review
+
+GitHub currently reports six open CodeQL alerts (30, 26, 25: randomness; 14: incomplete sanitization; 7, 6: DOM XSS). These remain open upstream and require current-source/path review; the old dashboard count of fourteen is stale. This maintenance pass does not dismiss them or claim that dependency fixes resolve them.
+
+Fresh production audit: baseline 23 (2 low, 11 moderate, 9 high, 1 critical) → 12 (8 moderate, 4 high, zero low/critical). Applied compatible dependency updates plus explicit Anthropic SDK 0.91 and KaTeX 0.18 upgrades. Removed the critical `websocket-driver` finding; upgraded Firebase Admin and its vulnerable node-forge chain. Serial tests and type checking passed; follow-up curriculum tests are recorded in the PR.
+
+Remaining findings involve Firebase/Firestore `@grpc/grpc-js` and Google SDK transitive chains (`uuid` etc.). Firebase's declared `~1.9.0` gRPC constraint excludes the current certificate fixes, so an out-of-range override was rejected and removed. Do not use the audit tool's forced Firebase downgrade suggestion. Treat this as open SDK migration work, not accepted risk or a clean audit.
+
+New analytics route authenticates the Firebase ID token, checks admin status before provider access, restricts periods to 7/28 completed days, disables shared caching and suppresses credential-bearing provider errors. GA4 uses its own read-only identity; no Firebase Admin credentials were invoked from scripts. No secret values are included in this PR.
+
+
 > Owned by the `security` team. Adversarial review of the whole app — auth, injection, XSS, secret exposure, dependency vulnerabilities, and whether an access-control fix actually closes the exploit it claims to. Distinct from `database` (owns Firestore schema/rules *design*) and `engineering` (owns product code) — security's job is to try to break what they built, not to build it.
 
 ---

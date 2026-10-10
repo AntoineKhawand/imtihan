@@ -345,7 +345,7 @@ export default function ExportPage() {
           </div>
 
           {/* Header info */}
-          <div className="card p-6 space-y-4">
+          <div data-guide="header" className="card p-6 space-y-4">
             <div>
               <h3 className="font-semibold text-[var(--text)] mb-0.5">Exam header</h3>
               <p className="text-xs text-[var(--text-secondary)]">Appears at the top of exported files. School name &amp; teacher are remembered.</p>
@@ -407,7 +407,7 @@ export default function ExportPage() {
           </div>
 
           {/* Download options */}
-          <div className="card p-6 space-y-4">
+          <div data-guide="download-layout" className="card p-6 space-y-4">
             <div className="flex items-center justify-between gap-4 flex-wrap">
               <h3 className="font-semibold text-[var(--text)]">Layout &amp; Download</h3>
               <div className="flex gap-2">
@@ -432,7 +432,7 @@ export default function ExportPage() {
               </div>
             </div>
             
-            <div className="flex items-center justify-between gap-4 flex-wrap pt-2">
+            <div data-guide="export-options" className="flex items-center justify-between gap-4 flex-wrap pt-2">
               <span className="text-xs font-medium text-[var(--text-secondary)]">Export Options</span>
               {/* Corrigé toggle */}
               <button
@@ -450,7 +450,7 @@ export default function ExportPage() {
             </div>
 
             {/* Variant + language */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div data-guide="variant" className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className={cn("rounded-xl border border-[var(--border)] p-3", isFreeTier && "opacity-60 relative")}>
                 {isFreeTier && (
                   <div className="absolute inset-0 z-10 flex items-center justify-center bg-[var(--surface)]/40 backdrop-blur-[1px] rounded-xl">
@@ -515,7 +515,7 @@ export default function ExportPage() {
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <button
-                onClick={() => handleDownload("word")}
+                data-guide="word" onClick={() => handleDownload("word")}
                 disabled={!!downloading || (variant === "B" && !versionBExercises)}
                 className={cn(
                   "flex items-center gap-4 p-4 rounded-xl border text-left transition-all",
@@ -541,7 +541,7 @@ export default function ExportPage() {
               </button>
 
               <button
-                onClick={() => window.open(variant === "B" && versionBExercises ? "/print?variant=b" : "/print", "_blank")}
+                data-guide="pdf" onClick={() => window.open(variant === "B" && versionBExercises ? "/print?variant=b" : "/print", "_blank")}
                 disabled={variant === "B" && !versionBExercises}
                 className={cn(
                   "flex items-center gap-4 p-4 rounded-xl border text-left transition-all",
@@ -562,7 +562,7 @@ export default function ExportPage() {
             {/* Manual save to library */}
             {!savedToLibrary && (
               <button
-                onClick={saveExamToLibrary}
+                data-guide="save" onClick={saveExamToLibrary}
                 className="w-full flex items-center justify-center gap-2 py-2.5 text-sm text-[var(--text-secondary)] hover:text-[var(--accent)] border border-dashed border-[var(--border)] hover:border-[var(--accent)] rounded-xl transition-colors"
               >
                 <Save size={13} />
@@ -595,7 +595,7 @@ export default function ExportPage() {
             >
               <div className="flex items-center gap-3">
                 <Mail size={16} className="text-[var(--text-secondary)]" />
-                <span className="text-sm font-semibold text-[var(--text)]">Send to my email</span>
+                <span data-guide="email" className="text-sm font-semibold text-[var(--text)]">Send to my email</span>
               </div>
               <Plus size={14} className={cn("text-[var(--text-tertiary)] transition-transform duration-200", showEmail && "rotate-45")} />
             </button>

@@ -73,3 +73,4 @@ fix-git-lock.ps1
 # scripts/nightly-ops.ps1 and scripts/nightly-ops-prompt.md ARE tracked —
 # those are the shared automation definition, not this machine's output.
 logs/nightly/
+scripts/nightly-ops.local.json

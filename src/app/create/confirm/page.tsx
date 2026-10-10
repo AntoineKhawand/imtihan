@@ -1,5 +1,6 @@
 "use client";
 
+import { DIFFICULTY_PRESETS, difficultyPreset, normalizeDifficulty } from "@/lib/difficulty";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -60,6 +61,7 @@ export default function ConfirmPage() {
 
       const initial = {
         ...parsed,
+        difficultyMix: normalizeDifficulty(parsed.difficultyMix),
         // If they uploaded a file, default to 'uploaded' template mode if not already chosen
         templateType: parsed.templateType ?? (fileName ? "uploaded" : "modern"),
         totalPoints: parsed.totalPoints ?? 20,
@@ -222,7 +224,7 @@ export default function ConfirmPage() {
           )}
 
           {/* Form card */}
-          <div className="card p-6 space-y-5">
+          <div data-guide="context" className="card p-6 space-y-5">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Select label="Curriculum" value={context.curriculumId} options={curriculumOptions}
                 onChange={(e) => {
@@ -273,7 +275,7 @@ export default function ConfirmPage() {
 
             {/* Chapters */}
             {availableChapters.length > 0 && (
-              <div className="pt-1">
+              <div data-guide="chapters" className="pt-1">
                 <p className="text-xs font-semibold text-[var(--text)] uppercase tracking-wide mb-3">Chapters</p>
                 <div className="flex flex-wrap gap-2">
                   {availableChapters.map((ch) => {
@@ -312,8 +314,18 @@ export default function ConfirmPage() {
               </div>
             )}
 
+            <div data-guide="difficulty" className="space-y-2 border-t border-[var(--border)] pt-4">
+              <label htmlFor="exam-difficulty" className="text-xs font-semibold text-[var(--text)]">Difficulty</label>
+              <select id="exam-difficulty" value={difficultyPreset(context.difficultyMix)}
+                onChange={(event) => update("difficultyMix", { ...DIFFICULTY_PRESETS[event.target.value as keyof typeof DIFFICULTY_PRESETS] })}
+                className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] p-3 text-sm text-[var(--text)]">
+                <option value="hard">Hard (default)</option><option value="medium">Medium</option><option value="easy">Easy</option><option value="mixed">Mixed</option><option value="custom" disabled>Custom mix from description</option>
+              </select>
+              <p className="text-xs text-[var(--text-tertiary)]">{Math.round(context.difficultyMix.easy * 100)}% easy · {Math.round(context.difficultyMix.medium * 100)}% medium · {Math.round(context.difficultyMix.hard * 100)}% hard. Difficulty stays within the selected syllabus.</p>
+            </div>
+
             {/* Blueprint Extension */}
-            <div className="pt-4 border-t border-[var(--border)] space-y-5">
+            <div data-guide="blueprint" className="pt-4 border-t border-[var(--border)] space-y-5">
               <div className="flex items-center gap-2">
                 <FileText size={14} className="text-[var(--text-tertiary)]" />
                 <p className="text-xs font-semibold text-[var(--text)] uppercase tracking-wide">Exam Blueprint</p>
@@ -357,7 +369,7 @@ export default function ConfirmPage() {
           </div>
 
           {/* Template Selection */}
-          <div className="space-y-4">
+          <div data-guide="template" className="space-y-4">
             <h3 className="text-sm font-semibold text-[var(--text)] flex items-center gap-2">
               <Layout size={16} className="text-[var(--text-tertiary)]" />
               Document Template
@@ -440,6 +452,7 @@ export default function ConfirmPage() {
           </div>
 
           <Button
+            data-guide="generate"
             onClick={handleContinue}
             disabled={(context.curriculumId !== "university" && context.chapterIds.length === 0) || pointsMismatch}
             size="lg"

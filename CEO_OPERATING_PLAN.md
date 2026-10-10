@@ -1,4 +1,21 @@
 # IMTIHAN — امتحان
+
+## Operating update — 2026-10-10
+
+This update supersedes the stale traffic, zero-backlog and memory-causality claims in the historical narrative below. See `METRICS.md` for fresh, dated GA4/GSC values and `docs/CURRICULUM_AUDIT_2026-10-10.md` for the coverage audit.
+
+Completed: isolated nightly checkout and preflight, serialized team instructions, locked dependency installation, 23→12 production dependency findings (critical removed), real admin Analytics API/tab with authorization tests, both GA4 key events enabled, EB9 statistics correction and IB AA HL shared-core repair.
+
+Next priorities, in order:
+1. Run the prepared scheduler installer from an elevated PowerShell to enable wake/catch-up and the four-hour limit. Registration was denied by Windows; the enabled existing task already routes through the isolated checkout. Verify the next actual run produces a truthful log/PR outcome.
+2. Configure the read-only GA4 reporting identity, deploy the reviewed branch, then verify the Analytics tab with an admin session. Do not reuse Firebase Admin credentials.
+3. Review Firebase/Google SDK migrations for the remaining four high/eight moderate dependency findings; no forced downgrade or out-of-range override was applied.
+4. Finish authenticated Pro export/variant QA and real mobile/dark-mode QA. Public homepage/pricing/login loaded, annual pricing and quotas agree; this does not certify protected flows.
+5. Complete source-edition/reduction mapping for Lebanese secondary science and IB SL/AHL separation before claiming complete syllabus coverage.
+6. Request indexing for `/about` and `/pricing`; monitor `/blog` (now discovered). Then measure teacher activation, cost per exam and paid conversion before expanding features or outreach.
+
+No full release, production Firebase mutation, paid exam generation or outreach was performed in this maintenance pass. Launch timing remains a founder decision; Q3 2026 is historical, not a current forecast.
+
 # CEO Operating Plan & Roadmap
 
 Running the business end-to-end with an eight-department AI agent organization

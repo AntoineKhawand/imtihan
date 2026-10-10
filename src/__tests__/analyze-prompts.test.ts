@@ -80,7 +80,7 @@ describe("buildAnalyzeSystemPrompt", () => {
   it("requires difficultyMix to sum to exactly 1.0 with the documented default", () => {
     const prompt = buildAnalyzeSystemPrompt();
     expect(prompt).toMatch(/sum to exactly 1\.0/);
-    expect(prompt).toContain("easy: 0.20, medium: 0.45, hard: 0.35");
+    expect(prompt).toContain("easy: 0, medium: 0, hard: 1");
   });
 
   // Regression test: warnings used to be a flat string[], with no link between
