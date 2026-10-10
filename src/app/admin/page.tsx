@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { AdminAreaChart } from "@/components/ui/AdminAreaChart";
+import { AnalyticsReport } from "@/components/admin/AnalyticsReport";
 import type { BlogPostSummary, BlogPostDetail } from "@/types/blog";
 
 const NAV_ITEMS = [
@@ -18,6 +19,7 @@ const NAV_ITEMS = [
   { id: "blog" as const, label: "Blog", icon: FileText },
   { id: "subscribers" as const, label: "Subscribers", icon: Users },
   { id: "coverage" as const, label: "Coverage", icon: AlertTriangle },
+  { id: "analytics" as const, label: "Analytics", icon: BarChart3 },
 ];
 
 const subjectMap: Record<string, string> = {
@@ -110,7 +112,7 @@ const EMAIL_TEMPLATES = [
 export default function AdminPage() {
   const { user } = useAuth();
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<"users" | "email" | "blog" | "subscribers" | "coverage">("users");
+  const [activeTab, setActiveTab] = useState<"users" | "email" | "blog" | "subscribers" | "coverage" | "analytics">("users");
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [statsData, setStatsData] = useState<{ subjects: Record<string, number>; lastUpdated: number }>({ subjects: {}, lastUpdated: Date.now() });
   const [loading, setLoading] = useState(true);
@@ -1307,6 +1309,8 @@ export default function AdminPage() {
             </div>
           </div>
         )}
+
+        {activeTab === "analytics" && <AnalyticsReport user={user} />}
 
         {/* ── COVERAGE TAB ── */}
         {activeTab === "coverage" && (
