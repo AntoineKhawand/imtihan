@@ -38,7 +38,7 @@ You must return ONLY a valid JSON object — no prose, no markdown fences, no pr
 }
 
 Rules:
-- difficultyMix values must sum to exactly 1.0. Default when not specified: { easy: 0.20, medium: 0.45, hard: 0.35 } — exams should skew medium-to-hard unless the teacher explicitly asks for something easier
+- difficultyMix values must sum to exactly 1.0. Default when not specified: { easy: 0, medium: 0, hard: 1 } — hard exercises within the selected syllabus, not content beyond the level. Honour an explicitly requested easier or mixed difficulty.
 - duration is in minutes (e.g. 1h = 60, 2h = 120)
 - totalPoints: use 20 for Bac Libanais/Français, 100 for IB, best judgment for university
 - chapterIds: <curriculum_reference> lists real "CHAPTER_ID: ..." values for every subject that has defined chapters. When the resolved curriculum/level/subject has any listed, you MUST select chapterIds ONLY from those exact real CHAPTER_ID strings — match them to what the teacher described by meaning, never invent your own slug and never kebab-case the teacher's own wording (an id that doesn't appear verbatim in <curriculum_reference> is worse than an empty array). Only fall back to inferring a short kebab-case identifier from the teacher's description when NO CHAPTER_ID values are listed at all for that subject — and in that case, add a note to "warnings" (field: "chapterIds") saying chapter matching isn't backed by defined curriculum data yet. For university, always return [].

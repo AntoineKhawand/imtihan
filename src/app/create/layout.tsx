@@ -1,3 +1,4 @@
+import { GeneratorTutorial } from "@/components/ui/GeneratorTutorial";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -8,5 +9,5 @@ export const metadata: Metadata = {
 };
 
 export default function CreateLayout({ children }: { children: React.ReactNode }) {
-  return <>{children}</>;
+  return <>{children}<GeneratorTutorial /></>;
 }

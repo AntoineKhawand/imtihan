@@ -72,7 +72,7 @@ describe("buildAnalyzeSystemPrompt", () => {
 
   it("documents the default difficulty mix and the anti-hallucination chapterIds rule", () => {
     const prompt = buildAnalyzeSystemPrompt();
-    expect(prompt).toContain("{ easy: 0.20, medium: 0.45, hard: 0.35 }");
+    expect(prompt).toContain("{ easy: 0, medium: 0, hard: 1 }");
     expect(prompt).toContain("an id that doesn't appear verbatim in <curriculum_reference> is worse than an empty array");
   });
 });

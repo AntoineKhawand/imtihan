@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { AdminAreaChart } from "@/components/ui/AdminAreaChart";
+import { ChapterCoverageReport } from "@/components/admin/ChapterCoverageReport";
 import { AnalyticsReport } from "@/components/admin/AnalyticsReport";
 import type { BlogPostSummary, BlogPostDetail } from "@/types/blog";
 
@@ -52,15 +53,6 @@ interface NewsletterSubscriber {
   source: string;
   createdAt: number;
   checklistSentAt: number | null;
-}
-
-interface ChapterCoverageMiss {
-  id: string;
-  curriculumId: string;
-  subject: string;
-  chapterId: string;
-  missCount: number;
-  lastMissedAt: number | null;
 }
 
 function formatDate(ts: number | null): string {
@@ -144,9 +136,6 @@ export default function AdminPage() {
   const [loadingPostDetail, setLoadingPostDetail] = useState(false);
   const [savingPost, setSavingPost] = useState(false);
   const [editForm, setEditForm] = useState({ title: "", description: "", content: "", category: "" });
-  const [coverageMisses, setCoverageMisses] = useState<ChapterCoverageMiss[]>([]);
-  const [loadingCoverage, setLoadingCoverage] = useState(false);
-  const [coverageLoaded, setCoverageLoaded] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // Real data only — computed from the already-fetched user list, nothing fabricated.
@@ -243,27 +232,6 @@ export default function AdminPage() {
   useEffect(() => {
     if (activeTab === "blog" && !blogPostsLoaded) fetchBlogPosts();
   }, [activeTab, blogPostsLoaded, user]);
-
-  async function fetchCoverageMisses() {
-    if (!user) return;
-    setLoadingCoverage(true);
-    try {
-      const token = await user.getIdToken();
-      const res = await fetch("/api/admin/chapter-coverage-misses", { headers: { Authorization: `Bearer ${token}` }, cache: "no-store" });
-      const data = await res.json();
-      if (res.ok) setCoverageMisses(data.misses);
-      else toast.error(data.error || "Failed to load coverage report");
-    } catch {
-      toast.error("Failed to load coverage report");
-    } finally {
-      setLoadingCoverage(false);
-      setCoverageLoaded(true);
-    }
-  }
-
-  useEffect(() => {
-    if (activeTab === "coverage" && !coverageLoaded) fetchCoverageMisses();
-  }, [activeTab, coverageLoaded, user]);
 
   async function openEditPost(id: string) {
     if (!user) return;
@@ -1312,56 +1280,8 @@ export default function AdminPage() {
 
         {activeTab === "analytics" && <AnalyticsReport user={user} />}
 
-        {/* ── COVERAGE TAB ── */}
-        {activeTab === "coverage" && (
-          <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-16">
-            <div className="bg-[var(--surface)] p-5 rounded-3xl border border-[var(--border)] shadow-sm">
-              <p className="text-sm font-bold text-[var(--text)] mb-1">Chapter coverage misses</p>
-              <p className="text-xs text-[var(--text-tertiary)] leading-relaxed">
-                A chapter is counted here every time a teacher selects it but the generated exam ends up
-                with zero exercises tagged to it (same signal as the &ldquo;Chapter coverage&rdquo; warning on
-                Step 4). Frequent misses on one chapter usually mean its curriculum objectives are too vague
-                for the model to act on, or it needs a stronger prompt nudge &mdash; read the pattern here
-                before changing any prompt, don&rsquo;t automate off this number.
-              </p>
-            </div>
+        {activeTab === "coverage" && <ChapterCoverageReport user={user} />}
 
-            <div className="bg-[var(--surface)] rounded-[32px] border border-[var(--border)] shadow-sm overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className="bg-[var(--bg-subtle)]/50 border-b border-[var(--border)]">
-                      <th className="px-6 py-5 text-[10px] font-black text-[var(--text-tertiary)] uppercase tracking-widest">Chapter ID</th>
-                      <th className="px-4 py-5 text-[10px] font-black text-[var(--text-tertiary)] uppercase tracking-widest">Curriculum</th>
-                      <th className="px-4 py-5 text-[10px] font-black text-[var(--text-tertiary)] uppercase tracking-widest">Subject</th>
-                      <th className="px-4 py-5 text-[10px] font-black text-[var(--text-tertiary)] uppercase tracking-widest">Last Missed</th>
-                      <th className="px-6 py-5 text-right text-[10px] font-black text-[var(--text-tertiary)] uppercase tracking-widest">Misses</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-[var(--border)]">
-                    {loadingCoverage ? (
-                      <tr><td colSpan={5} className="px-6 py-10 text-center text-sm text-[var(--text-tertiary)] font-medium">Loading…</td></tr>
-                    ) : coverageMisses.length === 0 ? (
-                      <tr><td colSpan={5} className="px-6 py-10 text-center text-sm text-[var(--text-tertiary)] font-medium">No coverage misses recorded yet</td></tr>
-                    ) : coverageMisses.map((m) => (
-                      <tr key={m.id} className="hover:bg-[var(--bg-subtle)]/30 transition-colors">
-                        <td className="px-6 py-4 text-sm font-bold text-[var(--text)] font-mono">{m.chapterId}</td>
-                        <td className="px-4 py-4 text-xs text-[var(--text-tertiary)] font-medium">{m.curriculumId}</td>
-                        <td className="px-4 py-4 text-xs text-[var(--text-tertiary)] font-medium">{subjectMap[m.subject] || m.subject}</td>
-                        <td className="px-4 py-4 text-xs text-[var(--text-tertiary)] font-medium">{formatDate(m.lastMissedAt)}</td>
-                        <td className="px-6 py-4 text-right">
-                          <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-full bg-red-50 text-red-700 border border-red-100">
-                            <AlertTriangle size={11} /> {m.missCount}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
 
       {/* Floating Send Bar (Users Tab) */}

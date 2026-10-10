@@ -280,11 +280,11 @@ describe("buildGenerateUserPrompt — general fields", () => {
     expect(prompt).toContain("Hard:   1 exercise(s) (25%)");
   });
 
-  it("documents a real rounding gap: the app's own default difficulty mix (0.20/0.45/0.35) does not sum back to the requested exercise count for exerciseCount=7", () => {
+  it("documents a real rounding gap: the optional mixed difficulty preset (0.20/0.45/0.35) does not sum back to the requested exercise count for exerciseCount=7", () => {
     // Each of easy/medium/hard is rounded independently (Math.round), so the
     // three displayed exercise counts can add up to less (or more) than
     // context.exerciseCount. This is the exact default mix documented in
-    // src/lib/prompts/analyze.ts ("Default when not specified: 0.20/0.45/0.35"),
+    // src/lib/difficulty.ts (the optional mixed preset),
     // so a 7-exercise exam is a realistic case that hits this gap.
     const prompt = buildGenerateUserPrompt(baseContext({ exerciseCount: 7, difficultyMix: { easy: 0.2, medium: 0.45, hard: 0.35 } }));
     expect(prompt).toContain("Easy:   1 exercise(s)");

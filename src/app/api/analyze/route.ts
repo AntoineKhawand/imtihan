@@ -1,3 +1,4 @@
+import { HARD_DIFFICULTY, normalizeDifficulty } from "@/lib/difficulty";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { withRetryAndFallback, geminiErrorMessage } from "@/lib/gemini";
@@ -48,7 +49,7 @@ const ExamContextSchema = z.object({
     easy:   z.coerce.number().min(0).max(1),
     medium: z.coerce.number().min(0).max(1),
     hard:   z.coerce.number().min(0).max(1),
-  }).catch({ easy: 0.3, medium: 0.5, hard: 0.2 }),
+  }).catch(HARD_DIFFICULTY),
   // Optional fields — null/undefined both fine
   teacherNotes: z.string().nullable().optional().transform(v => v ?? undefined),
   layoutPreferences: z.string().default(""),
@@ -264,14 +265,7 @@ export async function POST(request: NextRequest) {
 
     const ctx = validated.data;
 
-    // 7. Post-process: normalise difficulty mix to sum exactly 1.0
-    const { easy, medium, hard } = ctx.difficultyMix;
-    const sum = easy + medium + hard;
-    if (Math.abs(sum - 1.0) > 0.01) {
-      ctx.difficultyMix.easy   = sum === 0 ? 0.2 : easy   / sum;
-      ctx.difficultyMix.medium = sum === 0 ? 0.45 : medium / sum;
-      ctx.difficultyMix.hard   = sum === 0 ? 0.35 : hard   / sum;
-    }
+    ctx.difficultyMix = normalizeDifficulty(ctx.difficultyMix);
 
     // 8. Post-process: chapterIds must be real, matching the curriculum's
     //    actual chapter data. The prompt tells the model to copy real

@@ -635,7 +635,7 @@ export default function GeneratePage() {
           )}
 
           {status === "done" && exercises.length > 0 && chapterCoverage.length > 0 && (
-            <div className="card p-4 mb-3">
+            <div data-guide="coverage" className="card p-4 mb-3">
               <p className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-2.5">Chapter coverage</p>
               <div className="flex flex-wrap gap-1.5">
                 {chapterCoverage.map((c) =>
@@ -764,7 +764,7 @@ export default function GeneratePage() {
                 </div>
               ))}
 
-              <div className="pt-4">
+              <div data-guide="review-export" className="pt-4">
                 <Button
                   onClick={() => router.push("/create/export")}
                   size="lg"

@@ -107,7 +107,7 @@ function CreatePageContent() {
 
     if (chapterId && subject) {
       const subjectLabel = subject.charAt(0).toUpperCase() + subject.slice(1);
-      const prompt = `Generate a ${subjectLabel} exam for ${levelId} (${curriculumId}). \nFocus on the chapter: ${chapterId}. \nInclude 3 exercises with mixed difficulty.`;
+      const prompt = `Generate a ${subjectLabel} exam for ${levelId} (${curriculumId}). \nFocus on the chapter: ${chapterId}. \nInclude 3 hard exercises.`;
       setDescription(prompt);
       return; // Skip restoring session storage if we have a direct intent
     }
@@ -291,7 +291,7 @@ function CreatePageContent() {
                     ? "border-[var(--accent)] shadow-[0_0_20px_rgba(26,94,63,0.08)]"
                     : "border-[var(--border)] hover:border-[var(--border-strong)] hover:shadow-md"
                 )}>
-                  <textarea
+                  <textarea data-guide="describe" aria-label="Exam description"
                     value={description}
                     onChange={(e) => { setDescription(e.target.value.slice(0, CHAR_MAX)); setActiveExample(null); }}
                     placeholder="Ex: Examen de Physique pour Terminale S Bac Libanais, chapitres mécanique et électromagnétisme, 2 exercices en français, 2 heures, 20 points…"
@@ -316,7 +316,7 @@ function CreatePageContent() {
           </div>
 
           {/* Examples */}
-          <div className="mb-6">
+          <div data-guide="examples" className="mb-6">
             <p className="text-xs text-[var(--text-tertiary)] mb-2.5">Try an example:</p>
             <div className="flex flex-wrap gap-2">
               {EXAMPLE_PROMPTS.map((ex, i) => (
@@ -347,7 +347,7 @@ function CreatePageContent() {
                 <button
                   onClick={() => setShowProfileForm(!showProfileForm)}
                   className="text-xs text-[var(--accent)] hover:underline"
-                  aria-label={showProfileForm ? "Cancel adding new class profile" : "Add new class profile"}
+                  data-guide="profiles" aria-label={showProfileForm ? "Cancel adding new class profile" : "Add new class profile"}
                 >
                   {showProfileForm ? "Cancel" : "+ Add class"}
                 </button>
@@ -403,7 +403,7 @@ function CreatePageContent() {
               <button
                 onClick={() => setShowProfileForm(true)}
                 className="text-xs text-[var(--text-tertiary)] hover:text-[var(--accent)] inline-flex items-center gap-1.5 transition-colors"
-                aria-label="Save a class profile"
+                data-guide="profiles" aria-label="Save a class profile"
               >
                 <BookOpen size={11} />
                 + Save a class profile for quick reuse next time
@@ -412,7 +412,7 @@ function CreatePageContent() {
           )}
 
           {/* Research Paper Search */}
-          <div className="mb-6">
+          <div data-guide="research" className="mb-6">
             <div className="flex items-center gap-2 mb-2">
               <BookOpen size={13} className="text-[var(--text-tertiary)]" />
               <p className="text-sm font-medium text-[var(--text)]">Find a research paper</p>
@@ -471,7 +471,7 @@ function CreatePageContent() {
           </div>
 
           {/* Upload */}
-          <div className="mb-8">
+          <div data-guide="upload" className="mb-8">
             <div className="flex items-center gap-2 mb-2">
               <Upload size={13} className="text-[var(--text-tertiary)]" />
               <p className="text-sm font-medium text-[var(--text)]">Attach a document</p>
@@ -501,6 +501,7 @@ function CreatePageContent() {
           {/* CTA */}
           <div className="pt-4 pb-8">
             <Button
+              data-guide="analyze"
               onClick={handleAnalyze}
               disabled={!isReady}
               loading={isAnalyzing}
