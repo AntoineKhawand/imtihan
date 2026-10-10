@@ -1,4 +1,52 @@
-import type { Curriculum } from "@/types/curriculum";
+import type { Chapter, Curriculum } from "@/types/curriculum";
+
+// Shared SL core is required at HL too (IB AA guide, first assessment 2021).
+const aaCoreChapters: Chapter[] = [
+  {
+    id: "ib-aa-sl-algebra",
+    name: { fr: "Nombres et algèbre", en: "Number and Algebra" },
+    objectives: [
+      "Work with sequences, series, and the binomial theorem",
+      "Use exponents and logarithms",
+      "Solve systems of linear equations",
+    ],
+  },
+  {
+    id: "ib-aa-sl-functions",
+    name: { fr: "Fonctions", en: "Functions" },
+    objectives: [
+      "Analyze linear, quadratic, exponential, logarithmic, rational functions",
+      "Understand transformations and composite functions",
+    ],
+  },
+  {
+    id: "ib-aa-sl-geometry",
+    name: { fr: "Géométrie et trigonométrie", en: "Geometry and Trigonometry" },
+    objectives: [
+      "Apply trigonometric identities",
+      "Solve triangles using sine and cosine rules",
+      "Work with 3D geometry",
+    ],
+  },
+  {
+    id: "ib-aa-sl-stats",
+    name: { fr: "Statistiques et probabilités", en: "Statistics and Probability" },
+    objectives: [
+      "Calculate descriptive statistics",
+      "Apply binomial and normal distributions",
+      "Compute probabilities of independent and conditional events",
+    ],
+  },
+  {
+    id: "ib-aa-sl-calculus",
+    name: { fr: "Calcul différentiel et intégral", en: "Calculus" },
+    objectives: [
+      "Find derivatives and apply them to optimization",
+      "Compute definite and indefinite integrals",
+      "Interpret integrals as areas",
+    ],
+  },
+];
 
 /**
  * IB (International Baccalaureate) Diploma Programme.
@@ -76,52 +124,7 @@ export const ib: Curriculum = {
       id: "ib-dp-math-aa-sl",
       name: { fr: "DP Math — Analysis & Approaches SL", en: "DP Math — Analysis & Approaches SL" },
       chapters: {
-        mathematics: [
-          {
-            id: "ib-aa-sl-algebra",
-            name: { fr: "Nombres et algèbre", en: "Number and Algebra" },
-            objectives: [
-              "Work with sequences, series, and the binomial theorem",
-              "Use exponents and logarithms",
-              "Solve systems of linear equations",
-            ],
-          },
-          {
-            id: "ib-aa-sl-functions",
-            name: { fr: "Fonctions", en: "Functions" },
-            objectives: [
-              "Analyze linear, quadratic, exponential, logarithmic, rational functions",
-              "Understand transformations and composite functions",
-            ],
-          },
-          {
-            id: "ib-aa-sl-geometry",
-            name: { fr: "Géométrie et trigonométrie", en: "Geometry and Trigonometry" },
-            objectives: [
-              "Apply trigonometric identities",
-              "Solve triangles using sine and cosine rules",
-              "Work with 3D geometry",
-            ],
-          },
-          {
-            id: "ib-aa-sl-stats",
-            name: { fr: "Statistiques et probabilités", en: "Statistics and Probability" },
-            objectives: [
-              "Calculate descriptive statistics",
-              "Apply binomial and normal distributions",
-              "Compute probabilities of independent and conditional events",
-            ],
-          },
-          {
-            id: "ib-aa-sl-calculus",
-            name: { fr: "Calcul différentiel et intégral", en: "Calculus" },
-            objectives: [
-              "Find derivatives and apply them to optimization",
-              "Compute definite and indefinite integrals",
-              "Interpret integrals as areas",
-            ],
-          },
-        ],
+        mathematics: aaCoreChapters,
       },
     },
     // ──────────────────────────────────────────────────────────
@@ -132,10 +135,14 @@ export const ib: Curriculum = {
       name: { fr: "DP Math — Analysis & Approaches HL", en: "DP Math — Analysis & Approaches HL" },
       chapters: {
         mathematics: [
+          ...aaCoreChapters.slice(1, 4).map((chapter) => ({
+            ...chapter, id: chapter.id.replace("-sl-", "-hl-"),
+          })),
           {
             id: "ib-aa-hl-algebra",
             name: { fr: "Nombres et algèbre (HL)", en: "Number and Algebra (HL)" },
             objectives: [
+              ...aaCoreChapters[0].objectives,
               "Work with complex numbers (Cartesian, polar, Euler forms)",
               "Apply proof by induction",
               "Manipulate partial fractions",
@@ -145,6 +152,7 @@ export const ib: Curriculum = {
             id: "ib-aa-hl-calculus",
             name: { fr: "Calcul différentiel et intégral (HL)", en: "Calculus (HL)" },
             objectives: [
+              ...aaCoreChapters[4].objectives,
               "Apply limits from first principles",
               "Use integration by substitution and by parts",
               "Solve first-order differential equations",

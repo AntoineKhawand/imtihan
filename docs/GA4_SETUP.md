@@ -141,12 +141,13 @@ two characters backslash-then-n, not an actual line break — this matches how t
 
 ---
 
-## Step 7 — Let engineering know
+## Step 7 — Deploy and verify the reporting surface
 
-Once all 3 values are set (locally and/or on Vercel), post a one-line note in `TEAM_CHAT.md` or
-tell the team directly — the reading code already exists (`src/lib/analytics-reporting.ts`) but is
-intentionally not wired into any page, API route, or the nightly automation yet. Deciding how/where
-to surface real GA4 numbers is a separate follow-up task, not something this setup alone turns on.
+The maintenance branch wires the reporting library into **Admin → Analytics** and `GET /api/admin/analytics?days=28` (also supports 7). Merge/deploy the reviewed change after setting the variables, then use the actual admin UI to confirm real sessions, users, channels and event occurrences. A missing-configuration message is expected until setup is complete. The endpoint requires an admin ID token and never caches analytics publicly.
+
+Verified on 2026-10-10: Imtihan property ID is **538422391**, measurement ID **G-7DZ1T3P599**. Use the numeric property ID, not the measurement ID. Both `sign_up` and `exam_generated` were marked as key events in GA4 Admin today; this does not backfill historical key-event totals. Report event counts are occurrences, not unique teachers or a conversion rate.
+
+The three reporting variables were absent from the inspected local environment; production values have not been verified. Give the dedicated reporting service account Viewer access only; do not repurpose Firebase Admin credentials or commit/download keys into the repository. This account setup is a remaining human access step.
 
 ## If something goes wrong
 

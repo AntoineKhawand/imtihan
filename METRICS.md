@@ -1,5 +1,27 @@
 # Metrics — Imtihan
 
+## Current snapshot — 2026-10-10 (supersedes historical figures below)
+
+| Metric | Verified value | Source / limits |
+|---|---|---|
+| Automated checks | 412/412 tests, 31 files; TypeScript clean | Final serial Vitest run on maintenance branch |
+| CodeQL alerts | 6 open (all labelled high upstream) | Fresh GitHub API read; unresolved, not silently dismissed |
+| Production dependency findings | 12: 8 moderate, 4 high, 0 critical | Fresh `npm audit --omit=dev`, down from 23 on the branch baseline; remaining Firebase/Google SDK chains need migration review |
+| GA4 sessions / active users | 1,011 sessions / 993 active users | Imtihan property 538422391; Sep 12–Oct 9; active users is not Data API totalUsers |
+| GA4 channels | Direct 968 (95.75%); organic social 18; organic search 17 (1.68%); AI Assistant 5; referral 3 | Traffic acquisition UI, same 28 days |
+| Engagement | 564 engaged sessions, 55.79%; 3m16s per session | GA4 traffic acquisition UI |
+| Key events | `sign_up` and `exam_generated` enabled today | Saved in GA4 Admin; historical key-event zeros are not retroactively repaired |
+| GSC, Sep 12–Oct 9 | 19 clicks / 582 impressions, 3.26% CTR | WEB, domain property, date rows, data_state=all; returned dates through Oct 8; recent days may be incomplete |
+| GSC, Oct 3–9 | 5 clicks / 158 impressions, 3.16% CTR | Same query semantics and freshness caveat |
+| Indexing | Homepage + all 4 exam-generator landing pages indexed | Fresh 8-URL inspection; not comparable to old 9-URL count |
+| Indexing gaps | `/pricing` and `/about` unknown to Google; `/blog` discovered, not indexed | Inspection on Oct 10; latest homepage crawl Oct 7 |
+| Nightly task | Enabled, Ready, next Oct 11 at 00:00 Beirut; last actual run failed | Isolated checkout routing installed and clean preflight passed; full post-repair AI run not yet verified |
+
+The admin Analytics tab is now implemented in the maintenance branch. Its three GA4 reporting variables are absent locally; production configuration has not been verified. Missing configuration displays setup guidance instead of invented zeros. Cost per exam, revenue and unique-teacher conversion rates remain unmeasured.
+
+Memory pressure was observed (about 0.52–1.19 GB free out of 15.45 GB during this session), but it is **not proven** to cause MCP failures. GSC worked via its existing configuration today. The browser viewport override did not take effect, so mobile QA is not certified.
+
+
 A living dashboard of real, verifiable numbers — flagged as the single most overdue gap across three versions of `CEO_OPERATING_PLAN.md`. Every number here is either pulled directly from a real data source (GA4, Search Console, the test suite, `BUGS.md`) with the date it was measured, or explicitly marked as not yet tracked. Nothing here is estimated or invented — see CLAUDE.md's anti-fabrication rule.
 
 **Owned by:** no department yet (Growth Analytics was proposed but never stood up — see `CEO_OPERATING_PLAN.md` §3). Whoever updates this file should refresh the "as of" date on whatever section they touch, not just assume last week's number still holds.

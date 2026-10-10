@@ -2,11 +2,7 @@
  * Shapes returned by the read-only GA4 Data API library
  * (`src/lib/analytics-reporting.ts`).
  *
- * This is a standalone library — as of this writing nothing in the app
- * imports it. It exists so the nightly automation (or a future admin
- * surface) can eventually read real GA4 numbers, the same way `seo-growth`
- * already reads real Search Console data via the `gsc` MCP tools. See
- * `docs/GA4_SETUP.md` for how the founder grants the access this needs.
+ * Served by the admin-only analytics route. See docs/GA4_SETUP.md for access.
  */
 
 /** The two real conversion events already instrumented via `src/lib/analytics.ts` / gtag. */

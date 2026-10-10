@@ -15,7 +15,28 @@
 # previously caused false aborts on ordinary git output. Real failures are
 # instead detected explicitly via $LASTEXITCODE after each git call.
 
-$RepoDir    = "C:\Users\Administrateur\Downloads\imtihan\imtihan"
+param(
+    [string]$RepoDir = (Split-Path $PSScriptRoot -Parent),
+    [string]$PromptFile = (Join-Path $PSScriptRoot "nightly-ops-prompt.md"),
+    [string]$LogDir = "",
+    [string]$McpConfig = "",
+    [string]$Model = "claude-sonnet-5",
+    [switch]$PreflightOnly,
+    [switch]$NoNotifications
+)
+
+# Machine-local deployment config also supports an existing task whose action
+# cannot be edited without elevation. Explicit parameters always win.
+$LocalConfig = Join-Path $PSScriptRoot "nightly-ops.local.json"
+if (Test-Path -LiteralPath $LocalConfig) {
+    $Installed = Get-Content -Raw $LocalConfig | ConvertFrom-Json
+    foreach ($Name in @("RepoDir", "PromptFile", "LogDir", "McpConfig")) {
+        if (-not $PSBoundParameters.ContainsKey($Name) -and $Installed.$Name) {
+            Set-Variable -Name $Name -Value $Installed.$Name
+        }
+    }
+}
+$RepoDir = [IO.Path]::GetFullPath($RepoDir)
 
 # This Windows logon session's cached PATH can predate a mid-session tool
 # install (confirmed: gh was installed via winget after this session's
@@ -31,14 +52,13 @@ $RepoDir    = "C:\Users\Administrateur\Downloads\imtihan\imtihan"
 # prior successful git call — the run silently did nothing but logged
 # "exit code 0" anyway. Confirmed by reproducing the same failure
 # interactively and fixing it by adding npm's global prefix here.
-$ExtraPaths = @("C:\Program Files\GitHub CLI", "$env:APPDATA\npm")
+$ExtraPaths = @("C:\Program Files\GitHub CLI", "$env:APPDATA\npm", "$env:USERPROFILE\.local\bin")
 foreach ($p in $ExtraPaths) {
     if ($env:PATH -notlike "*$p*") {
         $env:PATH = "$p;$env:PATH"
     }
 }
-$PromptFile = Join-Path $RepoDir "scripts\nightly-ops-prompt.md"
-$LogDir     = Join-Path $RepoDir "logs\nightly"
+if (-not $LogDir) { $LogDir = Join-Path $RepoDir "logs\nightly" }
 New-Item -ItemType Directory -Force -Path $LogDir | Out-Null
 
 $Stamp   = Get-Date -Format "yyyy-MM-dd_HHmmss"
@@ -55,6 +75,7 @@ function Log($msg) {
 # Wrapped in try/catch and never touches $LASTEXITCODE: a notification
 # failure must never abort or mask the real run underneath it.
 function Notify($title, $message) {
+    if ($NoNotifications) { return }
     try {
         Add-Type -AssemblyName System.Windows.Forms
         $icon = New-Object System.Windows.Forms.NotifyIcon
@@ -71,7 +92,7 @@ function Notify($title, $message) {
 }
 
 function RunGit {
-    param([string[]]$GitArgs)
+    param([Parameter(ValueFromRemainingArguments = $true)][string[]]$GitArgs)
     $output = & git @GitArgs 2>&1
     $output | ForEach-Object { Log $_ }
     if ($LASTEXITCODE -ne 0) {
@@ -79,18 +100,47 @@ function RunGit {
     }
 }
 
-Set-Location $RepoDir
+if (-not (Test-Path -LiteralPath $RepoDir -PathType Container)) { throw "Checkout directory missing: $RepoDir" }
+Set-Location -LiteralPath $RepoDir -ErrorAction Stop
 Log "=== Nightly ops run started ==="
+Log "Checkout: $RepoDir"
+$RunMutex = New-Object System.Threading.Mutex($false, "Local\ImtihanNightlyOps")
+try { $OwnsMutex = $RunMutex.WaitOne(0) } catch [System.Threading.AbandonedMutexException] { $OwnsMutex = $true }
+if (-not $OwnsMutex) { Log "ABORT: another nightly run is active"; exit 1 }
 Notify "Imtihan Nightly Ops" "Tonight's run just started. Log: $LogFile"
+
+# Fail explicitly before a previous native command can leave a stale success code.
+foreach ($tool in @("git", "npm", "node", "gh", "claude")) {
+    if (-not (Get-Command $tool -ErrorAction SilentlyContinue)) {
+        Log "ABORT: required executable missing: $tool"
+        Notify "Imtihan Nightly Ops - ABORTED" "Required executable missing: $tool"
+        exit 1
+    }
+}
+if (-not (Test-Path -LiteralPath $PromptFile)) {
+    Log "ABORT: prompt file missing: $PromptFile"
+    exit 1
+}
+if ($McpConfig -and -not (Test-Path -LiteralPath $McpConfig)) {
+    Log "ABORT: MCP configuration missing: $McpConfig"
+    exit 1
+}
 
 # Refuse to run against a dirty working tree rather than risk discarding
 # or colliding with in-progress local work.
 $dirty = git status --porcelain
+if ($LASTEXITCODE -ne 0) { Log "ABORT: git status failed"; exit 1 }
 if ($dirty) {
     Log "ABORT: working tree is not clean, refusing to touch it. Uncommitted changes:"
     Log ($dirty -join "`n")
     Notify "Imtihan Nightly Ops - ABORTED" "Working tree was dirty, run skipped. Check the log."
     exit 1
+}
+
+if ($PreflightOnly) {
+    Log "Preflight passed; no sync, AI invocation, push, or PR creation requested."
+    Write-Output "Preflight passed: $RepoDir"
+    exit 0
 }
 
 try {
@@ -109,6 +159,18 @@ try {
 }
 
 $Prompt = Get-Content -Raw -Path $PromptFile
+$TodayBranch = "nightly/$(Get-Date -Format 'yyyy-MM-dd')"
+$Prompt = "Use this branch name for this entire run: $TodayBranch. Working directory: $RepoDir.`n`n$Prompt"
+
+# Isolated checkout has its own dependencies. Install only when lock content changes.
+$LockHash = (Get-FileHash (Join-Path $RepoDir "package-lock.json") -Algorithm SHA256).Hash
+$LockStamp = Join-Path $RepoDir "node_modules\.nightly-lock-hash"
+if (-not (Test-Path $LockStamp) -or (Get-Content $LockStamp -Raw).Trim() -ne $LockHash) {
+    Log "Installing locked dependencies in dedicated checkout"
+    & npm ci --no-fund --no-audit 2>&1 | ForEach-Object { Log $_ }
+    if ($LASTEXITCODE -ne 0) { Log "ABORT: npm ci failed"; exit 1 }
+    Set-Content -Path $LockStamp -Value $LockHash
+}
 
 # WebSearch and a read-only slice of the gsc MCP tools are included here
 # because content-curriculum.md and seo-growth.md both declare them, but
@@ -138,16 +200,23 @@ $AllowedTools = "Read Edit Write Grep Glob Agent WebSearch WebFetch Skill Bash(g
 # running (security's own npm ci for a dependency audit was still in
 # progress), so the process never reached its own commit/push/PR steps and
 # exited 0 anyway, silently discarding nothing but also shipping nothing.
-# Waiting indefinitely is safe here: this is a single unattended nightly
-# process with nothing else time-boxing it, and a truncated run that reports
-# success is worse than a slower one that actually finishes.
+# Let the scheduled task own the outer runtime limit (four hours in the
+# installer), rather than the CLI truncating an individual background task.
+# Existing protected tasks need elevated re-registration to adopt that limit.
 $env:CLAUDE_CODE_PRINT_BG_WAIT_CEILING_MS = "0"
 
-Log "Launching claude -p (model claude-sonnet-5, scoped allowedTools)"
+Log "Launching claude -p (model $Model, scoped allowedTools)"
 
-& claude -p $Prompt --model claude-sonnet-5 --allowedTools $AllowedTools 2>&1 |
-    ForEach-Object { Log $_ }
-$ExitCode = $LASTEXITCODE
+$ClaudeArgs = @("-p", $Prompt, "--model", $Model, "--allowedTools", $AllowedTools)
+if ($McpConfig) { $ClaudeArgs += @("--strict-mcp-config", "--mcp-config", $McpConfig) }
+try {
+    $LASTEXITCODE = 1
+    & claude @ClaudeArgs 2>&1 | ForEach-Object { Log $_ }
+    $ExitCode = $LASTEXITCODE
+} catch {
+    Log "Claude launch failed: $($_.Exception.Message)"
+    $ExitCode = 1
+}
 
 Log "=== Nightly ops run finished, exit code $ExitCode ==="
 
@@ -157,14 +226,12 @@ Log "=== Nightly ops run finished, exit code $ExitCode ==="
 # Checking for a real PR against tonight's branch name is a direct,
 # unambiguous answer to "did anything actually ship" instead of leaving that
 # to be inferred from the exit code.
-$TodayBranch = "nightly/$(Get-Date -Format 'yyyy-MM-dd')"
 try {
     $PrJson = & gh pr list --head $TodayBranch --state open --json url,title 2>&1
     $PrList = $PrJson | ConvertFrom-Json
 } catch {
     $PrList = $null
 }
-
 if ($PrList -and $PrList.Count -gt 0) {
     $PrUrl = $PrList[0].url
     Notify "Imtihan Nightly Ops - done" "PR opened: $PrUrl"
@@ -173,3 +240,4 @@ if ($PrList -and $PrList.Count -gt 0) {
 } else {
     Notify "Imtihan Nightly Ops - finished, no PR" "Run completed but no PR was opened for $TodayBranch. Check the log: $LogFile"
 }
+exit $ExitCode

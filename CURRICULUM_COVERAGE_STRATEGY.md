@@ -1,5 +1,10 @@
 # Curriculum Coverage & Exemplar-Learning Strategy — Imtihan
 
+## 2026-10-10 source audit
+
+See `docs/CURRICULUM_AUDIT_2026-10-10.md` for every MVP offering reviewed, source links, corrections and explicit limitations. EB9 statistics and AA HL shared-core omissions are corrected. Lebanese secondary reductions and complete IB SL/AHL mappings remain open; do not mark the entire curriculum audit complete from these two fixes.
+
+
 Living backlog for the new **Wednesday** slot in the scheduled `imtihan-daily-improvement-loop`
 task. Started 2026-09-04 at Antoine's request: make sure the app's chapter/exercise coverage for
 Bac Français, Bac Libanais, and IB is actually grounded in the right sources (see
