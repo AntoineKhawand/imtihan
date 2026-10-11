@@ -5,6 +5,8 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, Sparkles, Lightbulb, Upload, BookOpen, Trash2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import { UploadIntentPicker } from "@/components/ui/UploadIntentPicker";
+import { UploadIntentSchema, UploadedFileSchema, type UploadIntent } from "@/lib/schemas/sourceDocument";
 import { Dropzone } from "@/components/ui/Dropzone";
 import { cn, shortId } from "@/lib/utils";
 import {
@@ -38,6 +40,8 @@ function CreatePageContent() {
   const router = useRouter();
   const [description, setDescription] = useState("");
   const [uploadedFile, setUploadedFile] = useState<UploadedFile | null>(null);
+  const [uploadIntent, setUploadIntent] = useState<UploadIntent>({ purposes: ["content"], instructions: "" });
+  const [draftRestored, setDraftRestored] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analyzeStep, setAnalyzeStep] = useState(0);
   const stepTimer = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -98,6 +102,9 @@ function CreatePageContent() {
 
   useEffect(() => {
     setProfiles(getClassProfiles());
+    setDraftRestored(true);
+    const savedIntent = sessionStorage.getItem("imtihan_upload_intent");
+    if (savedIntent) { try { const result = UploadIntentSchema.safeParse(JSON.parse(savedIntent)); if (result.success) setUploadIntent(result.data); } catch { /* ignore corrupt draft */ } }
     
     // 1. Handle incoming syllabus parameters
     const chapterId = searchParams.get("chapter");
@@ -117,22 +124,26 @@ function CreatePageContent() {
     if (savedDesc) setDescription(savedDesc);
     const savedFileRaw = sessionStorage.getItem("imtihan_uploaded_file");
     if (savedFileRaw) {
-      try { setUploadedFile(JSON.parse(savedFileRaw) as UploadedFile); } catch { /* ignore */ }
+      try { const file = UploadedFileSchema.safeParse(JSON.parse(savedFileRaw)); if (file.success) setUploadedFile(file.data); } catch { /* ignore */ }
     }
   }, [searchParams]);
 
   // Persist the draft as the user types so nothing is lost on back-navigation.
   useEffect(() => {
-    if (description) sessionStorage.setItem("imtihan_description", description);
-  }, [description]);
+    if (draftRestored) sessionStorage.setItem("imtihan_description", description);
+  }, [description, draftRestored]);
 
   useEffect(() => {
-    if (uploadedFile) sessionStorage.setItem("imtihan_uploaded_file", JSON.stringify(uploadedFile));
-    else sessionStorage.removeItem("imtihan_uploaded_file");
-  }, [uploadedFile]);
+    if (!draftRestored) return;
+    try {
+      if (uploadedFile) sessionStorage.setItem("imtihan_uploaded_file", JSON.stringify(uploadedFile));
+      else sessionStorage.removeItem("imtihan_uploaded_file");
+      sessionStorage.setItem("imtihan_upload_intent", JSON.stringify(uploadIntent));
+    } catch { setError("The browser could not save this document. Remove it and attach a smaller file before continuing."); }
+  }, [uploadedFile, uploadIntent, draftRestored]);
 
   const charCount = description.length;
-  const isReady = description.trim().length >= 20;
+  const isReady = description.trim().length >= 20 && (!uploadedFile || uploadIntent.purposes.length > 0);
 
   function applyProfile(p: ClassProfile) {
     const text = `Examen pour ${p.name}, curriculum ${p.curriculumId.replace("-", " ")}, niveau ${p.levelId}, en ${p.language === "french" ? "français" : p.language === "english" ? "anglais" : "arabe"}. `;
@@ -181,6 +192,10 @@ function CreatePageContent() {
       if (uploadedFile) {
         body.documentBase64 = uploadedFile.base64;
         body.documentMimeType = uploadedFile.type;
+        body.documentName = uploadedFile.name;
+        body.uploadIntent = uploadIntent;
+        // Generation must retrieve these same bytes later; fail visibly if storage is full.
+        sessionStorage.setItem("imtihan_uploaded_file", JSON.stringify(uploadedFile));
       }
 
       const res = await fetch("/api/analyze", {
@@ -196,7 +211,9 @@ function CreatePageContent() {
         return;
       }
 
-      sessionStorage.setItem("imtihan_context", JSON.stringify(data.context));
+      sessionStorage.removeItem("imtihan_extracted_header");
+      const nextContext = { ...data.context, teacherNotes: description };
+      sessionStorage.setItem("imtihan_context", JSON.stringify(nextContext));
       sessionStorage.setItem("imtihan_description", description);
       router.push("/create/confirm");
     } catch {
@@ -481,6 +498,7 @@ function CreatePageContent() {
               Textbook chapter, course notes, or past exam PDF. Imtihan reads it to make exercises more relevant.
             </p>
             <Dropzone value={uploadedFile} onChange={setUploadedFile} />
+            {uploadedFile && <UploadIntentPicker value={uploadIntent} onChange={setUploadIntent} />}
           </div>
 
           {/* Error */}
@@ -567,7 +585,7 @@ export default function CreatePage() {
 export function StepIndicator({ current }: { current: number }) {
   return (
     <div className="flex items-center gap-1.5">
-      {[1, 2, 3, 4, 5].map((step) => (
+      {[1, 2, 4, 5].map((step) => (
         <div
           key={step}
           className={cn(
@@ -585,7 +603,7 @@ export function StepIndicator({ current }: { current: number }) {
 export function StepLabel({ step }: { step: number }) {
   return (
     <p className="text-xs uppercase tracking-widest text-[var(--accent)] font-medium mb-3">
-      Step {step} of 5
+      Step {step >= 4 ? step - 1 : step} of 4
     </p>
   );
 }

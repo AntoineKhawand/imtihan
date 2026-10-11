@@ -2,6 +2,8 @@ import { SUBJECT_LABELS as LOCALIZED_SUBJECT_LABELS } from "@/lib/utils";
 import { DOCUMENT_LAYOUT } from "@/lib/documentLayout";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import { PaperCompositionSchema, SourceDocumentSchema } from "@/lib/schemas/sourceDocument";
+import { paperExerciseIssues, paperProfileIssues, sectionAt, sectionInstruction } from "@/lib/paperComposition";
 import {
   Document, Packer, Paragraph, TextRun, HeadingLevel,
   AlignmentType, BorderStyle, Table, TableRow, TableCell, WidthType,
@@ -499,6 +501,11 @@ const RequestSchema = z.object({
     language: z.string(),
     duration: z.number(),
     totalPoints: z.number(),
+    exerciseCount: z.number().optional(),
+    pointsPerExercise: z.array(z.number()).optional(),
+    paperComposition: PaperCompositionSchema.optional(),
+    sourceDocument: SourceDocumentSchema.optional(),
+
     examType: z.string(),
   }),
   templateId: z.string().optional().default("imtihan"),
@@ -816,6 +823,10 @@ export async function POST(request: NextRequest) {
 
     const { context, templateId, exercises, format, header, includeAnswerKey } = parsed.data;
 
+    if (context.paperComposition) {
+      const issues = [...paperExerciseIssues({ ...context, exerciseCount: context.exerciseCount ?? exercises.length }, exercises), ...paperProfileIssues(context)];
+      if (issues.length) return NextResponse.json({ error: issues.join(" ") }, { status: 400 });
+    }
     // There is no real PDF renderer here — generateWordDocument() only ever
     // produces .docx (OOXML) bytes. A format:"pdf" caller used to get those
     // same bytes back mislabeled as application/pdf, downloading a file no
@@ -856,6 +867,10 @@ export async function generateWordDocument(
   const subjectName = LOCALIZED_SUBJECT_LABELS[context.subject]?.[lang] ?? context.subject;
 
   // Pre-process "Code Leaks" and AI errors in all exercises before generating doc
+  if (context.paperComposition) {
+    const issues = [...paperExerciseIssues({ ...context, exerciseCount: context.exerciseCount ?? exercises.length }, exercises), ...paperProfileIssues(context)];
+    if (issues.length) throw new Error(issues.join(" "));
+  }
   exercises.forEach(ex => {
     const cleanup = (str: string) => {
       if (!str) return str;
@@ -906,7 +921,7 @@ export async function generateWordDocument(
       } },
       footers: { default: new Footer({ children: [new Paragraph({
         alignment: AlignmentType.CENTER,
-        children: [new TextRun({ children: [PageNumber.CURRENT], font: fontHeader, size: 18, color: metaColor })],
+        children: [new TextRun({ text: `${context.paperComposition?.footerText ?? (context.sourceDocument?.intent.purposes.includes("branding") ? context.sourceDocument.structure?.footerText : "") ?? ""}  `, font: fontHeader, size: 18, color: metaColor }), new TextRun({ children: [PageNumber.CURRENT, " / ", PageNumber.TOTAL_PAGES], font: fontHeader, size: 18, color: metaColor })],
       })] }) },
       children,
     }],
@@ -928,7 +943,7 @@ export async function generateWordDocument(
     alignment: AlignmentType.CENTER, bidirectional: isArabic, spacing: { after: 80 },
   }));
   children.push(new Paragraph({
-    children: [new TextRun({ text: `${subjectName} — ${context.levelId}`, bold: true, size: 32, font: fontHeader, color: textColor, rightToLeft: isArabic })],
+    children: [new TextRun({ text: context.paperComposition?.title || `${subjectName} — ${context.levelId}`, bold: true, size: 32, font: fontHeader, color: textColor, rightToLeft: isArabic })],
     alignment: AlignmentType.CENTER, bidirectional: isArabic, spacing: { after: 100 }, heading: HeadingLevel.HEADING_1,
   }));
   const classWord = lang === "fr" ? "Classe" : lang === "ar" ? "الصف" : "Class";
@@ -944,6 +959,8 @@ export async function generateWordDocument(
     bidirectional: isArabic, alignment: isArabic ? AlignmentType.RIGHT : undefined, spacing: { after: 160 },
   }));
 
+  for (const instruction of context.paperComposition?.instructions ?? []) children.push(new Paragraph({ children: [new TextRun({ text: instruction, font: fontBody, size: 20 })], spacing: { after: 100 }, bidirectional: isArabic }));
+  for (const section of context.paperComposition?.sections ?? []) if (section.answerCount < section.marks.length) children.push(new Paragraph({ children: [new TextRun({ text: `${section.title}: ${sectionInstruction(section, context.language)}`, bold: true, font: fontBody, size: 20 })], spacing: { after: 100 }, bidirectional: isArabic }));
   // ─── Score Summary Table (Teachers love this) ──────────────
   children.push(new Table({
     width: { size: 100, type: WidthType.PERCENTAGE },
@@ -1007,7 +1024,12 @@ export async function generateWordDocument(
   children.push(new Paragraph({ text: "", spacing: { after: 400 } }));
 
   // ─── Exercises ─────────────────────────────────────────────
-  for (const ex of exercises) {
+  for (const [index, ex] of exercises.entries()) {
+    const group = sectionAt(context.paperComposition, index);
+    if (group?.start === index) {
+      children.push(new Paragraph({ text: group.section.title, heading: HeadingLevel.HEADING_2, spacing: { before: 240, after: 120 } }));
+      children.push(new Paragraph({ children: [new TextRun({ text: sectionInstruction(group.section, context.language), font: fontBody, size: 20 })], spacing: { after: 160 }, bidirectional: isArabic }));
+    }
     children.push(new Paragraph({
       children: [
         new TextRun({ text: `${exerciseWord} ${ex.number}.`, bold: true, size: 24, color: primaryColor, font: fontHeader, rightToLeft: isArabic }),
@@ -1107,6 +1129,7 @@ export async function generateWordDocument(
       }
     }
 
+    for (let line = 0; line < (context.paperComposition?.answerSpaceLines ?? 0); line++) children.push(new Paragraph({ text: " ", spacing: { before: 100, after: 100 }, border: { bottom: { style: BorderStyle.SINGLE, size: 2, color: DOCUMENT_LAYOUT.rule } } }));
     // No trailing filler paragraph here — the next exercise's own heading
     // already carries spacing.before:240 (see the Exercice heading Paragraph
     // above), so an extra empty Paragraph only compounded into visibly
@@ -1134,7 +1157,12 @@ export async function generateWordDocument(
   // separation (see the matching removal above and BUGS.md's whitespace
   // investigation entry).
 
-  for (const ex of exercises) {
+  for (const [index, ex] of exercises.entries()) {
+    const group = sectionAt(context.paperComposition, index);
+    if (group?.start === index) {
+      children.push(new Paragraph({ text: group.section.title, heading: HeadingLevel.HEADING_2, spacing: { before: 240, after: 120 } }));
+      children.push(new Paragraph({ children: [new TextRun({ text: sectionInstruction(group.section, context.language), font: fontBody, size: 20 })], spacing: { after: 160 }, bidirectional: isArabic }));
+    }
     children.push(new Paragraph({
       children: [new TextRun({ text: `${exerciseWord} ${ex.number}.`, bold: true, size: 24, color: primaryColor, font: fontHeader, rightToLeft: isArabic })],
       heading: HeadingLevel.HEADING_2,
@@ -1271,6 +1299,7 @@ export async function generateWordDocument(
       }));
     }
 
+    for (let line = 0; line < (context.paperComposition?.answerSpaceLines ?? 0); line++) children.push(new Paragraph({ text: " ", spacing: { before: 100, after: 100 }, border: { bottom: { style: BorderStyle.SINGLE, size: 2, color: DOCUMENT_LAYOUT.rule } } }));
     // No trailing filler paragraph here — same reasoning as the main
     // exercises loop above: the next exercise's heading already carries its
     // own spacing.before:240.

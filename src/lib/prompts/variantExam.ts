@@ -1,3 +1,4 @@
+import { paperPrompt } from "@/lib/paperComposition";
 import { ASSESSMENT_DATA_RULES } from "./assessmentQuality";
 import type { ExamContext, Exercise } from "@/types/exam";
 import { LANGUAGE_INSTRUCTIONS } from "./generate";
@@ -44,6 +45,7 @@ TARGET LANGUAGE — write entirely in ${context.language}, following these conve
 ${languageInstruction}
 
 ${ASSESSMENT_DATA_RULES}
+${paperPrompt(context)}
 
 =====================================================================
 WHAT YOU MUST CHANGE (this is the entire point of Version B)
@@ -95,7 +97,7 @@ Level      : ${context.levelId}
 Subject    : ${context.subject}
 Language   : ${context.language}
 Exercise count : ${exercises.length}
-Total points   : ${exercises.reduce((s, e) => s + (e.points ?? 0), 0)}
+Total points   : ${context.paperComposition ? context.totalPoints : exercises.reduce((s, e) => s + (e.points ?? 0), 0)}${context.paperComposition ? " (candidate maximum; optional alternatives are not all compulsory)" : ""}
 </source_metadata>
 
 <version_a_json>

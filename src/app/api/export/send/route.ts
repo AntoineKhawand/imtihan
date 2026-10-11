@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import { PaperCompositionSchema, SourceDocumentSchema } from "@/lib/schemas/sourceDocument";
+import { paperExerciseIssues, paperProfileIssues } from "@/lib/paperComposition";
 import { sendEmail } from "@/lib/brevo";
 import { generateWordDocument } from "@/app/api/export/route";
 
@@ -13,6 +15,11 @@ const RequestSchema = z.object({
     examType: z.string(),
     duration: z.number(),
     totalPoints: z.number(),
+    exerciseCount: z.number().optional(),
+    pointsPerExercise: z.array(z.number()).optional(),
+    paperComposition: PaperCompositionSchema.optional(),
+    sourceDocument: SourceDocumentSchema.optional(),
+
   }),
   templateId: z.string(),
   exercises: z.array(z.any()),
@@ -40,6 +47,10 @@ export async function POST(request: NextRequest) {
 
     const { context, templateId, exercises, header, to, includeSolution } = parsed.data;
 
+    if (context.paperComposition) {
+      const issues = [...paperExerciseIssues({ ...context, exerciseCount: context.exerciseCount ?? exercises.length }, exercises), ...paperProfileIssues(context)];
+      if (issues.length) return NextResponse.json({ error: issues.join(" ") }, { status: 400 });
+    }
     // 1. Generate the buffer on the server
     const buffer = await generateWordDocument(context, templateId, exercises, header ?? {}, includeSolution);
     const base64 = Buffer.from(buffer).toString("base64");

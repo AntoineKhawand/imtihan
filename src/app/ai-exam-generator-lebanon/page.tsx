@@ -1,3 +1,4 @@
+import { GeneratorLandingHero, GeneratorLandingNav } from "@/components/landing/GeneratorLandingHero";
 import Link from "next/link";
 import { ArrowRight, Check, Sparkles, BookOpen, Clock, Copy, Layers } from "lucide-react";
 import { Logo } from "@/components/ui/Logo";
@@ -26,13 +27,13 @@ const BENEFITS = [
   },
   {
     icon: Clock,
-    title: "Save 10+ Hours Every Week",
-    body: "Drafting questions, drawing diagrams, writing full step-by-step correction keys (corrigés), and adjusting difficulty distributions now takes under 30 seconds."
+    title: "Spend less time preparing",
+    body: "Draft questions and worked solutions together, then spend your preparation time reviewing and refining them for your class."
   },
   {
     icon: Copy,
     title: "Version A & B Cheating Prevention",
-    body: "Instantly clone any generated assessment into a parallel version with different numerical values and scenarios, but with the exact same level of difficulty."
+    body: "Pro teachers can generate a second version with different values and scenarios while preserving the question structure and marks. Review both versions before use."
   },
   {
     icon: Layers,
@@ -48,11 +49,11 @@ const LEBANON_FAQ_ITEMS = [
   },
   {
     q: "How much time does it actually save teachers?",
-    a: "Drafting questions, formatting diagrams, and writing a full step-by-step corrigé by hand can take an evening. With Imtihan, generating that same exam and its corrigé takes under 30 seconds.",
+    a: "Imtihan drafts questions and their worked solutions together, reducing repetitive preparation. Generation time depends on the length of the exam; leave time to review the result.",
   },
   {
     q: "What is Version A/B and how does it prevent cheating?",
-    a: "Version A/B instantly clones a generated exam into a second version with different numbers or scenarios but identical difficulty, so students seated next to each other get different papers.",
+    a: "Version B is a Pro feature that generates fresh values and scenarios while preserving the assessment structure and marks. It gives neighbouring students different papers; teachers should review both versions.",
   },
   {
     q: "Can I generate exams from my own class notes?",
@@ -97,61 +98,54 @@ export default function LebanonAiLanding() {
         ]}
       />
 
-      {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 md:px-10 h-16 bg-[var(--bg)]/75 backdrop-blur-xl border-b border-[var(--border)]/60 transition-colors">
-        <Logo size={26} />
-        <div className="flex items-center gap-3">
-          <Link href="/auth/login" className="inline-flex items-center gap-1.5 h-9 px-4 rounded-xl bg-[var(--accent)] text-white text-sm font-medium hover:opacity-90 transition-opacity shadow-sm">
-            Sign In <ArrowRight size={14} />
-          </Link>
-        </div>
-      </nav>
-
-      <main className="flex-grow pt-24">
-        {/* Hero */}
-        <section className="relative pt-16 pb-20 md:pt-24 md:pb-28 px-6 md:px-10 overflow-hidden">
-          <div className="absolute top-0 right-0 w-[600px] h-[600px] rounded-full bg-[var(--accent)] opacity-[0.045] blur-3xl -translate-y-1/3 translate-x-1/3 pointer-events-none" />
-          
-          <div className="relative max-w-4xl mx-auto text-center space-y-6">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-[var(--border)] bg-[var(--surface)] text-xs text-[var(--accent)] font-bold uppercase tracking-widest mx-auto">
-              <Sparkles size={12} className="fill-[var(--accent)]" /> No. 1 AI Exam Builder in Lebanon
-            </div>
-
-            <h1 className="serif text-display-xl text-[var(--text)] leading-tight tracking-tight max-w-2xl mx-auto">
-              The premier <span className="italic text-[var(--accent)]">AI exam generator in Lebanon</span> for educators.
-            </h1>
-
-            <p className="text-base text-[var(--text-secondary)] max-w-xl mx-auto leading-relaxed">
-              Tailored specifically to the academic realities of Lebanese schools. Generate high-quality test sheets and detailed corrigés aligned to Bac Libanais, Bac Français, and IB Diploma programs.
-            </p>
-
-            <div className="pt-4 flex flex-col sm:flex-row justify-center gap-3">
-              <Link href="/auth/register" className="inline-flex items-center justify-center gap-2 h-12 px-7 rounded-xl bg-[var(--accent)] text-white font-medium hover:opacity-95 shadow-lg shadow-[var(--accent)]/15">
-                Generate Your First Exam <ArrowRight size={16} />
-              </Link>
-              <Link href="/pricing" className="inline-flex items-center justify-center h-12 px-7 rounded-xl border border-[var(--border)] text-[var(--text-secondary)] font-medium hover:bg-[var(--surface)] transition-all">
-                View Pricing
-              </Link>
-            </div>
-          </div>
-        </section>
+      <GeneratorLandingNav french={false} />
+      <main className="flex-grow pt-16">
+        <GeneratorLandingHero {...{
+  "french": false,
+  "eyebrow": "Built for teachers in Lebanon",
+  "title": "Less exam preparation.",
+  "accent": "More time with your students.",
+  "description": "Create classroom assessments across Lebanese, French and IB curricula. Describe your needs in French, English or Arabic, optionally add teaching material, then review every question and its answer key.",
+  "cta": "Create my free exam",
+  "preview": {
+    "title": "Your next classroom assessment",
+    "level": "Your curriculum · Your chapters",
+    "duration": "Choose the duration",
+    "marks": "Set your own marks",
+    "instructions": "A flexible classroom exam, or a reviewed paper structure. You decide what the AI should take from an uploaded document.",
+    "sections": [
+      {
+        "title": "Questions that require reasoning",
+        "detail": "Hard by default, with easier or mixed difficulty available."
+      },
+      {
+        "title": "Your teaching material",
+        "detail": "Use it for course content, exercise inspiration or paper structure."
+      },
+      {
+        "title": "Ready for your classroom",
+        "detail": "Edit questions and export with or without the answer key."
+      }
+    ]
+  }
+}} />
 
         {/* Benefits */}
         <section className="px-6 md:px-10 py-20 bg-[var(--bg-subtle)] border-t border-b border-[var(--border)]">
           <div className="max-w-5xl mx-auto">
-            <div className="text-center mb-16">
+            <div className="text-center mb-10">
               <h2 className="serif text-display-md text-[var(--text)]">Why Lebanese educators choose Imtihan</h2>
               <p className="text-xs text-[var(--text-secondary)] uppercase tracking-widest mt-2 font-semibold">Engineered for quality, speed, and syllabus accuracy</p>
             </div>
 
-            <div className="grid md:grid-cols-2 gap-8">
+            <div className="grid md:grid-cols-2 gap-5">
               {BENEFITS.map((benefit, i) => (
-                <div key={i} className="card p-8 bg-[var(--surface)] space-y-4 hover:-translate-y-0.5 hover:shadow-md transition-all border border-[var(--border)]/45">
+                <div key={i} className="card p-6 sm:p-8 bg-[var(--surface)] space-y-4 hover:-translate-y-0.5 hover:shadow-md transition-all border border-[var(--border)]/45">
                   <div className="w-10 h-10 rounded-xl bg-[var(--accent-light)] text-[var(--accent)] flex items-center justify-center">
                     <benefit.icon size={20} />
                   </div>
                   <h3 className="font-semibold text-sm text-[var(--text)]">{benefit.title}</h3>
-                  <p className="text-xs text-[var(--text-secondary)] leading-relaxed">{benefit.body}</p>
+                  <p className="text-sm text-[var(--text-secondary)] leading-relaxed">{benefit.body}</p>
                 </div>
               ))}
             </div>
@@ -170,19 +164,19 @@ export default function LebanonAiLanding() {
           <div className="grid sm:grid-cols-3 gap-6">
             <div className="border border-[var(--border)] rounded-2xl p-6 bg-[var(--surface)] space-y-3">
               <h3 className="font-serif text-lg font-bold text-[var(--text)]">Lebanese Curriculum</h3>
-              <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+              <p className="text-sm text-[var(--text-secondary)] leading-relaxed">
                 Brevet (EB9) & Terminale (SG, SV, SE, LH) exams. Perfect alignment with official CRDP syllabi, terminology, and assessment criteria.
               </p>
             </div>
             <div className="border border-[var(--border)] rounded-2xl p-6 bg-[var(--surface)] space-y-3">
               <h3 className="font-serif text-lg font-bold text-[var(--text)]">French Curriculum</h3>
-              <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+              <p className="text-sm text-[var(--text-secondary)] leading-relaxed">
                 French Baccalaureate assessments from Seconde to Terminale. Built to support AEFE network grading standards and specialities (Maths, Physique-Chimie, SVT).
               </p>
             </div>
             <div className="border border-[var(--border)] rounded-2xl p-6 bg-[var(--surface)] space-y-3">
               <h3 className="font-serif text-lg font-bold text-[var(--text)]">IB Diploma Program</h3>
-              <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+              <p className="text-sm text-[var(--text-secondary)] leading-relaxed">
                 International Baccalaureate (IB) MYP & DP HL/SL assessments. Specific focus on science and humanities question matrices.
               </p>
             </div>

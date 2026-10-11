@@ -853,3 +853,8 @@ points at) to audit a local dev server instead.
   workstream — that's UI-day territory and the palette is locked.
 - Run `npx tsc --noEmit --skipLibCheck` after every change before committing.
 - One item per run. Small, safe, reviewable diffs — this runs unattended and pushes itself.
+
+
+### 2026-10-11 — public page presentation
+
+At the founder’s request, the global footer no longer renders the “Exam generators” link row. The four curriculum/locality pages remain public, canonical and included in the static sitemap; no hidden link block replaces the row. The home curriculum section retains relevant navigation. Homepage science coverage now uses three subject cards. The four search landing pages use a shared responsive hero, practice-composition preview and concise four-stage workflow, with page-specific curriculum copy. Browser policy blocked local visual QA; TypeScript and behavior tests are recorded in the release PR.

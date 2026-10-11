@@ -25,6 +25,8 @@ import {
   ChevronRight,
   Star,
   FlaskConical,
+  Calculator,
+  Atom,
 } from "lucide-react";
 import { MotionStats, MotionHowItWorks, MotionStreamingPreview } from "@/components/landing/LandingMotion";
 import { LandingPricing } from "@/components/landing/LandingPricing";
@@ -41,12 +43,9 @@ const STATS = [
 ];
 
 const SUBJECT_CATEGORIES = [
-  {
-    Icon: FlaskConical,
-    label: "Sciences",
-    color: "text-emerald-600 bg-emerald-50",
-    subjects: ["Mathématiques", "Physique", "Chimie"],
-  },
+  { Icon: Calculator, label: "Mathematics", color: "text-emerald-700 bg-emerald-50", description: "Problems that develop reasoning, with clear mathematical notation and worked solutions.", subjects: ["Functions & calculus", "Geometry", "Probability"], detail: "Proofs, calculations & problem solving" },
+  { Icon: Atom, label: "Physics", color: "text-sky-700 bg-sky-50", description: "Build assessments around experiments, realistic data and scientific explanations.", subjects: ["Mechanics", "Electricity", "Waves & optics"], detail: "Experiments, graphs & data interpretation" },
+  { Icon: FlaskConical, label: "Chemistry", color: "text-amber-700 bg-amber-50", description: "Assess chemical reasoning with balanced equations, measurements and detailed marking.", subjects: ["Reactions", "Organic chemistry", "Equilibrium"], detail: "Equations, analysis & laboratory contexts" },
 ];
 
 const FEATURES = [
@@ -279,15 +278,16 @@ export default async function LandingPage() {
             </h2>
           </div>
 
-          <div className="grid gap-4 max-w-sm">
+          <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
             {SUBJECT_CATEGORIES.map((cat) => (
               <div key={cat.label} className="card p-5 flex flex-col gap-4 bg-[var(--surface)] hover:-translate-y-1.5 hover:shadow-[0_16px_48px_rgba(26,94,63,0.10)] transition-all duration-300 cursor-default">
                 <div className="flex items-center gap-2.5">
                   <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${cat.color}`}>
                     <cat.Icon size={16} />
                   </div>
-                  <span className="text-sm font-semibold text-[var(--text)]">{cat.label}</span>
+                  <h3 className="text-base font-semibold text-[var(--text)]">{cat.label}</h3>
                 </div>
+                <p className="text-sm leading-relaxed text-[var(--text-secondary)]">{cat.description}</p>
                 <div className="flex flex-wrap gap-1.5">
                   {cat.subjects.map((s) => (
                     <span
@@ -298,6 +298,7 @@ export default async function LandingPage() {
                     </span>
                   ))}
                 </div>
+                <p className="mt-auto border-t border-[var(--border)] pt-4 text-xs text-[var(--accent)]">{cat.detail}</p>
               </div>
             ))}
           </div>

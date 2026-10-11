@@ -1,3 +1,4 @@
+import type { SourceDocument, PaperComposition } from "@/lib/schemas/sourceDocument";
 import type { CurriculumId, Language, Subject } from "./curriculum";
 
 export type ExamType =
@@ -24,6 +25,10 @@ export type ExerciseType =
  * Produced by /api/analyze from a teacher's natural-language description + uploaded docs.
  */
 export interface ExamContext {
+  sourceDocument?: SourceDocument;
+  paperComposition?: PaperComposition;
+  /** Prevent re-applying extracted sections after an explicit classroom-mode choice. */
+  paperCompositionReviewed?: boolean;
   curriculumId: CurriculumId;
   levelId: string;
   subject: Subject;
@@ -40,7 +45,9 @@ export interface ExamContext {
    * Optional per-exercise point breakdown, e.g. [5, 10, 5] for a 3-exercise,
    * 20-point exam — lets a teacher set an uneven split instead of leaving it
    * to the model's own discretion. Must sum to totalPoints and have exactly
-   * exerciseCount entries when present; omit to keep the previous automatic
+   * exerciseCount entries when present. For optional questions, their offered
+   * sum can exceed totalPoints (the candidate maximum); paperComposition defines choices.
+   * Omit to keep the previous automatic
    * behavior.
    */
   pointsPerExercise?: number[];

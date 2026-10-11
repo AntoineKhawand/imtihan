@@ -14,45 +14,12 @@
 
 ## 2. The Core Workflow
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│  STEP 1 — DESCRIBE                                              │
-│  Teacher writes a natural-language description + optionally     │
-│  uploads PDFs/DOCX/images (textbook chapter, past exam, notes). │
-│                                                                 │
-│  → POST /api/analyze                                            │
-│  → Claude Sonnet (primary) reads everything via vision/PDF, with │
-│    Gemini 2.5 Flash as fallback (API failure, or a document      │
-│    format only Gemini's vision handles, e.g. DOCX)               │
-│  → Returns structured ExamContext (curriculum, level, subject,   │
-│    chapters, language, duration, exercise count, etc.)          │
-└─────────────────────────────────────────────────────────────────┘
-                              ↓
-┌─────────────────────────────────────────────────────────────────┐
-│  STEP 2 — CONFIRM CONTEXT                                       │
-│  Auto-filled form. Teacher reviews/edits each field.            │
-│  Validates against curriculum JSON (chapter must exist in level)│
-└─────────────────────────────────────────────────────────────────┘
-                              ↓
-┌─────────────────────────────────────────────────────────────────┐
-│  STEP 3 — STRUCTURE & STYLE                                     │
-│  Points distribution, difficulty mix slider, unified composition,   │
-│  Version A/B toggle.                                            │
-└─────────────────────────────────────────────────────────────────┘
-                              ↓
-┌─────────────────────────────────────────────────────────────────┐
-│  STEP 4 — GENERATE & REFINE                                     │
-│  POST /api/generate — streams exercises from Claude.            │
-│  Per-exercise actions: regenerate, edit, easier, harder, remove.│
-│  Corrigé generated alongside, toggleable view.                  │
-└─────────────────────────────────────────────────────────────────┘
-                              ↓
-┌─────────────────────────────────────────────────────────────────┐
-│  STEP 5 — EXPORT                                                │
-│  Download Word (docx lib), download PDF (@react-pdf/renderer),  │
-│  or email. Auto-saved to Firestore under users/{uid}/exams.     │
-└─────────────────────────────────────────────────────────────────┘
-```
+1. **Describe** (`/create`): description plus an optional PDF/DOCX/image, up to 3 MB. Teachers explicitly choose content, exercise inspiration, structure, and/or school header/footer; these can be combined. `/api/analyze` returns context, source identity and extracted details, with uncertainty notes.
+2. **Confirm & Configure** (`/create/confirm`): review curriculum, real chapters, hard-by-default difficulty and composition. Classroom mode is flexible; structured papers define sections, marks, optional choices, instructions, footer and answer space. Dated reference profiles currently cover maths only (Lebanese GS/LS 2024, French specialty 2026 J1, IB AA SL/HL P1/P2 first assessment 2021). Other subjects use teacher-defined or uploaded structures. Reference scope is shown and checked; these are practice papers, not official reproductions.
+3. **Generate & Refine** (`/create/generate`): sends the same uploaded bytes for selected non-branding uses, streams questions, then supports review/edit/regeneration. Single-question adjustments use that question's marks and do not inherit whole-paper totals. Missing source files require reattachment or explicit removal. Incomplete questions/marks block export until reviewed or explicitly converted to a classroom exam.
+4. **Export** (`/create/export`): one Imtihan composition for Word, browser PDF and email. Reviewed sections, choice instructions, candidate maximum, footer and answer space are preserved; the main corrigé toggle controls all formats. Word uses page fields; Chrome/Edge 131+ PDF uses CSS margin boxes for footer and page counters. School branding can be edited before export. Raw uploaded page geometry/embedded logos are not copied.
+
+`/create/structure` remains a legacy redirect. Reference sources, validation and remaining scope are documented in [docs/WORKFLOW_AUDIT_2026-10-11.md](docs/WORKFLOW_AUDIT_2026-10-11.md).
 
 ## 3. Tech Stack (Locked In)
 
@@ -69,7 +36,7 @@
 | Storage | Firebase Storage | Uploaded source documents, generated files |
 | AI | Claude Sonnet (primary) + Gemini 2.5 Flash (fallback) | Claude for generation/analysis/translation quality; Gemini as a reliability fallback and for document formats (e.g. DOCX) Claude's vision API doesn't accept |
 | Word export | `docx` npm package | Full styling control |
-| PDF export | `@react-pdf/renderer` | React-native PDF rendering |
+| PDF export | Browser print (`/print`) | Shared exam composition, browser Save as PDF |
 | Payments | Stripe (v1.1+) | Monthly subscription, USD |
 | Hosting | Vercel | Next.js native |
 
