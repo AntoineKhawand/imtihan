@@ -1,3 +1,4 @@
+import { emailCampaignUrl } from "@/lib/campaigns";
 import { NextRequest, NextResponse } from "next/server";
 import { adminDb } from "@/lib/firebase-admin";
 import { sendEmail } from "@/lib/brevo";
@@ -59,7 +60,7 @@ function buildEngagementEmail(name: string, count: number): { subject: string; h
                   <tr><td class="tip-item" style="color:#166534;font-size:15px;"><img src="${tw("1f516")}" width="16" height="16" style="vertical-align:middle;margin-right:8px;" /> <b>Exercise Bank</b>: Save your favorite AI questions.</td></tr>
                 </table>
               </div>
-              <a href="${APP_URL}/create" class="cta-btn" style="display:inline-block;background:#1a5e3f;color:#fff;text-decoration:none;padding:16px 36px;border-radius:12px;font-weight:800;font-size:16px;box-shadow:0 8px 20px rgba(26,94,63,0.3);">Generate another exam →</a>
+              <a href="${emailCampaignUrl(`${APP_URL}/create`, "teacher_followup")}" class="cta-btn" style="display:inline-block;background:#1a5e3f;color:#fff;text-decoration:none;padding:16px 36px;border-radius:12px;font-weight:800;font-size:16px;box-shadow:0 8px 20px rgba(26,94,63,0.3);">Generate another exam →</a>
             </td>
           </tr>
           <tr>
@@ -157,7 +158,7 @@ function buildActivationEmail(name: string): { subject: string; html: string } {
 
           <!-- CTA -->
           <div style="text-align:center;">
-            <a href="${APP_URL}/create" class="cta-btn" style="display:inline-block;background:linear-gradient(135deg,#1a5e3f,#2d8f5f);color:#fff;text-decoration:none;padding:16px 44px;border-radius:14px;font-weight:800;font-size:16px;box-shadow:0 8px 24px rgba(26,94,63,0.35);">Generate my first exam →</a>
+            <a href="${emailCampaignUrl(`${APP_URL}/create`, "teacher_followup")}" class="cta-btn" style="display:inline-block;background:linear-gradient(135deg,#1a5e3f,#2d8f5f);color:#fff;text-decoration:none;padding:16px 44px;border-radius:14px;font-weight:800;font-size:16px;box-shadow:0 8px 24px rgba(26,94,63,0.35);">Generate my first exam →</a>
             <p style="color:#94a3b8;font-size:12px;margin:14px 0 0">No credit card required &nbsp;·&nbsp; Takes 30 seconds</p>
           </div>
         </td></tr>

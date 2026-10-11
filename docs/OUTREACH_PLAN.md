@@ -175,3 +175,14 @@ No individual teacher's or school administrator's personal email/phone number. N
 email list. No automated sending. Every channel above is either a public organization
 with its own listed contact path, or a public group/publication — the send action is
 yours, one at a time, through whichever of these you actually want to pursue.
+
+
+## Campaign attribution — added 2026-10-11
+
+Use tagged landing-page links for future school outreach, including manually sent messages. Do not put recipient names, email addresses or school contact details in URLs. These links are drafts, not sent messages.
+
+- School email: https://imtihan.live/?utm_source=school_outreach&utm_medium=email&utm_campaign=schools_2026_10&utm_content=introduction
+- IB school email: https://imtihan.live/ib-exam-generator?utm_source=school_outreach&utm_medium=email&utm_campaign=schools_2026_10&utm_content=ib_introduction
+- WhatsApp: https://imtihan.live/?utm_source=school_outreach&utm_medium=social&utm_campaign=schools_2026_10&utm_content=whatsapp
+
+Keep source/medium/campaign stable for comparisons; use a new campaign for a new outreach batch. Built-in welcome, follow-up, newsletter, checklist, subscription reminder and admin email CTAs now have stable email campaign tags. Generator links retain UTM parameters on the initial login redirect so GA4 sees the campaign on its first page view. No historical Direct sessions can be reattributed by this change.

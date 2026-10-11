@@ -1,3 +1,5 @@
+import { ExamDemo } from "@/components/landing/ExamDemo";
+import { LandingCTA } from "@/components/landing/LandingCTA";
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import { SchemaOrg } from "@/components/SchemaOrg";
@@ -25,7 +27,7 @@ import {
   Star,
   FlaskConical,
 } from "lucide-react";
-import { MotionHero, MotionStats, MotionHowItWorks, MotionStreamingPreview } from "@/components/landing/LandingMotion";
+import { MotionStats, MotionHowItWorks, MotionStreamingPreview } from "@/components/landing/LandingMotion";
 import { LandingPricing } from "@/components/landing/LandingPricing";
 import { LandingNav } from "@/components/landing/LandingNav";
 import { VisitorCounter } from "@/components/landing/VisitorCounter";
@@ -189,50 +191,39 @@ export default async function LandingPage() {
       <LandingNav isAuthenticated={isAuthenticated} />
 
       {/* ── HERO ─────────────────────────────────────────────────────── */}
-      <section className="relative pt-32 pb-20 md:pt-44 md:pb-28 px-6 md:px-10 overflow-hidden">
+      <section className="relative pt-24 pb-12 md:pt-32 md:pb-20 px-6 md:px-10 overflow-hidden">
         <div className="absolute top-0 right-0 w-[800px] h-[800px] rounded-full bg-[var(--accent)] opacity-[0.05] blur-3xl -translate-y-1/3 translate-x-1/3 pointer-events-none" />
         <div className="absolute bottom-0 left-0 w-[500px] h-[500px] rounded-full bg-[var(--orange)] opacity-[0.04] blur-3xl translate-y-1/3 -translate-x-1/3 pointer-events-none" />
 
         <div className="relative max-w-5xl mx-auto">
-          <MotionHero>
-            <div className="group inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-[var(--border)] bg-[var(--surface)] text-xs text-[var(--text-secondary)] mb-8 shadow-sm hover:border-[var(--accent)]/30 hover:bg-[var(--accent)]/5 transition-all duration-300 cursor-default" aria-label="1 free exam — no credit card required">
+          <div className="grid items-center gap-8 lg:grid-cols-[1.1fr_1fr] lg:gap-12">
+          <div>
+          <div>
+            <div className="group inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-[var(--border)] bg-[var(--surface)] text-xs text-[var(--text-secondary)] mb-5 shadow-sm hover:border-[var(--accent)]/30 hover:bg-[var(--accent)]/5 transition-all duration-300 cursor-default" aria-label="1 free exam — no credit card required">
               <Star size={10} className="text-[var(--accent)] fill-[var(--accent)] group-hover:rotate-[72deg] transition-transform duration-500" />
               <span>1 free exam — no credit card required</span>
               <ChevronRight size={10} />
             </div>
 
             {/* Headline */}
-            <h1 className="serif text-display-2xl text-[var(--text)] leading-[0.95] tracking-tighter mb-5">
-              <span className="md:block md:whitespace-nowrap">The exam you imagined,</span>
+            <h1 className="serif text-[clamp(2.6rem,5vw,4.5rem)] text-[var(--text)] leading-[1.02] tracking-tight mb-5">
+              <span className="block">The exam you imagined,</span>
               <span className="italic text-transparent bg-clip-text bg-gradient-to-r from-[var(--accent)] to-emerald-400 md:block">built in minutes.</span>
             </h1>
-          </MotionHero>
+          </div>
 
-          <p className="max-w-lg text-lg text-[var(--text-secondary)] leading-relaxed mb-2 text-pretty">
+          <p className="max-w-lg text-base text-[var(--text-secondary)] leading-relaxed mb-2 text-pretty">
             Describe what you need in plain language. Imtihan generates a complete, curriculum-aligned exam with detailed solutions in seconds.
           </p>
-          <p className="max-w-lg text-sm text-[var(--text-tertiary)] leading-relaxed mb-10">
+          <p className="max-w-lg text-sm text-[var(--text-tertiary)] leading-relaxed mb-5">
             Supports Bac Libanais · Bac Français · IB · University courses.
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-3">
-            <Link
-              href="/auth/login"
-              className="inline-flex items-center justify-center gap-2 h-12 px-7 rounded-xl bg-[var(--accent)] text-white text-base font-semibold hover:opacity-90 active:scale-95 transition-all duration-200 shadow-[0_4px_20px_rgba(26,94,63,0.30)] hover:shadow-[0_6px_28px_rgba(26,94,63,0.45)] ring-1 ring-inset ring-white/20"
-            >
-              Create your first exam <ArrowRight size={16} />
-            </Link>
-            <Link
-              href="#how"
-              className="inline-flex items-center justify-center gap-2 h-12 px-7 rounded-xl border border-[var(--border)] text-[var(--text)] text-base font-medium hover:border-[var(--accent)]/30 hover:bg-[var(--accent-light)] active:scale-95 transition-all duration-200"
-            >
-              See how it works
-            </Link>
+          <LandingCTA href={isAuthenticated ? "/create" : "/auth/register"} />
           </div>
-
-          <div className="mt-6">
-            <VisitorCounter />
+          <ExamDemo />
           </div>
+          <div className="mt-6"><VisitorCounter /></div>
 
           {/* Stats */}
           <MotionStats stats={STATS} />

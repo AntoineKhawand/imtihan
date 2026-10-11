@@ -1,3 +1,4 @@
+import { ANALYTICS_BOOTSTRAP } from "@/lib/analytics-bootstrap";
 import type { Metadata, Viewport } from "next";
 import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
@@ -146,12 +147,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           strategy="afterInteractive"
         />
         <Script id="google-analytics" strategy="afterInteractive">
-          {`
-            window.dataLayer = window.dataLayer || [];
-            function gtag(){dataLayer.push(arguments);}
-            gtag('js', new Date());
-            gtag('config', 'G-7DZ1T3P599');
-          `}
+          {ANALYTICS_BOOTSTRAP}
         </Script>
         {/* Privacy-friendly analytics by Plausible — real embed from the imtihan.live Plausible account */}
         <Script

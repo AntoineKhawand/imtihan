@@ -6,13 +6,13 @@ import { SchemaOrg } from "@/components/SchemaOrg";
 import { LandingFAQ, buildFaqSchema } from "@/components/landing/LandingFAQ";
 
 export const metadata = {
-  title: "IB Exam Generator: Chemistry & Physics | Imtihan",
-  description: "Create IB Diploma Programme (DP) and MYP Chemistry & Physics exams in seconds. Automatically generate detailed mark schemes matching IB Command Terms and rubrics.",
+  title: { absolute: "IB Test Maker – Free AI Exam Generator | Imtihan" },
+  description: "Create IB maths, physics and chemistry exams with worked solutions and mark schemes. Try your first exam free, then export to Word or PDF.",
   alternates: { canonical: "/ib-exam-generator" },
   openGraph: {
     type: "website",
-    title: "IB Exam Generator Chemistry & Physics — Imtihan",
-    description: "The professional assessment tool for IB science teachers. Draft curriculum-aligned worksheets and full mark schemes instantly.",
+    title: "IB Test Maker – Free AI Exam Generator | Imtihan",
+    description: "Create IB maths, physics and chemistry exams with worked solutions and mark schemes. Try your first exam free, then export to Word or PDF.",
     url: "https://imtihan.live/ib-exam-generator",
     images: [{ url: "/opengraph-image", width: 1200, height: 630, alt: "Imtihan — AI Exam Generator" }],
   },
@@ -74,7 +74,7 @@ export default function IbLandingPage() {
             "@type": "WebApplication",
             "name": "Imtihan — IB Chemistry & Physics Exam Generator",
             "url": "https://imtihan.live/ib-exam-generator",
-            "description": "Create IB Diploma Programme (DP) and MYP Chemistry & Physics exams in seconds. Automatically generate detailed mark schemes matching IB Command Terms and rubrics.",
+            "description": "Create IB maths, physics and chemistry exams with worked solutions and mark schemes. Try your first exam free, then export to Word or PDF.",
             "applicationCategory": "EducationalApplication",
             "operatingSystem": "All",
             "offers": {
