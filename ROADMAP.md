@@ -188,3 +188,7 @@
 ### Weekly growth follow-up — 2026-10-11
 
 IB search metadata rewritten; homepage free-exam CTA and accessible 20-second example demo added; early conversion events queue and dispatch before auth navigation, including new Google users signing up through login. Future email CTAs have campaign tags and login redirects preserve attribution. See docs/WEEKLY_GROWTH_2026-10-11.md and docs/OUTREACH_PLAN.md. This change does not backfill historical conversions or establish that outreach caused Direct traffic.
+
+### Generator guidance correction — 2026-10-11
+
+Removed the homepage 20-second demo and Watch link. The real generator now introduces highlights once per stage after controls are ready, waiting for generation to complete before review guidance. How to use replays each stage; Next, Back, Skip and Escape remain available.

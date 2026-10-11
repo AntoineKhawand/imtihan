@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { ArrowRight, Play } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { trackEvent } from "@/lib/analytics";
 export function LandingCTA({ href }: { href: string }) {
   return (
@@ -14,20 +14,6 @@ export function LandingCTA({ href }: { href: string }) {
       >
         Create a free exam <ArrowRight size={16} />
       </Link>
-      <a
-        href="#demo"
-        onClick={() => {
-          document
-            .getElementById("demo")
-            ?.querySelector<HTMLButtonElement>(
-              'button[aria-label="Play 20-second demo"], button[aria-label="Replay demo"]',
-            )
-            ?.click();
-        }}
-        className="inline-flex items-center gap-2 px-2 py-3 text-sm font-medium text-[var(--text)]"
-      >
-        <Play size={15} /> Watch 20-sec demo
-      </a>
     </div>
   );
 }

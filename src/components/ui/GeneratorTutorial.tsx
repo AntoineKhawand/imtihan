@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { HelpCircle, X } from "lucide-react";
 
@@ -155,7 +155,13 @@ export const GENERATOR_TOURS: Record<string, Step[]> = {
   ],
 };
 
-const STORAGE = "imtihan_generator_guide_v2";
+const STORAGE = "imtihan_generator_guide_v3";
+const READY_TARGETS: Record<string, string> = {
+  "/create": '[data-guide="describe"]',
+  "/create/confirm": '[data-guide="context"]',
+  "/create/generate": '[data-guide="review-export"]',
+  "/create/export": '[data-guide="header"]',
+};
 export function GeneratorTutorial() {
   const pathname = usePathname();
   const [steps, setSteps] = useState<Step[]>([]);
@@ -173,7 +179,7 @@ export function GeneratorTutorial() {
   const wasActive = useRef(false);
   const current = steps[index];
 
-  function start() {
+  const start = useCallback(() => {
     const available = (GENERATOR_TOURS[pathname] ?? []).filter((step) => {
       const target = document.querySelector<HTMLElement>(step.selector);
       return target && target.getClientRects().length > 0;
@@ -184,11 +190,11 @@ export function GeneratorTutorial() {
     setIndex(0);
     setActive(true);
     try {
-      localStorage.setItem(STORAGE, "seen");
+      localStorage.setItem(`${STORAGE}:${pathname}`, "seen");
     } catch {
       /* Help remains usable without storage. */
     }
-  }
+  }, [pathname]);
   function close() {
     setActive(false);
   }
@@ -207,19 +213,42 @@ export function GeneratorTutorial() {
     setSpot(null);
   }, [pathname]);
   useEffect(() => {
-    if (pathname !== "/create") return;
-    const timer = setTimeout(() => {
-      try {
-        if (localStorage.getItem(STORAGE)) return;
-      } catch {
-        return;
-      }
-      start();
-    }, 700);
-    return () => clearTimeout(timer);
-    // Start once on entering the description page; other stages are replayable on demand.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pathname]);
+    const selector = READY_TARGETS[pathname];
+    if (!selector) return;
+    const storageKey = `${STORAGE}:${pathname}`;
+    try {
+      if (localStorage.getItem(storageKey)) return;
+    } catch {
+      return;
+    }
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const observer = new MutationObserver(checkReady);
+    function checkReady() {
+      const target = document.querySelector<HTMLElement>(selector);
+      if (!target?.getClientRects().length || timer !== undefined) return;
+      timer = setTimeout(() => {
+        timer = undefined;
+        try {
+          if (localStorage.getItem(storageKey)) {
+            observer.disconnect();
+            return;
+          }
+        } catch {
+          observer.disconnect();
+          return;
+        }
+        if (!document.querySelector<HTMLElement>(selector)?.getClientRects().length) return;
+        observer.disconnect();
+        start();
+      }, 700);
+    }
+    observer.observe(document.body, { childList: true, subtree: true, attributes: true });
+    checkReady();
+    return () => {
+      observer.disconnect();
+      clearTimeout(timer);
+    };
+  }, [pathname, start]);
   useEffect(() => {
     if (!active || !current) return;
     const target = document.querySelector<HTMLElement>(current.selector);
