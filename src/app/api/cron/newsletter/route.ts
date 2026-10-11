@@ -1,3 +1,4 @@
+import { emailCampaignUrl } from "@/lib/campaigns";
 import { NextRequest, NextResponse } from "next/server";
 import { adminDb } from "@/lib/firebase-admin";
 import { sendEmail } from "@/lib/brevo";
@@ -148,7 +149,7 @@ function buildNewsletterHtml(firstName: string, month: string): string {
     <!-- CTA -->
     <table width="100%" cellpadding="0" cellspacing="0">
       <tr><td align="center">
-        <a href="${APP_URL}/create" class="cta-btn"
+        <a href="${emailCampaignUrl(`${APP_URL}/create`, "weekly_newsletter")}" class="cta-btn"
            style="display:inline-block;background:#1a5e3f;
                   color:#fff;text-decoration:none;padding:16px 40px;border-radius:980px;
                   font-weight:600;font-size:16px;letter-spacing:-0.1px">
@@ -166,7 +167,7 @@ function buildNewsletterHtml(firstName: string, month: string): string {
   <tr><td class="foot" style="background:#fff;border-radius:0 0 24px 24px;padding:36px 44px;text-align:center;border-top:1px solid #f0f0f2">
 
     <p style="margin:0 0 16px">
-      <a href="${APP_URL}/create" style="color:#1a5e3f;text-decoration:none;font-size:13px;font-weight:600;margin:0 10px">Create exam</a>
+      <a href="${emailCampaignUrl(`${APP_URL}/create`, "weekly_newsletter")}" style="color:#1a5e3f;text-decoration:none;font-size:13px;font-weight:600;margin:0 10px">Create exam</a>
       <a href="${APP_URL}/pricing" style="color:#86868b;text-decoration:none;font-size:13px;margin:0 10px">Pricing</a>
       <a href="${APP_URL}/contact" style="color:#86868b;text-decoration:none;font-size:13px;margin:0 10px">Contact</a>
       <a href="${APP_URL}/privacy" style="color:#86868b;text-decoration:none;font-size:13px;margin:0 10px">Privacy</a>

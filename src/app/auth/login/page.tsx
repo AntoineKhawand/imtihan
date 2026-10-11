@@ -13,6 +13,7 @@ import { auth, db } from "@/lib/firebase";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/FormElements";
 import { Logo as BrandLogo } from "@/components/ui/Logo";
+import { trackEventAndWait } from "@/lib/analytics";
 import fpPromise from "@fingerprintjs/fingerprintjs";
 
 function getRedirectDestination(): string {
@@ -123,9 +124,12 @@ function LoginForm() {
           subscription: { status: "none", tier: "free" },
           ...(fingerprint ? { fingerprint } : {}),
         });
-        fetch("/api/auth/welcome", { method: "POST" }).catch(() => {});
       }
       await setSessionCookie(await credential.user.getIdToken());
+      if (additionalInfo?.isNewUser) {
+        fetch("/api/auth/welcome", { method: "POST" }).catch(() => {});
+        await trackEventAndWait("sign_up", { method: "google" });
+      }
       window.location.assign(additionalInfo?.isNewUser ? "/dashboard" : dest);
     } catch (err: unknown) {
       const code = (err as { code?: string }).code ?? "";

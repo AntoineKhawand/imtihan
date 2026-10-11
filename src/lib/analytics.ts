@@ -1,17 +1,43 @@
-/**
- * Thin wrapper around the gtag() global set up in src/app/layout.tsx.
- * Guards against gtag not being loaded yet (ad blockers, slow script load,
- * or running before the afterInteractive <Script> tag executes) so a
- * tracking call never throws and breaks the actual user-facing action it's
- * attached to.
- */
-export function trackEvent(name: string, params?: Record<string, unknown>): void {
+type AnalyticsParams = Record<string, unknown>;
+type PendingEvent = { name: string; params?: AnalyticsParams };
+type AnalyticsWindow = Window & {
+  gtag?: (...args: unknown[]) => void;
+  imtihanPendingEvents?: PendingEvent[];
+};
+
+/** Queue early events until GA is configured; tracking must never break a real action. */
+export function trackEvent(name: string, params?: AnalyticsParams): void {
   if (typeof window === "undefined") return;
-  const gtag = (window as unknown as { gtag?: (...args: unknown[]) => void }).gtag;
-  if (typeof gtag !== "function") return;
+  const target = window as AnalyticsWindow;
   try {
-    gtag("event", name, params);
+    if (typeof target.gtag === "function") target.gtag("event", name, params);
+    else {
+      target.imtihanPendingEvents ??= [];
+      if (target.imtihanPendingEvents.length < 20)
+        target.imtihanPendingEvents.push({ name, params });
+    }
   } catch {
-    // Never let analytics break the real feature it's attached to.
+    /* Ad blockers must not break the app. */
   }
+}
+
+/** Give a conversion time to dispatch before a full auth-page navigation. */
+export function trackEventAndWait(
+  name: string,
+  params?: AnalyticsParams,
+): Promise<void> {
+  if (typeof window === "undefined") return Promise.resolve();
+  return new Promise((resolve) => {
+    const finish = () => {
+      window.clearTimeout(timer);
+      resolve();
+    };
+    const timer = window.setTimeout(finish, 1200);
+    trackEvent(name, {
+      ...params,
+      transport_type: "beacon",
+      event_callback: finish,
+      event_timeout: 1000,
+    });
+  });
 }

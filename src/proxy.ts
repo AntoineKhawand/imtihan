@@ -13,6 +13,11 @@ export function proxy(request: NextRequest) {
 
   if (isProtected && !session) {
     const loginUrl = new URL("/auth/login", request.url);
+    // The first GA page view is on login: retain campaign attribution there.
+    for (const key of ["utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term"]) {
+      const value = request.nextUrl.searchParams.get(key);
+      if (value) loginUrl.searchParams.set(key, value.slice(0, 200));
+    }
     const res = NextResponse.redirect(loginUrl);
     // Store original destination for client-side redirect after login
     res.cookies.set("__redirect", pathname, {

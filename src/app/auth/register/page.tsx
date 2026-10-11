@@ -16,7 +16,7 @@ import { Input } from "@/components/ui/FormElements";
 import { Logo as BrandLogo } from "@/components/ui/Logo";
 import type { UserRole } from "@/types/user";
 import fpPromise from "@fingerprintjs/fingerprintjs";
-import { trackEvent } from "@/lib/analytics";
+import { trackEventAndWait } from "@/lib/analytics";
 
 function getExplicitRedirect(): string | null {
   if (typeof document === "undefined") return null;
@@ -116,7 +116,7 @@ function RegisterForm() {
       await setSessionCookie(await credential.user.getIdToken());
       // 🎉 Send welcome newsletter (fire-and-forget)
       fetch("/api/auth/welcome", { method: "POST" }).catch(() => {});
-      trackEvent("sign_up", { method: "password" });
+      await trackEventAndWait("sign_up", { method: "password" });
       window.location.assign(explicitRedirect ?? "/dashboard");
     } catch (err: unknown) {
       console.error("[Register] handleRegister failed:", err);
@@ -203,7 +203,7 @@ function RegisterForm() {
         // __session cookie to identify the user, which didn't exist yet if
         // this ran earlier (silently failing every time for Google sign-ups).
         fetch("/api/auth/welcome", { method: "POST" }).catch(() => {});
-        trackEvent("sign_up", { method: "google" });
+        await trackEventAndWait("sign_up", { method: "google" });
       }
       const dest = explicitRedirect ?? (additionalInfo?.isNewUser ? "/dashboard" : "/create");
       window.location.assign(dest);

@@ -1,3 +1,4 @@
+import { emailCampaignUrl } from "@/lib/campaigns";
 import { NextRequest, NextResponse } from "next/server";
 import { adminDb } from "@/lib/firebase-admin";
 import { sendEmail } from "@/lib/brevo";
@@ -31,7 +32,7 @@ function buildReminderEmail(
   );
   // ── End customization ──────────────────────────────────────────────────────
   const whatsappLink = `https://wa.me/${WHATSAPP_NUMBER}?text=${whatsappMsg}`;
-  const upgradeLink  = `${APP_URL}/upgrade`;
+  const upgradeLink  = emailCampaignUrl(`${APP_URL}/upgrade`, "subscription_reminder");
 
   const subject = isExpired
     ? `🚨 Your Imtihan Pro has expired — 3-day grace period active`

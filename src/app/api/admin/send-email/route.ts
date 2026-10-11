@@ -1,3 +1,4 @@
+import { emailCampaignUrl } from "@/lib/campaigns";
 import { NextRequest, NextResponse } from "next/server";
 import { adminDb, verifyIdToken } from "@/lib/firebase-admin";
 import { isAdmin } from "@/lib/admin";
@@ -40,7 +41,7 @@ function buildNewsletterHtml(firstName: string): string {
         <td><strong style="color:#0f172a;font-size:15px;display:block;margin-bottom:6px">Version A & B — Anti-cheating exams</strong><p style="color:#64748b;font-size:13px;line-height:1.65;margin:0">Generate a real second exam — different numbers and wording, same difficulty.</p></td>
       </tr></table></td></tr></table>
     <div style="text-align:center;margin-top:24px">
-      <a href="${APP_URL}/create" style="display:inline-block;background:linear-gradient(135deg,#1a5e3f,#2d8f5f);color:#fff;text-decoration:none;padding:16px 48px;border-radius:13px;font-weight:700;font-size:16px;box-shadow:0 4px 20px rgba(26,94,63,0.35)">Generate an exam now →</a>
+      <a href="${emailCampaignUrl(`${APP_URL}/create`, "admin_outreach")}" style="display:inline-block;background:linear-gradient(135deg,#1a5e3f,#2d8f5f);color:#fff;text-decoration:none;padding:16px 48px;border-radius:13px;font-weight:700;font-size:16px;box-shadow:0 4px 20px rgba(26,94,63,0.35)">Generate an exam now →</a>
       <p style="color:#94a3b8;font-size:12px;margin:12px 0 0">1 free exam · No credit card required</p>
     </div>
   </div>
@@ -79,7 +80,7 @@ function buildActivationHtml(firstName: string): string {
 <tr><td style="padding:28px 32px;"><table cellpadding="0" cellspacing="0"><tr>
 <td style="padding-right:16px;vertical-align:top;font-size:36px;">🎁</td>
 <td><div style="font-weight:800;color:#166534;font-size:16px;margin-bottom:6px;">Your free exam is ready</div><p style="margin:0;color:#15803d;font-size:14px;line-height:1.6;">No credit card needed.</p></td></tr></table></td></tr></table>
-<div style="text-align:center;"><a href="${APP_URL}/create" style="display:inline-block;background:linear-gradient(135deg,#1a5e3f,#2d8f5f);color:#fff;text-decoration:none;padding:16px 44px;border-radius:14px;font-weight:800;font-size:16px;box-shadow:0 8px 24px rgba(26,94,63,0.35);">Generate my first exam →</a></div>
+<div style="text-align:center;"><a href="${emailCampaignUrl(`${APP_URL}/create`, "admin_outreach")}" style="display:inline-block;background:linear-gradient(135deg,#1a5e3f,#2d8f5f);color:#fff;text-decoration:none;padding:16px 44px;border-radius:14px;font-weight:800;font-size:16px;box-shadow:0 8px 24px rgba(26,94,63,0.35);">Generate my first exam →</a></div>
 </td></tr>
 <tr><td style="background:#f8fafc;padding:32px;text-align:center;border-top:1px solid #eef2f6;"><p style="margin:0;color:#94a3b8;font-size:12px;">Imtihan · Built for Lebanese teachers</p></td></tr>
 </table></td></tr></table></body></html>`;
@@ -104,7 +105,7 @@ function buildEngagementHtml(firstName: string, count: number): string {
 <tr><td style="padding-bottom:12px;color:#166534;font-size:15px;"><img src="${tw("1f4cb")}" width="16" height="16" style="vertical-align:middle;margin-right:8px;" /> <b>Full Barème</b>: Points breakdown included in every key.</td></tr>
 <tr><td style="color:#166534;font-size:15px;"><img src="${tw("1f516")}" width="16" height="16" style="vertical-align:middle;margin-right:8px;" /> <b>Exercise Bank</b>: Save your favorite AI questions.</td></tr>
 </table></div>
-<a href="${APP_URL}/create" style="display:inline-block;background:#1a5e3f;color:#fff;text-decoration:none;padding:16px 36px;border-radius:12px;font-weight:800;font-size:16px;box-shadow:0 8px 20px rgba(26,94,63,0.3);">Generate another exam →</a>
+<a href="${emailCampaignUrl(`${APP_URL}/create`, "admin_outreach")}" style="display:inline-block;background:#1a5e3f;color:#fff;text-decoration:none;padding:16px 36px;border-radius:12px;font-weight:800;font-size:16px;box-shadow:0 8px 20px rgba(26,94,63,0.3);">Generate another exam →</a>
 </td></tr>
 <tr><td style="background:#f8fafc;padding:32px;text-align:center;border-top:1px solid #eef2f6;"><p style="margin:0;color:#94a3b8;font-size:12px;">Imtihan · Built for Lebanese teachers</p></td></tr>
 </table></td></tr></table></body></html>`;

@@ -1,10 +1,13 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
-import { trackEvent } from "@/lib/analytics";
+import { trackEvent, trackEventAndWait } from "@/lib/analytics";
 
 describe("trackEvent", () => {
   afterEach(() => {
     // @ts-expect-error test cleanup of a global test double
     delete window.gtag;
+    delete (window as unknown as { imtihanPendingEvents?: unknown })
+      .imtihanPendingEvents;
+    vi.useRealTimers();
   });
 
   it("calls window.gtag with the event name and params when gtag is present", () => {
@@ -16,8 +19,50 @@ describe("trackEvent", () => {
     expect(gtag).toHaveBeenCalledWith("event", "sign_up", { method: "google" });
   });
 
-  it("does nothing (never throws) when gtag is not loaded", () => {
-    expect(() => trackEvent("exam_generated", { subject: "physics" })).not.toThrow();
+  it("queues early events and flushes them only after GA configuration", async () => {
+    trackEvent("exam_generated", { subject: "physics" });
+    const { ANALYTICS_BOOTSTRAP } = await import("@/lib/analytics-bootstrap");
+    const target = window as unknown as {
+      dataLayer: unknown[][];
+      imtihanPendingEvents: unknown[];
+    };
+    target.dataLayer = [];
+    new Function("window", ANALYTICS_BOOTSTRAP)(window);
+    expect(Array.from(target.dataLayer[1])).toEqual(["config", "G-7DZ1T3P599"]);
+    expect(Array.from(target.dataLayer[2])).toEqual([
+      "event",
+      "exam_generated",
+      { subject: "physics" },
+    ]);
+    expect(target.imtihanPendingEvents).toHaveLength(0);
+    delete (window as unknown as { dataLayer?: unknown }).dataLayer;
+  });
+  it("waits for the conversion callback before navigation can continue", async () => {
+    vi.useFakeTimers();
+    const gtag = vi.fn();
+    (window as unknown as { gtag: typeof gtag }).gtag = gtag;
+    let finished = false;
+    const pending = trackEventAndWait("sign_up", { method: "google" }).then(
+      () => {
+        finished = true;
+      },
+    );
+    await Promise.resolve();
+    expect(finished).toBe(false);
+    expect(gtag.mock.calls[0][2]).toMatchObject({
+      method: "google",
+      transport_type: "beacon",
+    });
+    gtag.mock.calls[0][2].event_callback();
+    await pending;
+    expect(finished).toBe(true);
+    expect(vi.getTimerCount()).toBe(0);
+  });
+  it("never blocks navigation indefinitely when analytics is unavailable", async () => {
+    vi.useFakeTimers();
+    const pending = trackEventAndWait("sign_up");
+    await vi.advanceTimersByTimeAsync(1200);
+    await pending;
   });
 
   it("never throws even if gtag itself throws", () => {

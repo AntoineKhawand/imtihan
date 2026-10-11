@@ -1,3 +1,4 @@
+import { emailCampaignUrl } from "@/lib/campaigns";
 // Shared by /api/newsletter/subscribe (first send) and
 // /api/cron/newsletter-checklist-backfill (retry for anyone whose first send
 // failed) — one template, so the two paths can never drift apart.
@@ -35,7 +36,7 @@ export const CHECKLIST_HTML = `
         Imtihan runs a version of this checklist automatically on every exam it generates —
         curriculum-aligned, corrigé included, in minutes instead of hours.
       </p>
-      <a href="https://imtihan.live/create" style="display:inline-block;background:#1a5e3f;color:#fff;padding:15px 32px;border-radius:980px;text-decoration:none;font-weight:600;font-size:16px">
+      <a href="${emailCampaignUrl("https://imtihan.live/create", "exam_checklist")}" style="display:inline-block;background:#1a5e3f;color:#fff;padding:15px 32px;border-radius:980px;text-decoration:none;font-weight:600;font-size:16px">
         Try your first exam free
       </a>
       <p style="color:#86868b;font-size:12px;margin:32px 0 0 0;line-height:1.6">
