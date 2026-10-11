@@ -120,7 +120,7 @@ export default function ConfirmPage() {
 
   function handleContinue() {
     if (!context || pointsMismatch || incompatibleProfile) return;
-    sessionStorage.setItem("imtihan_context", JSON.stringify(context));
+    sessionStorage.setItem("imtihan_context", JSON.stringify({ ...context, pointsPerExercise: context.paperComposition ? context.pointsPerExercise : displayPoints }));
     router.push("/create/generate");
   }
 

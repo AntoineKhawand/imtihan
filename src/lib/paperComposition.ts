@@ -30,7 +30,13 @@ export function sectionInstruction(section: PaperSection, language: string): str
     : `Answer ${required} of ${offered} questions. ${section.instructions}`;
 }
 export function paperContextIssues(context: Pick<ExamContext, "paperComposition" | "exerciseCount" | "totalPoints" | "pointsPerExercise">): string[] {
-  if (!context.paperComposition) return [];
+  if (!context.paperComposition) {
+    const marks = context.pointsPerExercise;
+    if (!marks) return [];
+    return [marks.length !== context.exerciseCount ? "Question marks must match the requested question count." : "",
+      marks.some(mark => !Number.isFinite(mark) || mark <= 0) ? "Every question must carry positive marks." : "",
+      Math.abs(marks.reduce((sum, mark) => sum + mark, 0) - context.totalPoints) > 0.001 ? "Question marks must add up to the exam total." : ""].filter(Boolean);
+  }
   const result = PaperCompositionSchema.safeParse(context.paperComposition);
   if (!result.success) return result.error.issues.map(i => i.message);
   const totals = paperTotals(result.data);
