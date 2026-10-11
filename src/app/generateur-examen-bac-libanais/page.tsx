@@ -1,3 +1,4 @@
+import { GeneratorLandingHero, GeneratorLandingNav } from "@/components/landing/GeneratorLandingHero";
 import Link from "next/link";
 import { ArrowRight, Check, Star, BookOpen, GraduationCap, Award, Printer } from "lucide-react";
 import { Logo } from "@/components/ui/Logo";
@@ -7,7 +8,7 @@ import { LandingFAQ, buildFaqSchema } from "@/components/landing/LandingFAQ";
 
 export const metadata = {
   title: "Générateur d'Examen Bac Libanais IA | Imtihan",
-  description: "Le premier générateur d'examen Bac Libanais intelligent. Créez des examens blancs et contrôles (Terminale SG, SV, SE, LH et Brevet EB9) avec corrigé complet en 30 secondes.",
+  description: "Créez des contrôles et sujets d’entraînement Bac Libanais ou Brevet avec corrigé détaillé. Relisez les chapitres, la structure et le barème avant export.",
   alternates: { canonical: "/generateur-examen-bac-libanais" },
   openGraph: {
     type: "website",
@@ -74,7 +75,7 @@ export default function BacLibanaisLanding() {
             "@type": "WebApplication",
             "name": "Imtihan — Générateur d'examen Bac Libanais IA",
             "url": "https://imtihan.live/generateur-examen-bac-libanais",
-            "description": "Le premier générateur d'examen Bac Libanais intelligent. Créez des examens blancs et contrôles (Terminale SG, SV, SE, LH et Brevet EB9) avec corrigé complet en 30 secondes.",
+            "description": "Créez des contrôles et sujets d’entraînement Bac Libanais ou Brevet avec corrigé détaillé. Relisez les chapitres, la structure et le barème avant export.",
             "applicationCategory": "EducationalApplication",
             "operatingSystem": "All",
             "offers": {
@@ -104,61 +105,54 @@ export default function BacLibanaisLanding() {
         ]}
       />
 
-      {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 md:px-10 h-16 bg-[var(--bg)]/75 backdrop-blur-xl border-b border-[var(--border)]/60 transition-colors">
-        <Logo size={26} />
-        <div className="flex items-center gap-3">
-          <Link href="/auth/login" className="inline-flex items-center gap-1.5 h-9 px-4 rounded-xl bg-[var(--accent)] text-white text-sm font-medium hover:opacity-90 transition-opacity shadow-sm">
-            Se connecter <ArrowRight size={14} />
-          </Link>
-        </div>
-      </nav>
-
-      <main className="flex-grow pt-24">
-        {/* Hero */}
-        <section className="relative pt-16 pb-20 md:pt-24 md:pb-28 px-6 md:px-10 overflow-hidden">
-          <div className="absolute top-0 right-0 w-[600px] h-[600px] rounded-full bg-[var(--accent)] opacity-[0.04] blur-3xl -translate-y-1/3 translate-x-1/3 pointer-events-none" />
-          
-          <div className="relative max-w-4xl mx-auto text-center space-y-6">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-[var(--border)] bg-[var(--surface)] text-xs text-[var(--accent)] font-bold uppercase tracking-widest mx-auto">
-              <Star size={12} className="fill-[var(--accent)]" /> Modèle spécifique au programme libanais
-            </div>
-
-            <h1 className="serif text-display-xl text-[var(--text)] leading-tight tracking-tight max-w-2xl mx-auto">
-              Le premier <span className="italic text-[var(--accent)]">générateur d'examen Bac Libanais</span> dopé à l'IA.
-            </h1>
-
-            <p className="text-base text-[var(--text-secondary)] max-w-xl mx-auto leading-relaxed">
-              Dites adieu aux heures passées à recopier d'anciennes Dawrat. Rédigez votre consigne ou déposez vos cours, et Imtihan crée des exercices de mathématiques, physique ou chimie conformes aux exigences officielles libanaises.
-            </p>
-
-            <div className="pt-4 flex flex-col sm:flex-row justify-center gap-3">
-              <Link href="/auth/register" className="inline-flex items-center justify-center gap-2 h-12 px-7 rounded-xl bg-[var(--accent)] text-white font-medium hover:opacity-95 shadow-lg shadow-[var(--accent)]/15">
-                Créer un examen Bac Libanais <ArrowRight size={16} />
-              </Link>
-              <Link href="/#how" className="inline-flex items-center justify-center h-12 px-7 rounded-xl border border-[var(--border)] text-[var(--text-secondary)] font-medium hover:bg-[var(--surface)] transition-all">
-                Voir la démonstration
-              </Link>
-            </div>
-          </div>
-        </section>
+      <GeneratorLandingNav french={true} />
+      <main className="flex-grow pt-16">
+        <GeneratorLandingHero {...{
+  "french": true,
+  "eyebrow": "Bac Libanais · Brevet & Terminale",
+  "title": "Vos prochains examens.",
+  "accent": "Plus de temps pour enseigner.",
+  "description": "Créez des exercices de mathématiques, physique et chimie à partir des chapitres enseignés. Choisissez une structure, relisez les questions et exportez un sujet avec son corrigé détaillé.",
+  "cta": "Créer mon examen gratuit",
+  "preview": {
+    "title": "Mathématiques · Entraînement",
+    "level": "Terminale Sciences générales · Référence 2024",
+    "duration": "3 heures",
+    "marks": "Maximum : 20 points",
+    "instructions": "Exemple basé sur la session ordinaire 2024 : sept exercices proposés, cinq à traiter. La structure reste à relire avant génération.",
+    "sections": [
+      {
+        "title": "7 exercices proposés",
+        "detail": "4 points par exercice, avec des questions progressives."
+      },
+      {
+        "title": "5 exercices au choix",
+        "detail": "Le total correspond aux réponses demandées, pas à tous les exercices proposés."
+      },
+      {
+        "title": "Un corrigé complet",
+        "detail": "Méthode et barème pour chacun des sept exercices."
+      }
+    ]
+  }
+}} />
 
         {/* Value Proposition */}
         <section className="px-6 md:px-10 py-20 bg-[var(--bg-subtle)] border-t border-b border-[var(--border)]">
           <div className="max-w-5xl mx-auto">
-            <div className="text-center mb-16">
+            <div className="text-center mb-10">
               <h2 className="serif text-display-md text-[var(--text)]">Pourquoi utiliser Imtihan pour vos classes au Liban ?</h2>
               <p className="text-xs text-[var(--text-secondary)] uppercase tracking-widest mt-2 font-semibold">Une productivité décuplée pour les enseignants libanais</p>
             </div>
 
-            <div className="grid md:grid-cols-2 gap-8">
+            <div className="grid md:grid-cols-2 gap-5">
               {FEATURES.map((feature, i) => (
-                <div key={i} className="card p-8 bg-[var(--surface)] space-y-4 hover:-translate-y-0.5 hover:shadow-md transition-all border border-[var(--border)]/45">
+                <div key={i} className="card p-6 sm:p-8 bg-[var(--surface)] space-y-4 hover:-translate-y-0.5 hover:shadow-md transition-all border border-[var(--border)]/45">
                   <div className="w-10 h-10 rounded-xl bg-[var(--accent-light)] text-[var(--accent)] flex items-center justify-center">
                     <feature.icon size={20} />
                   </div>
                   <h3 className="font-semibold text-sm text-[var(--text)]">{feature.title}</h3>
-                  <p className="text-xs text-[var(--text-secondary)] leading-relaxed">{feature.body}</p>
+                  <p className="text-sm text-[var(--text-secondary)] leading-relaxed">{feature.body}</p>
                 </div>
               ))}
             </div>
@@ -177,19 +171,19 @@ export default function BacLibanaisLanding() {
           <div className="grid sm:grid-cols-3 gap-6 text-center">
             <div className="border border-[var(--border)] rounded-2xl p-6 bg-[var(--surface)] space-y-3">
               <h3 className="font-serif text-lg font-bold text-[var(--accent)]">Terminale SG / SV</h3>
-              <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+              <p className="text-sm text-[var(--text-secondary)] leading-relaxed">
                 Génération de problèmes complexes en Analyse, Géométrie, Mécanique Newtonienne, Électricité et Chimie Organique.
               </p>
             </div>
             <div className="border border-[var(--border)] rounded-2xl p-6 bg-[var(--surface)] space-y-3">
               <h3 className="font-serif text-lg font-bold text-[var(--accent)]">Terminale SE / LH</h3>
-              <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+              <p className="text-sm text-[var(--text-secondary)] leading-relaxed">
                 Exercices adaptés en Statistiques et Probabilités simples — la partie mathématique du programme SE / LH.
               </p>
             </div>
             <div className="border border-[var(--border)] rounded-2xl p-6 bg-[var(--surface)] space-y-3">
               <h3 className="font-serif text-lg font-bold text-[var(--accent)]">Brevet Libanais (EB9)</h3>
-              <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+              <p className="text-sm text-[var(--text-secondary)] leading-relaxed">
                 Questions d'entraînements classiques en Algèbre, Théorème de Thalès/Pythagore, Physique (Optique/Forces) et Chimie des solutions.
               </p>
             </div>

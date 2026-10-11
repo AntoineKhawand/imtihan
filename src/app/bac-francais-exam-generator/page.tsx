@@ -1,3 +1,4 @@
+import { GeneratorLandingHero, GeneratorLandingNav } from "@/components/landing/GeneratorLandingHero";
 import Link from "next/link";
 import { ArrowRight, Check, Star, BookOpen, Clock, Settings, GraduationCap } from "lucide-react";
 import { Logo } from "@/components/ui/Logo";
@@ -97,62 +98,54 @@ export default function FrenchBacLandingPage() {
         ]}
       />
 
-      {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 md:px-10 h-16 bg-[var(--bg)]/75 backdrop-blur-xl border-b border-[var(--border)]/60 transition-colors">
-        <Logo size={26} />
-        <div className="flex items-center gap-3">
-          <Link href="/auth/login" className="inline-flex items-center gap-1.5 h-9 px-4 rounded-xl bg-[var(--accent)] text-white text-sm font-medium hover:opacity-90 transition-opacity shadow-sm">
-            Se connecter <ArrowRight size={14} />
-          </Link>
-        </div>
-      </nav>
-
-      <main className="flex-grow pt-24">
-        {/* Hero */}
-        <section className="relative pt-16 pb-20 md:pt-24 md:pb-28 px-6 md:px-10 overflow-hidden">
-          <div className="absolute top-0 right-0 w-[600px] h-[600px] rounded-full bg-[var(--accent)] opacity-[0.04] blur-3xl -translate-y-1/3 translate-x-1/3 pointer-events-none" />
-          
-          <div className="relative max-w-4xl mx-auto text-center space-y-6">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-[var(--border)] bg-[var(--surface)] text-xs text-[var(--accent)] font-bold uppercase tracking-widest mx-auto">
-              <Star size={12} className="fill-[var(--accent)]" /> Dédié au programme officiel français (AEFE)
-            </div>
-
-            <h1 className="serif text-display-lg text-[var(--text)] leading-tight tracking-tight max-w-3xl mx-auto">
-              <span className="md:block md:whitespace-nowrap">Le générateur de devoir Bac Français</span>
-              <span className="italic text-[var(--accent)] md:block md:whitespace-nowrap">conçu pour les professeurs.</span>
-            </h1>
-
-            <p className="text-base text-[var(--text-secondary)] max-w-xl mx-auto leading-relaxed">
-              Créez des sujets de Devoirs Surveillés (DS), contrôles continus et épreuves de spécialité en quelques secondes. Les corrigés pas-à-pas et grilles de barèmes sont inclus automatiquement.
-            </p>
-
-            <div className="pt-4 flex flex-col sm:flex-row justify-center gap-3">
-              <Link href="/auth/register" className="inline-flex items-center justify-center gap-2 h-12 px-7 rounded-xl bg-[var(--accent)] text-white font-medium hover:opacity-95 shadow-lg shadow-[var(--accent)]/15">
-                Créer un devoir Bac Français <ArrowRight size={16} />
-              </Link>
-              <Link href="/pricing" className="inline-flex items-center justify-center h-12 px-7 rounded-xl border border-[var(--border)] text-[var(--text-secondary)] font-medium hover:bg-[var(--surface)] transition-all">
-                Tarifs enseignants
-              </Link>
-            </div>
-          </div>
-        </section>
+      <GeneratorLandingNav french={true} />
+      <main className="flex-grow pt-16">
+        <GeneratorLandingHero {...{
+  "french": true,
+  "eyebrow": "Bac Français · Seconde à Terminale",
+  "title": "Des devoirs qui font réfléchir.",
+  "accent": "Des corrigés qui font gagner du temps.",
+  "description": "Préparez vos contrôles, devoirs surveillés et sujets d’entraînement en mathématiques ou physique-chimie. Gardez la main sur les chapitres, la difficulté, la structure et les points.",
+  "cta": "Créer mon devoir gratuit",
+  "preview": {
+    "title": "Spécialité mathématiques",
+    "level": "Terminale · Exemple de composition 2026 J1",
+    "duration": "4 heures",
+    "marks": "20 points",
+    "instructions": "Quatre exercices obligatoires. Une référence datée pour préparer un sujet d’entraînement, avec un barème modifiable.",
+    "sections": [
+      {
+        "title": "Exercices 1 & 2",
+        "detail": "5 et 4 points · Raisonnement et application des connaissances."
+      },
+      {
+        "title": "Exercices 3 & 4",
+        "detail": "6 et 5 points · Plusieurs étapes, méthodes à justifier."
+      },
+      {
+        "title": "Corrigé séparé",
+        "detail": "Réponses, démarche et critères d’attribution des points."
+      }
+    ]
+  }
+}} />
 
         {/* Features */}
         <section className="px-6 md:px-10 py-20 bg-[var(--bg-subtle)] border-t border-b border-[var(--border)]">
           <div className="max-w-5xl mx-auto">
-            <div className="text-center mb-16">
+            <div className="text-center mb-10">
               <h2 className="serif text-display-md text-[var(--text)]">Un outil d'évaluation rigoureux et complet</h2>
               <p className="text-xs text-[var(--text-secondary)] uppercase tracking-widest mt-2 font-semibold">Gagnez du temps tout en maintenant l'exigence académique</p>
             </div>
 
-            <div className="grid md:grid-cols-2 gap-8">
+            <div className="grid md:grid-cols-2 gap-5">
               {FRENCH_FEATURES.map((feature, i) => (
-                <div key={i} className="card p-8 bg-[var(--surface)] space-y-4 hover:-translate-y-0.5 hover:shadow-md transition-all border border-[var(--border)]/45">
+                <div key={i} className="card p-6 sm:p-8 bg-[var(--surface)] space-y-4 hover:-translate-y-0.5 hover:shadow-md transition-all border border-[var(--border)]/45">
                   <div className="w-10 h-10 rounded-xl bg-[var(--accent-light)] text-[var(--accent)] flex items-center justify-center">
                     <feature.icon size={20} />
                   </div>
                   <h3 className="font-semibold text-sm text-[var(--text)]">{feature.title}</h3>
-                  <p className="text-xs text-[var(--text-secondary)] leading-relaxed">{feature.body}</p>
+                  <p className="text-sm text-[var(--text-secondary)] leading-relaxed">{feature.body}</p>
                 </div>
               ))}
             </div>
@@ -171,13 +164,13 @@ export default function FrenchBacLandingPage() {
           <div className="grid sm:grid-cols-2 gap-6 text-center max-w-2xl mx-auto">
             <div className="border border-[var(--border)] rounded-2xl p-6 bg-[var(--surface)] space-y-3">
               <h3 className="font-serif text-lg font-bold text-[var(--accent)]">Physique-Chimie</h3>
-              <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+              <p className="text-sm text-[var(--text-secondary)] leading-relaxed">
                 Mécanique, thermodynamique, synthèse organique, ondes, électricité, réactions chimiques. Questions de type I (synthèse) et type II (raisonnement scientifique).
               </p>
             </div>
             <div className="border border-[var(--border)] rounded-2xl p-6 bg-[var(--surface)] space-y-3">
               <h3 className="font-serif text-lg font-bold text-[var(--accent)]">Mathématiques</h3>
-              <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+              <p className="text-sm text-[var(--text-secondary)] leading-relaxed">
                 Suites, fonctions, limites, dérivation, probabilités discrètes, géométrie dans l'espace. Exercices complets et QCM d'entraînement.
               </p>
             </div>
