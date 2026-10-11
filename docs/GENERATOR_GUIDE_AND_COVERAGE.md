@@ -19,3 +19,9 @@ Legacy chapterCoverageMisses data remains untouched and is excluded because its 
 ## October 11 correction
 
 Removed the timed 20-second homepage demo and its Watch link. The free-exam CTA remains. Guidance is provided by highlights on actual generator buttons and sections, with Next, Back, Skip and replay on each stage. Visit history is stored separately per stage.
+
+## Responsive guidance and visual controls
+
+The guide uses a bounded bottom sheet on phones, keeps navigation outside the scrolling text, and scrolls highlights into the space above the sheet on phones and short landscape screens. Highlight bounds are clipped to the visible viewport. Exercise tools wrap with labels and larger touch targets on phones; graph inputs stack. Clear visuals now persists through the generation page’s update callback. An empty graph request explicitly asks for a blank student grid.
+
+Teachers can configure table rows, columns, headers and data from each exercise’s Table control. Function plots support equations (linear, polynomial, trigonometric, exponential and logarithmic) and blank grids; diagrams use Mermaid. There is no dedicated editor for statistical charts such as bars, histograms or scatter plots. Polylane is optional development/review tooling and is not required by exam generation.

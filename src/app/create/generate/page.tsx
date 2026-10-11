@@ -756,6 +756,7 @@ export default function GeneratePage() {
                     onRegenerate={handleRegenerate}
                     onRemove={handleRemove}
                     onEdit={handleEdit}
+                    onUpdate={handleEditorSave}
                     onSaveToBank={handleSaveToBank}
                     onTransform={handleTransform}
                     savedToBank={savedIds.has(exercise.id)}

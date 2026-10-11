@@ -9,6 +9,8 @@ import { GeneratorTutorial } from "@/components/ui/GeneratorTutorial";
 let host: HTMLDivElement, root: Root;
 beforeEach(() => {
   vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
+  vi.stubGlobal("ResizeObserver", class { observe() {} disconnect() {} });
+  vi.spyOn(window, "scrollBy").mockImplementation(() => {});
   host = document.createElement("div");
   document.body.append(host);
   root = createRoot(host);

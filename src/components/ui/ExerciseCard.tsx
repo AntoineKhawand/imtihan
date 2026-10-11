@@ -318,8 +318,8 @@ export function ExerciseCard({
       )}
     >
       {/* Header */}
-      <div className="flex items-start justify-between p-6 pb-4 gap-4">
-        <div className="flex items-center gap-3">
+      <div className="flex flex-col items-start justify-between p-4 pb-4 gap-4 sm:flex-row sm:p-6 sm:pb-4">
+        <div className="flex min-w-0 items-center gap-3">
           {/* Number badge */}
           <div className="w-8 h-8 rounded-lg bg-[var(--bg-subtle)] border border-[var(--border)] flex items-center justify-center flex-shrink-0">
             <span className="text-sm font-semibold text-[var(--text)]">{index + 1}</span>
@@ -334,7 +334,7 @@ export function ExerciseCard({
                 {TYPE_LABELS[exercise.type] ?? exercise.type}
               </span>
             </div>
-            <div className="flex items-center gap-2 mt-1">
+            <div className="flex flex-wrap items-center gap-2 mt-1">
               <span className={cn("inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium", difficulty.color)}>
                 <span className={cn("w-1.5 h-1.5 rounded-full", difficulty.dot)} />
                 {difficulty.label}
@@ -352,53 +352,64 @@ export function ExerciseCard({
         </div>
 
         {/* Action menu trigger */}
-        <div data-guide="visuals" className="flex items-center gap-1.5 flex-shrink-0">
+        <div data-guide="visuals" className="flex w-full min-w-0 items-start gap-1.5 sm:w-auto sm:flex-shrink-0">
           {onTransform && (
-            <div className="flex items-center bg-[var(--bg-subtle)]/50 rounded-lg border border-[var(--border)] p-0.5 mr-1">
+            <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1 bg-[var(--bg-subtle)]/50 rounded-lg border border-[var(--border)] p-0.5 sm:flex-initial sm:flex-nowrap sm:gap-0 sm:mr-1">
               <button
                 onClick={() => setTableConfig({ columns: 0, rows: 0, headers: "", data: "" })}
-                className="w-7 h-7 rounded-md flex items-center justify-center text-[var(--text-tertiary)] hover:text-[var(--accent)] hover:bg-[var(--surface)] transition-all"
+                className="min-h-11 gap-1.5 px-2 rounded-md flex items-center justify-center sm:min-h-7 sm:w-7 sm:px-0 text-[var(--text-tertiary)] hover:text-[var(--accent)] hover:bg-[var(--surface)] transition-all"
+                aria-label="Format as Table"
                 title="Format as Table"
               >
                 <Table size={13} />
+                <span className="text-xs sm:hidden">Table</span>
               </button>
               <button
                 onClick={() => { setTransformType("plot"); setTransformPrompt(""); }}
-                className="w-7 h-7 rounded-md flex items-center justify-center text-[var(--text-tertiary)] hover:text-[var(--accent)] hover:bg-[var(--surface)] transition-all"
+                className="min-h-11 gap-1.5 px-2 rounded-md flex items-center justify-center sm:min-h-7 sm:w-7 sm:px-0 text-[var(--text-tertiary)] hover:text-[var(--accent)] hover:bg-[var(--surface)] transition-all"
+                aria-label="Add Math Plot (SVG)"
                 title="Add Math Plot (SVG)"
               >
                 <LineChart size={13} />
+                <span className="text-xs sm:hidden">Graph</span>
               </button>
               <button
                 onClick={() => { setTransformType("visual"); setTransformPrompt(""); }}
-                className="w-7 h-7 rounded-md flex items-center justify-center text-[var(--text-tertiary)] hover:text-[var(--accent)] hover:bg-[var(--surface)] transition-all"
+                className="min-h-11 gap-1.5 px-2 rounded-md flex items-center justify-center sm:min-h-7 sm:w-7 sm:px-0 text-[var(--text-tertiary)] hover:text-[var(--accent)] hover:bg-[var(--surface)] transition-all"
+                aria-label="Add Diagram (Mermaid)"
                 title="Add Diagram (Mermaid)"
               >
                 <ImageIcon size={13} />
+                <span className="text-xs sm:hidden">Diagram</span>
               </button>
               <button
                 onClick={() => { setTransformType("image"); setTransformPrompt(""); }}
-                className="w-7 h-7 rounded-md flex items-center justify-center text-[var(--text-tertiary)] hover:text-[var(--accent)] hover:bg-[var(--surface)] transition-all"
+                className="min-h-11 gap-1.5 px-2 rounded-md flex items-center justify-center sm:min-h-7 sm:w-7 sm:px-0 text-[var(--text-tertiary)] hover:text-[var(--accent)] hover:bg-[var(--surface)] transition-all"
+                aria-label="Generate AI Illustration"
                 title="Generate AI Illustration"
               >
                 <Sparkles size={12} />
+                <span className="text-xs sm:hidden">Image</span>
               </button>
-              <div className="w-px h-4 bg-[var(--border)] mx-1" />
+              <div className="hidden w-px h-4 bg-[var(--border)] mx-1 sm:block" />
               <button
                 onClick={handleClearVisuals}
-                className="w-7 h-7 rounded-md flex items-center justify-center text-[var(--text-tertiary)] hover:text-[var(--danger)] hover:bg-red-50 dark:hover:bg-red-950/20 transition-all"
+                className="min-h-11 gap-1.5 px-2 rounded-md flex items-center justify-center sm:min-h-7 sm:w-7 sm:px-0 text-[var(--text-tertiary)] hover:text-[var(--danger)] hover:bg-red-50 dark:hover:bg-red-950/20 transition-all"
+                aria-label="Clear all visuals (Plots, Diagrams, Images)"
                 title="Clear all visuals (Plots, Diagrams, Images)"
               >
                 <Trash2 size={12} />
+                <span className="text-xs sm:hidden">Clear</span>
               </button>
             </div>
           )}
 
           <div data-tutorial="exercise-actions" className="relative">
             <button
+              aria-label="Exercise actions"
               onClick={() => setShowActions(!showActions)}
               className={cn(
-                "w-8 h-8 rounded-lg flex items-center justify-center transition-colors",
+                "min-w-11 min-h-11 rounded-lg flex items-center justify-center transition-colors sm:min-w-8 sm:min-h-8",
                 showActions
                   ? "bg-[var(--bg-subtle)] text-[var(--text)]"
                   : "text-[var(--text-tertiary)] hover:text-[var(--text)] hover:bg-[var(--bg-subtle)]"
@@ -601,7 +612,7 @@ export function ExerciseCard({
                 <X size={14} />
               </button>
             </div>
-            <div className="flex gap-2">
+            <div className="flex flex-col gap-2 sm:flex-row">
               <input
                 type="text"
                 autoFocus
@@ -609,7 +620,7 @@ export function ExerciseCard({
                 onChange={(e) => setTransformPrompt(e.target.value)}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && onTransform) {
-                    onTransform(exercise.id, transformType, transformPrompt.trim());
+                    onTransform(exercise.id, transformType, transformPrompt.trim() || (transformType === "plot" ? "blank grid for students" : ""));
                     setTransformType(null);
                   }
                 }}
@@ -619,12 +630,12 @@ export function ExerciseCard({
                   ? "e.g. sin(x), x^2 + 2x - 5 (leave empty for a blank grid)"
                   : "e.g. flowchart, sequence diagram..."
                 }
-                className="flex-1 h-9 px-3 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-sm text-[var(--text)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] transition-all"
+                className="min-w-0 w-full flex-1 h-11 sm:h-9 px-3 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-sm text-[var(--text)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] transition-all"
               />
               <button
                 onClick={() => {
                   if (onTransform) {
-                    onTransform(exercise.id, transformType, transformPrompt.trim());
+                    onTransform(exercise.id, transformType, transformPrompt.trim() || (transformType === "plot" ? "blank grid for students" : ""));
                     setTransformType(null);
                   }
                 }}
@@ -665,7 +676,7 @@ export function ExerciseCard({
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="text-[10px] font-semibold text-[var(--text-secondary)] block mb-1">Columns</label>
-                <input
+                <input aria-label="Columns"
                   type="number" min={1} max={20}
                   value={tableConfig.columns || ""}
                   onChange={(e) => setTableConfig({ ...tableConfig, columns: Math.min(20, Math.max(1, parseInt(e.target.value) || 0)) })}
@@ -675,7 +686,7 @@ export function ExerciseCard({
               </div>
               <div>
                 <label className="text-[10px] font-semibold text-[var(--text-secondary)] block mb-1">Rows (excluding header)</label>
-                <input
+                <input aria-label="Rows (excluding header)"
                   type="number" min={1} max={50}
                   value={tableConfig.rows || ""}
                   onChange={(e) => setTableConfig({ ...tableConfig, rows: Math.min(50, Math.max(1, parseInt(e.target.value) || 0)) })}
@@ -685,7 +696,7 @@ export function ExerciseCard({
               </div>
               <div className="col-span-2">
                 <label className="text-[10px] font-semibold text-[var(--text-secondary)] block mb-1">Column headers (comma-separated)</label>
-                <input
+                <input aria-label="Column headers (comma-separated)"
                   type="text"
                   value={tableConfig.headers}
                   onChange={(e) => setTableConfig({ ...tableConfig, headers: e.target.value })}
@@ -695,7 +706,7 @@ export function ExerciseCard({
               </div>
               <div className="col-span-2">
                 <label className="text-[10px] font-semibold text-[var(--text-secondary)] block mb-1">Data description (what should fill the cells)</label>
-                <input
+                <input aria-label="Data description (what should fill the cells)"
                   type="text"
                   value={tableConfig.data}
                   onChange={(e) => setTableConfig({ ...tableConfig, data: e.target.value })}
@@ -712,6 +723,7 @@ export function ExerciseCard({
                 Cancel
               </button>
               <button
+                disabled={tableConfig.columns < 1 || tableConfig.rows < 1}
                 onClick={() => {
                   if (onTransform && tableConfig.columns > 0 && tableConfig.rows > 0) {
                     const promptText = `Create a table with ${tableConfig.columns} columns and ${tableConfig.rows} data rows. Headers: ${tableConfig.headers || "auto-generated"}. Data: ${tableConfig.data || "use relevant data from the exercise"}.`;
@@ -855,7 +867,7 @@ export function ExerciseCard({
 
                     {mathTab === "stats" && (
                       <>
-                        <div className="flex gap-2">
+                        <div className="flex flex-col gap-2 sm:flex-row">
                           <input type="text" value={statsInput}
                             onChange={(e) => { setStatsInput(e.target.value); setStatsResult(null); }}
                             onKeyDown={(e) => e.key === "Enter" && computeStats()}
@@ -884,7 +896,7 @@ export function ExerciseCard({
 
                     {mathTab === "chem" && (
                       <>
-                        <div className="flex gap-2">
+                        <div className="flex flex-col gap-2 sm:flex-row">
                           <input type="text" value={chemFormula}
                             onChange={(e) => { setChemFormula(e.target.value); setChemResult(null); }}
                             onKeyDown={(e) => e.key === "Enter" && computeChem()}
@@ -921,7 +933,7 @@ export function ExerciseCard({
 
                     {mathTab === "const" && (
                       <>
-                        <div className="flex gap-2">
+                        <div className="flex flex-col gap-2 sm:flex-row">
                           <input
                             type="text"
                             value={constQuery}
@@ -1071,7 +1083,7 @@ function PubChemLookup() {
       <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-tertiary)]">
         Compound lookup (PubChem)
       </p>
-      <div className="flex gap-2">
+      <div className="flex flex-col gap-2 sm:flex-row">
         <input
           type="text"
           value={query}
