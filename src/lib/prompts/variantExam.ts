@@ -1,3 +1,4 @@
+import { ASSESSMENT_DATA_RULES } from "./assessmentQuality";
 import type { ExamContext, Exercise } from "@/types/exam";
 import { LANGUAGE_INSTRUCTIONS } from "./generate";
 
@@ -41,6 +42,8 @@ export function buildVariantExamSystemPrompt(context: ExamContext): string {
 
 TARGET LANGUAGE — write entirely in ${context.language}, following these conventions (same as the original exam):
 ${languageInstruction}
+
+${ASSESSMENT_DATA_RULES}
 
 =====================================================================
 WHAT YOU MUST CHANGE (this is the entire point of Version B)

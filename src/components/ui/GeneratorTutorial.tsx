@@ -66,8 +66,8 @@ export const GENERATOR_TOURS: Record<string, Step[]> = {
     ),
     guide(
       "template",
-      "Choose a document layout",
-      "Modern uses the standard layout. Extract Template uses an uploaded document or your layout instructions. Tell it which header, logo or grading table to follow.",
+      "Your document composition",
+      "Every exam uses one polished composition. Uploaded files provide course content; personalise the school header on the export step.",
     ),
     guide(
       "generate",
@@ -125,8 +125,8 @@ export const GENERATOR_TOURS: Record<string, Step[]> = {
     ),
     guide(
       "download-layout",
-      "Classic or Modern",
-      "Choose the document style before downloading. Classic is available on the free plan; Modern may require Pro. Check the target language shown below before exporting.",
+      "One polished exam layout",
+      "Word and PDF use the same professional composition on every plan. Check the school header, answer-key option and selected version before exporting.",
     ),
     guide(
       "variant",

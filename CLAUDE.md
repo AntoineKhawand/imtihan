@@ -36,7 +36,7 @@
                               ↓
 ┌─────────────────────────────────────────────────────────────────┐
 │  STEP 3 — STRUCTURE & STYLE                                     │
-│  Points distribution, difficulty mix slider, template choice,   │
+│  Points distribution, difficulty mix slider, unified composition,   │
 │  Version A/B toggle.                                            │
 └─────────────────────────────────────────────────────────────────┘
                               ↓
@@ -159,7 +159,7 @@ users/{uid}/exams/{examId}
 - Curricula: Bac Libanais, Bac Français, IB, University (free-form)
 - Subjects: Math, Physics, Chemistry
 - Languages: French, English
-- 4–5 default templates (no custom upload)
+- One Imtihan document composition (Georgia body, Arial headings, A4); no template picker. Legacy template IDs remain accepted for saved exams.
 - Teacher account + exam library
 - Version A/B generation
 - Granular exercise regeneration

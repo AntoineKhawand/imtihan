@@ -1,5 +1,12 @@
 # Roadmap — Imtihan
 
+## Generator quality and composition — 2026-10-11
+
+- Shared generation, regeneration and Version B rules prevent givens, tables, graphs and MCQ wording from revealing assessed answers; hard questions require connected reasoning within the selected syllabus. Preserve teacher measurements and solvability.
+- One Imtihan A4 composition for every plan and legacy template ID; removed layout selectors, retained school branding and uploaded course content.
+- PDF printing now respects Exam only, includes MCQ options and uses the current header fields.
+- Validation: 81 focused prompt, Word export and print tests; TypeScript. AI question quality remains subject to teacher review; no paid generation was run for verification.
+
 ## Maintenance — 2026-10-10
 
 - Implemented on maintenance branch: isolated nightly execution, explicit preflight/failures, serialized work, locked installs; scheduler wake/catch-up registration pending an elevated Windows session.
@@ -28,7 +35,7 @@
 - ✅ Gemini client singleton + prompt architecture
 - ✅ /api/analyze — vision-powered context extraction (Zod validated)
 - ✅ /api/generate — SSE streaming with progressive exercise delivery
-- ✅ /api/export — Word (.docx) generation with 3 templates
+- ✅ /api/export — Word (.docx) generation with one Imtihan composition
 - ✅ /api/export/send — generate + email in one call (Brevo)
 - ✅ SEO strategy (sitemap, robots, JSON-LD, metadata, canonical)
 - ✅ GEO strategy (llms.txt, FAQ structured data, Vercel Analytics)

@@ -1,3 +1,4 @@
+import { ASSESSMENT_DATA_RULES } from "./assessmentQuality";
 import type { ExamContext } from "@/types/exam";
 import type { ChapterExemplarGroup } from "@/types/schoolBank";
 import { buildChaptersSummary, getChapter } from "@/data/curricula";
@@ -227,7 +228,7 @@ HL topics: All SL + Complex numbers, Proof, Series/sums, Differential equations,
 - PHYSICS parts: state the formula in literal form before any numerical application ("Écrire l'expression littérale de… puis calculer…").
 - CHEMISTRY parts: always balance equations; use $\\\\ce{...}$ for ALL formulas (e.g. $\\\\ce{H2O}$, $\\\\ce{2H2 + O2 -> 2H2O}$); ask students to "Écrire et équilibrer l'équation de la réaction".
 - MATH & CHEMISTRY NOTATION: Use KaTeX $...$ for all formulas and $\\\\ce{...}$ for chemical formulas. NEVER use \\\\ce{} without surrounding $...$.
-- "Aide :" prefix for optional hints on hard sub-questions.
+- "Aide :" prefix only for hints explicitly requested by the teacher; do not reveal the method or result assessed by a hard sub-question.
 - Total: 20 points for a full exam; adjust proportionally for partial exams.`,
   },
 
@@ -424,7 +425,7 @@ const DIFFICULTY_GUIDE = `
 DIFFICULTY CALIBRATION:
 - easy: Single formula/definition applied directly. A student who attended all classes should score full marks. ≤ 2 reasoning steps.
 - medium: Requires combining 2–3 concepts from the same chapter. Some algebraic manipulation. Students need to understand the topic, not just memorise.
-- hard: Multi-step, may cross chapter boundaries, requires strategic thinking. Weak students make errors; only prepared students score full marks.`;
+- hard: Multi-step reasoning within the selected chapters and level; connect concepts, choose a method, derive intermediate results and justify conclusions. Most marks must require reasoning, not direct substitution or reading off supplied data.`;
 
 // ---------------------------------------------------------------------------
 // Main system prompt builder
@@ -492,7 +493,7 @@ export function buildGenerateSystemPrompt(context: ExamContext): string {
 - For longer exercises, add parts: "Partie A —", "Partie B —".
 - Sub-questions: 1., 2., 3. (numeric at top level); 1.a., 1.b. for nested.
 - "On donne :" or "Données :" before the constants block.
-- "Aide :" prefix for optional hints on hard sub-questions.
+- "Aide :" prefix only for hints explicitly requested by the teacher; do not reveal the method or result assessed by a hard sub-question.
 - Total: 20 points.
 - Corrigé: label each answer "Réponse 1.", "Réponse 1.a." etc. Show all intermediate algebra.`,
 
@@ -525,7 +526,7 @@ export function buildGenerateSystemPrompt(context: ExamContext): string {
   // renderContent.ts's `[PLOT:]` handling, which this instruction feeds.
   const isPlottableSubject = context.subject === "mathematics" || context.subject === "physics" || context.subject === "physique-chimie";
   const mathPlotsInstruction = isPlottableSubject
-    ? `    - **MATHEMATICAL PLOTS**: For mathematical functions (e.g. $f(x) = \\sin(x)$), DO NOT use Mermaid and DO NOT use [GRAPH:]/[IMAGE:]/[VISUAL:] (those route through an AI image model, which cannot accurately draw a function curve). Instead, insert the tag \`[PLOT: sin(x)]\` directly inside the \`statement\`, exactly where it belongs — right after the sub-question or sentence that asks for the graph, never bunched at the top or bottom of the statement. The equation must use standard mathematical notation compatible with function-plot/D3 (e.g. "x^2", "sin(x)", "exp(x) - 1"). Do NOT use the legacy \`mathPlots\` array field for new exercises — it only exists for backward compatibility with older exams.\n`
+    ? `    - **MATHEMATICAL PLOTS**: For mathematical functions (e.g. $f(x) = \\sin(x)$), DO NOT use Mermaid and DO NOT use [GRAPH:]/[IMAGE:]/[VISUAL:] (those route through an AI image model, which cannot accurately draw a function curve). Instead, insert the tag \`[PLOT: sin(x)]\` directly inside the \`statement\`, exactly where it belongs — right after the sub-question or sentence that refers to a supplied graph, never bunched at the top or bottom of the statement. If the student must draw the graph, provide an empty [PLOT: ] grid or omit the plot; never supply the completed curve being assessed. The equation must use standard mathematical notation compatible with function-plot/D3 (e.g. "x^2", "sin(x)", "exp(x) - 1"). Do NOT use the legacy \`mathPlots\` array field for new exercises — it only exists for backward compatibility with older exams.\n`
     : "";
 
   const stepWord = context.language === "french" ? "Étape"
@@ -551,6 +552,8 @@ ${subjectConventions}
 ${structural}
 
 ${DIFFICULTY_GUIDE}
+
+${ASSESSMENT_DATA_RULES}
 
 ${fewShotText}
 ACADEMIC RESEARCH & VERIFICATION (MANDATORY):
@@ -846,9 +849,7 @@ export function buildGenerateUserPrompt(
 
   const exemplarsStr = exemplarsPrompt ? `\n${exemplarsPrompt}\n` : "";
   const teacherNotesStr = context.teacherNotes ? `\nTeacher notes:\n${context.teacherNotes}` : "";
-  const templateStr = context.templateType === "modern"
-    ? "\nTEMPLATE: Use the standard Modern (Standard) layout. Ignore the visual layout of any uploaded documents — use them for content only."
-    : `\nTEMPLATE: Extract and replicate the visual layout, header, and formatting from the uploaded document. Instructions: ${context.layoutPreferences || "Mimic the general header and question structure."}`;
+  const templateStr = "\nDOCUMENT COMPOSITION: Use Imtihan’s single professional layout. Uploaded files supply course content and school header information only; do not reproduce their layout. Do not put decorative formatting or document headers inside exercise statements.";
   const visualStr = context.visualPreference ? `\nVisual & Graph Requirements:\n${context.visualPreference}` : "";
   const extraContextStr = extraContext ? `\nDOMAIN DATA CONTEXT:\n${extraContext}` : "";
 
@@ -895,6 +896,8 @@ export function buildRegenerateExercisePrompt(
 
   return `Generate a NEW, DIFFERENT replacement for exercise #${exerciseNumber}.
 Current difficulty: ${currentDifficulty}.${targetDiffStr}
+
+${ASSESSMENT_DATA_RULES}
 
 Curriculum: ${context.curriculumId} | Level: ${context.levelId} | Subject: ${context.subject} | Language: ${context.language}
 

@@ -1,9 +1,11 @@
+import { SUBJECT_LABELS as LOCALIZED_SUBJECT_LABELS } from "@/lib/utils";
+import { DOCUMENT_LAYOUT } from "@/lib/documentLayout";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import {
   Document, Packer, Paragraph, TextRun, HeadingLevel,
   AlignmentType, BorderStyle, Table, TableRow, TableCell, WidthType,
-  ImageRun, TableBorders, VerticalAlign
+  ImageRun, TableBorders, VerticalAlign, Footer, PageNumber
 } from "docx";
 import { create, all } from "mathjs";
 import { fixBoxedMath } from "@/lib/renderContent";
@@ -301,6 +303,7 @@ async function processContentBlocks(
         .map(line => {
           const cells = line.split("|").filter((_, i, arr) => i > 0 && i < arr.length - 1);
           return new TableRow({
+        cantSplit: true,
             children: cells.map(cell => new TableCell({
               children: [new Paragraph({ 
                 children: createFormattedTextRuns(cell.trim(), { ...baseOptions, size: baseOptions.size - 2 }),
@@ -498,7 +501,7 @@ const RequestSchema = z.object({
     totalPoints: z.number(),
     examType: z.string(),
   }),
-  templateId: z.string().optional().default("classic"),
+  templateId: z.string().optional().default("imtihan"),
   exercises: z.array(z.object({
     number: z.number(),
     type: z.string(),
@@ -849,8 +852,8 @@ export async function generateWordDocument(
   header: z.infer<typeof RequestSchema>["header"],
   includeAnswerKey = true
 ): Promise<Buffer> {
-  const subjectName = SUBJECT_LABELS[context.subject] ?? context.subject;
   const lang = context.language === "french" ? "fr" : context.language === "arabic" ? "ar" : "en";
+  const subjectName = LOCALIZED_SUBJECT_LABELS[context.subject]?.[lang] ?? context.subject;
 
   // Pre-process "Code Leaks" and AI errors in all exercises before generating doc
   exercises.forEach(ex => {
@@ -881,115 +884,65 @@ export async function generateWordDocument(
   const durationWord = lang === "fr" ? "Durée" : lang === "ar" ? "المدة" : "Duration";
   const totalWord = lang === "ar" ? "المجموع" : "Total";
 
-  // Template configuration
-  const isModern = templateId === "modern";
-  const isClassic = templateId === "classic" || templateId === "formal";
-
-  const fontBody = isModern ? "Helvetica" : "Times New Roman";
-  const fontHeader = isModern ? "Arial" : "Times New Roman";
-  
-  // Match the UI CSS variables exactly
-  const primaryColor = isClassic ? "000000" : "1a5e3f"; // var(--accent)
-  const textColor = isClassic ? "000000" : "111827";    // var(--text)
-  const metaColor = isClassic ? "000000" : "6b7280";    // var(--text-secondary)
-  const subtleBg = isClassic ? "ffffff" : "f3f4f6";     // var(--bg-subtle)
-  const accentLight = isClassic ? "ffffff" : "ecfdf5";  // var(--accent-light)
-
+  // Legacy template IDs are accepted, but all exports use one composition.
+  const fontBody = DOCUMENT_LAYOUT.bodyFont;
+  const fontHeader = DOCUMENT_LAYOUT.headingFont;
+  const primaryColor = DOCUMENT_LAYOUT.accent;
+  const textColor = DOCUMENT_LAYOUT.ink;
+  const metaColor = DOCUMENT_LAYOUT.muted;
+  const subtleBg = DOCUMENT_LAYOUT.soft;
+  const accentLight = DOCUMENT_LAYOUT.soft;
   const children: (Paragraph | Table)[] = [];
-
-  // ─── Header ────────────────────────────────────────────────
-  if (isClassic) {
-    // CLASSIC HEADER: Formal, centered, B&W
-    if (header?.schoolLogo) {
-      try {
-        const base64Data = header.schoolLogo.split(",")[1] || header.schoolLogo;
-        const logoBuffer = Buffer.from(base64Data, "base64");
-        const mimeMatch = header.schoolLogo.match(/^data:image\/(\w+);/);
-        const imgType = (mimeMatch?.[1] === "jpeg" || mimeMatch?.[1] === "jpg") ? "jpg" : "png";
-        children.push(new Paragraph({
-          children: [new ImageRun({ type: imgType, data: logoBuffer, transformation: { width: 60, height: 60 } })],
-          alignment: AlignmentType.CENTER,
-          spacing: { after: 120 },
-        }));
-      } catch (e) { console.error(e); }
-    }
-
-    if (header?.schoolName) {
-      children.push(new Paragraph({
-        children: [new TextRun({ text: header.schoolName, bold: true, size: 24, font: fontHeader, color: "000000" })],
+  const compose = () => new Document({
+    styles: { default: {
+      document: { run: { font: fontBody, size: 22, color: textColor }, paragraph: { spacing: { line: 276 } } },
+      heading1: { run: { font: fontHeader, color: primaryColor }, paragraph: { keepNext: true } },
+      heading2: { run: { font: fontHeader, color: primaryColor }, paragraph: { keepNext: true } },
+    } },
+    sections: [{
+      properties: { page: {
+        size: { width: 11906, height: 16838 },
+        margin: { top: DOCUMENT_LAYOUT.pageMarginTwips, bottom: DOCUMENT_LAYOUT.pageMarginTwips, left: DOCUMENT_LAYOUT.pageMarginTwips, right: DOCUMENT_LAYOUT.pageMarginTwips },
+      } },
+      footers: { default: new Footer({ children: [new Paragraph({
         alignment: AlignmentType.CENTER,
+        children: [new TextRun({ children: [PageNumber.CURRENT], font: fontHeader, size: 18, color: metaColor })],
+      })] }) },
+      children,
+    }],
+  });
+
+  if (header?.schoolLogo) {
+    try {
+      const base64Data = header.schoolLogo.split(",")[1] || header.schoolLogo;
+      const mimeMatch = header.schoolLogo.match(/^data:image\/(\w+);/);
+      const imgType = (mimeMatch?.[1] === "jpeg" || mimeMatch?.[1] === "jpg") ? "jpg" : "png";
+      children.push(new Paragraph({
+        children: [new ImageRun({ type: imgType, data: Buffer.from(base64Data, "base64"), transformation: { width: 60, height: 60 } })],
+        alignment: AlignmentType.CENTER, spacing: { after: 100 },
       }));
-    }
-
-    children.push(new Paragraph({
-      children: [
-        new TextRun({ text: `${professorWord}: ${header?.teacherName ?? "..."}  |  ${durationWord}: ${context.duration} min  |  ${totalWord}: ${context.totalPoints} ${pointsWord}`, size: 18, font: fontBody, color: "000000" }),
-      ],
-      alignment: AlignmentType.CENTER,
-      spacing: { after: 100 },
-    }));
-
-    children.push(new Paragraph({
-      children: [new TextRun({ text: `${subjectName} — ${context.levelId}`, bold: true, size: 32, font: fontHeader, color: "000000" })],
-      alignment: AlignmentType.CENTER,
-      heading: HeadingLevel.HEADING_1,
-      border: { bottom: { style: BorderStyle.SINGLE, size: 12, color: "000000", space: 8 } }
-    }));
-    children.push(new Paragraph({ text: "", spacing: { after: 300 } }));
-
-  } else {
-    // MODERN HEADER: Sleek, colorful, table-based alignment
-    const logoRun = header?.schoolLogo ? (() => {
-      try {
-        const base64Data = header.schoolLogo.split(",")[1] || header.schoolLogo;
-        const mimeMatch = header.schoolLogo.match(/^data:image\/(\w+);/);
-        return new ImageRun({ 
-          type: (mimeMatch?.[1] === "jpeg" || mimeMatch?.[1] === "jpg") ? "jpg" : "png", 
-          data: Buffer.from(base64Data, "base64"), 
-          transformation: { width: 70, height: 70 } 
-        });
-      } catch { return null; }
-    })() : null;
-
-    children.push(new Table({
-      width: { size: 100, type: WidthType.PERCENTAGE },
-      borders: TableBorders.NONE,
-      visuallyRightToLeft: isArabic,
-      rows: [
-        new TableRow({
-          children: [
-            new TableCell({
-              children: logoRun ? [new Paragraph({ children: [logoRun] })] : [],
-              width: { size: 15, type: WidthType.PERCENTAGE },
-              verticalAlign: VerticalAlign.CENTER,
-            }),
-            new TableCell({
-              children: [
-                new Paragraph({
-                  children: [new TextRun({ text: header?.schoolName || "Institution", bold: true, size: 24, color: primaryColor, font: fontHeader })],
-                  spacing: { after: 40 },
-                }),
-                new Paragraph({
-                  children: [new TextRun({ text: `${subjectName} — ${context.levelId}`, bold: true, size: 36, color: textColor, font: fontHeader })],
-                  spacing: { after: 60 },
-                }),
-                new Paragraph({
-                  children: [new TextRun({ text: `${professorWord}: ${header?.teacherName ?? "..."}  •  ${durationWord}: ${context.duration} min  •  ${totalWord}: ${context.totalPoints} ${pointsWord}`, size: 18, color: metaColor, font: fontBody })],
-                }),
-              ],
-              width: { size: 85, type: WidthType.PERCENTAGE },
-              verticalAlign: VerticalAlign.CENTER,
-            }),
-          ],
-        }),
-      ],
-    }));
-
-    children.push(new Paragraph({
-      border: { bottom: { style: BorderStyle.SINGLE, size: 4, color: primaryColor, space: 10 } },
-      spacing: { after: 400 },
-    }));
+    } catch (e) { console.error(e); }
   }
+  if (header?.schoolName) children.push(new Paragraph({
+    children: [new TextRun({ text: header.schoolName, bold: true, size: 22, font: fontHeader, color: primaryColor, rightToLeft: isArabic })],
+    alignment: AlignmentType.CENTER, bidirectional: isArabic, spacing: { after: 80 },
+  }));
+  children.push(new Paragraph({
+    children: [new TextRun({ text: `${subjectName} — ${context.levelId}`, bold: true, size: 32, font: fontHeader, color: textColor, rightToLeft: isArabic })],
+    alignment: AlignmentType.CENTER, bidirectional: isArabic, spacing: { after: 100 }, heading: HeadingLevel.HEADING_1,
+  }));
+  const classWord = lang === "fr" ? "Classe" : lang === "ar" ? "الصف" : "Class";
+  const dateWord = lang === "ar" ? "التاريخ" : "Date";
+  const metadata = [header?.className ? `${classWord}: ${header.className}` : "", header?.teacherName ? `${professorWord}: ${header.teacherName}` : "", header?.date ? `${dateWord}: ${header.date}` : "", `${durationWord}: ${context.duration} min`, `${totalWord}: ${context.totalPoints} ${pointsWord}`].filter(Boolean).join("  |  ");
+  children.push(new Paragraph({
+    children: [new TextRun({ text: metadata, size: 18, font: fontHeader, color: metaColor, rightToLeft: isArabic })],
+    alignment: AlignmentType.CENTER, bidirectional: isArabic,
+    border: { bottom: { style: BorderStyle.SINGLE, size: 6, color: primaryColor, space: 10 } }, spacing: { after: 240 },
+  }));
+  children.push(new Paragraph({
+    children: [new TextRun({ text: lang === "fr" ? "Nom et prénom : ________________________________________" : lang === "ar" ? "الاسم : ________________________________________" : "Student name: ________________________________________", font: fontHeader, size: 20, color: metaColor, rightToLeft: isArabic })],
+    bidirectional: isArabic, alignment: isArabic ? AlignmentType.RIGHT : undefined, spacing: { after: 160 },
+  }));
 
   // ─── Score Summary Table (Teachers love this) ──────────────
   children.push(new Table({
@@ -998,6 +951,7 @@ export async function generateWordDocument(
     visuallyRightToLeft: isArabic,
     rows: [
       new TableRow({
+        cantSplit: true,
         children: [
           new TableCell({ 
             children: [new Paragraph({ children: [new TextRun({ text: exerciseWord, bold: true, size: 20 })], alignment: AlignmentType.CENTER, spacing: { before: 80, after: 80 } })], 
@@ -1016,6 +970,7 @@ export async function generateWordDocument(
         ]
       }),
       new TableRow({
+        cantSplit: true,
         children: [
           new TableCell({ 
             children: [new Paragraph({ children: [new TextRun({ text: lang === "fr" ? "Max" : lang === "ar" ? "الأقصى" : "Max", bold: true, size: 18 })], alignment: AlignmentType.CENTER, spacing: { before: 80, after: 80 } })],
@@ -1031,6 +986,7 @@ export async function generateWordDocument(
         ]
       }),
       new TableRow({
+        cantSplit: true,
         children: [
           new TableCell({ 
             children: [new Paragraph({ children: [new TextRun({ text: lang === "fr" ? "Note" : lang === "ar" ? "العلامة" : "Score", bold: true, size: 18 })], alignment: AlignmentType.CENTER, spacing: { before: 200, after: 200 } })],
@@ -1054,14 +1010,14 @@ export async function generateWordDocument(
   for (const ex of exercises) {
     children.push(new Paragraph({
       children: [
-        new TextRun({ text: `${exerciseWord} ${isClassic ? String(ex.number) + "." : ex.number}`, bold: true, size: isClassic ? 24 : 26, color: primaryColor, font: fontHeader, rightToLeft: isArabic }),
+        new TextRun({ text: `${exerciseWord} ${ex.number}.`, bold: true, size: 24, color: primaryColor, font: fontHeader, rightToLeft: isArabic }),
         new TextRun({ text: `  (${ex.points} ${pointsWord})`, size: 20, color: metaColor, font: fontBody, rightToLeft: isArabic }),
       ],
       heading: HeadingLevel.HEADING_2,
       spacing: { before: 240, after: 120 },
       bidirectional: isArabic,
       alignment: isArabic ? AlignmentType.RIGHT : undefined,
-      shading: isClassic ? undefined : { fill: accentLight },
+      border: { bottom: { style: BorderStyle.SINGLE, size: 2, color: DOCUMENT_LAYOUT.rule, space: 4 } },
     }));
 
     children.push(...(await processContentBlocks(ex.statement, { size: 22, font: fontBody, color: textColor, bidirectional: isArabic, lang })));
@@ -1074,6 +1030,7 @@ export async function generateWordDocument(
         margins: { top: 60, bottom: 60, left: 120, right: 120 },
         visuallyRightToLeft: isArabic,
         rows: ex.options.map(opt => new TableRow({
+        cantSplit: true,
           children: [
             new TableCell({
               children: [new Paragraph({
@@ -1159,7 +1116,7 @@ export async function generateWordDocument(
 
   // ─── Corrigé (only if includeAnswerKey is true) ───────────
   if (!includeAnswerKey) {
-    const doc = new Document({ sections: [{ properties: {}, children }] });
+    const doc = compose();
     return Buffer.from(await Packer.toBuffer(doc));
   }
 
@@ -1179,7 +1136,7 @@ export async function generateWordDocument(
 
   for (const ex of exercises) {
     children.push(new Paragraph({
-      children: [new TextRun({ text: `${exerciseWord} ${isClassic ? String(ex.number) + "." : ex.number}`, bold: true, size: 24, color: primaryColor, font: fontHeader, rightToLeft: isArabic })],
+      children: [new TextRun({ text: `${exerciseWord} ${ex.number}.`, bold: true, size: 24, color: primaryColor, font: fontHeader, rightToLeft: isArabic })],
       heading: HeadingLevel.HEADING_2,
       spacing: { before: 240, after: 120 },
       bidirectional: isArabic,
@@ -1207,6 +1164,7 @@ export async function generateWordDocument(
         visuallyRightToLeft: isArabic,
         rows: [
           new TableRow({
+        cantSplit: true,
             tableHeader: true,
             children: [
               new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: lang === "fr" ? "Question" : lang === "ar" ? "السؤال" : "Question", bold: true, size: 20, color: primaryColor })], alignment: AlignmentType.CENTER })], width: { size: 8, type: WidthType.PERCENTAGE }, verticalAlign: AlignmentType.CENTER }),
@@ -1215,6 +1173,7 @@ export async function generateWordDocument(
             ],
           }),
           ...ex.solution.bareme.map((b) => new TableRow({
+        cantSplit: true,
             children: [
               new TableCell({
                 children: [new Paragraph({ children: [new TextRun({ text: b.label, bold: true, size: 20, font: fontBody, rightToLeft: isArabic })], alignment: AlignmentType.CENTER, spacing: { before: 40, after: 40 } })],
@@ -1244,6 +1203,7 @@ export async function generateWordDocument(
           width: { size: 100, type: WidthType.PERCENTAGE },
           visuallyRightToLeft: isArabic,
           rows: [new TableRow({
+        cantSplit: true,
             children: [
               new TableCell({
                 children: [new Paragraph({
@@ -1282,6 +1242,7 @@ export async function generateWordDocument(
         visuallyRightToLeft: isArabic,
         rows: [
           new TableRow({
+        cantSplit: true,
             tableHeader: true,
             children: [
               new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: lang === "fr" ? "Étape" : lang === "ar" ? "الخطوة" : "Step", bold: true, size: 20, color: primaryColor })], alignment: AlignmentType.CENTER })], width: { size: 8, type: WidthType.PERCENTAGE }, verticalAlign: AlignmentType.CENTER }),
@@ -1290,6 +1251,7 @@ export async function generateWordDocument(
             ],
           }),
           ...ex.solution.microBareme.map((mb) => new TableRow({
+        cantSplit: true,
             children: [
               new TableCell({
                 children: [new Paragraph({ children: [new TextRun({ text: mb.step, bold: true, size: 20, font: fontBody, rightToLeft: isArabic })], alignment: AlignmentType.CENTER, spacing: { before: 40, after: 40 } })],
@@ -1314,12 +1276,7 @@ export async function generateWordDocument(
     // own spacing.before:240.
   }
 
-  const doc = new Document({
-    sections: [{
-      properties: {},
-      children,
-    }],
-  });
+  const doc = compose();
 
   const buffer = await Packer.toBuffer(doc);
   return buffer;

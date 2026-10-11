@@ -1,6 +1,7 @@
 "use client";
+import { DOCUMENT_LAYOUT } from "@/lib/documentLayout";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { useRouter } from "next/navigation";
 import { SUBJECT_LABELS } from "@/lib/utils";
@@ -14,8 +15,8 @@ export default function PrintPage() {
   const router = useRouter();
   const [context, setContext] = useState<ExamContext | null>(null);
   const [exercises, setExercises] = useState<Exercise[]>([]);
-  const [templateId, setTemplateId] = useState("classic");
-  const [schoolSettings, setSchoolSettings] = useState<{ schoolName?: string; teacherName?: string; schoolLogo?: string }>({});
+  const [includeAnswerKey, setIncludeAnswerKey] = useState(true);
+  const [schoolSettings, setSchoolSettings] = useState<{ schoolName?: string; teacherName?: string; schoolLogo?: string; className?: string; date?: string }>({});
   const printRootRef = useRef<HTMLDivElement>(null);
 
   // Mounts the real `MathPlot` (function-plot/D3, client-only) component into
@@ -72,7 +73,6 @@ export default function PrintPage() {
 
   useEffect(() => {
     const ctxRaw = sessionStorage.getItem("imtihan_context");
-    const tmpl = sessionStorage.getItem("imtihan_templateId") ?? "classic";
     // /create/export can open this page with ?variant=b to print the real,
     // AI-generated Version B (src/app/api/generate/version-b) instead of the
     // default Version A — falls back to Version A if no Version B was ever
@@ -92,12 +92,15 @@ export default function PrintPage() {
     try {
       setContext(JSON.parse(ctxRaw));
       setExercises(JSON.parse(exRaw));
-      setTemplateId(tmpl);
-      setSchoolSettings(getSchoolSettings() || {});
+      const rawSettings = sessionStorage.getItem("imtihan_print_settings");
+      const settings = rawSettings ? JSON.parse(rawSettings) : null;
+      setSchoolSettings(settings?.header ?? getSchoolSettings() ?? {});
+      setIncludeAnswerKey(settings?.includeAnswerKey !== false);
 
-      setTimeout(() => {
+      const printTimer = setTimeout(() => {
         window.print();
       }, 1000);
+      return () => clearTimeout(printTimer);
     } catch {
       router.replace("/create");
     }
@@ -107,44 +110,48 @@ export default function PrintPage() {
 
   const isArabic = context.language === "arabic";
   const lang = isArabic ? "ar" : context.language === "french" ? "fr" : "en";
-  const subjectName = SUBJECT_LABELS[context.subject]?.[lang === "ar" ? "fr" : lang] ?? context.subject;
+  const subjectName = SUBJECT_LABELS[context.subject]?.[lang] ?? context.subject;
 
-  const durationWord = lang === "ar" ? "المدة" : "Durée";
+  const durationWord = lang === "ar" ? "المدة" : lang === "en" ? "Duration" : "Durée";
   const totalWord = lang === "ar" ? "المجموع" : "Total";
   const pointsWord = lang === "ar" ? "نقاط" : "points";
-  const professorWord = lang === "ar" ? "الأستاذ" : "Prof";
-  const exerciseWord = lang === "ar" ? "تمرين" : "Exercice";
-  const corrigWord = lang === "ar" ? "الإجابة النموذجية" : "CORRIGÉ";
-  const responseWord = lang === "ar" ? "الإجابة" : "Réponse";
-  const baremeWord = lang === "ar" ? "سلم التصحيح" : "Barème de correction";
-  const methodologyWord = lang === "ar" ? "منهجية الحل" : "Méthodologie";
-  const microWord = lang === "ar" ? "سلم تنقيط تفصيلي" : "Micro-barème";
-  const stepLabel = lang === "ar" ? "الخطوة" : "Étape";
-  const noteWord = lang === "ar" ? "العلامة" : "Note";
+  const professorWord = lang === "ar" ? "الأستاذ" : lang === "en" ? "Teacher" : "Prof";
+  const exerciseWord = lang === "ar" ? "تمرين" : lang === "en" ? "Exercise" : "Exercice";
+  const corrigWord = lang === "ar" ? "الإجابة النموذجية" : lang === "en" ? "ANSWER KEY" : "CORRIGÉ";
+  const responseWord = lang === "ar" ? "الإجابة" : lang === "en" ? "Answer" : "Réponse";
+  const baremeWord = lang === "ar" ? "سلم التصحيح" : lang === "en" ? "Mark scheme" : "Barème de correction";
+  const methodologyWord = lang === "ar" ? "منهجية الحل" : lang === "en" ? "Methodology" : "Méthodologie";
+  const microWord = lang === "ar" ? "سلم تنقيط تفصيلي" : lang === "en" ? "Detailed mark scheme" : "Micro-barème";
+  const stepLabel = lang === "ar" ? "الخطوة" : lang === "en" ? "Step" : "Étape";
+  const noteWord = lang === "ar" ? "العلامة" : lang === "en" ? "Score" : "Note";
   const maxWord = lang === "ar" ? "الأقصى" : "Max";
 
-  const isModern = templateId === "modern";
-  const isFormal = templateId === "formal";
-
-  const primaryColor = isFormal ? "#000000" : "#1a5e3f";
-  const borderColor = isFormal ? "#000000" : isModern ? "#2563eb" : "#1a5e3f";
-  const fontFamily = isFormal ? "Times New Roman, serif" : isModern ? "Arial, sans-serif" : "Georgia, serif";
+  const primaryColor = `#${DOCUMENT_LAYOUT.accent}`;
+  const borderColor = primaryColor;
+  const fontFamily = `${DOCUMENT_LAYOUT.bodyFont}, serif`;
 
   return (
     <div
       ref={printRootRef}
       dir={isArabic ? "rtl" : "ltr"}
-      className="bg-white text-black min-h-screen p-8 mx-auto max-w-[210mm]"
-      style={{ fontFamily }}
+      className="exam-document bg-white text-black min-h-screen p-4 sm:p-8 mx-auto max-w-[210mm]"
+      style={{ fontFamily, "--text": `#${DOCUMENT_LAYOUT.ink}`, "--text-secondary": `#${DOCUMENT_LAYOUT.muted}`, "--text-tertiary": "#66746C", "--surface": "#ffffff", "--bg": "#ffffff", "--bg-subtle": `#${DOCUMENT_LAYOUT.soft}`, "--border": `#${DOCUMENT_LAYOUT.rule}`, "--accent": primaryColor, "--accent-light": `#${DOCUMENT_LAYOUT.soft}` } as CSSProperties}
     >
       <style dangerouslySetInnerHTML={{ __html: `
         @media print {
-          @page { margin: 20mm; size: A4; }
+          @page { margin: 18mm; size: A4; }
+          .exam-document { padding: 0 !important; max-width: none !important; }
+          h1, h2, h3 { break-after: avoid; }
+          p { orphans: 3; widows: 3; }
+          tr { break-inside: avoid; }
+          thead { display: table-header-group; }
           body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
           .page-break { page-break-before: always; }
           .no-break { page-break-inside: avoid; }
           header, footer, nav, button { display: none !important; }
         }
+        .exam-document { font-size: 11pt; line-height: 1.45; }
+        .exam-document h1, .exam-document h2, .exam-document h3 { font-family: Arial, sans-serif; }
         table.score-table { width: 100%; border-collapse: collapse; margin: 12px 0 24px 0; font-size: 11px; }
         table.score-table th, table.score-table td { border: 1px solid #d1d5db; padding: 6px 10px; text-align: center; }
         table.score-table th { background: #effaf4; font-weight: 700; }
@@ -166,7 +173,7 @@ export default function PrintPage() {
       `}} />
 
       {/* ── HEADER ── */}
-      <div className="text-center mb-6" style={isFormal ? { borderBottom: "3px double black", paddingBottom: 20 } : { borderBottom: `2px solid ${borderColor}`, paddingBottom: 14 }}>
+      <div className="text-center mb-6" style={{ borderBottom: `2px solid ${borderColor}`, paddingBottom: 14 }}>
         {schoolSettings.schoolLogo && (
           <img
             src={schoolSettings.schoolLogo}
@@ -183,7 +190,9 @@ export default function PrintPage() {
         <h1 className="text-2xl font-bold mb-1">
           {subjectName} — {context.levelId}
         </h1>
-        <div className="flex justify-center items-center gap-3 text-xs text-gray-600">
+        <div className="flex flex-wrap justify-center items-center gap-x-3 gap-y-1 text-xs text-gray-600">
+          {schoolSettings.className && <span>{lang === "ar" ? "الصف" : lang === "fr" ? "Classe" : "Class"}: {schoolSettings.className}</span>}
+          {schoolSettings.date && <span>{lang === "ar" ? "التاريخ" : "Date"}: {schoolSettings.date}</span>}
           {schoolSettings.teacherName && <span>{professorWord}: {schoolSettings.teacherName}</span>}
           {schoolSettings.teacherName && <span>|</span>}
           <span>{durationWord}: {context.duration} min</span>
@@ -192,6 +201,7 @@ export default function PrintPage() {
         </div>
       </div>
 
+      <p className="mb-4 text-xs text-gray-600">{lang === "ar" ? "الاسم" : lang === "fr" ? "Nom et prénom" : "Student name"}: ________________________________________</p>
       {/* ── SCORE SUMMARY TABLE (matching Word export) ── */}
       <table className="score-table">
         <thead>
@@ -224,7 +234,7 @@ export default function PrintPage() {
       {/* ── EXERCISES ── */}
       <div className="space-y-6">
         {exercises.map((ex, i) => (
-          <div key={ex.id} className="no-break">
+          <div key={ex.id} className="exam-exercise">
             <h2 className="text-base font-bold mb-2" style={{ color: primaryColor }}>
               {exerciseWord} {ex.number} <span className="text-xs font-normal" style={{ color: "#5c5c5c" }}>({ex.points} {pointsWord})</span>
             </h2>
@@ -245,6 +255,12 @@ export default function PrintPage() {
               className="text-sm leading-relaxed mb-3"
               dangerouslySetInnerHTML={{ __html: statementHtmlById.get(ex.id) ?? "" }}
             />
+
+            {ex.type === "multiple_choice" && ex.options?.length ? (
+              <div className="mb-4 space-y-2">
+                {ex.options.map(option => <div key={option.label} className="flex gap-3 text-sm"><span className="font-bold">{option.label}.</span><div dangerouslySetInnerHTML={{ __html: renderContent(option.text) }} /></div>)}
+              </div>
+            ) : null}
 
             {ex.subQuestions && ex.subQuestions.length > 0 && (
               <div className="ml-8 space-y-2 mb-3">
@@ -270,13 +286,13 @@ export default function PrintPage() {
           every exported PDF (see BUGS.md's Word/PDF export whitespace
           investigation — the same redundant-spacer pattern found and fixed
           in the Word export route). */}
-      <div className="page-break">
+      {includeAnswerKey && <div className="page-break">
         <h1 className="text-2xl font-bold text-center mb-8" style={{ color: primaryColor }}>
           {corrigWord}
         </h1>
 
         {exercises.map((ex, i) => (
-          <div key={ex.id} className="no-break mb-8">
+          <div key={ex.id} className="exam-exercise mb-8">
             <h2 className="text-base font-bold mb-4" style={{ color: primaryColor }}>
               {exerciseWord} {ex.number} — {corrigWord}
             </h2>
@@ -351,7 +367,7 @@ export default function PrintPage() {
             )}
           </div>
         ))}
-      </div>
+      </div>}
     </div>
   );
 }
