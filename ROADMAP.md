@@ -192,3 +192,7 @@ IB search metadata rewritten; homepage free-exam CTA and accessible 20-second ex
 ### Generator guidance correction — 2026-10-11
 
 Removed the homepage 20-second demo and Watch link. The real generator now introduces highlights once per stage after controls are ready, waiting for generation to complete before review guidance. How to use replays each stage; Next, Back, Skip and Escape remain available.
+
+### Responsive generator — 2026-10-11
+
+Guide sheet navigation remains visible on phones and landscape; targets stay above the instructions. Exercise visual tools wrap with labels, and inputs stack on phones. Clear visuals persists and empty graph requests produce an explicit blank-grid instruction. Statistical chart editing remains a future feature.

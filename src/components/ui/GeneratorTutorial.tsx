@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { HelpCircle, X } from "lucide-react";
+import { guideSpot } from "@/lib/guide-geometry";
 
 type Step = { selector: string; title: string; body: string };
 const guide = (id: string, title: string, body: string): Step => ({
@@ -253,28 +254,41 @@ export function GeneratorTutorial() {
     if (!active || !current) return;
     const target = document.querySelector<HTMLElement>(current.selector);
     const previousOverflow = document.body.style.overflow;
+    const previousPadding = document.body.style.paddingBottom;
     document.body.style.overflow = "hidden";
     target?.scrollIntoView({ block: "center", behavior: "instant" });
     const measure = () => {
-      const rect = target?.getBoundingClientRect();
-      setSpot(
-        rect
-          ? {
-              top: Math.max(4, rect.top - 6),
-              left: Math.max(4, rect.left - 6),
-              width: Math.min(rect.width + 12, window.innerWidth - 8),
-              height: Math.min(rect.height + 12, window.innerHeight - 8),
-            }
-          : null,
-      );
+      const compact = window.innerWidth < 640 || window.innerHeight < 500;
+      // Provide scroll room even for the last button at the end of a page.
+      document.body.style.paddingBottom = compact
+        ? `calc(${previousPadding || "0px"} + ${(dialog.current?.offsetHeight ?? 0) + 32}px)`
+        : previousPadding;
+      let rect = target?.getBoundingClientRect();
+      // On phones the guide is a bottom sheet: scroll the target into the
+      // remaining space rather than centering it underneath the instructions.
+      const sheetTop = dialog.current?.getBoundingClientRect().top ?? window.innerHeight;
+      const bottom = compact ? sheetTop - 12 : window.innerHeight;
+      if (rect && compact) {
+        const top = Math.max(16, (document.querySelector("header")?.getBoundingClientRect().bottom ?? 0) + 12);
+        const available = Math.max(0, bottom - top);
+        const desiredTop = top + Math.max(0, (available - rect.height) / 2);
+        const shift = rect.top - desiredTop;
+        if (Math.abs(shift) > 1) window.scrollBy({ top: shift, behavior: "instant" });
+        rect = target?.getBoundingClientRect();
+      }
+      setSpot(rect ? guideSpot(rect, window.innerWidth, bottom) : null);
     };
     const frame = requestAnimationFrame(measure);
-    dialog.current?.focus();
+    dialog.current?.focus({ preventScroll: true });
+    const observer = new ResizeObserver(measure);
+    if (dialog.current) observer.observe(dialog.current);
     window.addEventListener("resize", measure);
     window.addEventListener("scroll", measure, true);
     return () => {
       cancelAnimationFrame(frame);
+      observer.disconnect();
       document.body.style.overflow = previousOverflow;
+      document.body.style.paddingBottom = previousPadding;
       window.removeEventListener("resize", measure);
       window.removeEventListener("scroll", measure, true);
     };
@@ -289,7 +303,7 @@ export function GeneratorTutorial() {
           type="button"
           onClick={start}
           aria-label="Open exam generator tutorial"
-          className="fixed bottom-5 right-5 z-[990] flex items-center gap-2 rounded-full bg-[var(--accent)] px-4 py-3 text-sm text-white shadow-lg"
+          className="fixed bottom-[max(1.25rem,env(safe-area-inset-bottom))] right-5 z-[990] flex items-center gap-2 rounded-full bg-[var(--accent)] px-4 py-3 text-sm text-white shadow-lg"
         >
           <HelpCircle size={18} /> How to use
         </button>
@@ -346,9 +360,9 @@ export function GeneratorTutorial() {
                 }
               }
             }}
-            className="fixed bottom-4 left-4 right-4 z-[999] max-h-[55dvh] overflow-y-auto rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 text-[var(--text)] shadow-2xl sm:left-auto sm:w-[360px]"
+            className="fixed bottom-[max(0.5rem,env(safe-area-inset-bottom))] left-2 right-2 z-[999] flex max-h-[48dvh] flex-col rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 text-[var(--text)] shadow-2xl sm:bottom-4 sm:left-auto sm:right-4 sm:max-h-[70dvh] sm:w-[360px] sm:p-5 [@media(max-height:500px)]:max-h-[48dvh]"
           >
-            <div className="flex items-center justify-between">
+            <div className="flex shrink-0 items-center justify-between">
               <p className="text-xs text-[var(--text-tertiary)]">
                 Guide · {index + 1} of {steps.length}
               </p>
@@ -356,11 +370,12 @@ export function GeneratorTutorial() {
                 type="button"
                 onClick={close}
                 aria-label="Close tutorial"
-                className="p-2"
+                className="flex min-h-11 min-w-11 items-center justify-center"
               >
                 <X size={18} />
               </button>
             </div>
+            <div className="min-h-0 overflow-y-auto overscroll-contain break-words">
             <h2 id="generator-guide-title" className="my-2 text-lg font-bold">
               {current.title}
             </h2>
@@ -374,11 +389,12 @@ export function GeneratorTutorial() {
               Close the guide to use these controls. Open “How to use” on any
               stage for its walkthrough.
             </p>
-            <div className="mt-5 flex justify-between gap-2">
+            </div>
+            <div className="mt-3 flex shrink-0 justify-between gap-2">
               <button
                 type="button"
                 onClick={close}
-                className="px-3 py-2 text-sm"
+                className="min-h-11 px-3 py-2 text-sm"
               >
                 Skip
               </button>
@@ -387,7 +403,7 @@ export function GeneratorTutorial() {
                   type="button"
                   disabled={index === 0}
                   onClick={() => setIndex((value) => value - 1)}
-                  className="rounded-xl border border-[var(--border)] px-3 py-2 text-sm disabled:opacity-40"
+                  className="min-h-11 rounded-xl border border-[var(--border)] px-3 py-2 text-sm disabled:opacity-40"
                 >
                   Back
                 </button>
@@ -398,7 +414,7 @@ export function GeneratorTutorial() {
                       ? close()
                       : setIndex((value) => value + 1)
                   }
-                  className="rounded-xl bg-[var(--accent)] px-4 py-2 text-sm text-white"
+                  className="min-h-11 rounded-xl bg-[var(--accent)] px-4 py-2 text-sm text-white"
                 >
                   {index === steps.length - 1 ? "Done" : "Next"}
                 </button>
