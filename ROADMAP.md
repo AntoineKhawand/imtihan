@@ -1,5 +1,11 @@
 # Roadmap — Imtihan
 
+## Export corrigé toggle — 2026-10-11
+
+- Fixed email export ignoring the main corrigé toggle through a separate default-on checkbox. Word, PDF and email now share one accessible switch and clear audience text.
+- Keep the choice for the browser session when returning to export; clear previous download/send success when the choice changes.
+- Verified failure before the fix and success afterwards: 20 focused UI, Word document and print tests; TypeScript. Email requests are mocked; no real emails sent.
+
 ## Generator quality and composition — 2026-10-11
 
 - Shared generation, regeneration and Version B rules prevent givens, tables, graphs and MCQ wording from revealing assessed answers; hard questions require connected reasoning within the selected syllabus. Preserve teacher measurements and solvability.
