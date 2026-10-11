@@ -57,7 +57,6 @@ export default function ExportPage() {
   const [showEmail, setShowEmail] = useState(false);
   const [emailSending, setEmailSending] = useState(false);
   const [emailError, setEmailError] = useState<string | null>(null);
-  const [emailIncludeSolution, setEmailIncludeSolution] = useState(true);
   const [variant, setVariant] = useState<"A" | "B">("A");
   const [exportLanguage, setExportLanguage] = useState<"french" | "english" | "arabic">("french");
 
@@ -79,6 +78,7 @@ export default function ExportPage() {
     if (!ctxRaw || !exRaw) { router.replace("/create"); return; }
     try {
       const ctx = JSON.parse(ctxRaw) as ExamContext;
+      setIncludeAnswerKey(sessionStorage.getItem("imtihan_include_answer_key") !== "false");
       setContext(ctx);
       setExercises(JSON.parse(exRaw));
       setTemplateId(tmpl);
@@ -243,7 +243,7 @@ export default function ExportPage() {
           exercises: exportExercises,
           header,
           to: email,
-          includeSolution: emailIncludeSolution,
+          includeSolution: includeAnswerKey,
         }),
       });
 
@@ -259,6 +259,15 @@ export default function ExportPage() {
     } finally {
       setEmailSending(false);
     }
+  }
+
+  function changeAnswerKey() {
+    const next = !includeAnswerKey;
+    setIncludeAnswerKey(next);
+    sessionStorage.setItem("imtihan_include_answer_key", String(next));
+    setDownloaded(null);
+    setEmailSent(false);
+    setEmailError(null);
   }
 
   function handlePrint() {
@@ -425,9 +434,15 @@ export default function ExportPage() {
               <span className="text-xs font-medium text-[var(--text-secondary)]">Export Options</span>
               {/* Corrigé toggle */}
               <button
-                onClick={() => setIncludeAnswerKey(!includeAnswerKey)}
+                type="button"
+                role="switch"
+                aria-label="Include corrigé in exports"
+                aria-checked={includeAnswerKey}
+                aria-describedby="corrige-export-description"
+                disabled={!!downloading || emailSending}
+                onClick={changeAnswerKey}
                 className={cn(
-                  "inline-flex items-center gap-2 text-xs px-3 py-1.5 rounded-full border transition-all",
+                  "inline-flex items-center gap-2 text-xs px-3 py-1.5 rounded-full border transition-all disabled:opacity-50 disabled:cursor-wait",
                   includeAnswerKey
                     ? "bg-[var(--accent-light)] border-[var(--accent)] text-[var(--accent-text)]"
                     : "border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--border-strong)]"
@@ -437,6 +452,12 @@ export default function ExportPage() {
                 {includeAnswerKey ? "Includes corrigé" : "Exam only"}
               </button>
             </div>
+
+            <p id="corrige-export-description" className="text-xs leading-relaxed text-[var(--text-secondary)]">
+              {includeAnswerKey
+                ? "Word, PDF and email include the exam followed by the corrigé."
+                : "Word, PDF and email contain exam questions only. Answers and methodology are excluded."}
+            </p>
 
             {/* Variant + language */}
             <div data-guide="variant" className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -608,21 +629,15 @@ export default function ExportPage() {
                     {emailSent ? "Sent ✓" : "Send"}
                   </Button>
                 </div>
-                <label className="flex items-center gap-2 text-xs text-[var(--text-secondary)] cursor-pointer select-none">
-                  <input
-                    type="checkbox"
-                    checked={emailIncludeSolution}
-                    onChange={(e) => setEmailIncludeSolution(e.target.checked)}
-                    className="w-3.5 h-3.5 rounded border-[var(--border)] text-[var(--accent)] focus:ring-[var(--accent)]"
-                  />
-                  Include corrigé (answers + methodology)
-                </label>
+                <p className="text-xs text-[var(--text-secondary)]">
+                  {includeAnswerKey ? "Attachment includes the corrigé." : "Attachment contains exam questions only."} Change this with the export toggle above.
+                </p>
                 {emailError && (
                   <p className="text-xs text-[var(--danger)] leading-relaxed">{emailError}</p>
                 )}
                 {emailSent && (
                   <p className="text-xs text-[var(--accent)]">
-                    Email sent to {email}. Attachment includes the {emailIncludeSolution ? "full corrigé" : "exam only"}.
+                    Email sent to {email}. Attachment includes the {includeAnswerKey ? "full corrigé" : "exam only"}.
                   </p>
                 )}
               </div>
