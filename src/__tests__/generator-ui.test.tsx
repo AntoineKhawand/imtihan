@@ -12,11 +12,14 @@ beforeEach(() => {
   host = document.createElement("div");
   document.body.append(host);
   root = createRoot(host);
-  localStorage.setItem("imtihan_generator_guide_v2", "seen");
+  navigation.pathname = "/create/confirm";
+  localStorage.clear();
+  localStorage.setItem("imtihan_generator_guide_v3:/create/confirm", "seen");
 });
 afterEach(async () => {
   await act(async () => root.unmount());
   host.remove();
+  vi.useRealTimers();
   vi.restoreAllMocks();
   vi.unstubAllGlobals();
 });
@@ -196,4 +199,39 @@ describe("generator guide", () => {
     await click(button("Done"));
     expect(host.querySelector('[role="dialog"]')).toBeNull();
   });
+  it("waits for controls to appear before introducing a stage", async () => {
+    vi.useFakeTimers();
+    localStorage.clear();
+    await act(async () => root.render(<GeneratorTutorial />));
+    await act(async () => vi.advanceTimersByTime(1000));
+    expect(host.querySelector('[role="dialog"]')).toBeNull();
+    await act(async () => root.render(<><div data-guide="context">Settings</div><GeneratorTutorial /></>));
+    await act(async () => vi.advanceTimersByTime(700));
+    expect(host.querySelector('[role="dialog"]')?.textContent).toContain("Check the detected settings");
+    expect(localStorage.getItem("imtihan_generator_guide_v3:/create/confirm")).toBe("seen");
+    await click(button("Skip"));
+    await act(async () => vi.advanceTimersByTime(2000));
+    expect(host.querySelector('[role="dialog"]')).toBeNull();
+  });
+  it("introduces review only after generation is complete", async () => {
+    vi.useFakeTimers();
+    navigation.pathname = "/create/generate";
+    await act(async () => root.render(<><main>Generating</main><GeneratorTutorial /></>));
+    await act(async () => vi.advanceTimersByTime(1000));
+    expect(host.querySelector('[role="dialog"]')).toBeNull();
+    await act(async () => root.render(<><main>Ready</main><div data-guide="review-export">Export</div><GeneratorTutorial /></>));
+    await act(async () => vi.advanceTimersByTime(700));
+    expect(host.querySelector('[role="dialog"]')).not.toBeNull();
+  });
+  it("does not introduce a stage again on return, and never appears on the homepage", async () => {
+    vi.useFakeTimers();
+    await act(async () => root.render(<><div data-guide="context">Settings</div><GeneratorTutorial /></>));
+    await act(async () => vi.advanceTimersByTime(1000));
+    expect(host.querySelector('[role="dialog"]')).toBeNull();
+    navigation.pathname = "/";
+    await act(async () => root.render(<GeneratorTutorial />));
+    await act(async () => vi.advanceTimersByTime(1000));
+    expect(host.textContent).toBe("");
+  });
+
 });

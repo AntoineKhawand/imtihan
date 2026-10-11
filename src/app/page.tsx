@@ -1,4 +1,3 @@
-import { ExamDemo } from "@/components/landing/ExamDemo";
 import { LandingCTA } from "@/components/landing/LandingCTA";
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
@@ -196,8 +195,6 @@ export default async function LandingPage() {
         <div className="absolute bottom-0 left-0 w-[500px] h-[500px] rounded-full bg-[var(--orange)] opacity-[0.04] blur-3xl translate-y-1/3 -translate-x-1/3 pointer-events-none" />
 
         <div className="relative max-w-5xl mx-auto">
-          <div className="grid items-center gap-8 lg:grid-cols-[1.1fr_1fr] lg:gap-12">
-          <div>
           <div>
             <div className="group inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-[var(--border)] bg-[var(--surface)] text-xs text-[var(--text-secondary)] mb-5 shadow-sm hover:border-[var(--accent)]/30 hover:bg-[var(--accent)]/5 transition-all duration-300 cursor-default" aria-label="1 free exam — no credit card required">
               <Star size={10} className="text-[var(--accent)] fill-[var(--accent)] group-hover:rotate-[72deg] transition-transform duration-500" />
@@ -220,9 +217,6 @@ export default async function LandingPage() {
           </p>
 
           <LandingCTA href={isAuthenticated ? "/create" : "/auth/register"} />
-          </div>
-          <ExamDemo />
-          </div>
           <div className="mt-6"><VisitorCounter /></div>
 
           {/* Stats */}
