@@ -1,4 +1,5 @@
 "use client";
+import { paperExerciseIssues } from "@/lib/paperComposition";
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -76,8 +77,10 @@ export default function ExportPage() {
     const exRaw = sessionStorage.getItem("imtihan_exercises");
     const tmpl = sessionStorage.getItem("imtihan_templateId") ?? "classic";
     if (!ctxRaw || !exRaw) { router.replace("/create"); return; }
+    let restoredContext: ExamContext | null = null;
     try {
       const ctx = JSON.parse(ctxRaw) as ExamContext;
+      restoredContext = ctx;
       setIncludeAnswerKey(sessionStorage.getItem("imtihan_include_answer_key") !== "false");
       setContext(ctx);
       setExercises(JSON.parse(exRaw));
@@ -103,6 +106,7 @@ export default function ExportPage() {
       try { extractedHeader = JSON.parse(extractedHeaderStr); } catch {}
     }
 
+    if (restoredContext?.sourceDocument) extractedHeader = restoredContext.sourceDocument.intent.purposes.includes("branding") ? restoredContext.sourceDocument.structure?.header : null;
     if (settings || extractedHeader) {
       setSchoolName(extractedHeader?.schoolName ?? settings?.schoolName ?? "");
       setClassName(extractedHeader?.className ?? "");
@@ -303,7 +307,9 @@ export default function ExportPage() {
     );
   }
 
-  const totalPoints = exercises.reduce((s, e) => s + e.points, 0);
+  if (paperExerciseIssues(context, exercises).length) return <div role="alert" className="p-8 space-y-3"><p>The paper needs review before export.</p>{paperExerciseIssues(context, exercises).map((issue, i) => <p key={i}>{issue}</p>)}<Link href="/create/generate" className="underline">Return to questions</Link></div>;
+
+  const totalPoints = context?.paperComposition ? context.totalPoints : exercises.reduce((s, e) => s + e.points, 0);
   const subjectLabel = SUBJECT_LABELS[context.subject]?.fr ?? context.subject;
 
   return (

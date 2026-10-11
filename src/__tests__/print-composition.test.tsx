@@ -7,6 +7,8 @@ vi.mock("@/lib/storage",()=>({getSchoolSettings:()=>({schoolName:"Old school"})}
 vi.mock("@/lib/renderContent",()=>({renderContent:(s:string)=>s}));
 vi.mock("@/components/ui/MathPlot",()=>({MathPlot:()=>null}));
 import PrintPage from "@/app/print/page";
+import { PAPER_PROFILES } from "@/data/paperProfiles";
+import { paperTotals } from "@/lib/paperComposition";
 let host:HTMLDivElement,root:Root;
 beforeEach(()=>{
   vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT",true);vi.useFakeTimers();vi.spyOn(window,"print").mockImplementation(()=>{});
@@ -28,4 +30,24 @@ it("puts the requested answer key in its own section",async()=>{
   sessionStorage.setItem("imtihan_print_settings",JSON.stringify({includeAnswerKey:true,header:{}}));
   await act(async()=>root.render(<PrintPage/>));
   expect(host.querySelector(".page-break")?.textContent).toContain("ANSWER KEY");expect(host.textContent).toContain("SECRET ANSWER");
+});
+it("prints offered alternatives with the candidate maximum and reviewed section instructions", async () => {
+  const paper = PAPER_PROFILES[0].composition;
+  sessionStorage.setItem("imtihan_context", JSON.stringify({ curriculumId: "bac-libanais", subject: "mathematics", levelId: "terminale-s", language: "french", duration: 180, ...paperTotals(paper), paperComposition: paper }));
+  sessionStorage.setItem("imtihan_exercises", JSON.stringify(Array.from({ length: 7 }, (_, i) => ({ id: String(i), number: i + 1, type: "proof", points: 4, statement: "Question", solution: { finalAnswer: "Answer", methodology: "Method" } }))));
+  sessionStorage.setItem("imtihan_print_settings", JSON.stringify({ includeAnswerKey: false }));
+  await act(async () => root.render(<PrintPage />));
+  expect(host.textContent).toContain("Traiter 5 exercice(s) sur 7");
+  expect(host.textContent).toContain("Calculatrice non programmable");
+  expect(host.querySelector(".score-table")?.textContent).toContain("20");
+  expect(host.querySelectorAll(".exam-exercise")).toHaveLength(7);
+  expect(host.querySelector("style")?.textContent).toContain("counter(pages)");
+});
+it("does not open print for an incomplete structured paper", async () => {
+  const paper = PAPER_PROFILES[0].composition;
+  sessionStorage.setItem("imtihan_context", JSON.stringify({ subject: "mathematics", language: "french", duration: 180, ...paperTotals(paper), paperComposition: paper }));
+  await act(async () => root.render(<PrintPage />));
+  expect(host.querySelector('[role="alert"]')?.textContent).toContain("requires 7 questions");
+  await act(async () => vi.advanceTimersByTime(1000));
+  expect(window.print).not.toHaveBeenCalled();
 });

@@ -1,5 +1,6 @@
 "use client";
 
+import { UPLOAD_MAX_BYTES } from "@/lib/schemas/sourceDocument";
 import { useCallback, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import { cn } from "@/lib/utils";
@@ -45,8 +46,8 @@ export function Dropzone({ value, onChange, className }: DropzoneProps) {
       const file = acceptedFiles[0];
       if (!file) return;
 
-      if (file.size > 10 * 1024 * 1024) {
-        setError("File is too large. Maximum size is 10 MB.");
+      if (file.size > UPLOAD_MAX_BYTES) {
+        setError("File is too large. Maximum size is 3 MB.");
         return;
       }
 
@@ -68,6 +69,8 @@ export function Dropzone({ value, onChange, className }: DropzoneProps) {
       "image/png": [".png"],
       "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [".docx"],
     },
+    maxSize: UPLOAD_MAX_BYTES,
+    onDropRejected: () => setError("Use one PDF, DOCX, PNG or JPG file, at most 3 MB."),
     maxFiles: 1,
     multiple: false,
   });
@@ -118,7 +121,7 @@ export function Dropzone({ value, onChange, className }: DropzoneProps) {
             {isDragActive ? "Drop it here" : "Upload your document"}
           </p>
           <p className="text-xs text-[var(--text-secondary)] mt-1">
-            PDF, DOCX, JPG or PNG · max 10 MB
+            PDF, DOCX, JPG or PNG · max 3 MB
           </p>
         </div>
         <p className="text-xs text-[var(--text-tertiary)] text-center">

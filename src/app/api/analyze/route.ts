@@ -1,3 +1,5 @@
+import { UploadIntentSchema, DocumentStructureSchema, DocumentBase64Schema, DocumentMimeSchema } from "@/lib/schemas/sourceDocument";
+import { documentFingerprint } from "@/lib/sourceDocument";
 import { HARD_DIFFICULTY, normalizeDifficulty } from "@/lib/difficulty";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
@@ -51,6 +53,7 @@ const ExamContextSchema = z.object({
     hard:   z.coerce.number().min(0).max(1),
   }).catch(HARD_DIFFICULTY),
   // Optional fields — null/undefined both fine
+  documentStructure: z.unknown().optional(),
   teacherNotes: z.string().nullable().optional().transform(v => v ?? undefined),
   layoutPreferences: z.string().default(""),
   visualPreference: z.string().default(""),
@@ -70,9 +73,11 @@ const ExamContextSchema = z.object({
 /** Request body schema */
 const RequestSchema = z.object({
   description: z.string().min(10, "Description is too short — please add more detail."),
-  documentBase64: z.string().optional(),
-  documentMimeType: z.string().optional(),
-});
+  documentBase64: DocumentBase64Schema.optional(),
+  documentMimeType: DocumentMimeSchema.optional(),
+  documentName: z.string().max(250).optional(),
+  uploadIntent: UploadIntentSchema.optional(),
+}).refine(input => !!input.documentBase64 === !!input.documentMimeType, { message: "Document bytes and file type must be provided together." });
 
 // ---------------------------------------------------------------------------
 // JSON helpers
@@ -139,7 +144,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { description, documentBase64, documentMimeType } = parsed.data;
+    const { description, documentBase64, documentMimeType, documentName, uploadIntent } = parsed.data;
+    const effectiveIntent = uploadIntent ?? { purposes: ["content" as const], instructions: "" };
 
     // 2. Build prompts — include curricula reference so the AI returns valid level IDs
     const systemPrompt = buildAnalyzeSystemPrompt();
@@ -147,6 +153,7 @@ export async function POST(request: NextRequest) {
       teacherDescription: description,
       hasUploadedDocument: !!documentBase64,
       availableCurricula: buildCurriculaReference(),
+      uploadIntent: documentBase64 ? effectiveIntent : undefined,
     });
 
     // ── AI Analysis (Primary: Claude, Fallback: Gemini) ─────────────────────
@@ -287,9 +294,9 @@ export async function POST(request: NextRequest) {
     }
 
     // 9. Post-process: if chapterIds is empty and not university, add a warning
-    //    and fill in a placeholder so downstream steps don't break
+    //    so the teacher selects real curriculum chapters before generation
     if (ctx.chapterIds.length === 0 && ctx.curriculumId !== "university") {
-      ctx.chapterIds = ["general"];
+      ctx.chapterIds = [];
       ctx.warnings = [
         ...ctx.warnings,
         { field: "chapterIds", message: "Chapters could not be identified from your description. Please select them on the next screen." },
@@ -313,7 +320,13 @@ export async function POST(request: NextRequest) {
       })
     );
 
-    return NextResponse.json({ success: true, context: ctx });
+    const { documentStructure, ...examContext } = ctx;
+    const extracted = DocumentStructureSchema.safeParse(documentStructure);
+    const sourceDocument = documentBase64 ? {
+      id: documentFingerprint(documentBase64), name: documentName ?? "Uploaded document", intent: effectiveIntent,
+      ...(extracted.success ? { structure: extracted.data } : { structure: { title: "", sections: [], instructions: [], footerText: "", uncertainties: ["Document details were not extracted reliably. Review the source and enter the structure manually if needed."] } }),
+    } : undefined;
+    return NextResponse.json({ success: true, context: { ...examContext, teacherNotes: description, ...(sourceDocument ? { sourceDocument } : {}) } });
   } catch (error) {
     console.error("[/api/analyze]", error);
     return NextResponse.json(

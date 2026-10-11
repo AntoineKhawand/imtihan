@@ -1,5 +1,6 @@
 "use client";
 import { DOCUMENT_LAYOUT } from "@/lib/documentLayout";
+import { paperExerciseIssues, sectionAt, sectionInstruction } from "@/lib/paperComposition";
 
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { createRoot, type Root } from "react-dom/client";
@@ -16,6 +17,7 @@ export default function PrintPage() {
   const [context, setContext] = useState<ExamContext | null>(null);
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [includeAnswerKey, setIncludeAnswerKey] = useState(true);
+  const [compositionErrors, setCompositionErrors] = useState<string[]>([]);
   const [schoolSettings, setSchoolSettings] = useState<{ schoolName?: string; teacherName?: string; schoolLogo?: string; className?: string; date?: string }>({});
   const printRootRef = useRef<HTMLDivElement>(null);
 
@@ -90,13 +92,18 @@ export default function PrintPage() {
       return;
     }
     try {
-      setContext(JSON.parse(ctxRaw));
-      setExercises(JSON.parse(exRaw));
+      const restoredContext = JSON.parse(ctxRaw) as ExamContext;
+      const restoredExercises = JSON.parse(exRaw) as Exercise[];
+      setContext(restoredContext);
+      setExercises(restoredExercises);
+      const issues = paperExerciseIssues(restoredContext, restoredExercises);
+      setCompositionErrors(issues);
       const rawSettings = sessionStorage.getItem("imtihan_print_settings");
       const settings = rawSettings ? JSON.parse(rawSettings) : null;
-      setSchoolSettings(settings?.header ?? getSchoolSettings() ?? {});
+      setSchoolSettings(settings?.header ?? (restoredContext.sourceDocument?.intent.purposes.includes("branding") ? restoredContext.sourceDocument.structure?.header : undefined) ?? getSchoolSettings() ?? {});
       setIncludeAnswerKey(settings?.includeAnswerKey !== false);
 
+      if (issues.length) return;
       const printTimer = setTimeout(() => {
         window.print();
       }, 1000);
@@ -107,6 +114,7 @@ export default function PrintPage() {
   }, [router]);
 
   if (!context) return null;
+  if (compositionErrors.length) return <div role="alert" className="p-8 space-y-3"><p>Review the paper before printing:</p>{compositionErrors.map((error, i) => <p key={i}>{error}</p>)}<a href="/create/generate" className="underline">Return to questions</a></div>;
 
   const isArabic = context.language === "arabic";
   const lang = isArabic ? "ar" : context.language === "french" ? "fr" : "en";
@@ -130,6 +138,9 @@ export default function PrintPage() {
   const borderColor = primaryColor;
   const fontFamily = `${DOCUMENT_LAYOUT.bodyFont}, serif`;
 
+  const footerText = context.paperComposition?.footerText ?? (context.sourceDocument?.intent.purposes.includes("branding") ? context.sourceDocument.structure?.footerText : "") ?? "";
+  // Escape every character as a CSS code point; source text never becomes HTML/CSS syntax.
+  const footerCss = Array.from(footerText, c => `\\${c.codePointAt(0)!.toString(16)} `).join("");
   return (
     <div
       ref={printRootRef}
@@ -139,7 +150,7 @@ export default function PrintPage() {
     >
       <style dangerouslySetInnerHTML={{ __html: `
         @media print {
-          @page { margin: 18mm; size: A4; }
+          @page { margin: 18mm 18mm 24mm; size: A4; @bottom-left { content: "${footerCss}"; font: 9pt Arial; } @bottom-right { content: counter(page) " / " counter(pages); font: 9pt Arial; } }
           .exam-document { padding: 0 !important; max-width: none !important; }
           h1, h2, h3 { break-after: avoid; }
           p { orphans: 3; widows: 3; }
@@ -188,7 +199,7 @@ export default function PrintPage() {
           </h2>
         )}
         <h1 className="text-2xl font-bold mb-1">
-          {subjectName} — {context.levelId}
+          {context.paperComposition?.title || `${subjectName} — ${context.levelId}`}
         </h1>
         <div className="flex flex-wrap justify-center items-center gap-x-3 gap-y-1 text-xs text-gray-600">
           {schoolSettings.className && <span>{lang === "ar" ? "الصف" : lang === "fr" ? "Classe" : "Class"}: {schoolSettings.className}</span>}
@@ -231,10 +242,12 @@ export default function PrintPage() {
         </tbody>
       </table>
 
+      {context.paperComposition?.instructions.map((instruction, i) => <p key={i} className="text-sm mb-2">{instruction}</p>)}
       {/* ── EXERCISES ── */}
       <div className="space-y-6">
         {exercises.map((ex, i) => (
           <div key={ex.id} className="exam-exercise">
+            {sectionAt(context.paperComposition, i)?.start === i && <div className="mb-4"><h2 className="font-bold">{sectionAt(context.paperComposition, i)!.section.title}</h2><p className="text-sm">{sectionInstruction(sectionAt(context.paperComposition, i)!.section, context.language)}</p></div>}
             <h2 className="text-base font-bold mb-2" style={{ color: primaryColor }}>
               {exerciseWord} {ex.number} <span className="text-xs font-normal" style={{ color: "#5c5c5c" }}>({ex.points} {pointsWord})</span>
             </h2>
@@ -273,10 +286,12 @@ export default function PrintPage() {
                 ))}
               </div>
             )}
+            {Array.from({ length: context.paperComposition?.answerSpaceLines ?? 0 }, (_, line) => <div key={line} style={{ height: "8mm", borderBottom: "1px solid #ccc" }} />)}
           </div>
         ))}
       </div>
 
+      <div className="print:hidden text-xs mt-6 text-center">{context.paperComposition?.footerText ?? (context.sourceDocument?.intent.purposes.includes("branding") ? context.sourceDocument.structure?.footerText : "")}</div>
       {/* ── CORRIGÉ ── */}
       {/* No extra margin/padding here beyond the heading's own spacing —
           `.page-break` already forces this onto a fresh page, so a

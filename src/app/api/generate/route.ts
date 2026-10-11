@@ -1,3 +1,6 @@
+import { SourceDocumentSchema, PaperCompositionSchema, DocumentBase64Schema, DocumentMimeSchema } from "@/lib/schemas/sourceDocument";
+import { paperContextIssues, paperProfileIssues } from "@/lib/paperComposition";
+import { documentFingerprint } from "@/lib/sourceDocument";
 import { recordChapterCoverage } from "@/lib/chapter-coverage-recording";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
@@ -62,13 +65,17 @@ export const ExamContextSchema = z.object({
   ]),
   chapterIds: z.array(z.string()),
   language: z.enum(["french", "english", "arabic"]),
-  examType: z.enum(["quiz", "homework", "midterm", "final", "practice"]),
-  duration: z.number(),
-  exerciseCount: z.number(),
-  totalPoints: z.number(),
-  pointsPerExercise: z.array(z.number()).optional(),
+  examType: z.enum(["quiz", "homework", "midterm", "final", "practice", "dawrat"]),
+  duration: z.number().int().min(5).max(600),
+  exerciseCount: z.number().int().min(1).max(20),
+  totalPoints: z.number().positive().max(200),
+  pointsPerExercise: z.array(z.number().positive().max(200)).max(20).optional(),
   difficultyMix: z.object({ easy: z.number(), medium: z.number(), hard: z.number() }),
   teacherNotes: z.string().optional(),
+  sourceDocument: SourceDocumentSchema.optional(),
+  paperComposition: PaperCompositionSchema.optional(),
+  visualPreference: z.string().max(3000).optional(),
+  geographicContext: z.string().max(250).optional(),
   templateType: z.enum(["modern", "uploaded"]).optional(),
   layoutPreferences: z.string().optional(),
 });
@@ -76,8 +83,8 @@ export const ExamContextSchema = z.object({
 const RequestSchema = z.object({
   context: ExamContextSchema,
   templateId: z.string().default("default"),
-  documentBase64: z.string().optional(),
-  documentMimeType: z.string().optional(),
+  documentBase64: DocumentBase64Schema.optional(),
+  documentMimeType: DocumentMimeSchema.optional(),
   isAdjustment: z.boolean().optional().default(false),
 });
 
@@ -284,6 +291,11 @@ export async function POST(request: NextRequest) {
     }
 
     const { context, documentBase64, documentMimeType } = parsed.data;
+    const compositionIssues = [...paperContextIssues(context), ...paperProfileIssues(context)];
+    if (compositionIssues.length) return NextResponse.json({ success: false, errors: compositionIssues }, { status: 400 });
+    const needsSource = context.sourceDocument?.intent.purposes.some(p => p !== "branding");
+    if (needsSource && (!documentBase64 || !documentMimeType || documentFingerprint(documentBase64) !== context.sourceDocument?.id))
+      return NextResponse.json({ success: false, errors: ["The reviewed source document is missing or changed. Attach and analyse it again."] }, { status: 400 });
 
     // ── Monthly quota check ──────────────────────────────────────────────────
     const uid = await verifySession(request);

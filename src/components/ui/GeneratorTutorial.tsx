@@ -25,7 +25,12 @@ export const GENERATOR_TOURS: Record<string, Step[]> = {
     guide(
       "upload",
       "Add your teaching material (optional)",
-      "Upload course notes or a past paper to ground the exam. Remove clears your attachment; you can also describe the exam without a file.",
+      "Upload course notes or a past paper, then choose its purpose: course content, exercise inspiration, paper structure, or school header/footer. You can combine purposes. Add instructions to explain what to keep or change.",
+    ),
+    guide(
+      "upload-intent",
+      "Tell AI how to use this document",
+      "Select one or more purposes. Structure preserves the reviewed sections and choices; inspiration creates fresh questions. Header/footer extracts school details without using unrelated course content.",
     ),
     guide(
       "profiles",
@@ -62,12 +67,12 @@ export const GENERATOR_TOURS: Record<string, Step[]> = {
     guide(
       "blueprint",
       "Set the marks and exercise count",
-      "Enter total marks and number of exercises. Adjust each exercise's marks; they must add up to the total before you can continue.",
+      "In classroom mode, set total marks and exercise count. A structured paper calculates these from its sections. Optional questions count toward the offered count; the total is the maximum a student can earn by answering the required choices.",
     ),
     guide(
       "template",
       "Your document composition",
-      "Every exam uses one polished composition. Uploaded files provide course content; personalise the school header on the export step.",
+      "Choose classroom mode, a dated reference for your subject and level, the reviewed uploaded structure, or your own sections. Review optional questions, marks, candidate instructions and school information. One Imtihan design is used throughout.",
     ),
     guide(
       "generate",

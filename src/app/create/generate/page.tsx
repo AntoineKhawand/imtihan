@@ -18,6 +18,8 @@ import { getChapter } from "@/data/curricula";
 import { useAuth } from "@/contexts/AuthContext";
 import { isProActive } from "@/lib/subscription";
 import { trackEvent } from "@/lib/analytics";
+import { generationDocument } from "@/lib/sourceDocument";
+import { paperExerciseIssues, singleExerciseContext } from "@/lib/paperComposition";
 
 type ExerciseWithStatus = Exercise & { isRegenerating?: boolean };
 type GenerationStatus = "idle" | "generating" | "done" | "error";
@@ -165,7 +167,7 @@ export default function GeneratePage() {
       const res = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ context, templateId }),
+        body: JSON.stringify({ context, templateId, ...generationDocument(context, sessionStorage) }),
         signal: abortRef.current.signal,
       });
 
@@ -258,7 +260,7 @@ export default function GeneratePage() {
       }
     } catch (err) {
       if ((err as Error).name !== "AbortError") {
-        setError("Network error. Please try again.");
+        setError(err instanceof Error ? err.message : "Network error. Please try again.");
         setStatus("error");
       }
     }
@@ -266,6 +268,8 @@ export default function GeneratePage() {
 
   async function handleRegenerate(id: string, targetDifficulty?: "easy" | "medium" | "hard") {
     if (!context) return;
+    const target = exercises.find(ex => ex.id === id);
+    if (!target) return;
     setRegeneratingId(id);
     try {
       const res = await fetch("/api/generate", {
@@ -273,8 +277,7 @@ export default function GeneratePage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           context: {
-            ...context,
-            exerciseCount: 1,
+            ...singleExerciseContext(context, target.points, target.chapterIds?.length ? target.chapterIds : context.chapterIds),
             ...(targetDifficulty ? {
               difficultyMix: {
                 easy: targetDifficulty === "easy" ? 1 : 0,
@@ -284,6 +287,8 @@ export default function GeneratePage() {
             } : {}),
           },
           templateId,
+          isAdjustment: true,
+          ...generationDocument(context, sessionStorage),
         }),
       });
 
@@ -348,7 +353,7 @@ export default function GeneratePage() {
     } catch (err) {
       // Revert optimistic update on network error
       setExercises(prev => prev.map(ex => ex.id === id ? { ...ex, isRegenerating: false } : ex));
-      showToast("Failed to regenerate exercise. Please try again.", "error");
+      showToast(err instanceof Error ? err.message : "Failed to regenerate exercise. Please try again.", "error");
     } finally {
       setRegeneratingId(null);
     }
@@ -369,11 +374,11 @@ export default function GeneratePage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           context: {
-            ...context,
-            chapterIds: [chapterId],
-            exerciseCount: 1,
+            ...singleExerciseContext(context, Math.max(1, Math.round(context.totalPoints / context.exerciseCount)), [chapterId]),
           },
           templateId,
+          isAdjustment: true,
+          ...generationDocument(context, sessionStorage),
         }),
       });
 
@@ -432,8 +437,8 @@ export default function GeneratePage() {
         persistExercises(next);
         return next;
       });
-    } catch {
-      showToast("Failed to add a question for this chapter. Please try again.", "error");
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : "Failed to add a question for this chapter. Please try again.", "error");
     } finally {
       setAddingChapterId(null);
     }
@@ -766,8 +771,17 @@ export default function GeneratePage() {
               ))}
 
               <div data-guide="review-export" className="pt-4">
+                {context && paperExerciseIssues(context, exercises).length > 0 && <div role="alert" className="mb-4 rounded-xl border border-[var(--border)] p-4 text-sm space-y-2">
+                  {paperExerciseIssues(context, exercises).map((issue, i) => <p key={i}>{issue}</p>)}
+                  <Link href="/create/confirm" className="underline">Review paper composition</Link>
+                  <button type="button" className="block underline" onClick={() => {
+                    const next = { ...context, paperComposition: undefined, paperCompositionReviewed: true, exerciseCount: exercises.length, totalPoints: exercises.reduce((sum, ex) => sum + ex.points, 0), pointsPerExercise: exercises.map(ex => ex.points) };
+                    setContext(next); sessionStorage.setItem("imtihan_context", JSON.stringify(next)); persistExercises(exercises, next);
+                  }}>Use these questions as a classroom exam and update the total</button>
+                </div>}
                 <Button
                   onClick={() => router.push("/create/export")}
+                  disabled={!!context && paperExerciseIssues(context, exercises).length > 0}
                   size="lg"
                   className="w-full"
                   icon={<ArrowRight size={16} />}

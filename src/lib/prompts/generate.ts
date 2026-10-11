@@ -1,3 +1,5 @@
+import { sourceInstruction } from "@/lib/sourceDocument";
+import { paperPrompt, paperTotals } from "@/lib/paperComposition";
 import { ASSESSMENT_DATA_RULES } from "./assessmentQuality";
 import type { ExamContext } from "@/types/exam";
 import type { ChapterExemplarGroup } from "@/types/schoolBank";
@@ -555,6 +557,8 @@ ${DIFFICULTY_GUIDE}
 
 ${ASSESSMENT_DATA_RULES}
 
+${paperPrompt(context)}
+
 ${fewShotText}
 ACADEMIC RESEARCH & VERIFICATION (MANDATORY):
 - Before generating any exercise involving physics, chemistry, or mathematics, you must simulate a "check the web" verification phase.
@@ -615,7 +619,7 @@ CRITICAL RULES:
      - Each step should be one logical thought.
      - NO DENSE BLOCKS OF CODE. Everything must be beautifully formatted LaTeX.
      - Avoid redundant technical jargon — explain the physics/math simply.
-   - Total points: Must sum exactly to the specified total.
+   - Total points: ${context.paperComposition ? "The specified total is the candidate maximum. All offered question marks must follow the reviewed sections, including optional alternatives." : "Must sum exactly to the specified total."}
 
 9. CHEMISTRY NOTATION: For all organic molecules and all chemical formulas, you MUST wrap in $\\\\ce{...}$. Example: $\\\\ce{CH3-CH2-OH}$, $\\\\ce{C6H12O6}$, $\\\\ce{Na+}$. NEVER use bare \\\\ce{} without surrounding $...$ — teachers will see raw code text.
 
@@ -842,14 +846,14 @@ export function buildGenerateUserPrompt(
   const pointsBreakdownValid =
     !!pointsPerExercise &&
     pointsPerExercise.length === context.exerciseCount &&
-    pointsPerExercise.reduce((a, b) => a + b, 0) === context.totalPoints;
+    pointsPerExercise.reduce((a, b) => a + b, 0) === (context.paperComposition ? paperTotals(context.paperComposition).pointsPerExercise.reduce((a, b) => a + b, 0) : context.totalPoints);
   const pointsBreakdown = pointsBreakdownValid
     ? `\nEXERCISE POINT VALUES (MANDATORY — set by the teacher, do not redistribute):\n${pointsPerExercise!.map((p, i) => `- Exercise ${i + 1} → exactly ${p} points`).join("\n")}`
     : "";
 
   const exemplarsStr = exemplarsPrompt ? `\n${exemplarsPrompt}\n` : "";
   const teacherNotesStr = context.teacherNotes ? `\nTeacher notes:\n${context.teacherNotes}` : "";
-  const templateStr = "\nDOCUMENT COMPOSITION: Use Imtihan’s single professional layout. Uploaded files supply course content and school header information only; do not reproduce their layout. Do not put decorative formatting or document headers inside exercise statements.";
+  const templateStr = context.sourceDocument ? "\nDOCUMENT COMPOSITION: Use the reviewed academic structure in Imtihan’s single professional design. Do not copy page geometry. Follow the explicit document-use purposes below. Never put headers or decorative formatting inside exercise statements." : "\nDOCUMENT COMPOSITION: Use Imtihan’s single professional layout. Uploaded files supply course content and school header information only; do not reproduce their layout. Do not put decorative formatting or document headers inside exercise statements.";
   const visualStr = context.visualPreference ? `\nVisual & Graph Requirements:\n${context.visualPreference}` : "";
   const extraContextStr = extraContext ? `\nDOMAIN DATA CONTEXT:\n${extraContext}` : "";
 
@@ -861,17 +865,19 @@ Subject    : ${context.subject}
 Language   : ${context.language}
 Exam type  : ${context.examType}
 Duration   : ${context.duration} minutes
-Total points: ${context.totalPoints} (points must sum to exactly ${context.totalPoints})
+Total points: ${context.totalPoints} (${context.paperComposition ? "candidate maximum; offered alternatives follow the reviewed sections below" : `points must sum to exactly ${context.totalPoints}`})
 Difficulty : ${difficultyBreakdown}
 ${pointsBreakdown}
 ${chapterDistribution}
 ${exemplarsStr}
 ${teacherNotesStr}
 ${templateStr}
+${sourceInstruction(context)}
+${paperPrompt(context)}
 ${visualStr}
 ${extraContextStr}
 
-If a document was uploaded, or if the teacher explicitly requested it in the instructions, extract the school name, class name, teacher name, and date into the "header" object. Otherwise, leave those fields null.
+If school information is explicitly requested (and for a reviewed source only when branding is selected), extract the school name, class name, teacher name, and date into the "header" object. Otherwise, leave those fields null.
 
 Return the JSON object now.`;
 }

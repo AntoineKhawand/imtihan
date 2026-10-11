@@ -1,10 +1,14 @@
 "use client";
 
+import { PaperCompositionReview } from "@/components/ui/PaperCompositionReview";
+import { applyPaper, paperContextIssues } from "@/lib/paperComposition";
+import { PaperCompositionSchema } from "@/lib/schemas/sourceDocument";
+import { compatiblePaperProfiles } from "@/data/paperProfiles";
 import { DIFFICULTY_PRESETS, difficultyPreset, normalizeDifficulty } from "@/lib/difficulty";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, ArrowRight, AlertTriangle, CheckCircle2, Info, X, Layout, FileText } from "lucide-react";
+import { ArrowLeft, ArrowRight, AlertTriangle, CheckCircle2, Info, X, FileText } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Select } from "@/components/ui/FormElements";
 import { cn, SUBJECT_LABELS, LANGUAGE_LABELS, EXAM_TYPE_LABELS } from "@/lib/utils";
@@ -50,7 +54,7 @@ export default function ConfirmPage() {
     if (!raw) { router.replace("/create"); return; }
     try { 
       const parsed = JSON.parse(raw);
-      const initial = {
+      let initial = {
         ...parsed,
         difficultyMix: normalizeDifficulty(parsed.difficultyMix),
         templateType: "modern" as const,
@@ -58,6 +62,11 @@ export default function ConfirmPage() {
         exerciseCount: parsed.exerciseCount ?? 3,
         layoutPreferences: "",
       };
+      const source = initial.sourceDocument;
+      if (!initial.paperCompositionReviewed && !initial.paperComposition && source?.intent?.purposes?.includes("structure") && source.structure?.sections?.length) {
+        const paper = PaperCompositionSchema.safeParse({ origin: "uploaded", ...source.structure, footerText: source.intent.purposes.includes("branding") ? source.structure.footerText : "" });
+        if (paper.success) initial = { ...initial, ...applyPaper(initial, paper.data) };
+      }
       setContext(initial);
       setOriginalValues(initial);
     }
@@ -88,7 +97,7 @@ export default function ConfirmPage() {
   }
 
   function update<K extends keyof ExamContext>(key: K, value: ExamContext[K]) {
-    setContext((prev) => prev ? { ...prev, [key]: value } : prev);
+    setContext((prev) => prev ? { ...prev, [key]: value, ...((key === "subject" || key === "levelId") ? { chapterIds: [] } : {}) } : prev);
     reconcileWarningsForField(key as string, value);
   }
 
@@ -99,7 +108,9 @@ export default function ConfirmPage() {
         : evenPointSplit(context.totalPoints, context.exerciseCount))
     : [];
   const displayPointsSum = displayPoints.reduce((a, b) => a + (b || 0), 0);
-  const pointsMismatch = context ? displayPointsSum !== context.totalPoints : false;
+  const compositionIssues = context ? paperContextIssues(context) : [];
+  const incompatibleProfile = context?.paperComposition?.profileId && !compatiblePaperProfiles(context).some(p => p.id === context.paperComposition?.profileId);
+  const pointsMismatch = context ? (context.paperComposition ? compositionIssues.length > 0 : displayPointsSum !== context.totalPoints || displayPoints.some(points => !Number.isFinite(points) || points <= 0)) : false;
 
   function updateExercisePoints(index: number, value: number) {
     const next = [...displayPoints];
@@ -108,7 +119,7 @@ export default function ConfirmPage() {
   }
 
   function handleContinue() {
-    if (!context) return;
+    if (!context || pointsMismatch || incompatibleProfile) return;
     sessionStorage.setItem("imtihan_context", JSON.stringify(context));
     router.push("/create/generate");
   }
@@ -320,14 +331,14 @@ export default function ConfirmPage() {
                 <p className="text-xs font-semibold text-[var(--text)] uppercase tracking-wide">Exam Blueprint</p>
               </div>
               <div className="grid grid-cols-2 gap-4">
-                <Input type="number" label="Total Points" value={context.totalPoints} onChange={(e) => update("totalPoints", parseInt(e.target.value, 10))} />
-                <Input type="number" label="Exercises" value={context.exerciseCount} onChange={(e) => update("exerciseCount", parseInt(e.target.value, 10))} />
+                <Input type="number" label="Total Points" disabled={!!context.paperComposition} min={1} max={200} value={context.totalPoints} onChange={(e) => update("totalPoints", parseInt(e.target.value, 10))} />
+                <Input type="number" label="Exercises" disabled={!!context.paperComposition} min={1} max={20} value={context.exerciseCount} onChange={(e) => update("exerciseCount", parseInt(e.target.value, 10))} />
               </div>
 
               {/* Per-exercise point breakdown — defaults to an even split, editable to
                   set e.g. Exercise 1 = 5, Exercise 2 = 10, Exercise 3 = 5 instead of
                   leaving the distribution entirely to the model. */}
-              {context.exerciseCount > 0 && (
+              {context.exerciseCount > 0 && !context.paperComposition && (
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <p className="text-xs font-semibold text-[var(--text)] uppercase tracking-wide">Points per Exercise</p>
@@ -357,15 +368,12 @@ export default function ConfirmPage() {
             </div>
           </div>
 
-          <div data-guide="template" className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4">
-            <h3 className="flex items-center gap-2 text-sm font-semibold text-[var(--text)]"><Layout size={16} /> Document composition</h3>
-            <p className="mt-2 text-xs leading-relaxed text-[var(--text-secondary)]">One polished layout for every exam: clear headings, readable questions, a score table and a separate answer key. Personalise your school header on the export step. Uploaded documents provide course content.</p>
-          </div>
+          <PaperCompositionReview context={context} onChange={next => setContext(prev => prev ? { ...prev, ...next } : prev)} />
 
           <Button
             data-guide="generate"
             onClick={handleContinue}
-            disabled={(context.curriculumId !== "university" && context.chapterIds.length === 0) || pointsMismatch}
+            disabled={(context.curriculumId !== "university" && availableChapters.length > 0 && !context.chapterIds.some(id => availableChapters.some(ch => ch.id === id))) || pointsMismatch || !!incompatibleProfile || !Number.isFinite(context.totalPoints) || context.totalPoints <= 0 || !Number.isInteger(context.exerciseCount) || context.exerciseCount < 1 || context.exerciseCount > 20}
             size="lg"
             className="w-full"
             icon={<ArrowRight size={16} />}
