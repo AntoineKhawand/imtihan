@@ -4,7 +4,7 @@ import { DIFFICULTY_PRESETS, difficultyPreset, normalizeDifficulty } from "@/lib
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, ArrowRight, AlertTriangle, CheckCircle2, Info, X, Layout, FileText, Wand2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, AlertTriangle, CheckCircle2, Info, X, Layout, FileText } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Select } from "@/components/ui/FormElements";
 import { cn, SUBJECT_LABELS, LANGUAGE_LABELS, EXAM_TYPE_LABELS } from "@/lib/utils";
@@ -40,7 +40,6 @@ export default function ConfirmPage() {
   const [context, setContext] = useState<(ExamContext & { warnings?: ExamContextWarning[]; confidence?: number }) | null>(null);
   const [loading, setLoading] = useState(true);
   const [dismissedWarnings, setDismissedWarnings] = useState<number[]>([]);
-  const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
   /** Snapshot of the AI's original field values, taken once on load — lets us
    *  detect "teacher reverted this field back" vs. "still different" so a
    *  dismissed warning can reappear if they undo their edit. */
@@ -51,23 +50,13 @@ export default function ConfirmPage() {
     if (!raw) { router.replace("/create"); return; }
     try { 
       const parsed = JSON.parse(raw);
-      const fileRaw = sessionStorage.getItem("imtihan_uploaded_file");
-      let fileName: string | null = null;
-      if (fileRaw) {
-        const file = JSON.parse(fileRaw);
-        fileName = file.name;
-        setUploadedFileName(fileName);
-      }
-
       const initial = {
         ...parsed,
         difficultyMix: normalizeDifficulty(parsed.difficultyMix),
-        // If they uploaded a file, default to 'uploaded' template mode if not already chosen
-        templateType: parsed.templateType ?? (fileName ? "uploaded" : "modern"),
+        templateType: "modern" as const,
         totalPoints: parsed.totalPoints ?? 20,
         exerciseCount: parsed.exerciseCount ?? 3,
-        // Pre-fill instructions if they chose uploaded but have no prefs yet
-        layoutPreferences: parsed.layoutPreferences ?? (fileName ? `Mimic the header, logo, and general visual layout of the uploaded document "${fileName}".` : ""),
+        layoutPreferences: "",
       };
       setContext(initial);
       setOriginalValues(initial);
@@ -368,87 +357,9 @@ export default function ConfirmPage() {
             </div>
           </div>
 
-          {/* Template Selection */}
-          <div data-guide="template" className="space-y-4">
-            <h3 className="text-sm font-semibold text-[var(--text)] flex items-center gap-2">
-              <Layout size={16} className="text-[var(--text-tertiary)]" />
-              Document Template
-            </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <button
-                onClick={() => update("templateType", "modern")}
-                className={cn(
-                  "flex flex-col items-start p-4 rounded-2xl border transition-all text-left group",
-                  context.templateType === "modern"
-                    ? "bg-[var(--accent-light)] border-[var(--accent)] ring-1 ring-[var(--accent)]"
-                    : "bg-[var(--surface)] border-[var(--border)] hover:border-[var(--border-strong)]"
-                )}
-              >
-                <div className={cn(
-                  "w-8 h-8 rounded-lg flex items-center justify-center mb-3 transition-colors",
-                  context.templateType === "modern" ? "bg-[var(--accent)] text-white" : "bg-[var(--bg-subtle)] text-[var(--text-tertiary)] group-hover:text-[var(--text-secondary)]"
-                )}>
-                  <CheckCircle2 size={16} />
-                </div>
-                <p className="text-sm font-semibold text-[var(--text)] mb-1">Modern (Standard)</p>
-                <p className="text-[11px] text-[var(--text-secondary)] leading-relaxed">
-                  Clean, professional Imtihan layout optimized for readability and printing.
-                </p>
-              </button>
-
-              <button
-                onClick={() => update("templateType", "uploaded")}
-                className={cn(
-                  "flex flex-col items-start p-4 rounded-2xl border transition-all text-left group relative",
-                  context.templateType === "uploaded"
-                    ? "bg-[var(--accent-light)] border-[var(--accent)] ring-1 ring-[var(--accent)]"
-                    : "bg-[var(--surface)] border-[var(--border)] hover:border-[var(--border-strong)]"
-                )}
-              >
-                {uploadedFileName && (
-                  <div className="absolute top-3 right-3 bg-[var(--accent)] text-white text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider animate-pulse">
-                    Recommended
-                  </div>
-                )}
-                <div className={cn(
-                  "w-8 h-8 rounded-lg flex items-center justify-center mb-3 transition-colors",
-                  context.templateType === "uploaded" ? "bg-[var(--accent)] text-white" : "bg-[var(--bg-subtle)] text-[var(--text-tertiary)] group-hover:text-[var(--text-secondary)]"
-                )}>
-                  <Wand2 size={16} />
-                </div>
-                <p className="text-sm font-semibold text-[var(--text)] mb-1">Extract Template</p>
-                <div className="text-[11px] text-[var(--text-secondary)] leading-relaxed">
-                  {uploadedFileName ? (
-                    <div className="flex items-center gap-1 text-[var(--accent)] font-medium">
-                      <FileText size={10} />
-                      <span className="truncate max-w-[140px]">{uploadedFileName}</span>
-                    </div>
-                  ) : (
-                    "Describe a custom layout or upload a template file in Step 1."
-                  )}
-                </div>
-              </button>
-            </div>
-
-            {context.templateType === "uploaded" && (
-              <div className="animate-in fade-in slide-in-from-top-2 duration-300">
-                <div className="p-4 rounded-2xl border border-[var(--border)] bg-[var(--surface)] space-y-3">
-                  <div className="flex items-center gap-2">
-                    <FileText size={14} className="text-[var(--accent)]" />
-                    <p className="text-xs font-semibold text-[var(--text)]">Extraction Instructions</p>
-                  </div>
-                  <textarea
-                    value={context.layoutPreferences || ""}
-                    onChange={(e) => update("layoutPreferences", e.target.value)}
-                    placeholder="e.g. Replicate the school header from the PDF, use the same grading table at the end, keep the specific logo on the top right..."
-                    className="w-full min-h-[80px] p-3 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-xs text-[var(--text)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] transition-colors resize-none"
-                  />
-                  <p className="text-[10px] text-[var(--text-tertiary)] leading-relaxed">
-                    The AI will analyze the visual structure of your document and attempt to replicate it.
-                  </p>
-                </div>
-              </div>
-            )}
+          <div data-guide="template" className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4">
+            <h3 className="flex items-center gap-2 text-sm font-semibold text-[var(--text)]"><Layout size={16} /> Document composition</h3>
+            <p className="mt-2 text-xs leading-relaxed text-[var(--text-secondary)]">One polished layout for every exam: clear headings, readable questions, a score table and a separate answer key. Personalise your school header on the export step. Uploaded documents provide course content.</p>
           </div>
 
           <Button

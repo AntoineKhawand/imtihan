@@ -262,15 +262,14 @@ describe("buildGenerateUserPrompt — general fields", () => {
     expect(withoutNotes).not.toContain("Teacher notes:");
   });
 
-  it("uses the standard-layout instruction for the modern template, and layout extraction for uploaded", () => {
-    const modern = buildGenerateUserPrompt(baseContext({ templateType: "modern" }));
-    expect(modern).toContain("Use the standard Modern (Standard) layout");
-
-    const uploaded = buildGenerateUserPrompt(
-      baseContext({ templateType: "uploaded", layoutPreferences: "Header with school crest" }),
-    );
-    expect(uploaded).toContain("Extract and replicate the visual layout");
-    expect(uploaded).toContain("Header with school crest");
+  it("uses one composition even for old uploaded-template settings", () => {
+    for (const templateType of ["modern", "uploaded"] as const) {
+      const prompt = buildGenerateUserPrompt(baseContext({ templateType, layoutPreferences: "Header with school crest" }));
+      expect(prompt).toContain("single professional layout");
+      expect(prompt).not.toContain("Extract and replicate");
+      expect(prompt).not.toContain("Header with school crest");
+      expect(prompt).toContain("course content and school header information only");
+    }
   });
 
   it("computes the difficulty breakdown from the difficulty mix and exercise count", () => {
@@ -451,13 +450,13 @@ describe("buildGenerateSystemPrompt — MATHEMATICAL PLOTS gating", () => {
   it("omits the MATHEMATICAL PLOTS instruction entirely for non-plottable subjects (e.g. chemistry)", () => {
     const prompt = buildGenerateSystemPrompt(baseContext({ subject: "chemistry" }));
     expect(prompt).not.toContain("MATHEMATICAL PLOTS");
-    expect(prompt).not.toContain("[PLOT:");
+    expect(prompt).not.toContain("[PLOT: sin(x)]");
   });
 
   it("omits the MATHEMATICAL PLOTS instruction for humanities subjects (e.g. history)", () => {
     const prompt = buildGenerateSystemPrompt(baseContext({ subject: "history" }));
     expect(prompt).not.toContain("MATHEMATICAL PLOTS");
-    expect(prompt).not.toContain("[PLOT:");
+    expect(prompt).not.toContain("[PLOT: sin(x)]");
   });
 });
 

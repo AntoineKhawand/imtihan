@@ -153,8 +153,9 @@ describe("generateWordDocument — basic template rendering", () => {
   it("does not crash when header is entirely undefined (missing optional field)", async () => {
     const buffer = await generateWordDocument(baseContext(), "modern", [baseExercise()], undefined, false);
     const { documentXml } = await unzip(buffer);
-    // Modern template falls back to the literal "Institution" label when no schoolName is given.
-    expect(documentXml).toContain("Institution");
+    // Missing school details should not invent an institution.
+    expect(documentXml).not.toContain("Institution");
+    expect(documentXml).toContain("Mathématiques");
   });
 });
 
@@ -302,3 +303,25 @@ async function unzipRels(buffer: Buffer): Promise<string> {
   const contentTypes = await zip.file("[Content_Types].xml")!.async("string");
   return contentTypes;
 }
+
+
+describe("unified document composition", () => {
+  it("uses the same header, fonts and A4 geometry for every legacy template ID", async () => {
+    const rendered: string[] = [];
+    for (const id of ["classic", "modern", "formal", "imtihan"]) {
+      const {documentXml,zip} = await unzip(await generateWordDocument(baseContext(), id, [baseExercise()], {className:"TS-2",date:"2026-10-11"}, false));
+      expect(documentXml).toContain("TS-2");
+      expect(documentXml).toContain("2026-10-11");
+      expect(documentXml).toContain('w:w="11906"');
+      expect(documentXml).toContain('w:h="16838"');
+      expect(documentXml).toContain('w:top="1020"');
+      const styles = await zip.file("word/styles.xml")!.async("string");
+      expect(styles).toContain("Georgia");
+      expect(styles).toContain("Arial");
+      expect(styles).toContain("keepNext");
+      expect(await zip.file("word/footer1.xml")!.async("string")).toContain("PAGE");
+      rendered.push(documentXml);
+    }
+    expect(new Set(rendered).size).toBe(1);
+  });
+});

@@ -261,6 +261,14 @@ export default function ExportPage() {
     }
   }
 
+  function handlePrint() {
+    sessionStorage.setItem("imtihan_print_settings", JSON.stringify({
+      header: { schoolName, className, teacherName, date: examDate, schoolLogo },
+      includeAnswerKey,
+    }));
+    window.open(variant === "B" && versionBExercises ? "/print?variant=b" : "/print", "_blank");
+  }
+
   function saveExamToLibrary() {
     if (!context || !exercises.length) return;
     const exam: SavedExam = {
@@ -409,29 +417,10 @@ export default function ExportPage() {
           {/* Download options */}
           <div data-guide="download-layout" className="card p-6 space-y-4">
             <div className="flex items-center justify-between gap-4 flex-wrap">
-              <h3 className="font-semibold text-[var(--text)]">Layout &amp; Download</h3>
-              <div className="flex gap-2">
-                {(["classic", "modern"] as const).map((t) => (
-                  <button
-                    key={t}
-                    onClick={() => {
-                      if (t === "modern" && isFreeTier) return;
-                      setTemplateId(t);
-                    }}
-                    className={cn(
-                      "text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-lg border transition-all",
-                      templateId === t
-                        ? "bg-[var(--accent)] text-white border-[var(--accent)] shadow-md"
-                        : "bg-[var(--surface)] border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)]/30",
-                      t === "modern" && isFreeTier && "opacity-50 grayscale cursor-not-allowed"
-                    )}
-                  >
-                    {t} {t === "modern" && isFreeTier && "🔒"}
-                  </button>
-                ))}
-              </div>
+              <h3 className="font-semibold text-[var(--text)]">Download your exam</h3>
             </div>
-            
+            <p className="text-xs leading-relaxed text-[var(--text-secondary)]">One professional composition for Word and PDF, with a school header, clear question hierarchy, score table and optional answer key.</p>
+
             <div data-guide="export-options" className="flex items-center justify-between gap-4 flex-wrap pt-2">
               <span className="text-xs font-medium text-[var(--text-secondary)]">Export Options</span>
               {/* Corrigé toggle */}
@@ -541,7 +530,7 @@ export default function ExportPage() {
               </button>
 
               <button
-                data-guide="pdf" onClick={() => window.open(variant === "B" && versionBExercises ? "/print?variant=b" : "/print", "_blank")}
+                data-guide="pdf" onClick={handlePrint}
                 disabled={variant === "B" && !versionBExercises}
                 className={cn(
                   "flex items-center gap-4 p-4 rounded-xl border text-left transition-all",
