@@ -11,6 +11,9 @@ import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { AdminAreaChart } from "@/components/ui/AdminAreaChart";
 import { ChapterCoverageReport } from "@/components/admin/ChapterCoverageReport";
+import { NewsletterPreview } from "@/components/admin/NewsletterPreview";
+import { NewsletterSubscribers } from "@/components/admin/NewsletterSubscribers";
+import { ReportMetric } from "@/components/admin/ReportUI";
 import { AnalyticsReport } from "@/components/admin/AnalyticsReport";
 import type { BlogPostSummary, BlogPostDetail } from "@/types/blog";
 
@@ -852,57 +855,53 @@ export default function AdminPage() {
         {/* ── EMAIL TAB ── */}
         {activeTab === "email" && (
           <div className="space-y-6">
-            {/* Stats */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-              <div className="bg-[var(--surface)] p-5 rounded-3xl border border-[var(--border)] shadow-sm">
-                <p className="text-[10px] font-black text-[var(--text-tertiary)] uppercase tracking-widest mb-1">Total Users</p>
-                <h3 className="text-2xl font-black text-[var(--text)]">{users.length}</h3>
-              </div>
-              <div className="bg-[var(--surface)] p-5 rounded-3xl border border-[var(--border)] shadow-sm">
-                <p className="text-[10px] font-black text-emerald-500 uppercase tracking-widest mb-1">Selected</p>
-                <h3 className="text-2xl font-black text-emerald-600">{selectedUids.size}</h3>
-              </div>
-              <div className="bg-[var(--surface)] p-5 rounded-3xl border border-[var(--border)] shadow-sm">
-                <p className="text-[10px] font-black text-amber-500 uppercase tracking-widest mb-1">No Exams</p>
-                <h3 className="text-2xl font-black text-amber-600">{users.filter(u => u.examsGenerated === 0).length}</h3>
-              </div>
-              <div className="bg-[var(--surface)] p-5 rounded-3xl border border-[var(--border)] shadow-sm">
-                <p className="text-[10px] font-black text-blue-500 uppercase tracking-widest mb-1">Active (1+)</p>
-                <h3 className="text-2xl font-black text-blue-600">{users.filter(u => u.examsGenerated >= 1).length}</h3>
-              </div>
+            <header className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-5 sm:p-6">
+              <p className="text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)]">Teacher outreach</p>
+              <h2 className="mt-2 text-xl font-black tracking-tight">Compose an email</h2>
+              <p className="mt-2 max-w-2xl text-sm leading-relaxed text-[var(--text-secondary)]">Choose your message, select teacher accounts and review your audience before sending.</p>
+              <p className="mt-3 text-xs leading-relaxed text-[var(--text-secondary)]">Promotional sends require a configured postal address and unsubscribe link. Recipients who opted out are skipped.</p>
+            </header>
+            <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+              <ReportMetric label="Teacher accounts" count={users.length} />
+              <ReportMetric label="Selected recipients" count={selectedUids.size} />
+              <ReportMetric label="No exams yet" count={users.filter(u => u.examsGenerated === 0).length} />
+              <ReportMetric label="Created an exam" count={users.filter(u => u.examsGenerated >= 1).length} />
             </div>
 
             {/* Template Picker */}
-            <div>
-              <p className="text-[10px] font-black text-[var(--text-tertiary)] uppercase tracking-widest mb-3">Choose Template</p>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <section className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-5 sm:p-6" aria-label="Choose email template">
+              <h3 className="mb-4 text-sm font-bold">1. Choose your message</h3>
+              <div className="grid grid-cols-1 min-[420px]:grid-cols-2 xl:grid-cols-4 gap-3">
                 {EMAIL_TEMPLATES.map(t => (
-                  <button key={t.id} onClick={() => setEmailTemplate(t.id)}
+                  <button key={t.id} type="button" aria-pressed={emailTemplate === t.id} onClick={() => setEmailTemplate(t.id)}
                     className={cn(
-                      "p-4 rounded-2xl border text-left transition-all",
-                      emailTemplate === t.id ? "bg-emerald-50 border-emerald-200 shadow-sm" : "bg-[var(--surface)] border-[var(--border)] hover:border-[var(--border-strong)] hover:shadow-sm"
+                      "min-w-0 p-4 rounded-2xl border text-left transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]",
+                      emailTemplate === t.id ? "bg-emerald-500/10 border-emerald-500/40 shadow-sm" : "bg-[var(--surface)] border-[var(--border)] hover:border-[var(--border-strong)] hover:shadow-sm"
                     )}
                   >
                     <div className="text-2xl mb-2">{t.icon}</div>
                     <p className="font-bold text-[var(--text)] text-sm leading-tight">{t.title}</p>
                     <p className="text-[11px] text-[var(--text-tertiary)] mt-1 font-medium leading-tight">{t.desc}</p>
                     {emailTemplate === t.id && (
-                      <div className="mt-2 flex items-center gap-1 text-[10px] font-bold text-emerald-600">
+                      <div className="mt-2 flex items-center gap-1 text-[10px] font-bold text-emerald-700 dark:text-emerald-300">
                         <Check size={10} /> Selected
                       </div>
                     )}
                   </button>
                 ))}
               </div>
-            </div>
+            </section>
+            {emailTemplate === "newsletter" && <NewsletterPreview />}
 
             {/* Custom HTML Editor */}
             {emailTemplate === "custom" && (
               <div className="bg-[var(--surface)] p-6 rounded-3xl border border-[var(--border)] shadow-sm">
                 <p className="font-bold text-[var(--text)] mb-4">Custom Email Content</p>
-                <input type="text" placeholder="Email subject..." value={customSubject} onChange={e => setCustomSubject(e.target.value)}
+                <label htmlFor="outreach-subject" className="mb-2 block text-xs font-bold">Subject</label>
+                <input id="outreach-subject" type="text" placeholder="Email subject..." value={customSubject} onChange={e => setCustomSubject(e.target.value)}
                   className="w-full h-12 px-4 bg-[var(--surface)] text-[var(--text)] border border-[var(--border)] rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-emerald-600/10 focus:border-emerald-600 mb-4" />
-                <textarea placeholder="Email HTML content..." value={customHtml} onChange={e => setCustomHtml(e.target.value)} rows={10}
+                <label htmlFor="outreach-html" className="mb-2 block text-xs font-bold">HTML message</label>
+                <textarea id="outreach-html" placeholder="Email HTML content..." value={customHtml} onChange={e => setCustomHtml(e.target.value)} rows={10}
                   className="w-full px-4 py-3 bg-[var(--surface)] text-[var(--text)] border border-[var(--border)] rounded-xl text-sm font-mono focus:outline-none focus:ring-2 focus:ring-emerald-600/10 focus:border-emerald-600 resize-y" />
               </div>
             )}
@@ -910,11 +909,11 @@ export default function AdminPage() {
             {/* Recipient Picker */}
             <div className="bg-[var(--surface)] rounded-[28px] border border-[var(--border)] shadow-sm overflow-hidden">
               <div className="p-5 border-b border-[var(--border)]">
-                <div className="flex items-center justify-between mb-4">
-                  <p className="font-black text-[var(--text)]">Select Recipients</p>
+                <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+                  <p className="font-black text-[var(--text)]">2. Select recipients</p>
                   <span className={cn(
                     "text-xs font-bold px-3 py-1 rounded-full border",
-                    selectedUids.size > 0 ? "bg-emerald-50 text-emerald-700 border-emerald-100" : "bg-[var(--bg-subtle)] text-[var(--text-tertiary)] border-[var(--border)]"
+                    selectedUids.size > 0 ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/25" : "bg-[var(--bg-subtle)] text-[var(--text-tertiary)] border-[var(--border)]"
                   )}>
                     {selectedUids.size} selected
                   </span>
@@ -923,24 +922,24 @@ export default function AdminPage() {
                 {/* Quick Segment Buttons */}
                 <div className="flex flex-wrap gap-2 mb-4">
                   <button onClick={() => setSelectedUids(new Set(users.map(u => u.uid)))}
-                    className="h-8 px-4 rounded-xl text-[10px] font-bold bg-[var(--text)] text-[var(--surface)] hover:opacity-80 transition-opacity">
+                    className="min-h-11 px-4 rounded-xl text-xs font-bold bg-[var(--text)] text-[var(--surface)] hover:opacity-80 transition-opacity">
                     All ({users.length})
                   </button>
                   <button onClick={() => setSelectedUids(new Set(users.filter(u => u.proExpiresAt && u.proExpiresAt > Date.now()).map(u => u.uid)))}
-                    className="h-8 px-4 rounded-xl text-[10px] font-bold bg-emerald-600 text-white hover:bg-emerald-700 transition-colors">
+                    className="min-h-11 px-4 rounded-xl text-xs font-bold bg-[var(--bg-subtle)] text-[var(--text-secondary)] border border-[var(--border)] hover:border-[var(--border-strong)] focus-visible:ring-2 focus-visible:ring-[var(--accent)] transition-colors">
                     Pro Active ({users.filter(u => u.proExpiresAt && u.proExpiresAt > Date.now()).length})
                   </button>
                   <button onClick={() => setSelectedUids(new Set(users.filter(u => !u.proExpiresAt || u.proExpiresAt < Date.now()).map(u => u.uid)))}
-                    className="h-8 px-4 rounded-xl text-[10px] font-bold bg-blue-500 text-white hover:bg-blue-600 transition-colors">
+                    className="min-h-11 px-4 rounded-xl text-xs font-bold bg-[var(--bg-subtle)] text-[var(--text-secondary)] border border-[var(--border)] hover:border-[var(--border-strong)] focus-visible:ring-2 focus-visible:ring-[var(--accent)] transition-colors">
                     Free ({users.filter(u => !u.proExpiresAt || u.proExpiresAt < Date.now()).length})
                   </button>
                   <button onClick={() => setSelectedUids(new Set(users.filter(u => u.examsGenerated === 0).map(u => u.uid)))}
-                    className="h-8 px-4 rounded-xl text-[10px] font-bold bg-amber-500 text-white hover:bg-amber-600 transition-colors">
+                    className="min-h-11 px-4 rounded-xl text-xs font-bold bg-[var(--bg-subtle)] text-[var(--text-secondary)] border border-[var(--border)] hover:border-[var(--border-strong)] focus-visible:ring-2 focus-visible:ring-[var(--accent)] transition-colors">
                     No Exams ({users.filter(u => u.examsGenerated === 0).length})
                   </button>
                   {selectedUids.size > 0 && (
                     <button onClick={() => setSelectedUids(new Set())}
-                      className="h-8 px-4 rounded-xl text-[10px] font-bold bg-red-50 text-red-500 border border-red-100 hover:bg-red-100 transition-colors">
+                      className="min-h-11 px-4 rounded-xl text-xs font-bold bg-[var(--surface)] text-[var(--text-secondary)] border border-[var(--border)] hover:bg-[var(--bg-subtle)] focus-visible:ring-2 focus-visible:ring-[var(--accent)] transition-colors">
                       Clear
                     </button>
                   )}
@@ -950,36 +949,36 @@ export default function AdminPage() {
                 <div className="relative">
                   <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)]" size={14} />
                   <input type="text" placeholder="Filter by email or name..." value={emailSearch} onChange={e => setEmailSearch(e.target.value)}
-                    className="w-full h-10 pl-9 pr-4 bg-[var(--bg-subtle)] border border-[var(--border)] rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-emerald-600/10 focus:border-emerald-600 transition-all" />
+                    aria-label="Search teacher recipients" className="w-full h-11 pl-9 pr-4 bg-[var(--bg-subtle)] border border-[var(--border)] rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-emerald-600/10 focus:border-emerald-600 transition-all" />
                 </div>
               </div>
 
               {/* User List */}
               <div className="divide-y divide-[var(--border)] max-h-72 overflow-y-auto">
-                {emailFiltered.length === 0 ? (
+                {loading ? (<div role="status" className="p-5 text-sm text-[var(--text-secondary)]">Loading teacher accounts…</div>) : emailFiltered.length === 0 ? (
                   <div className="px-5 py-8 text-center text-sm text-[var(--text-tertiary)] font-medium">No users match your search</div>
                 ) : emailFiltered.map(u => (
-                  <div key={u.uid} onClick={() => toggleSelect(u.uid)}
+                  <label key={u.uid}
                     className={cn(
                       "flex items-center gap-3 sm:gap-4 px-5 py-3.5 cursor-pointer transition-colors",
-                      selectedUids.has(u.uid) ? "bg-emerald-50/60" : "hover:bg-[var(--bg-subtle)]/60"
+                      selectedUids.has(u.uid) ? "bg-emerald-500/10" : "hover:bg-[var(--bg-subtle)]/60"
                     )}
                   >
-                    <Checkbox checked={selectedUids.has(u.uid)} onChange={() => toggleSelect(u.uid)} />
+                    <input type="checkbox" aria-label={`Send to ${u.email}`} checked={selectedUids.has(u.uid)} onChange={() => toggleSelect(u.uid)} className="h-5 w-5 shrink-0 accent-emerald-600 focus-visible:ring-2 focus-visible:ring-[var(--accent)]" />
                     <div className={cn(
                       "w-9 h-9 rounded-xl flex items-center justify-center text-sm font-black border shrink-0",
-                      u.proExpiresAt && u.proExpiresAt > Date.now() ? "bg-emerald-50 text-emerald-700 border-emerald-100" : "bg-[var(--bg-subtle)] text-[var(--text-secondary)] border-[var(--border)]"
+                      u.proExpiresAt && u.proExpiresAt > Date.now() ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/25" : "bg-[var(--bg-subtle)] text-[var(--text-secondary)] border-[var(--border)]"
                     )}>
                       {u.displayName?.[0] || u.email[0].toUpperCase()}
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-bold text-[var(--text)] truncate">{u.email}</p>
-                      <p className="text-xs text-[var(--text-tertiary)] font-medium">{u.displayName || "Anonymized Educator"}</p>
+                      <p className="text-xs text-[var(--text-tertiary)] font-medium truncate">{u.displayName || "Educator"}</p>
                     </div>
                     <div className="shrink-0 hidden sm:block">
                       <ProBadge expiresAt={u.proExpiresAt} />
                     </div>
-                  </div>
+                  </label>
                 ))}
               </div>
             </div>
@@ -1001,14 +1000,14 @@ export default function AdminPage() {
                       {selectedUids.size > 0 ? `${selectedUids.size} recipient${selectedUids.size !== 1 ? "s" : ""} selected` : "Select recipients above"}
                     </p>
                     <p className={cn("text-xs mt-0.5 capitalize", selectedUids.size > 0 ? "text-emerald-300/70" : "text-[var(--text-tertiary)]")}>
-                      Template: {emailTemplate}
+                      3. Review and send · {emailTemplate}
                     </p>
                   </div>
                 </div>
                 <button
                   onClick={handleSendEmails}
-                  disabled={sendingEmails || selectedUids.size === 0}
-                  className="w-full sm:w-auto h-12 px-8 bg-emerald-500 hover:bg-emerald-400 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-2xl font-bold flex items-center justify-center gap-2 transition-all shadow-lg shadow-emerald-500/20 text-sm"
+                  disabled={sendingEmails || loading || selectedUids.size === 0 || (emailTemplate === "custom" && (!customSubject.trim() || !customHtml.trim()))}
+                  className="w-full sm:w-auto h-12 px-8 bg-emerald-700 hover:bg-emerald-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-2xl font-bold flex items-center justify-center gap-2 transition-all shadow-lg shadow-emerald-500/20 text-sm"
                 >
                   {sendingEmails ? <RefreshCw size={16} className="animate-spin" /> : <Send size={16} />}
                   {sendingEmails ? "Sending..." : "Send Emails"}
@@ -1018,13 +1017,13 @@ export default function AdminPage() {
 
             {/* Result Banner */}
             {emailResult && (
-              <div className="bg-[var(--surface)] p-5 rounded-3xl border border-[var(--border)] shadow-sm flex items-center gap-4">
+              <div role="status" className="bg-[var(--surface)] p-5 rounded-3xl border border-[var(--border)] shadow-sm flex items-start gap-4">
                 <CheckCircle2 size={22} className="text-emerald-500 shrink-0" />
                 <div className="flex-1">
                   <p className="font-bold text-[var(--text)]">{emailResult.sent} email{emailResult.sent !== 1 ? "s" : ""} sent successfully</p>
                   {emailResult.failed > 0 && <p className="text-sm text-red-500 font-medium">{emailResult.failed} failed</p>}
                 </div>
-                <button onClick={() => setEmailResult(null)} className="text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]"><XCircle size={18} /></button>
+                <button aria-label="Dismiss send result" onClick={() => setEmailResult(null)} className="text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]"><XCircle size={18} /></button>
               </div>
             )}
           </div>
@@ -1205,78 +1204,7 @@ export default function AdminPage() {
           </div>
         )}
 
-        {/* ── SUBSCRIBERS TAB ── */}
-        {activeTab === "subscribers" && (
-          <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-              <div className="bg-[var(--surface)] p-5 rounded-3xl border border-[var(--border)] shadow-sm">
-                <p className="text-[10px] font-black text-[var(--text-tertiary)] uppercase tracking-widest mb-1">Total Subscribers</p>
-                <h3 className="text-2xl font-black text-[var(--text)]">{subscribers.length}</h3>
-              </div>
-              <div className="bg-[var(--surface)] p-5 rounded-3xl border border-[var(--border)] shadow-sm">
-                <p className="text-[10px] font-black text-emerald-500 uppercase tracking-widest mb-1">Checklist Delivered</p>
-                <h3 className="text-2xl font-black text-emerald-600">{subscribers.filter(s => s.checklistSentAt).length}</h3>
-              </div>
-              <div className="bg-[var(--surface)] p-5 rounded-3xl border border-[var(--border)] shadow-sm">
-                <p className="text-[10px] font-black text-amber-500 uppercase tracking-widest mb-1">Send Failed / Pending</p>
-                <h3 className="text-2xl font-black text-amber-600">{subscribers.filter(s => !s.checklistSentAt).length}</h3>
-              </div>
-            </div>
-
-            {subscribers.some(s => !s.checklistSentAt) && (
-              <div className="bg-amber-50 border border-amber-100 rounded-3xl p-5 flex flex-wrap items-center justify-between gap-4">
-                <div>
-                  <p className="font-bold text-amber-900 text-sm">{subscribers.filter(s => !s.checklistSentAt).length} subscriber(s) never got their checklist email</p>
-                  <p className="text-xs text-amber-700 mt-0.5">Runs automatically every night — or trigger it now.</p>
-                </div>
-                <button onClick={handleResendChecklists} disabled={resendingChecklists}
-                  className="h-10 px-5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-bold flex items-center gap-2 disabled:opacity-50 transition-all shrink-0">
-                  {resendingChecklists ? <RefreshCw size={13} className="animate-spin" /> : <RotateCcw size={13} />}
-                  Resend failed
-                </button>
-              </div>
-            )}
-
-            <div className="bg-[var(--surface)] rounded-[32px] border border-[var(--border)] shadow-sm overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className="bg-[var(--bg-subtle)]/50 border-b border-[var(--border)]">
-                      <th className="px-6 py-5 text-[10px] font-black text-[var(--text-tertiary)] uppercase tracking-widest">Email</th>
-                      <th className="px-4 py-5 text-[10px] font-black text-[var(--text-tertiary)] uppercase tracking-widest">Source</th>
-                      <th className="px-4 py-5 text-[10px] font-black text-[var(--text-tertiary)] uppercase tracking-widest">Signed Up</th>
-                      <th className="px-6 py-5 text-right text-[10px] font-black text-[var(--text-tertiary)] uppercase tracking-widest">Checklist</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-[var(--border)]">
-                    {loadingSubscribers ? (
-                      <tr><td colSpan={4} className="px-6 py-10 text-center text-sm text-[var(--text-tertiary)] font-medium">Loading…</td></tr>
-                    ) : subscribers.length === 0 ? (
-                      <tr><td colSpan={4} className="px-6 py-10 text-center text-sm text-[var(--text-tertiary)] font-medium">No subscribers yet</td></tr>
-                    ) : subscribers.map((s) => (
-                      <tr key={s.id} className="hover:bg-[var(--bg-subtle)]/30 transition-colors">
-                        <td className="px-6 py-4 text-sm font-bold text-[var(--text)]">{s.email}</td>
-                        <td className="px-4 py-4 text-xs text-[var(--text-tertiary)] font-medium">{s.source || "—"}</td>
-                        <td className="px-4 py-4 text-xs text-[var(--text-tertiary)] font-medium">{formatDate(s.createdAt)}</td>
-                        <td className="px-6 py-4 text-right">
-                          {s.checklistSentAt ? (
-                            <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">
-                              <CheckCircle2 size={11} /> Sent
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-100">
-                              <XCircle size={11} /> Pending
-                            </span>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        )}
+        {activeTab === "subscribers" && <NewsletterSubscribers subscribers={subscribers} loading={loadingSubscribers} resending={resendingChecklists} onResend={handleResendChecklists} />}
 
         {activeTab === "analytics" && <AnalyticsReport user={user} />}
 

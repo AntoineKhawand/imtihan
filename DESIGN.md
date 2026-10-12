@@ -295,3 +295,12 @@ None of the above were touched tonight — flagging as a prioritized backlog for
 Coverage and growth reporting now share the admin console's rounded cards, compact uppercase metric labels, period/refresh toolbar, table headers and token-based status panels. Longer methodology notes are expandable. Coverage summaries explicitly distinguish the full tracked-chapter count from totals for shown rows; existing sample-size and missing-recording caveats remain. Insights shows the selected date range and explains consent-related undercounting. Sidebar labels and icons now identify Coverage and Insights consistently.
 
 Validation: TypeScript and 13 existing mocked admin reporting/coverage boundary tests passed. Tables scroll inside their cards and controls wrap on narrow screens. Authenticated visual verification remains blocked by the browser's admin sign-in network error; no production credentials or admin API scripts were used.
+
+
+## Newsletter and outreach UI — 2026-10-12
+
+- Email now uses the admin card system, a numbered compose/recipients/send flow, larger touch controls, labelled custom fields and native keyboard-accessible recipient checkboxes.
+- Subscribers has search and checklist-status filters, wrapping phone/tablet cards and a desktop table. Checklist delivery is explicitly separate from marketing consent and teacher-account outreach.
+- One shared newsletter HTML template serves scheduled sends, manual sends and a sandboxed Phone/Desktop preview. Fluid email tables, inline fallback styles, small-screen padding, a full-width mobile CTA and dark colour overrides replace the two drifting layouts. The checklist email also gains viewport/mobile styles.
+- Existing suppression checks, configured postal address requirement and signed unsubscribe footer remain in the delivery layer. No real emails were sent for verification.
+- TypeScript and mocked/DOM tests cover preview controls, subscriber filtering/retry interaction, recipient-text escaping and campaign links. Authenticated visual QA at 375/768/1440 and real inbox-client screenshots remain unverified because admin sign-in reports a network error and local/preview browser access is restricted.
