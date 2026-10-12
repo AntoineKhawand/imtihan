@@ -25,6 +25,7 @@ export default function robots(): MetadataRoute.Robots {
           "/print",
           "/analytics",
           "/test-auth",
+          "/test-exam-regressions",
           "/test-wysiwyg",
           "/account",
           "/teacher/",

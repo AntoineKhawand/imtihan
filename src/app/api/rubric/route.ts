@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { withRetryAndFallback, geminiErrorMessage } from "@/lib/gemini";
+import { withRetryAndFallback, openaiErrorMessage } from "@/lib/openai";
 import { buildRubricSystemPrompt, buildRubricUserPrompt } from "@/lib/prompts/rubric";
 import { verifySession } from "@/lib/firebase-admin";
 import type { Exercise } from "@/types/exam";
@@ -77,6 +77,8 @@ function robustParse(text: string): unknown {
   throw new Error("All JSON parse strategies failed");
 }
 
+export const maxDuration = 120;
+
 export async function POST(request: NextRequest) {
   try {
     // FOUNDER_DECISIONS.md #8: this route calls a paid AI API with no auth and
@@ -114,7 +116,7 @@ export async function POST(request: NextRequest) {
   } catch (err) {
     console.error("[/api/rubric]", err);
     return NextResponse.json(
-      { success: false, errors: [geminiErrorMessage(err)] },
+      { success: false, errors: [openaiErrorMessage(err)] },
       { status: 503 }
     );
   }

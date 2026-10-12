@@ -1,4 +1,5 @@
 "use client";
+import { Select } from "@/components/ui/WorkflowSelect";
 import { compatiblePaperProfiles, PAPER_PROFILES } from "@/data/paperProfiles";
 import { applyPaper, paperContextIssues } from "@/lib/paperComposition";
 import { type PaperComposition } from "@/lib/schemas/sourceDocument";
@@ -54,15 +55,14 @@ export function PaperCompositionReview({ context, onChange }: { context: ExamCon
       </div>}
       <div className="flex gap-4"><a href="/create" className="underline text-[var(--accent)]">Change document use</a><button type="button" className="underline" onClick={() => onChange({ ...context, sourceDocument: undefined, paperComposition: paper?.origin === "uploaded" ? undefined : paper })}>Remove document reference</button></div>
     </div>}
-    <label className="block text-xs font-medium">Paper type
-      <select className="mt-2 w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] p-3 text-[var(--text)]" value={!paper ? "classroom" : paper.origin === "uploaded" ? "uploaded" : paper.origin === "custom" ? "custom" : paper.profileId} onChange={e => select(e.target.value)}>
-        <option value="classroom">Classroom exam / quiz — flexible composition</option>
-        {profiles.map(p => <option key={p.id} value={p.id}>{p.label}</option>)}
-        {source?.intent.purposes.includes("structure") && !!sourcePaper?.sections.length && <option value="uploaded">Use the uploaded paper structure</option>}
-        <option value="custom">Teacher-defined sections and choices</option>
-        {invalidProfile && <option value={paper?.profileId}>Incompatible previous profile — change paper type</option>}
-      </select>
-    </label>
+    <Select label="Paper type" value={!paper ? "classroom" : paper.origin === "uploaded" ? "uploaded" : paper.origin === "custom" ? "custom" : paper.profileId}
+      onChange={event => select(event.target.value)} options={[
+        { value: "classroom", label: "Classroom exam / quiz — flexible composition" },
+        ...profiles.map(profile => ({ value: profile.id, label: profile.label })),
+        ...(source?.intent.purposes.includes("structure") && !!sourcePaper?.sections.length ? [{ value: "uploaded", label: "Use the uploaded paper structure" }] : []),
+        { value: "custom", label: "Teacher-defined sections and choices" },
+        ...(invalidProfile && paper?.profileId ? [{ value: paper.profileId, label: "Incompatible previous profile — change paper type" }] : []),
+      ]} />
     {!profiles.length && <p className="text-xs text-[var(--text-secondary)]">No verified official reference is registered for this subject and level yet. Use classroom mode, define your sections, or upload the relevant paper.</p>}
     {reference && <div className="text-xs space-y-1"><a href={reference.sourceUrl} target="_blank" rel="noreferrer" className="underline text-[var(--accent)]">{reference.reference}</a><p>{reference.scope}</p><p>Reference checked {reference.verifiedOn}. {paper?.origin === "custom" ? "You have adapted this reference." : "Practice composition based on this reference."}</p></div>}
     {invalidProfile && <p role="alert" className="text-xs text-[var(--danger)]">This reference does not match the selected curriculum, subject or level. Choose another paper type.</p>}

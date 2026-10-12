@@ -103,7 +103,6 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
                 : "border-[var(--border)] focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent)]/10",
               className
             )}
-            style={{ colorScheme: "light" }}
             {...props}
           >
             {placeholder && (

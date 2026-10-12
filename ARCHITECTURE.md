@@ -18,7 +18,7 @@ Server builds Claude messages:
   - System: inject curriculum reference (all IDs)
   - User: teacher description + optional PDF/image block
             ↓
-Gemini 2.5 Flash returns JSON (ExamContext)
+Claude / OpenAI returns JSON (ExamContext)
             ↓
 Zod validates schema + auto-corrects difficultyMix sum
             ↓
@@ -39,7 +39,7 @@ Server builds system prompt:
   - Curriculum style (Bac vs IB formatting)
   - Difficulty guide
             ↓
-Gemini 2.5 Flash streams JSON array of exercises
+Claude / OpenAI streams JSON array of exercises
             ↓
 Server pipes SSE stream to client
   → Client renders exercises as they arrive
@@ -54,10 +54,10 @@ To ensure generated content is accurate and curriculum-aligned, we employ a Retr
 
 ### v1 (MVP): Direct Context Injection
 
-The current implementation uses a simple form of RAG. In the `/api/analyze` step, any uploaded document (PDF, DOCX) is sent directly to Gemini along with the user's text prompt.
+The current implementation uses a simple form of RAG. In the `/api/analyze` step, any uploaded document (PDF, DOCX) is sent directly to the configured Claude/OpenAI provider along with the user's text prompt.
 
 ```
-User Prompt + Base64 Encoded Document → Gemini API → Structured ExamContext
+User Prompt + Base64 Encoded Document → OpenAI Responses API → Structured ExamContext
 ```
 
 **Pros:** Simple to implement, effective for single-document analysis.
@@ -69,7 +69,7 @@ The long-term vision is to implement a full RAG pipeline using a vector database
 
 1.  **Indexing:** All official curriculum documents and teacher-uploaded materials will be chunked, vectorized, and stored in a vector database.
 2.  **Retrieval:** When a user makes a request, their prompt is used to search the vector database for the most relevant document chunks.
-3.  **Augmentation:** These retrieved chunks are then injected into the prompt sent to Gemini, providing highly relevant, targeted context.
+3.  **Augmentation:** These retrieved chunks are then injected into the prompt sent to the configured Claude/OpenAI provider, providing highly relevant, targeted context.
 
 This approach is more scalable, faster at runtime, and allows for grounding across a vast library of trusted sources, perfectly aligning with the project's goal of accuracy.
 

@@ -57,7 +57,7 @@ describe("coverage UI", () => {
       ),
     );
     expect(host.querySelector('[role="alert"]')?.textContent).toContain(
-      "Could not load",
+      "Coverage report unavailable",
     );
     expect(host.textContent).not.toContain("No tracked chapter selections");
     await click(button("Retry"));

@@ -240,7 +240,9 @@ describe("generateWordDocument — [PLOT:] inline math-plot rendering (BUG-051/0
       // the pre-existing text-box behavior, never a blank/broken document.
       expect(documentXml).toContain("Graph");
     }
-  });
+    // Native canvas plus the first mathjs import can exceed 5s under parallel
+    // Windows/CI load. Keep all PNG/content assertions; allow a bounded cold start.
+  }, 15_000);
 
   it("falls back to the labelled text box (never a raw [PLOT:] tag, never a crash) for an unsafe/rejected equation (BUG-057 guard)", async () => {
     // "(1:1:100000000)" is the exact, empirically-documented mathjs DoS

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { GEMINI_MODEL_PRIMARY, getGeminiModel } from "@/lib/gemini";
+import { withRetryAndFallback, openaiErrorMessage } from "@/lib/openai";
 import { verifySession } from "@/lib/firebase-admin";
 
 // FOUNDER_DECISIONS.md #8: distinct from src/app/api/exam/translate/route.ts
@@ -13,6 +13,8 @@ const RequestSchema = z.object({
   exercise: z.any(),
   targetLanguage: z.string().min(1).max(50),
 });
+
+export const maxDuration = 120;
 
 export async function POST(req: NextRequest) {
   try {
@@ -27,8 +29,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Exercise and target language are required" }, { status: 400 });
     }
     const { exercise, targetLanguage } = parsed.data;
-
-    const model = getGeminiModel(GEMINI_MODEL_PRIMARY);
 
     const prompt = `
       You are an expert educational translator. 
@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
       Return ONLY the JSON.
     `;
 
-    const result = await model.generateContent(prompt);
+    const result = await withRetryAndFallback(model => model.generateContent(prompt));
     const response = await result.response;
     const text = response.text();
     
@@ -55,8 +55,8 @@ export async function POST(req: NextRequest) {
     const data = JSON.parse(jsonStr);
 
     return NextResponse.json(data);
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Translation error:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: openaiErrorMessage(error) }, { status: 500 });
   }
 }

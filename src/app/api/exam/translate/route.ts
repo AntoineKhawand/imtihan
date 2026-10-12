@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import * as admin from "firebase-admin";
-import { withRetryAndFallback, geminiErrorMessage } from "@/lib/gemini";
+import { withRetryAndFallback, openaiErrorMessage } from "@/lib/openai";
 import { getAnthropicClient, isAnthropicConfigured, GENERATE_MODEL, GENERATE_MAX_TOKENS } from "@/lib/anthropic";
 import { buildTranslateExamSystemPrompt, buildTranslateExamUserPrompt } from "@/lib/prompts/translateExam";
 import { sanitizeError, createSecurityHeaders } from "@/lib/security";
@@ -14,7 +14,7 @@ export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
 // ── Daily translation cap ──────────────────────────────────────────────────
-// This is a real, billed AI call (Claude/Gemini), so it must never be
+// This is a real, billed AI call (Claude/OpenAI), so it must never be
 // reachable without a valid session — same non-negotiable as /api/generate.
 // It is NOT counted against the monthly exam-generation quota, though:
 // translating an exam the user already paid quota for once shouldn't cost a
@@ -54,6 +54,7 @@ const RequestSchema = z.object({
 });
 
 export async function POST(request: NextRequest) {
+  const requestStartedAt = Date.now();
   try {
     const body = await request.json();
     const parsed = RequestSchema.safeParse(body);
@@ -129,9 +130,9 @@ export async function POST(request: NextRequest) {
     );
 
     let rawText: string | null = null;
-    let providerName: "Claude" | "Gemini" = "Gemini";
+    let providerName: "Claude" | "OpenAI" = "OpenAI";
 
-    // ── AI Translation (Primary: Claude, Fallback: Gemini) ──────────────────
+    // ── AI Translation (Primary: Claude, Fallback: OpenAI) ──────────────────
     // Same dual-provider pattern as /api/generate — this is a bounded,
     // non-streaming transform, so we just await the full response.
     if (isAnthropicConfigured()) {
@@ -167,26 +168,27 @@ export async function POST(request: NextRequest) {
           providerName = "Claude";
         }
       } catch (claudeErr) {
-        console.warn("[/api/exam/translate] Claude failed, falling back to Gemini:", claudeErr);
+        console.warn("[/api/exam/translate] Claude failed, falling back to OpenAI:", claudeErr);
       }
     }
 
     if (!rawText) {
       try {
-        console.log("[/api/exam/translate] Using Gemini...");
+        console.log("[/api/exam/translate] Using OpenAI...");
         const result = await withRetryAndFallback((model) =>
           model.generateContent({
             systemInstruction: systemPrompt,
             contents: [{ role: "user", parts: [{ text: userPrompt }] }],
             generationConfig: { responseMimeType: "application/json" },
-          })
+          }),
+          2, 1000, Math.max(1, 50000 - (Date.now() - requestStartedAt))
         );
         rawText = result.response.text();
-        providerName = "Gemini";
-      } catch (geminiErr) {
-        console.error("[/api/exam/translate] Gemini fallback failed:", geminiErr);
+        providerName = "OpenAI";
+      } catch (openaiErr) {
+        console.error("[/api/exam/translate] OpenAI fallback failed:", openaiErr);
         return NextResponse.json(
-          { success: false, error: geminiErrorMessage(geminiErr) },
+          { success: false, error: openaiErrorMessage(openaiErr) },
           { status: 503, headers: createSecurityHeaders() }
         );
       }

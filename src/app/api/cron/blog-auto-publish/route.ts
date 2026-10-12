@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminDb, adminAuth } from "@/lib/firebase-admin";
-import { withRetryAndFallback, geminiErrorMessage } from "@/lib/gemini";
+import { withRetryAndFallback, openaiErrorMessage } from "@/lib/openai";
 import { getAnthropicClient, isAnthropicConfigured, CLAUDE_MODEL, MAX_TOKENS } from "@/lib/anthropic";
 import { isAdmin } from "@/lib/admin";
 import { shortId, slugify } from "@/lib/utils";
@@ -10,7 +10,10 @@ import { GeneratedBlogSchema, blogQualityIssues, blogReadTime } from "@/lib/blog
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+export const maxDuration = 120;
+
 export async function GET(request: NextRequest) {
+  const requestStartedAt = Date.now();
   // 1. Verify Authentication (Cron Secret OR Admin Token)
   const authHeader = request.headers.get("authorization");
   const cronSecret = process.env.CRON_SECRET;
@@ -27,7 +30,7 @@ export async function GET(request: NextRequest) {
   // authorized — i.e. any signed-in account (a free-tier teacher, even a
   // student), not just an admin — despite the comment's own intent and
   // every sibling /api/admin/* route gating on isAdmin(uid). That let any
-  // signed-in user trigger an unbounded, cost-incurring Claude/Gemini call
+  // signed-in user trigger an unbounded, cost-incurring Claude/OpenAI call
   // and auto-publish a live blog post with zero review. Now matches the
   // same verifyIdToken + isAdmin(uid) pattern used everywhere else.
   if (!isAuthorized && authHeader?.startsWith("Bearer ")) {
@@ -58,12 +61,12 @@ export async function GET(request: NextRequest) {
     const brief = selectBlogBrief(recent, Math.floor(Date.now() / 86400000));
     const prompt = buildBlogPrompt(brief, recent);
 
-    // ── AI Generation (Primary: Claude, Fallback: Gemini) ───────────────────
+    // ── AI Generation (Primary: Claude, Fallback: OpenAI) ───────────────────
     // Matches the pattern already used by /api/generate, /api/analyze, and
     // /api/exam/translate — this route is text-only (no document upload),
     // so it's the simplest case: no image/PDF content block needed.
     let result = "";
-    let providerName: "Claude" | "Gemini" = "Gemini";
+    let providerName: "Claude" | "OpenAI" = "OpenAI";
 
     if (isAnthropicConfigured()) {
       try {
@@ -77,22 +80,22 @@ export async function GET(request: NextRequest) {
         result = message.content.filter(block => block.type === "text").map(block => block.text).join("\n");
         providerName = "Claude";
       } catch (claudeErr) {
-        console.warn("[/api/cron/blog-auto-publish] Claude failed, falling back to Gemini:", claudeErr);
+        console.warn("[/api/cron/blog-auto-publish] Claude failed, falling back to OpenAI:", claudeErr);
       }
     }
 
     if (!result) {
       try {
-        console.log("[/api/cron/blog-auto-publish] Using Gemini...");
+        console.log("[/api/cron/blog-auto-publish] Using OpenAI...");
         result = await withRetryAndFallback(async (model) => {
           const res = await model.generateContent(prompt);
           return res.response.text();
-        });
-        providerName = "Gemini";
-      } catch (geminiErr) {
-        console.error("[/api/cron/blog-auto-publish] Gemini fallback failed:", geminiErr);
+        }, 2, 1000, Math.max(1, 110000 - (Date.now() - requestStartedAt)));
+        providerName = "OpenAI";
+      } catch (openaiErr) {
+        console.error("[/api/cron/blog-auto-publish] OpenAI fallback failed:", openaiErr);
         return NextResponse.json(
-          { success: false, error: geminiErrorMessage(geminiErr) },
+          { success: false, error: openaiErrorMessage(openaiErr) },
           { status: 503 }
         );
       }

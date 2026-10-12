@@ -5,7 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { FREE_EXAM_LIMIT } from "@/lib/utils";
-import { RefreshCw, Search, Calendar, Clock, ShieldCheck, User, Users, Zap, Sparkles, BarChart3, TrendingUp, FileText, ArrowRight, Mail, Send, CheckCircle2, XCircle, Check, RotateCcw, Trash2, AlertTriangle, Menu, X, Bell, UserPlus, LogIn, BookOpen } from "lucide-react";
+import { RefreshCw, Search, Calendar, Clock, ShieldCheck, User, Users, Zap, Sparkles, BarChart3, TrendingUp, FileText, ArrowRight, Mail, Send, Check, RotateCcw, Trash2, AlertTriangle, Menu, X, Bell, UserPlus, LogIn, BookOpen } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
@@ -13,6 +13,9 @@ import { AdminAreaChart } from "@/components/ui/AdminAreaChart";
 import { ChapterCoverageReport } from "@/components/admin/ChapterCoverageReport";
 import { NewsletterPreview } from "@/components/admin/NewsletterPreview";
 import { NewsletterSubscribers } from "@/components/admin/NewsletterSubscribers";
+import { EmailSendReport } from "@/components/admin/EmailSendReport";
+import { EmailConfiguration } from "@/components/admin/EmailConfiguration";
+import type { EmailSendResult } from "@/types/admin-email";
 import { ReportMetric } from "@/components/admin/ReportUI";
 import { AnalyticsReport } from "@/components/admin/AnalyticsReport";
 import type { BlogPostSummary, BlogPostDetail } from "@/types/blog";
@@ -123,7 +126,7 @@ export default function AdminPage() {
   const [customSubject, setCustomSubject] = useState("");
   const [customHtml, setCustomHtml] = useState("");
   const [sendingEmails, setSendingEmails] = useState(false);
-  const [emailResult, setEmailResult] = useState<{ sent: number; failed: number } | null>(null);
+  const [emailResult, setEmailResult] = useState<EmailSendResult | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<AdminUser | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [subscribers, setSubscribers] = useState<NewsletterSubscriber[]>([]);
@@ -436,8 +439,10 @@ export default function AdminPage() {
       });
       const data = await res.json();
       if (data.success) {
-        setEmailResult({ sent: data.sent, failed: data.failed });
-        toast.success(`Sent ${data.sent} email${data.sent !== 1 ? "s" : ""}${data.failed > 0 ? `, ${data.failed} failed` : ""}`);
+        setEmailResult({ sent: data.sent, failed: data.failed, skipped: data.skipped ?? 0, results: data.results ?? [] });
+        if (data.failed > 0) toast.error(`${data.sent} accepted, ${data.failed} failed. Review the recipient details below.`);
+        else if ((data.skipped ?? 0) > 0) toast.info(`${data.sent} accepted, ${data.skipped} skipped.`);
+        else toast.success(`${data.sent} email${data.sent !== 1 ? "s" : ""} accepted by the provider.`);
         setSelectedUids(new Set());
       } else {
         toast.error(data.error || "Failed to send emails");
@@ -840,14 +845,7 @@ export default function AdminPage() {
 
             {/* Email Result (Users Tab) */}
             {emailResult && (
-              <div className="mt-6 bg-[var(--surface)] p-5 rounded-3xl border border-[var(--border)] shadow-sm flex items-center gap-4">
-                <CheckCircle2 size={22} className="text-emerald-500 shrink-0" />
-                <div className="flex-1">
-                  <p className="font-bold text-[var(--text)]">{emailResult.sent} email{emailResult.sent !== 1 ? "s" : ""} sent</p>
-                  {emailResult.failed > 0 && <p className="text-sm text-red-500">{emailResult.failed} failed</p>}
-                </div>
-                <button onClick={() => setEmailResult(null)} className="text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]"><XCircle size={18} /></button>
-              </div>
+              <EmailSendReport result={emailResult} onDismiss={() => setEmailResult(null)} />
             )}
           </>
         )}
@@ -861,6 +859,7 @@ export default function AdminPage() {
               <p className="mt-2 max-w-2xl text-sm leading-relaxed text-[var(--text-secondary)]">Choose your message, select teacher accounts and review your audience before sending.</p>
               <p className="mt-3 text-xs leading-relaxed text-[var(--text-secondary)]">Promotional sends require a configured postal address and unsubscribe link. Recipients who opted out are skipped.</p>
             </header>
+            <EmailConfiguration user={user} />
             <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
               <ReportMetric label="Teacher accounts" count={users.length} />
               <ReportMetric label="Selected recipients" count={selectedUids.size} />
@@ -1017,14 +1016,7 @@ export default function AdminPage() {
 
             {/* Result Banner */}
             {emailResult && (
-              <div role="status" className="bg-[var(--surface)] p-5 rounded-3xl border border-[var(--border)] shadow-sm flex items-start gap-4">
-                <CheckCircle2 size={22} className="text-emerald-500 shrink-0" />
-                <div className="flex-1">
-                  <p className="font-bold text-[var(--text)]">{emailResult.sent} email{emailResult.sent !== 1 ? "s" : ""} sent successfully</p>
-                  {emailResult.failed > 0 && <p className="text-sm text-red-500 font-medium">{emailResult.failed} failed</p>}
-                </div>
-                <button aria-label="Dismiss send result" onClick={() => setEmailResult(null)} className="text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]"><XCircle size={18} /></button>
-              </div>
+              <EmailSendReport result={emailResult} onDismiss={() => setEmailResult(null)} />
             )}
           </div>
         )}

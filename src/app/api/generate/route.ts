@@ -4,7 +4,7 @@ import { documentFingerprint } from "@/lib/sourceDocument";
 import { recordChapterCoverage } from "@/lib/chapter-coverage-recording";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { withRetryAndFallback, geminiErrorMessage, isRetryableError } from "@/lib/gemini";
+import { withRetryAndFallback, openaiErrorMessage, isRetryableError } from "@/lib/openai";
 import { getAnthropicClient, isAnthropicConfigured, GENERATE_MODEL, GENERATE_MAX_TOKENS } from "@/lib/anthropic";
 import { buildGenerateSystemPrompt, buildGenerateUserPrompt, buildExemplarsPrompt } from "@/lib/prompts/generate";
 import { getChapterExemplars, schoolSlugFrom } from "@/lib/schoolBank";
@@ -450,9 +450,9 @@ export async function POST(request: NextRequest) {
     // Dynamic user prompt — carries per-request context (chapters, teacher style, document note)
     const userPrompt = buildGenerateUserPrompt(context, extraContext, chaptersSummary, teacherStylePrompt, hasDocument, exemplarsPrompt);
 
-    // ── AI Generation (Primary: Claude, Fallback: Gemini) ───────────────────
+    // ── AI Generation (Primary: Claude, Fallback: OpenAI) ───────────────────
     let stream: AsyncIterable<any>;
-    let providerName: "Claude" | "Gemini" = "Gemini";
+    let providerName: "Claude" | "OpenAI" = "OpenAI";
 
     const isClaudeCompatible = !hasDocument || 
       (documentMimeType && (documentMimeType.startsWith("image/") || documentMimeType === "application/pdf"));
@@ -534,17 +534,17 @@ export async function POST(request: NextRequest) {
         })();
         providerName = "Claude";
       } catch (claudeErr) {
-        console.warn("[/api/generate] Claude failed to start, falling back to Gemini:", claudeErr);
-        // If Claude fails, we proceed to Gemini fallback below
+        console.warn("[/api/generate] Claude failed to start, falling back to OpenAI:", claudeErr);
+        // If Claude fails, we proceed to OpenAI fallback below
       }
     } else if (isAnthropicConfigured() && hasDocument && !isClaudeCompatible) {
-      console.log(`[/api/generate] Skipping Claude: File type ${documentMimeType} only supported by Gemini.`);
+      console.log(`[/api/generate] Skipping Claude: File type ${documentMimeType} only supported by OpenAI.`);
     }
 
-    // Gemini Fallback (or Primary if Claude not configured)
+    // OpenAI Fallback (or Primary if Claude not configured)
     if (!stream!) {
       try {
-        console.log("[/api/generate] Using Gemini...");
+        console.log("[/api/generate] Using OpenAI...");
         type Part = { text: string } | { inlineData: { mimeType: string; data: string } };
         const parts: Part[] = [];
         if (documentBase64 && documentMimeType) {
@@ -558,14 +558,15 @@ export async function POST(request: NextRequest) {
             systemInstruction: systemPrompt,
             contents: [{ role: "user", parts }],
             generationConfig: { responseMimeType: "application/json" },
-          })
+          }),
+          2, 1000, Math.max(1, 280000 - (Date.now() - startedAt))
         );
         stream = streamResult.stream;
-        providerName = "Gemini";
-      } catch (geminiErr) {
-        console.error("[/api/generate] Gemini fallback failed:", geminiErr);
+        providerName = "OpenAI";
+      } catch (openaiErr) {
+        console.error("[/api/generate] OpenAI fallback failed:", openaiErr);
         return NextResponse.json(
-          { success: false, errors: [geminiErrorMessage(geminiErr)] },
+          { success: false, errors: [openaiErrorMessage(openaiErr)] },
           { status: 503 }
         );
       }

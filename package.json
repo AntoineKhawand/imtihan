@@ -30,6 +30,7 @@
     "test:rules": "firebase emulators:exec --only firestore \"vitest run --config vitest.rules.config.ts\"",
     "test:e2e": "playwright test",
     "test:e2e:daily": "node scripts/run-daily-phase.mjs",
+    "verify:fix": "node scripts/verify-fix.mjs",
     "audit:seo": "node scripts/seo-audit.mjs",
     "audit:geo": "node scripts/geo-audit.mjs",
     "generate:sitemap-routes": "node scripts/generate-static-routes.mjs"
@@ -39,7 +40,6 @@
     "@chemistry/formula": "^3.1.0",
     "@fingerprintjs/fingerprintjs": "^5.2.0",
     "@google-analytics/data": "^7.2.1",
-    "@google/generative-ai": "^0.24.1",
     "@react-pdf/renderer": "^4.1.5",
     "@types/katex": "^0.16.8",
     "@vercel/analytics": "^2.0.1",

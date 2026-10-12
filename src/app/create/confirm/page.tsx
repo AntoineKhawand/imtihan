@@ -10,7 +10,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, ArrowRight, AlertTriangle, CheckCircle2, Info, X, FileText } from "lucide-react";
 import { Button } from "@/components/ui/Button";
-import { Select } from "@/components/ui/FormElements";
+import { Select } from "@/components/ui/WorkflowSelect";
 import { cn, SUBJECT_LABELS, LANGUAGE_LABELS, EXAM_TYPE_LABELS } from "@/lib/utils";
 import { CURRICULA, SUBJECT_GROUPS, GEOGRAPHIC_SUBJECTS } from "@/data/curricula";
 import { Globe } from "lucide-react";
@@ -315,12 +315,9 @@ export default function ConfirmPage() {
             )}
 
             <div data-guide="difficulty" className="space-y-2 border-t border-[var(--border)] pt-4">
-              <label htmlFor="exam-difficulty" className="text-xs font-semibold text-[var(--text)]">Difficulty</label>
-              <select id="exam-difficulty" value={difficultyPreset(context.difficultyMix)}
-                onChange={(event) => update("difficultyMix", { ...DIFFICULTY_PRESETS[event.target.value as keyof typeof DIFFICULTY_PRESETS] })}
-                className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] p-3 text-sm text-[var(--text)]">
-                <option value="hard">Hard (default)</option><option value="medium">Medium</option><option value="easy">Easy</option><option value="mixed">Mixed</option><option value="custom" disabled>Custom mix from description</option>
-              </select>
+              <Select id="exam-difficulty" label="Difficulty" value={difficultyPreset(context.difficultyMix)}
+                onChange={event => update("difficultyMix", { ...DIFFICULTY_PRESETS[event.target.value as keyof typeof DIFFICULTY_PRESETS] })}
+                options={[{ value: "hard", label: "Hard (default)" }, { value: "medium", label: "Medium" }, { value: "easy", label: "Easy" }, { value: "mixed", label: "Mixed" }, { value: "custom", label: "Custom mix from description", disabled: true }]} />
               <p className="text-xs text-[var(--text-tertiary)]">{Math.round(context.difficultyMix.easy * 100)}% easy · {Math.round(context.difficultyMix.medium * 100)}% medium · {Math.round(context.difficultyMix.hard * 100)}% hard. Difficulty stays within the selected syllabus.</p>
             </div>
 
