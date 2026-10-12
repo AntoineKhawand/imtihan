@@ -10,7 +10,7 @@ vi.mock("@/lib/firebase-admin", () => ({
 }));
 vi.mock("@/lib/admin", () => ({ isAdmin: vi.fn() }));
 vi.mock("@/lib/anthropic", () => ({ isAnthropicConfigured: () => true, getAnthropicClient: () => ({ messages: { create: mocks.generate } }), CLAUDE_MODEL: "mock", MAX_TOKENS: 16000 }));
-vi.mock("@/lib/gemini", () => ({ withRetryAndFallback: vi.fn(), geminiErrorMessage: () => "Mock failure" }));
+vi.mock("@/lib/openai", () => ({ withRetryAndFallback: vi.fn(), openaiErrorMessage: () => "Mock failure" }));
 import { GET } from "@/app/api/cron/blog-auto-publish/route";
 
 function article() {

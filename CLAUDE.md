@@ -34,7 +34,7 @@
 | Auth | Firebase Auth | Standard cloud stack |
 | Database | Firestore | Teacher accounts, saved exams, exam library |
 | Storage | Firebase Storage | Uploaded source documents, generated files |
-| AI | Claude Sonnet (primary) + Gemini 2.5 Flash (fallback) | Claude for generation/analysis/translation quality; Gemini as a reliability fallback and for document formats (e.g. DOCX) Claude's vision API doesn't accept |
+| AI | Claude Sonnet + OpenAI Responses / Images | Claude remains primary for exam generation and analysis; OpenAI replaces all former Gemini paths, powers editing with Claude fallback, and generates cached illustrations. Server-only OPENAI_API_KEY is required. |
 | Word export | `docx` npm package | Full styling control |
 | PDF export | Browser print (`/print`) | Shared exam composition, browser Save as PDF |
 | Payments | Stripe (v1.1+) | Monthly subscription, USD |
@@ -77,7 +77,7 @@ Prompts live in `src/lib/prompts/` as versioned TypeScript files, not hardcoded 
 1. Has a **named export** describing its purpose: `buildAnalyzePrompt()`, `buildExerciseGenerationPrompt()`.
 2. Takes typed inputs and returns a single string.
 3. Uses explicit XML tags when structuring sub-sections (`<curriculum>`, `<teacher_description>`, etc.) — this is how Claude is trained to parse structure.
-4. Asks the model to **return JSON only** when structured output is needed (Claude and Gemini both), and we parse it safely with Zod schemas.
+4. Asks the model to **return JSON only** when structured output is needed (Claude and OpenAI both), and we parse it safely with Zod schemas.
 
 **Never** inline a prompt as a template literal inside a route handler. It makes prompts un-testable and un-versionable.
 
@@ -159,16 +159,15 @@ If a request implies scope creep, flag it and point back to this section.
 ## 11. Testing Strategy (Post-MVP Priority)
 
 - Unit tests for prompt builders (deterministic string output).
-- Integration tests for the generate endpoint using recorded Claude/Gemini responses.
+- Integration tests for the generate endpoint using recorded Claude/OpenAI responses.
 - E2E with Playwright for the full workflow — same pattern as previous apps.
 
 ## 12. Known Gotchas
 
 - **Firebase Admin private key** in env vars needs literal `\n` characters, not real newlines. Handle with `.replace(/\\n/g, '\n')` on load.
-- **Gemini vision for PDFs** works best when PDFs are small (<20 pages). Large syllabi should be chunked.
+- **Document vision for PDFs** works best when PDFs are small (<20 pages). Large syllabi should be chunked.
 - **Next.js 15 + React 19** — some older libraries don't support React 19 yet. Check before adding deps.
 - **Lebanese internet** — Vercel edge performs okay in Beirut, but generated file downloads must be self-contained (no re-fetching assets from cloud at print time).
-- **Gemini `thinking` tokens** — The SDK can fail on "thinking" tokens in streams. `thinkingBudget: 0` is set in `gemini.ts` to suppress them.
 
 ## 13. When You're Stuck
 
@@ -180,6 +179,8 @@ If a request implies scope creep, flag it and point back to this section.
 6. Ask for approval. Don't silently rewrite core decisions.
 
 ## 14. Definition of Done for Any Feature
+
+**Mandatory QA before push/deploy (founder request, 2026-10-12):** Every modification or fix must be independently verified by the `qa` team after the final product edit and before pushing or deploying. Run `npm run verify:fix` (TypeScript, full Vitest and the safe isolated Playwright acceptance suite), read failures, and record a concrete pass/fail verdict. A later product edit invalidates that verdict for the affected behavior. QA must also exercise the changed real UI/provider path when a normal signed-in session is available; fixture/mocked-provider passes must never be reported as real-provider passes. Unverified provider behavior must be stated explicitly. Never bypass auth with real Admin credentials to complete QA. The `Fix QA` CI workflow repeats the automated gate on pull requests and master; branch protection must require it separately to enforce GitHub merge blocking.
 
 - [ ] Types are in `src/types/` and imported everywhere they're used
 - [ ] Prompts are in `src/lib/prompts/` with named exports

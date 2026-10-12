@@ -1,5 +1,12 @@
 # Roadmap — Imtihan
 
+## OpenAI provider migration — 2026-10-12
+
+- Replaced every Gemini runtime caller with a server-only OpenAI Responses adapter; Claude stays primary for existing analysis, generation, Version B, exam translation and blog workflows. OpenAI handles the former fallback and direct scanner/rubric/translation calls.
+- Preserved source PDF, DOCX and image bytes through native file/vision input; streaming still yields progressive exam text. Failed, incomplete, refused and disconnected responses fail explicitly instead of reporting a completed exam.
+- `OPENAI_API_KEY` is required; `OPENAI_MODEL` / `OPENAI_FALLBACK_MODEL` override GPT-4.1 / GPT-4.1 mini defaults. Provider retries share a deadline sized to each route rather than restarting long request timeouts. Admin configuration diagnostics expose a presence boolean only.
+- Engineering validation: TypeScript clean, 27 focused mocked-provider/blog tests pass, including JSON request protocol, uploads, fragmented UTF-8 streaming, fallback, quota/auth failure, secret handling and timeout budgets. No real provider request or production database action was performed. Independent QA must run the complete final gate and distinguish mocked coverage from real-provider verification before push/deploy. Security review should include the new server credential/provider boundary.
+
 ## Export corrigé toggle — 2026-10-11
 
 - Fixed email export ignoring the main corrigé toggle through a separate default-on checkbox. Word, PDF and email now share one accessible switch and clear audience text.

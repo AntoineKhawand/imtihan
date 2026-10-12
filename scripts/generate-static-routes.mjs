@@ -49,6 +49,7 @@ const EXCLUDED_TOP_SEGMENTS = new Set([
   "student",
   "teacher",
   "test-auth",
+  "test-exam-regressions",
   "test-wysiwyg",
   "account",
 ]);

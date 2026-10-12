@@ -1,5 +1,5 @@
 /**
- * renderContent — converts Gemini exercise text to display-ready HTML.
+ * renderContent — converts generated exercise text to display-ready HTML.
  *
  * Handles:
  *  - Display math:  $$...$$ → KaTeX block
@@ -117,8 +117,18 @@ export function fixBoxedMath(text: string): string {
 
     const inner = text.slice(start + 1, j - 1).replace(/\$/g, "");
     const rebuilt = `\\boxed{${inner}}`;
-    const alreadyWrapped = result.endsWith("$") && text[j] === "$";
-    result += alreadyWrapped ? rebuilt : `$${rebuilt}$`;
+    // Track delimiter state: a closing dollar before a bare box must not
+    // become an accidental display-math delimiter ($$).
+    let delimiter = "";
+    for (let k = 0; k < result.length; k++) {
+      if (result[k] !== "$" || (k > 0 && result[k - 1] === "\\")) continue;
+      const token = result[k + 1] === "$" ? "$$" : "$";
+      if (!delimiter) delimiter = token;
+      else if (delimiter === token) delimiter = "";
+      if (token === "$$") k++;
+    }
+    if (delimiter) result += rebuilt;
+    else result += `${result.endsWith("$") ? " " : ""}$${rebuilt}$`;
     i = j;
   }
   return result;
@@ -285,15 +295,16 @@ function applyMarkdown(rawText: string): string {
 
 export function renderContent(raw: string): string {
   if (!raw) return "";
-  let text = raw.replace(/\\n/g, "\n").replace(/\r\n/g, "\n").replace(/\n{3,}/g, "\n\n");
+  let text = raw.replace(/\\n(?![A-Za-z])/g, "\n").replace(/\r\n/g, "\n").replace(/\n{3,}/g, "\n\n");
 
   // 0. Pre-process "hallucinations" and common AI artifacts
-  // Fix arrows (nearrow, searrow, earrow) that AI often writes without backslashes or inside stars
-  text = text.replace(/[\s*_]*(nearrow|searrow|earrow|nearr|searr)[\s*_]*/gi, (match) => {
-    const low = match.toLowerCase();
-    const arrow = low.includes("se") ? "\\searrow" : "\\nearrow";
-    return ` $${arrow}$ `;
-  });
+  // Repair bare arrows without touching already delimited expressions.
+  // Rewrapping a valid $\nearrow$ used to create $$ and corrupt later formulas.
+  text = text.replace(/(\$\$[\s\S]*?\$\$|\$[^$\n]*\$)|(?<![\w\\])\\?\b(nearrow|searrow|earrow|nearr|searr)\b/gi,
+    (match, math: string | undefined, arrow: string | undefined) => {
+      if (math) return match;
+      return ` $${arrow?.toLowerCase().startsWith("se") ? "\\searrow" : "\\nearrow"}$ `;
+    });
 
   // Convert backticks containing LaTeX triggers (\, ^, _, {) to math blocks
   text = text.replace(/`([^`]*[\\^_{][^`]*)`/g, "$$$1$$");
@@ -385,9 +396,9 @@ export function renderContent(raw: string): string {
     
     // We use the AI Image Generator as a high-quality fallback for these charts
     const prompt = `Professional scientific chart: ${cleanDesc}. Minimalist, publication quality, white background, accurate axis and trends.`;
-    const src = `/api/image/generate?prompt=${encodeURIComponent(prompt)}&width=800&height=450&seed=${uid}`;
+    const src = `/api/image/generate?prompt=${encodeURIComponent(prompt)}&width=800&height=450`;
 
-    const html = `<div class="relative group my-6" data-raw="${safeDesc}" contenteditable="false"><button data-action="remove-visual" data-type="tag" data-content="${safeDesc}" class="absolute top-2 right-2 z-20 w-6 h-6 rounded-full bg-white/90 backdrop-blur-sm border border-red-100 text-red-500 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center hover:bg-red-50 shadow-sm" title="Remove Visual"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button><div class="relative rounded-xl overflow-hidden border border-[var(--border)] bg-[var(--bg-subtle)] min-h-[140px] flex items-center justify-center"><img id="img-${uid}" src="${src}" alt="Scientific Chart" loading="lazy" class="w-full h-auto object-contain rounded-xl transition-opacity duration-500" style="opacity:0" onload="this.style.opacity='1'; document.getElementById('fb-${uid}').style.display='none'; document.getElementById('spin-${uid}').style.display='none';" onerror="this.style.display='none'; document.getElementById('fb-${uid}').style.display='flex'; document.getElementById('spin-${uid}').style.display='none';"/><div id="spin-${uid}" class="absolute inset-0 flex items-center justify-center bg-[var(--bg-subtle)]"><div class="flex flex-col items-center gap-2"><svg class="animate-spin w-5 h-5 text-[var(--accent)]" viewBox="0 0 24 24" fill="none"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg><span class="text-[9px] font-bold uppercase tracking-widest text-[var(--text-tertiary)] animate-pulse">Generating Chart...</span></div></div><div id="fb-${uid}" class="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-[var(--bg-subtle)] hidden"><span class="text-xl opacity-40">📊</span><p class="text-[10px] font-bold uppercase tracking-tighter text-[var(--text-tertiary)]">Visual Representation</p></div></div></div>`;
+    const html = `<div class="relative group my-6" data-raw="${safeDesc}" contenteditable="false"><button data-action="remove-visual" data-type="tag" data-content="${safeDesc}" class="absolute top-2 right-2 z-20 w-6 h-6 rounded-full bg-white/90 backdrop-blur-sm border border-red-100 text-red-500 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center hover:bg-red-50 shadow-sm" title="Remove Visual"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button><div class="relative rounded-xl overflow-hidden border border-[var(--border)] bg-[var(--bg-subtle)] min-h-[140px] flex items-center justify-center"><img id="img-${uid}" src="${src}" alt="Scientific Chart" loading="lazy" class="w-full h-auto object-contain rounded-xl transition-opacity duration-500" style="opacity:0" onload="this.style.opacity='1'; document.getElementById('fb-${uid}').style.display='none'; document.getElementById('spin-${uid}').style.display='none';" onerror="this.style.display='none'; document.getElementById('fb-${uid}').style.display='flex'; document.getElementById('spin-${uid}').style.display='none';"/><div id="spin-${uid}" class="absolute inset-0 flex items-center justify-center bg-[var(--bg-subtle)]"><div class="flex flex-col items-center gap-2"><svg class="animate-spin w-5 h-5 text-[var(--accent)]" viewBox="0 0 24 24" fill="none"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg><span class="text-[9px] font-bold uppercase tracking-widest text-[var(--text-tertiary)] animate-pulse">Generating Chart...</span></div></div><div id="fb-${uid}" class="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-[var(--bg-subtle)] hidden"><span class="text-xl opacity-40">📊</span><p class="text-[10px] font-bold uppercase tracking-tighter text-[var(--text-tertiary)]">Illustration unavailable — reload to retry</p></div></div></div>`;
     
     visualBlocks.push(html);
     return (prefix || "") + `%%VISUAL_${idx}%%`;
@@ -403,13 +414,13 @@ export function renderContent(raw: string): string {
     const rawToReplace = _match.replace(/"/g, "&quot;");
     const prompt = (desc.length > 200 ? desc.slice(0, 200) : desc)
       + ", professional scientific diagram, minimalist vector, publication quality, white background";
-    const src = `/api/image/generate?prompt=${encodeURIComponent(prompt)}&width=800&height=450&seed=${uid}`;
+    const src = `/api/image/generate?prompt=${encodeURIComponent(prompt)}&width=800&height=450`;
 
     // We hide the prompt text entirely if it's an IMAGE_PROMPT or if the user requested it.
     const isImagePrompt = _match.toUpperCase().includes("PROMPT");
     const safeDescText = escapeHtml(safeDesc.length > 100 ? safeDesc.slice(0, 100) + "…" : safeDesc);
 
-    const html = `<div class="relative group my-6" data-raw="${rawToReplace}" contenteditable="false"><button data-action="remove-visual" data-type="tag" data-content="${rawToReplace}" class="absolute top-2 right-2 z-20 w-6 h-6 rounded-full bg-white/90 backdrop-blur-sm border border-red-100 text-red-500 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center hover:bg-red-50 shadow-sm" title="Remove Visual"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button><div class="relative rounded-xl overflow-hidden border border-[var(--border)] bg-[var(--bg-subtle)] min-h-[140px] flex items-center justify-center"><img id="img-${uid}" src="${src}" alt="Scientific Visual" loading="lazy" class="w-full h-auto object-contain rounded-xl transition-opacity duration-500" style="opacity:0" onload="this.style.opacity='1'; document.getElementById('fb-${uid}').style.display='none'; document.getElementById('spin-${uid}').style.display='none';" onerror="this.style.display='none'; document.getElementById('fb-${uid}').style.display='flex'; document.getElementById('spin-${uid}').style.display='none';"/><div id="spin-${uid}" class="absolute inset-0 flex items-center justify-center bg-[var(--bg-subtle)]"><div class="flex flex-col items-center gap-2"><svg class="animate-spin w-5 h-5 text-[var(--accent)]" viewBox="0 0 24 24" fill="none"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg><span class="text-[9px] font-bold uppercase tracking-widest text-[var(--text-tertiary)] animate-pulse">Generating Visual...</span></div></div><div id="fb-${uid}" class="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-[var(--bg-subtle)] hidden"><span class="text-xl opacity-40">📊</span><p class="text-[10px] font-bold uppercase tracking-tighter text-[var(--text-tertiary)]">Visual Representation</p></div></div>${!isImagePrompt ? `<p class="text-[9px] text-center text-[var(--text-tertiary)] italic mt-2 opacity-60">${safeDescText}</p>` : ''}</div>`;
+    const html = `<div class="relative group my-6" data-raw="${rawToReplace}" contenteditable="false"><button data-action="remove-visual" data-type="tag" data-content="${rawToReplace}" class="absolute top-2 right-2 z-20 w-6 h-6 rounded-full bg-white/90 backdrop-blur-sm border border-red-100 text-red-500 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center hover:bg-red-50 shadow-sm" title="Remove Visual"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button><div class="relative rounded-xl overflow-hidden border border-[var(--border)] bg-[var(--bg-subtle)] min-h-[140px] flex items-center justify-center"><img id="img-${uid}" src="${src}" alt="Scientific Visual" loading="lazy" class="w-full h-auto object-contain rounded-xl transition-opacity duration-500" style="opacity:0" onload="this.style.opacity='1'; document.getElementById('fb-${uid}').style.display='none'; document.getElementById('spin-${uid}').style.display='none';" onerror="this.style.display='none'; document.getElementById('fb-${uid}').style.display='flex'; document.getElementById('spin-${uid}').style.display='none';"/><div id="spin-${uid}" class="absolute inset-0 flex items-center justify-center bg-[var(--bg-subtle)]"><div class="flex flex-col items-center gap-2"><svg class="animate-spin w-5 h-5 text-[var(--accent)]" viewBox="0 0 24 24" fill="none"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg><span class="text-[9px] font-bold uppercase tracking-widest text-[var(--text-tertiary)] animate-pulse">Generating Visual...</span></div></div><div id="fb-${uid}" class="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-[var(--bg-subtle)] hidden"><span class="text-xl opacity-40">📊</span><p class="text-[10px] font-bold uppercase tracking-tighter text-[var(--text-tertiary)]">Illustration unavailable — reload to retry</p></div></div>${!isImagePrompt ? `<p class="text-[9px] text-center text-[var(--text-tertiary)] italic mt-2 opacity-60">${safeDescText}</p>` : ''}</div>`;
     
     visualBlocks.push(html);
     return `%%VISUAL_${idx}%%`;
@@ -543,7 +554,9 @@ export function renderContent(raw: string): string {
     }
   );
 
-  text = parseNakedMath(text);
+  // Naked-math heuristics must never insert delimiters inside valid formulas.
+  text = text.replace(/(\$\$[\s\S]*?\$\$|\$[^$\n]*\$)|([^$]+)/g,
+    (_match, math: string | undefined, plain: string | undefined) => math ?? parseNakedMath(plain ?? ""));
 
   let displayParts = splitMath(text, "$$", "$$");
   let html = displayParts.map((part) => {

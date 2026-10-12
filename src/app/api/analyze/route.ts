@@ -3,7 +3,7 @@ import { documentFingerprint } from "@/lib/sourceDocument";
 import { HARD_DIFFICULTY, normalizeDifficulty } from "@/lib/difficulty";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { withRetryAndFallback, geminiErrorMessage } from "@/lib/gemini";
+import { withRetryAndFallback, openaiErrorMessage } from "@/lib/openai";
 import { getAnthropicClient, isAnthropicConfigured, CLAUDE_MODEL, MAX_TOKENS } from "@/lib/anthropic";
 import { buildAnalyzeSystemPrompt, buildAnalyzeUserPrompt, buildCurriculaReference } from "@/lib/prompts/analyze";
 import { getAllChapterIds } from "@/data/curricula";
@@ -11,6 +11,7 @@ import { sanitizeError, createSecurityHeaders } from "@/lib/security";
 import { verifySession } from "@/lib/firebase-admin";
 
 export const runtime = "nodejs";
+export const maxDuration = 120;
 export const dynamic = "force-dynamic";
 
 export async function GET() {
@@ -31,19 +32,19 @@ const SUBJECT_VALUES = [
 ] as const;
 
 // ---------------------------------------------------------------------------
-// Gemini-tolerant Zod schema
+// OpenAI-tolerant Zod schema
 // z.coerce.number() accepts "120" → 120 and z.coerce.boolean() "false" → false
 // ---------------------------------------------------------------------------
 const ExamContextSchema = z.object({
   curriculumId: z.enum(["bac-libanais", "bac-francais", "ib", "university"]),
   levelId: z.string().min(1),
   subject: z.enum(SUBJECT_VALUES),
-  // Gemini sometimes returns [] for university — allow it, we patch below
+  // OpenAI sometimes returns [] for university — allow it, we patch below
   chapterIds: z.array(z.string()).default([]),
   language: z.enum(["french", "english", "arabic"]),
   examType: z.enum(["quiz", "homework", "midterm", "final", "practice"])
     .catch("midterm"),                        // unknown value → default midterm
-  // Coerce: Gemini occasionally returns "120" (string) instead of 120
+  // Coerce: OpenAI occasionally returns "120" (string) instead of 120
   duration: z.coerce.number().min(10).max(360).catch(60),
   exerciseCount: z.coerce.number().min(1).max(20).catch(2),
   totalPoints: z.coerce.number().min(1).max(200).catch(20),
@@ -58,7 +59,7 @@ const ExamContextSchema = z.object({
   layoutPreferences: z.string().default(""),
   visualPreference: z.string().default(""),
   geographicContext: z.string().default("Global"),
-  // Gemini/Claude occasionally returns the old flat-string shape despite the
+  // OpenAI/Claude occasionally returns the old flat-string shape despite the
   // prompt — coerce a bare string into { field: "general", message } instead
   // of dropping the note entirely.
   warnings: z.array(
@@ -156,9 +157,9 @@ export async function POST(request: NextRequest) {
       uploadIntent: documentBase64 ? effectiveIntent : undefined,
     });
 
-    // ── AI Analysis (Primary: Claude, Fallback: Gemini) ─────────────────────
+    // ── AI Analysis (Primary: Claude, Fallback: OpenAI) ─────────────────────
     let rawText: string = "";
-    let providerName: "Claude" | "Gemini" = "Gemini";
+    let providerName: "Claude" | "OpenAI" = "OpenAI";
 
     const isClaudeCompatible = !documentBase64 || 
       (documentMimeType && (documentMimeType.startsWith("image/") || documentMimeType === "application/pdf"));
@@ -212,13 +213,13 @@ export async function POST(request: NextRequest) {
         rawText = message.content[0].text;
         providerName = "Claude";
       } catch (claudeErr) {
-        console.warn("[/api/analyze] Claude failed, falling back to Gemini:", claudeErr);
+        console.warn("[/api/analyze] Claude failed, falling back to OpenAI:", claudeErr);
       }
     }
 
     if (!rawText) {
       try {
-        console.log("[/api/analyze] Using Gemini...");
+        console.log("[/api/analyze] Using OpenAI...");
         const parts: Array<{ text: string } | { inlineData: { mimeType: string; data: string } }> = [];
         if (documentBase64 && documentMimeType) {
           const data = documentBase64.replace(/^data:[^;]+;base64,/, "");
@@ -230,20 +231,21 @@ export async function POST(request: NextRequest) {
           model.generateContent({
             systemInstruction: systemPrompt,
             contents: [{ role: "user", parts }],
-          })
+          }),
+          2, 1000, Math.max(1, 110000 - (Date.now() - startedAt))
         );
         rawText = result.response.text();
-        providerName = "Gemini";
-      } catch (geminiErr) {
-        console.error("[/api/analyze] Gemini fallback failed:", geminiErr);
+        providerName = "OpenAI";
+      } catch (openaiErr) {
+        console.error("[/api/analyze] OpenAI fallback failed:", openaiErr);
         return NextResponse.json(
-          { success: false, errors: [geminiErrorMessage(geminiErr)] },
+          { success: false, errors: [openaiErrorMessage(openaiErr)] },
           { status: 503 }
         );
       }
     }
 
-    // 5. Parse Gemini's JSON response
+    // 5. Parse OpenAI's JSON response
     let rawParsed: unknown;
     try {
       rawParsed = robustParse(extractJSON(rawText));

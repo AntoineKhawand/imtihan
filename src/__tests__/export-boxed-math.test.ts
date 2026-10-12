@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { unwrapBoxed } from "@/app/api/export/route";
-import { fixBoxedMath } from "@/lib/renderContent";
+import { renderContent, fixBoxedMath } from "@/lib/renderContent";
 
 // Regression test for BUG-040: the Word export path had its own naive
 // \boxed{...} handling (a single-level-nesting regex with no stray-$
@@ -48,5 +48,27 @@ describe("export route — \\boxed{} math repair", () => {
     // verbatim — same fail-soft posture as the rest of this export path.
     const input = "Answer: \\boxed{x = 5";
     expect(unwrapBoxed(input)).toBe(input);
+  });
+});
+
+
+describe("corrigé math delimiter regressions", () => {
+  it("renders the founder's exact limit followed by a bare box", () => {
+    const input = String.raw`De plus, $\lim_{n \to +\infty} 2^{n+2} = +\infty$, donc $\lim_{n \to +\infty} u_n = $\boxed{+\infty}`;
+    const root = document.createElement("div"); root.innerHTML = renderContent(input);
+    expect(root.querySelectorAll(".katex").length).toBeGreaterThanOrEqual(3);
+    expect(root.querySelector(".katex-error")).toBeNull();
+    const clone = root.cloneNode(true) as HTMLElement;
+    clone.querySelectorAll(".math-node").forEach(node => node.remove());
+    expect(clone.textContent).not.toMatch(/\\(?:lim|boxed|infty)/);
+  });
+  it("does not nest delimiters when a box is part of a formula", () => {
+    const input = String.raw`$u_n = \boxed{+\infty}$`;
+    expect(fixBoxedMath(input)).toBe(input);
+    expect(renderContent(input)).not.toContain("katex-error");
+  });
+  it("keeps math commands starting with n intact", () => {
+    expect(renderContent(String.raw`$x \neq y,\quad \nu=2$`)).not.toContain("katex-error");
+    expect(renderContent(String.raw`$x \neq y,\quad \nu=2$`)).toContain(String.raw`\neq`);
   });
 });

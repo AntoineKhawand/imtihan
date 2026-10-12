@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import * as admin from "firebase-admin";
-import { withRetryAndFallback, geminiErrorMessage } from "@/lib/gemini";
+import { withRetryAndFallback, openaiErrorMessage } from "@/lib/openai";
 import { getAnthropicClient, isAnthropicConfigured, GENERATE_MODEL, GENERATE_MAX_TOKENS } from "@/lib/anthropic";
 import { buildVariantExamSystemPrompt, buildVariantExamUserPrompt } from "@/lib/prompts/variantExam";
 import { mergeVariantExercises } from "@/lib/variant";
@@ -42,7 +42,7 @@ export async function GET() {
 // output rather than crafted garbage. mergeVariantExercise() (src/lib/variant.ts)
 // only guards the AI's response shape, never `original`, so a malformed
 // element (e.g. `null`, or an object missing `solution`) crashed with a
-// plain TypeError — AFTER a real, billed Claude/Gemini call had already run,
+// plain TypeError — AFTER a real, billed Claude/OpenAI call had already run,
 // and the quota-increment above only fires on the success path, so this was
 // a repeatable, unlimited, unbilled-to-quota AI-cost drain. Validating the
 // same shape used for the AI's OWN response (AIExerciseSchema) closes this
@@ -54,6 +54,7 @@ const RequestSchema = z.object({
 });
 
 export async function POST(request: NextRequest) {
+  const requestStartedAt = Date.now();
   try {
     const body = await request.json();
     const parsed = RequestSchema.safeParse(body);
@@ -138,9 +139,9 @@ export async function POST(request: NextRequest) {
     );
 
     let rawText: string | null = null;
-    let providerName: "Claude" | "Gemini" = "Gemini";
+    let providerName: "Claude" | "OpenAI" = "OpenAI";
 
-    // ── AI Generation (Primary: Claude, Fallback: Gemini) ───────────────────
+    // ── AI Generation (Primary: Claude, Fallback: OpenAI) ───────────────────
     if (isAnthropicConfigured()) {
       try {
         console.log("[/api/generate/version-b] Attempting Claude...");
@@ -176,26 +177,27 @@ export async function POST(request: NextRequest) {
           providerName = "Claude";
         }
       } catch (claudeErr) {
-        console.warn("[/api/generate/version-b] Claude failed, falling back to Gemini:", claudeErr);
+        console.warn("[/api/generate/version-b] Claude failed, falling back to OpenAI:", claudeErr);
       }
     }
 
     if (!rawText) {
       try {
-        console.log("[/api/generate/version-b] Using Gemini...");
+        console.log("[/api/generate/version-b] Using OpenAI...");
         const result = await withRetryAndFallback((model) =>
           model.generateContent({
             systemInstruction: systemPrompt,
             contents: [{ role: "user", parts: [{ text: userPrompt }] }],
             generationConfig: { responseMimeType: "application/json" },
-          })
+          }),
+          2, 1000, Math.max(1, 110000 - (Date.now() - requestStartedAt))
         );
         rawText = result.response.text();
-        providerName = "Gemini";
-      } catch (geminiErr) {
-        console.error("[/api/generate/version-b] Gemini fallback failed:", geminiErr);
+        providerName = "OpenAI";
+      } catch (openaiErr) {
+        console.error("[/api/generate/version-b] OpenAI fallback failed:", openaiErr);
         return NextResponse.json(
-          { success: false, errors: [geminiErrorMessage(geminiErr)] },
+          { success: false, errors: [openaiErrorMessage(openaiErr)] },
           { status: 503, headers: createSecurityHeaders() }
         );
       }
