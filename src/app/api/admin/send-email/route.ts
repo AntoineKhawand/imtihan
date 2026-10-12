@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { adminDb, verifyIdToken } from "@/lib/firebase-admin";
 import { isAdmin } from "@/lib/admin";
 import { sendEmail } from "@/lib/brevo";
+import type { EmailSendResult } from "@/types/admin-email";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://imtihan.live";
 const LOGO_URL = `${APP_URL}/Imtihan-logo.png`;
@@ -72,6 +73,24 @@ function buildEngagementHtml(firstName: string, count: number): string {
 </table></td></tr></table></body></html>`;
 }
 
+/** Read-only configuration diagnostics. Never returns secret values or sends email. */
+export async function GET(request: NextRequest) {
+  const uid = await verifyIdToken(request);
+  const headers = { "Cache-Control": "private, no-store" };
+  if (!uid || !(await isAdmin(uid))) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401, headers });
+  }
+  const issues: string[] = [];
+  if (!process.env.BREVO_API_KEY || process.env.BREVO_API_KEY === "your_brevo_api_key_here")
+    issues.push("Configure BREVO_API_KEY in Vercel Production.");
+  if (!process.env.MARKETING_POSTAL_ADDRESS?.trim())
+    issues.push("Configure a valid MARKETING_POSTAL_ADDRESS in Vercel Production.");
+  const secret = process.env.MARKETING_UNSUBSCRIBE_SECRET || process.env.CRON_SECRET;
+  if (!secret || secret.length < 32)
+    issues.push("Configure MARKETING_UNSUBSCRIBE_SECRET with at least 32 characters in Vercel Production.");
+  return NextResponse.json({ ready: issues.length === 0, issues }, { headers });
+}
+
 export async function POST(request: NextRequest) {
   const uid = await verifyIdToken(request);
   if (!uid || !(await isAdmin(uid))) {
@@ -86,12 +105,20 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "No users selected" }, { status: 400 });
     }
 
-    const results: { uid: string; email: string; success: boolean; error?: string }[] = [];
+    const results: EmailSendResult["results"] = [];
     let successCount = 0;
     let failCount = 0;
+    let skippedCount = 0;
 
     for (const targetUid of targetUids) {
-      const userDoc = await adminDb.collection("users").doc(targetUid).get();
+      let userDoc;
+      try {
+        userDoc = await adminDb.collection("users").doc(targetUid).get();
+      } catch {
+        failCount++;
+        results.push({ uid: targetUid, email: "", success: false, error: "Recipient lookup failed. No email was attempted for this recipient." });
+        continue;
+      }
       if (!userDoc.exists) {
         results.push({ uid: targetUid, email: "", success: false, error: "User not found" });
         failCount++;
@@ -139,9 +166,18 @@ export async function POST(request: NextRequest) {
           continue;
       }
 
-      const res = await sendEmail({ to: email, toName: name || email, subject: finalSubject, html: finalHtml, purpose: "marketing" });
+      let res: Awaited<ReturnType<typeof sendEmail>>;
+      try {
+        res = await sendEmail({ to: email, toName: name || email, subject: finalSubject, html: finalHtml, purpose: "marketing" });
+      } catch {
+        // A transport failure can follow provider acceptance: never blindly retry.
+        failCount++;
+        results.push({ uid: targetUid, email, success: false, error: "Delivery status unknown after a connection error. Check Brevo logs before retrying to avoid duplicates." });
+        continue;
+      }
       if (res.skipped) {
-        results.push({ uid: targetUid, email, success: false, error: "Skipped: recipient opted out of promotional emails." });
+        skippedCount++;
+        results.push({ uid: targetUid, email, success: false, skipped: true, error: "Recipient opted out of promotional emails." });
       } else if (res.ok) {
         successCount++;
         results.push({ uid: targetUid, email, success: true });
@@ -151,7 +187,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    return NextResponse.json({ success: true, sent: successCount, failed: failCount, results });
+    return NextResponse.json({ success: true, sent: successCount, failed: failCount, skipped: skippedCount, results }, { headers: { "Cache-Control": "private, no-store" } });
   } catch (err) {
     console.error("[/api/admin/send-email]", err);
     return NextResponse.json({ error: "Failed to send emails" }, { status: 500 });

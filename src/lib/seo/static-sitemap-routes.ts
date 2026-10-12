@@ -34,6 +34,7 @@ export const STATIC_SITEMAP_ROUTES: StaticSitemapRoute[] = [
   { path: "/blog/stop-recycled-exams", changeFrequency: "monthly", priority: 0.7 },
   { path: "/blog/university-assessment-ai", changeFrequency: "monthly", priority: 0.7 },
   { path: "/contact", changeFrequency: "monthly", priority: 0.5 },
+  { path: "/copyright", changeFrequency: "monthly", priority: 0.6 },
   { path: "/generateur-examen-bac-libanais", changeFrequency: "monthly", priority: 0.8 },
   { path: "/ib-exam-generator", changeFrequency: "monthly", priority: 0.8 },
   { path: "/pricing", changeFrequency: "monthly", priority: 0.8 },
