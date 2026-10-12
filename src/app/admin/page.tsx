@@ -401,7 +401,7 @@ export default function AdminPage() {
       return data;
     })();
     toast.promise(publishPromise, {
-      loading: "AI is researching and writing your blog article...",
+      loading: "AI is drafting and checking your blog article...",
       success: (data) => `Published: ${data.title}`,
       error: (err) => `Error: ${err.message}`,
       finally: () => setIsGeneratingBlog(false),
@@ -1042,7 +1042,7 @@ export default function AdminPage() {
                 </div>
                 <h2 className="text-3xl sm:text-4xl font-black leading-tight mb-4 tracking-tight">Fully Autonomous Content</h2>
                 <p className="text-emerald-100/70 max-w-2xl leading-relaxed">
-                  Your blog operates in 100% Zero-Touch mode. Our AI agent researches Lebanese educational trends and publishes curriculum-aligned articles daily at 9:00 AM.
+                  Scheduled daily at 09:00 UTC. AI drafts practical English and French guides from keyword briefs and recent articles. Posts publish only after passing structural and duplication checks; teachers should still review factual claims.
                 </p>
                 <div className="mt-8 flex flex-wrap items-center gap-4">
                   <div className="flex items-center gap-2 text-[10px] text-emerald-400 font-black uppercase tracking-widest">

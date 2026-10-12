@@ -4,6 +4,8 @@ import { withRetryAndFallback, geminiErrorMessage } from "@/lib/gemini";
 import { getAnthropicClient, isAnthropicConfigured, CLAUDE_MODEL, MAX_TOKENS } from "@/lib/anthropic";
 import { isAdmin } from "@/lib/admin";
 import { shortId, slugify } from "@/lib/utils";
+import { buildBlogPrompt, selectBlogBrief, type RecentBlogPost } from "@/lib/prompts/blog";
+import { GeneratedBlogSchema, blogQualityIssues, blogReadTime } from "@/lib/blogQuality";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -12,7 +14,7 @@ export async function GET(request: NextRequest) {
   // 1. Verify Authentication (Cron Secret OR Admin Token)
   const authHeader = request.headers.get("authorization");
   const cronSecret = process.env.CRON_SECRET;
-  
+
   let isAuthorized = false;
 
   // Check Cron Secret
@@ -43,40 +45,18 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    // 2. Determine Topic & Content
-    const today = new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
-    
-    const prompt = `
-      You are a high-end educational consultant and blog writer for "Imtihan", an AI platform that helps Lebanese teachers and students generate professional exams.
-      Today is ${today}.
-      
-      Task: Write a trending, viral-potential blog post for the Lebanese educational community.
-      
-      CORE FOCUS:
-      The article MUST explicitly relate to how Imtihan helps with specific curricula:
-      - Bac Libanais (Official Lebanese Program)
-      - Bac Français (French System)
-      - IB (International Baccalaureate)
-      - University entrance exams in Lebanon
-      
-      TARGET PERSONAS (Rotate focus daily):
-      - Teachers (Time-saving, pedagogy, exam quality)
-      - Parents (Supporting children at home, mock exams, Brevet preparation)
-      - Students (Self-testing, understanding official exam formats)
-      - Coordinators (Standardization across sections)
-      
-      Requirements:
-      - Topic: Must be relevant to current Lebanese education milestones.
-      - Tone: Professional, authoritative, yet encouraging and premium.
-      - Format: Return ONLY a raw JSON object (no markdown code blocks) with:
-        {
-          "title": "...",
-          "description": "...",
-          "category": "...", (Pick from: Teaching Strategies, Exam Techniques, Productivity, Resources, Parental Guides)
-          "readTime": "... min read",
-          "content": "Full markdown content with h2, h3 tags. Mention Imtihan's specific features like AI diagrams, instant corrigé, and curriculum alignment."
-        }
-    `;
+    // Recent content is editorial context, not a source of factual claims.
+    const recentSnapshot = await adminDb.collection("blog_posts")
+      .orderBy("createdAt", "desc").limit(60).get();
+    const recent: RecentBlogPost[] = recentSnapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        title: typeof data.title === "string" ? data.title : "",
+        primaryKeyword: typeof data.primaryKeyword === "string" ? data.primaryKeyword : undefined,
+      };
+    });
+    const brief = selectBlogBrief(recent, Math.floor(Date.now() / 86400000));
+    const prompt = buildBlogPrompt(brief, recent);
 
     // ── AI Generation (Primary: Claude, Fallback: Gemini) ───────────────────
     // Matches the pattern already used by /api/generate, /api/analyze, and
@@ -94,8 +74,7 @@ export async function GET(request: NextRequest) {
           max_tokens: MAX_TOKENS,
           messages: [{ role: "user", content: prompt }],
         });
-        // @ts-ignore
-        result = message.content[0].text;
+        result = message.content.filter(block => block.type === "text").map(block => block.text).join("\n");
         providerName = "Claude";
       } catch (claudeErr) {
         console.warn("[/api/cron/blog-auto-publish] Claude failed, falling back to Gemini:", claudeErr);
@@ -126,10 +105,16 @@ export async function GET(request: NextRequest) {
     try {
       const jsonMatch = result.match(/\{[\s\S]*\}/);
       const jsonStr = jsonMatch ? jsonMatch[0] : result;
-      postData = JSON.parse(jsonStr);
+      postData = GeneratedBlogSchema.parse(JSON.parse(jsonStr));
     } catch (e) {
       console.error("Failed to parse AI response:", result);
       throw new Error("AI returned malformed data. Try again.");
+    }
+
+    const issues = blogQualityIssues(postData, brief.keyword, brief.link, recent.map(p => p.title));
+    if (issues.length) {
+      console.warn("[/api/cron/blog-auto-publish] Quality gate rejected article:", issues);
+      return NextResponse.json({ success: false, error: "Article did not pass editorial checks", issues }, { status: 422 });
     }
 
     // 3. Generate Slug & Save
@@ -137,6 +122,11 @@ export async function GET(request: NextRequest) {
 
     const post = {
       ...postData,
+      readTime: blogReadTime(postData.content),
+      primaryKeyword: brief.keyword,
+      relatedKeywords: [...brief.related],
+      language: brief.language,
+      editorialVersion: 1,
       slug,
       createdAt: new Date(),
       published: true,
@@ -148,18 +138,18 @@ export async function GET(request: NextRequest) {
       createdAt: new Date()
     });
 
-    return NextResponse.json({ 
-      success: true, 
+    return NextResponse.json({
+      success: true,
       id: docRef.id,
       slug,
       title: postData.title
     });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("[/api/cron/blog-auto-publish] Error:", error);
-    return NextResponse.json({ 
+    return NextResponse.json({
       success: false,
-      error: error.message || "Failed to auto-publish blog" 
+      error: error instanceof Error ? error.message : "Failed to auto-publish blog"
     }, { status: 500 });
   }
 }
