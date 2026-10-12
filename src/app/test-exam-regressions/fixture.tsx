@@ -7,11 +7,11 @@ import type { Exercise } from "@/types/exam";
 
 const methodology = String.raw`Étape 6 (B.3) : Sens de variation et limite.
 
-Pour tout $n \in \mathbb{N}$ : $u_{n+1} - u_n = (2^{n+3} - 3) - (2^{n+2} - 3) = 2^{n+3} - 2^{n+2} = 2^{n+2}(2 - 1) = 2^{n+2} > 0$.
+Pour tout $n \in \mathbb{N}$ : $u\_{n+1} - u_n = (2^{n+3} - 3) - (2^{n+2} - 3) = 2^{n+3} - 2^{n+2} = 2^{n+2}(2 - 1) = 2^{n+2} > 0$.
 
 Donc $(u_n)$ est strictement croissante.
 
-De plus, $\lim_{n \to +\infty} 2^{n+2} = +\infty$, donc $\lim_{n \to +\infty} u_n = $\boxed{+\infty}`;
+De plus, $\lim\_{n \to +\infty} 2^{n+2} = +\infty$, donc $\lim\_{n \to +\infty} u_n = $\boxed{+\infty}`;
 
 const initial: Exercise = {
   id: "qa-exam", number: 1, type: "problem_solving", difficulty: "hard", points: 5,
@@ -33,7 +33,7 @@ export function ExamRegressionFixture() {
       table: "\n\n| n | u_n |\n| --- | --- |\n| 0 | 1 |\n| 1 | 5 |",
       plot: "\n\n[PLOT: x^2]",
       insertPlot: "\n\n[PLOT: x^2]",
-      visual: "\n\n[VISUAL: Suite croissante]",
+      visual: "\n\n```mermaid\nflowchart TD\nA[Suite] --> B[Strictement croissante]\n```",
       image: "\n\n[IMAGE: Classroom illustration]",
     };
     setExercise((previous) => ({ ...previous, statement: previous.statement + output[mode] }));

@@ -42,6 +42,19 @@ describe("transform route uses authenticated, validated providers", () => {
     expect(response.status).toBe(200); expect((await response.json()).exercise).toEqual({ ...exercise, statement: table });
     expect(mocks.claude).not.toHaveBeenCalled();
   });
+  it.each([
+    ["table", { statement: table }],
+    ["visual", { statement: "Study the sequence.\n```mermaid\nflowchart TD\nA[Start] --> B[Increasing]\n```" }],
+    ["image", { statement: "Study the sequence.\n[IMAGE: A sequence illustration]" }],
+    ["plot", { statement: "Study the sequence.", mathPlots: ["x^2"] }],
+    ["insertPlot", { statement: "Study the sequence.\n[PLOT: x^2]" }],
+  ])("applies %s output through the route without replacing academic fields", async (type, patch) => {
+    mocks.generate.mockResolvedValue({ response: { text: () => JSON.stringify({ ...patch, id: "changed", points: 99, solution: { finalAnswer: "wrong", methodology: "wrong" }, chapterIds: ["wrong"] }) } });
+    const response = await POST(request(body(type)));
+    expect(response.status).toBe(200);
+    expect((await response.json()).exercise).toEqual({ ...exercise, ...patch });
+    expect(mocks.claude).not.toHaveBeenCalled();
+  });
   it("falls back on invalid provider output and rejects truncated fallback output", async () => {
     mocks.generate.mockResolvedValue({ response: { text: () => '{"statement":"truncated' } });
     mocks.configured.mockReturnValue(true);

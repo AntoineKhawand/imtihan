@@ -11,10 +11,15 @@ test.describe("Exam fixes — isolated browser acceptance", () => {
     await page.route("**/api/image/generate?**", (route) => route.fulfill({
       contentType: "image/svg+xml", body: '<svg xmlns="http://www.w3.org/2000/svg" width="200" height="100"><rect width="200" height="100" fill="green"/></svg>',
     }));
+    await page.route("**/api/visual/mermaid?**", (route) => route.fulfill({
+      contentType: "image/svg+xml", body: '<svg xmlns="http://www.w3.org/2000/svg" width="200" height="100"><rect width="200" height="100" fill="blue"/></svg>',
+    }));
     await page.goto("/test-exam-regressions");
     await expect(page.getByRole("heading", { name: /Exam QA/ })).toBeVisible();
     const rejectAnalytics = page.getByRole("button", { name: "Reject analytics", exact: true });
-    if (await rejectAnalytics.isVisible()) await rejectAnalytics.click();
+    await expect(rejectAnalytics).toBeVisible();
+    await rejectAnalytics.click();
+    await expect(rejectAnalytics).toBeHidden();
   });
   test.afterEach(() => expect(pageErrors, "uncaught browser exceptions").toEqual([]));
 
@@ -37,10 +42,18 @@ test.describe("Exam fixes — isolated browser acceptance", () => {
       await page.getByRole("button", { name: label, exact: true }).click();
       const input = page.locator('input[type="text"]').last();
       await input.fill(prompt);
+      const diagramRequest = mode === "visual" ? page.waitForRequest(request => request.url().includes("/api/visual/mermaid?")) : null;
       await page.getByRole("button", { name: "Add", exact: true }).click();
       await expect(page.getByTestId("transform-request")).toContainText(JSON.stringify({ id: "qa-exam", mode, prompt }));
       if (mode === "plot") await expect(page.locator(".imtihan-mathplot-mount svg")).toBeVisible();
-      else await expect(page.locator('main img').last()).toBeVisible();
+      else if (mode === "visual") {
+        const diagram = page.locator('main img[src^="/api/visual/mermaid?"]');
+        await expect(diagram).toBeVisible();
+        const source = await diagram.getAttribute("src");
+        expect(new URL(source!, "http://localhost:3017").searchParams.get("code")).toBe("flowchart TD\nA[Suite] --> B[Strictement croissante]");
+        expect(new URL((await diagramRequest!).url()).searchParams.get("code")).toBe("flowchart TD\nA[Suite] --> B[Strictement croissante]");
+        await expect.poll(() => diagram.evaluate((element: HTMLImageElement) => element.complete && element.naturalWidth > 0)).toBe(true);
+      } else await expect(page.locator('main img').last()).toBeVisible();
       await expect(page.locator(".katex-error")).toHaveCount(0);
     });
   }

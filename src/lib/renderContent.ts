@@ -20,7 +20,36 @@ export function escapeHtml(unsafe: string): string {
     .replace(/'/g, "&#039;");
 }
 
+/** Repair Markdown-escaped braced subscripts on a variable or math operator.
+ * Explicit text/identifier commands retain literal underscores, as does prose.
+ */
+function repairEscapedSubscripts(src: string): string {
+  const repair = (part: string) => part.replace(
+    /(\\(?:lim|limsup|liminf|sum|prod|int|max|min|sup|inf)\s*|(?<![A-Za-z\\])[A-Za-z])\\_(?=\{)/g,
+    "$1_",
+  );
+  const textCommand = /\\(?:text[a-z]*|operatorname\*?|mathrm|mathsf|mathtt)\s*\{/g;
+  let result = "";
+  let cursor = 0;
+  let match: RegExpExecArray | null;
+  while ((match = textCommand.exec(src))) {
+    result += repair(src.slice(cursor, match.index));
+    let end = textCommand.lastIndex;
+    let depth = 1;
+    for (; end < src.length && depth; end++) {
+      if (src[end] === "\\") { end++; continue; }
+      if (src[end] === "{") depth++;
+      else if (src[end] === "}") depth--;
+    }
+    result += src.slice(match.index, end);
+    cursor = end;
+    textCommand.lastIndex = end;
+  }
+  return result + repair(src.slice(cursor));
+}
+
 function renderKaTeX(src: string, displayMode: boolean): string {
+  src = repairEscapedSubscripts(src);
   try {
     const html = katex.renderToString(src, {
       displayMode,
