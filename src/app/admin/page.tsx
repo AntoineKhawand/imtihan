@@ -5,7 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { FREE_EXAM_LIMIT } from "@/lib/utils";
-import { RefreshCw, Search, Calendar, Clock, ShieldCheck, User, Users, Zap, Sparkles, BarChart3, TrendingUp, FileText, ArrowRight, Mail, Send, CheckCircle2, XCircle, Check, RotateCcw, Trash2, AlertTriangle, Menu, X, Bell, UserPlus, LogIn } from "lucide-react";
+import { RefreshCw, Search, Calendar, Clock, ShieldCheck, User, Users, Zap, Sparkles, BarChart3, TrendingUp, FileText, ArrowRight, Mail, Send, CheckCircle2, XCircle, Check, RotateCcw, Trash2, AlertTriangle, Menu, X, Bell, UserPlus, LogIn, BookOpen } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
@@ -19,8 +19,8 @@ const NAV_ITEMS = [
   { id: "email" as const, label: "Email", icon: Mail },
   { id: "blog" as const, label: "Blog", icon: FileText },
   { id: "subscribers" as const, label: "Subscribers", icon: Users },
-  { id: "coverage" as const, label: "Coverage", icon: AlertTriangle },
-  { id: "analytics" as const, label: "Analytics", icon: BarChart3 },
+  { id: "coverage" as const, label: "Coverage", icon: BookOpen },
+  { id: "analytics" as const, label: "Insights", icon: BarChart3 },
 ];
 
 const subjectMap: Record<string, string> = {
