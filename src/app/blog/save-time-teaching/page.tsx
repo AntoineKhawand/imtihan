@@ -1,4 +1,10 @@
-import type { Metadata } from "next";
+import { BlogArticleDates } from "@/components/blog/BlogArticleDates";
+import { BlogWorkloadEvidence } from "@/components/blog/BlogWorkloadEvidence";
+import { BLOG_EDITORIAL, BLOG_REFRESH_DATE, blogFigurePath } from "@/data/blogEditorial";
+import { staticBlogMetadata } from "@/lib/blogMetadata";
+import { buildBlogArticleSchema, buildBlogBreadcrumbSchema } from "@/lib/blogSchema";
+import { BlogArticleFigure } from "@/components/blog/BlogArticleFigure";
+import { BlogPracticalExample } from "@/components/blog/BlogPracticalExample";
 import Link from "next/link";
 import { ArrowRight, ArrowLeft } from "lucide-react";
 import { Logo } from "@/components/ui/Logo";
@@ -13,16 +19,12 @@ import { BlogFAQ } from "@/components/blog/BlogFAQ";
 import { SchemaOrg } from "@/components/SchemaOrg";
 import { buildFaqSchema } from "@/components/landing/LandingFAQ";
 
-export const metadata: Metadata = {
-  title: "Reclaiming Your Sundays: 5 Ways Imtihan Automates Tasks | Imtihan Blog",
-  description: "Learn how generative AI can save Lebanese teachers 10+ hours a week by automating exam creation.",
-  alternates: { canonical: "/blog/save-time-teaching" },
-};
+export const metadata = staticBlogMetadata("save-time-teaching");
 
 const FAQ_ITEMS = [
   {
     q: "How much of a teacher's week actually goes to admin work like exam drafting?",
-    a: "The OECD's 2024 TALIS survey — the largest international survey of teachers — found that teaching itself makes up only around 43% of a teacher's self-reported working time; the rest is planning, grading, administration, and related tasks. Assessment drafting is one of the largest single pieces of that non-teaching time.",
+    a: "The OECD’s TALIS 2024 report distinguishes classroom instruction from planning, marking and administration. These international findings explain why preparation deserves attention, but do not measure Imtihan’s time savings or the workload of Lebanese teachers specifically.",
   },
   {
     q: "Does Imtihan replace a teacher's own judgment on what to include?",
@@ -35,7 +37,8 @@ const FAQ_ITEMS = [
 ];
 
 export default function ProductivityBlogPage() {
-  const title = "Reclaiming Your Sundays: 5 Ways Imtihan Automates Tasks";
+  const editorial = BLOG_EDITORIAL["save-time-teaching"];
+  const title = editorial.title;
   const url = "https://imtihan.live/blog/save-time-teaching";
 
   return (
@@ -43,18 +46,8 @@ export default function ProductivityBlogPage() {
       <BlogProgressBar />
       <SchemaOrg
         schema={[
-          {
-            "@context": "https://schema.org",
-            "@type": "Article",
-            headline: title,
-            description: metadata.description,
-            author: { "@type": "Organization", name: "Imtihan" },
-            publisher: {
-              "@type": "Organization",
-              name: "Imtihan",
-              logo: { "@type": "ImageObject", url: "https://imtihan.live/logo.png" },
-            },
-          },
+          buildBlogArticleSchema({ slug: "save-time-teaching", title, description: editorial.description, published: editorial.published, modified: BLOG_REFRESH_DATE, language: editorial.language, image: blogFigurePath(editorial.figure) }),
+          buildBlogBreadcrumbSchema("save-time-teaching", title),
           buildFaqSchema(FAQ_ITEMS),
         ]}
       />
@@ -74,32 +67,24 @@ export default function ProductivityBlogPage() {
           </Link>
           <h1 className="serif text-display-lg text-[var(--text)] leading-[1.1] mb-8 text-balance">{title}</h1>
 
+          <BlogArticleDates published={editorial.published} french={editorial.language === "fr"} />
+          <BlogArticleFigure kind={editorial.figure} french={editorial.language === "fr"} />
+
           <article className="prose prose-imtihan max-w-none text-[var(--text)] text-[1.1rem] leading-relaxed">
             <p className="text-xl text-[var(--text-secondary)] leading-relaxed mb-10 font-medium">
-              Imtihan automates the five slowest parts of writing an exam — finding a scenario, formatting it, writing the corrigé, building a second version, and checking curriculum alignment — so a draft that used to take 3–4 hours on a Sunday takes closer to 10 minutes to generate and review.
+              AI exam preparation can help with drafting questions, worked solutions and editable documents. The practical goal is to reduce repeated work while leaving time to solve the paper, check its difficulty and review every answer before students receive it.
             </p>
 
             <h2 id="cost" className="text-2xl font-bold text-[var(--text)] mt-12 mb-4 serif">The Hidden Cost of Assessment</h2>
-            <p>
-              When you spend 4 hours on a single assessment, that&apos;s 4 hours you aren&apos;t spending on lesson planning or student mentorship. Internationally, the OECD&apos;s{" "}
-              <a href="https://www.oecd.org/en/publications/results-from-talis-2024_90df6235-en/full-report/the-demands-of-teaching_0e941e2f.html" target="_blank" rel="noopener noreferrer" className="text-[var(--accent)] underline underline-offset-2">2024 TALIS survey</a>{" "}
-              found teachers report spending only about 43% of their working time on actual instruction — the rest goes to planning, grading, and administration, and exam drafting sits squarely inside that non-teaching share.
-            </p>
+            <BlogWorkloadEvidence />
 
             <BlogCallout
               title="Teacher's Tip"
-              content="Drafting a solution key from scratch is usually the single slowest part of Sunday exam prep. Generating the exam and corrigé together the night before, instead of writing the key separately afterward, is what gives most of that time back."
+              content="Draft the questions and worked solutions together. Then solve the paper independently before reviewing the generated corrigé; this makes errors and missing assumptions easier to spot."
             />
 
             <h2 id="ways" className="text-2xl font-bold text-[var(--text)] mt-12 mb-4 serif">5 Ways to Save Time Today</h2>
-            <p>Imtihan automates the most time-consuming parts of your workflow. In order, a typical 4-hour Sunday prep session usually breaks down like this:</p>
-            <ul>
-              <li>Roughly 1 hour hunting for a scenario that fits the chapter without repeating last term&apos;s numbers.</li>
-              <li>Roughly 1.5 hours writing the corrigé, step by step, after the questions are already finished.</li>
-              <li>30–45 minutes building a second version so two sections can&apos;t compare answers.</li>
-              <li>The remaining time reformatting equations, tables, and spacing so the file actually prints cleanly.</li>
-            </ul>
-            <p>Each of those four steps maps to one of the automations below.</p>
+            <p>Start by identifying which parts of your own preparation are repetitive. The steps below are a workflow to try, not a measured claim about how many hours every teacher saves.</p>
 
             <h3 id="scenario" className="text-xl font-bold text-[var(--text)] mt-8 mb-3 serif">1. Instant Scenario Generation</h3>
             <p>Stop looking for that perfect physics problem. Describe the concept, and Imtihan builds the scenario for you, grounded in the chapter you specify.</p>
@@ -121,6 +106,7 @@ export default function ProductivityBlogPage() {
               None of this replaces your judgment as a teacher — Imtihan drafts a baseline you still review, edit, and approve exercise by exercise, and every chapter it can reference is checked against the actual curriculum so it can&apos;t quietly drift off-syllabus. What it removes is the blank-page problem: the hour spent staring at an empty document before you&apos;ve even started drafting the first question.
             </p>
             <p>Imtihan gives you the tools to provide high-quality assessments while preserving your mental health — your first exam is free to try, with no card required, before any paywall applies.</p>
+            <BlogPracticalExample slug="save-time-teaching" />
             <BlogFAQ items={FAQ_ITEMS} />
           </article>
 

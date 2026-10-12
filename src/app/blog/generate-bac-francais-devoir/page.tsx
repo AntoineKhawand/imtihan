@@ -1,4 +1,9 @@
-import type { Metadata } from "next";
+import { BlogArticleDates } from "@/components/blog/BlogArticleDates";
+import { BLOG_EDITORIAL, BLOG_REFRESH_DATE, blogFigurePath } from "@/data/blogEditorial";
+import { staticBlogMetadata } from "@/lib/blogMetadata";
+import { buildBlogArticleSchema, buildBlogBreadcrumbSchema } from "@/lib/blogSchema";
+import { BlogArticleFigure } from "@/components/blog/BlogArticleFigure";
+import { BlogPracticalExample } from "@/components/blog/BlogPracticalExample";
 import Link from "next/link";
 import { ArrowRight, ArrowLeft } from "lucide-react";
 import { Logo } from "@/components/ui/Logo";
@@ -13,11 +18,7 @@ import { BlogFAQ } from "@/components/blog/BlogFAQ";
 import { SchemaOrg } from "@/components/SchemaOrg";
 import { buildFaqSchema } from "@/components/landing/LandingFAQ";
 
-export const metadata: Metadata = {
-  title: "Générateur de Devoir Bac Français : Physique-Chimie | Imtihan Blog",
-  description: "Découvrez comment concevoir des Devoirs Surveillés (DS) de spécialité Physique-Chimie conformes au Baccalauréat Français (AEFE) en 5 minutes grâce à l'IA.",
-  alternates: { canonical: "/blog/generate-bac-francais-devoir" },
-};
+export const metadata = staticBlogMetadata("generate-bac-francais-devoir");
 
 const FAQ_ITEMS = [
   {
@@ -35,7 +36,8 @@ const FAQ_ITEMS = [
 ];
 
 export default function FrenchBacDevoirBlogPage() {
-  const title = "Générateur de devoir Bac Français : Gagnez des heures sur vos DS de physique-chimie";
+  const editorial = BLOG_EDITORIAL["generate-bac-francais-devoir"];
+  const title = editorial.title;
   const url = "https://imtihan.live/blog/generate-bac-francais-devoir";
 
   return (
@@ -43,18 +45,8 @@ export default function FrenchBacDevoirBlogPage() {
       <BlogProgressBar />
       <SchemaOrg
         schema={[
-          {
-            "@context": "https://schema.org",
-            "@type": "Article",
-            headline: title,
-            description: metadata.description,
-            author: { "@type": "Organization", name: "Imtihan" },
-            publisher: {
-              "@type": "Organization",
-              name: "Imtihan",
-              logo: { "@type": "ImageObject", url: "https://imtihan.live/logo.png" },
-            },
-          },
+          buildBlogArticleSchema({ slug: "generate-bac-francais-devoir", title, description: editorial.description, published: editorial.published, modified: BLOG_REFRESH_DATE, language: editorial.language, image: blogFigurePath(editorial.figure) }),
+          buildBlogBreadcrumbSchema("generate-bac-francais-devoir", title),
           buildFaqSchema(FAQ_ITEMS),
         ]}
       />
@@ -74,9 +66,12 @@ export default function FrenchBacDevoirBlogPage() {
           </Link>
           <h1 className="serif text-display-lg text-[var(--text)] leading-[1.1] mb-8 text-balance">{title}</h1>
 
+          <BlogArticleDates published={editorial.published} french={editorial.language === "fr"} />
+          <BlogArticleFigure kind={editorial.figure} french={editorial.language === "fr"} />
+
           <article className="prose prose-imtihan max-w-none text-[var(--text)] text-[1.1rem] leading-relaxed">
             <p className="text-xl text-[var(--text-secondary)] leading-relaxed mb-10 font-medium">
-              La façon la plus rapide de préparer un devoir de Physique-Chimie conforme au programme de spécialité Terminale du Bac Français est de décrire vos thématiques à Imtihan — mécanique, énergie, cinétique chimique ou chimie organique — et de laisser l&apos;IA générer un sujet structuré avec sa grille d&apos;évaluation par compétences en quelques minutes, plutôt qu&apos;en plusieurs heures de rédaction manuelle.
+              Un générateur de devoir Bac Français aide à préparer un brouillon de physique-chimie à partir des chapitres enseignés. Définissez la durée, les compétences et le barème, puis vérifiez les calculs et le corrigé. Le professeur reste responsable de la conformité au programme et des critères retenus.
             </p>
 
             <h2 id="competences" className="text-2xl font-bold text-[var(--text)] mt-12 mb-4 serif">Les exigences des DS de spécialité</h2>
@@ -96,12 +91,12 @@ export default function FrenchBacDevoirBlogPage() {
 
             <h2 id="le-generateur" className="text-2xl font-bold text-[var(--text)] mt-12 mb-4 serif">Comment fonctionne le générateur Imtihan ?</h2>
             <p>
-              Imtihan propose un modèle d&apos;intelligence artificielle configuré pour le programme national français. Voici comment concevoir un sujet en 5 minutes :
+              Imtihan propose un modèle d&apos;intelligence artificielle configuré pour le programme national français. Voici les étapes pour préparer un brouillon à relire :
             </p>
             <ol className="list-decimal pl-6 space-y-3 mt-4 text-xs text-[var(--text-secondary)]">
               <li><strong>Sélectionnez la classe et la matière :</strong> Choisissez <em>Bac Français</em>, Terminale Spécialité, et Physique-Chimie.</li>
               <li><strong>Décrivez le sujet :</strong> Saisissez vos thématiques (ex: <em>&quot;mouvement dans un champ gravitationnel, avec un exercice sur le suivi temporel d&apos;une réaction chimique&quot;</em>).</li>
-              <li><strong>Chargez vos documents :</strong> Copiez-collez vos notes de cours ou de TP pour que l&apos;IA respecte vos notations et exemples vus en classe.</li>
+              <li><strong>Chargez vos documents :</strong> Ajoutez vos notes et indiquez si le document doit fournir le contenu, inspirer les exercices ou guider la structure. Vérifiez les notations retenues par l&apos;IA.</li>
               <li><strong>Générez et validez :</strong> L&apos;outil génère l&apos;énoncé structuré et la grille d&apos;évaluation associée. Les équations s&apos;affichent au format LaTeX.</li>
             </ol>
 
@@ -112,8 +107,9 @@ export default function FrenchBacDevoirBlogPage() {
 
             <h2 id="fidelite" className="text-2xl font-bold text-[var(--text)] mt-12 mb-4 serif">Un sujet fidèle au programme officiel</h2>
             <p>
-              Chaque chapitre proposé est d&apos;abord validé par rapport au programme officiel de la spécialité Physique-Chimie de Terminale avant qu&apos;une seule question ne soit générée. Si une notion ne fait pas partie du programme de ce niveau, elle n&apos;apparaît tout simplement pas comme option dans l&apos;assistant — le sujet généré ne peut donc pas s&apos;appuyer sur une notion que vos élèves n&apos;ont pas encore vue en classe, même si le professeur formule sa description de façon très libre.
+              Les chapitres sélectionnés guident la génération. Vérifiez toutefois que chaque exercice reste dans le périmètre réellement enseigné et que ses hypothèses sont explicites. Pour la physique-chimie, fournissez votre composition ou un sujet de référence ; les profils de structure intégrés ne couvrent pas toutes les matières.
             </p>
+            <BlogPracticalExample slug="generate-bac-francais-devoir" />
             <BlogFAQ items={FAQ_ITEMS} />
           </article>
 

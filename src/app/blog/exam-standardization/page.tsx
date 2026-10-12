@@ -1,4 +1,9 @@
-import type { Metadata } from "next";
+import { BlogArticleDates } from "@/components/blog/BlogArticleDates";
+import { BLOG_EDITORIAL, BLOG_REFRESH_DATE, blogFigurePath } from "@/data/blogEditorial";
+import { staticBlogMetadata } from "@/lib/blogMetadata";
+import { buildBlogArticleSchema, buildBlogBreadcrumbSchema } from "@/lib/blogSchema";
+import { BlogArticleFigure } from "@/components/blog/BlogArticleFigure";
+import { BlogPracticalExample } from "@/components/blog/BlogPracticalExample";
 import Link from "next/link";
 import { ArrowRight, ArrowLeft } from "lucide-react";
 import { Logo } from "@/components/ui/Logo";
@@ -13,11 +18,7 @@ import { BlogFAQ } from "@/components/blog/BlogFAQ";
 import { SchemaOrg } from "@/components/SchemaOrg";
 import { buildFaqSchema } from "@/components/landing/LandingFAQ";
 
-export const metadata: Metadata = {
-  title: "The Coordinator’s Secret: Standardizing Exam Quality | Imtihan Blog",
-  description: "How educational coordinators in Lebanon can use AI to ensure consistent, high-quality assessments.",
-  alternates: { canonical: "/blog/exam-standardization" },
-};
+export const metadata = staticBlogMetadata("exam-standardization");
 
 const FAQ_ITEMS = [
   {
@@ -26,7 +27,7 @@ const FAQ_ITEMS = [
   },
   {
     q: "How is this different from just agreeing on a shared rubric at a department meeting?",
-    a: "A rubric agreement only holds as long as every teacher applies it the same way when actually writing questions — which is exactly where inter-rater consistency tends to break down. Imtihan enforces the baseline at generation time, in every exam, instead of relying on teachers to self-apply a shared standard after the fact.",
+    a: "A rubric agreement only holds as long as every teacher applies it the same way when actually writing questions — which is exactly where inter-rater consistency tends to break down. Imtihan lets teachers start from the same selected chapters, duration, difficulty settings and marks. A coordinator still needs to compare the resulting papers and moderate the marking criteria.",
   },
   {
     q: "Does standardized difficulty mean questions get easier for weaker sections?",
@@ -35,7 +36,8 @@ const FAQ_ITEMS = [
 ];
 
 export default function CoordinatorsBlogPage() {
-  const title = "The Coordinator’s Secret: Standardizing Exam Quality";
+  const editorial = BLOG_EDITORIAL["exam-standardization"];
+  const title = editorial.title;
   const url = "https://imtihan.live/blog/exam-standardization";
 
   return (
@@ -43,18 +45,8 @@ export default function CoordinatorsBlogPage() {
       <BlogProgressBar />
       <SchemaOrg
         schema={[
-          {
-            "@context": "https://schema.org",
-            "@type": "Article",
-            headline: title,
-            description: metadata.description,
-            author: { "@type": "Organization", name: "Imtihan" },
-            publisher: {
-              "@type": "Organization",
-              name: "Imtihan",
-              logo: { "@type": "ImageObject", url: "https://imtihan.live/logo.png" },
-            },
-          },
+          buildBlogArticleSchema({ slug: "exam-standardization", title, description: editorial.description, published: editorial.published, modified: BLOG_REFRESH_DATE, language: editorial.language, image: blogFigurePath(editorial.figure) }),
+          buildBlogBreadcrumbSchema("exam-standardization", title),
           buildFaqSchema(FAQ_ITEMS),
         ]}
       />
@@ -74,9 +66,12 @@ export default function CoordinatorsBlogPage() {
           </Link>
           <h1 className="serif text-display-lg text-[var(--text)] leading-[1.1] mb-8 text-balance">{title}</h1>
 
+          <BlogArticleDates published={editorial.published} french={editorial.language === "fr"} />
+          <BlogArticleFigure kind={editorial.figure} french={editorial.language === "fr"} />
+
           <article className="prose prose-imtihan max-w-none text-[var(--text)] text-[1.1rem] leading-relaxed">
             <p className="text-xl text-[var(--text-secondary)] leading-relaxed mb-10 font-medium">
-              Standardizing exam quality across a department means giving every teacher the same baseline — chapter coverage, difficulty distribution, and points allocation — so an exam written by one teacher is comparably rigorous to one written by another, without forcing everyone onto an identical paper. Imtihan gives coordinators that shared baseline in minutes instead of a manual review meeting.
+              Standardizing exam quality across a department means giving every teacher the same baseline — chapter coverage, difficulty distribution, and points allocation — so an exam written by one teacher is comparably rigorous to one written by another, without forcing everyone onto an identical paper. Teachers can use a shared brief in Imtihan, then compare the generated papers in a moderation meeting.
             </p>
 
             <h2 id="inconsistency" className="text-2xl font-bold text-[var(--text)] mt-12 mb-4 serif">The Inconsistency Problem</h2>
@@ -91,12 +86,12 @@ export default function CoordinatorsBlogPage() {
 
             <BlogCallout
               title="Coordinator's Tip"
-              content="Using the same generated baseline across every parallel section — rather than each teacher drafting independently — is what actually keeps difficulty uniform, without a manual 'balancing' pass afterward."
+              content="Agree on the assessment blueprint before generation, then compare the completed papers. Matching settings is a useful start; it does not remove the need to moderate difficulty."
             />
 
             <h2 id="standardization" className="text-2xl font-bold text-[var(--text)] mt-12 mb-4 serif">Standardization Through AI</h2>
             <p>
-              Imtihan acts as a shared &quot;Gold Standard&quot; for your department. Instead of every teacher starting from a blank document and their own sense of what the chapter requires, each exam is generated against the same validated chapter objectives — the same curriculum data every other teacher&apos;s exam draws from — with the difficulty mix and points distribution the coordinator sets applied consistently across every section.
+              Imtihan can help teachers draft papers from a shared brief. Instead of every teacher starting from a blank document and their own sense of what the chapter requires, each exam is generated against the same validated chapter objectives — the same curriculum data every other teacher&apos;s exam draws from — with the difficulty mix and points distribution the coordinator sets applied consistently across every section.
             </p>
             <p>Without a shared baseline, this is what tends to drift between teachers in the same department, even when everyone means well:</p>
             <ul>
@@ -113,6 +108,7 @@ export default function CoordinatorsBlogPage() {
             <p>
               A shared baseline solves that at the source: instead of reviewing four teachers&apos; drafts after the fact and asking for revisions, a coordinator sets the standard once, and every section&apos;s exam is generated against it directly, with a matching corrigé produced alongside each version.
             </p>
+            <BlogPracticalExample slug="exam-standardization" />
             <BlogFAQ items={FAQ_ITEMS} />
           </article>
 

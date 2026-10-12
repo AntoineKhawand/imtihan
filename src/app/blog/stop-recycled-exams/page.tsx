@@ -1,4 +1,9 @@
-import type { Metadata } from "next";
+import { BlogArticleDates } from "@/components/blog/BlogArticleDates";
+import { BLOG_EDITORIAL, BLOG_REFRESH_DATE, blogFigurePath } from "@/data/blogEditorial";
+import { staticBlogMetadata } from "@/lib/blogMetadata";
+import { buildBlogArticleSchema, buildBlogBreadcrumbSchema } from "@/lib/blogSchema";
+import { BlogArticleFigure } from "@/components/blog/BlogArticleFigure";
+import { BlogPracticalExample } from "@/components/blog/BlogPracticalExample";
 import Link from "next/link";
 import { ArrowRight, ArrowLeft } from "lucide-react";
 import { Logo } from "@/components/ui/Logo";
@@ -13,11 +18,7 @@ import { BlogFAQ } from "@/components/blog/BlogFAQ";
 import { SchemaOrg } from "@/components/SchemaOrg";
 import { buildFaqSchema } from "@/components/landing/LandingFAQ";
 
-export const metadata: Metadata = {
-  title: "Are Your Students Bored of the Same Recycled Exams? | Imtihan Blog",
-  description: "Why using past papers (Dawrat) is hurting your students' engagement in Lebanon, and how AI can instantly solve the problem with fresh, unique exercises.",
-  alternates: { canonical: "/blog/stop-recycled-exams" },
-};
+export const metadata = staticBlogMetadata("stop-recycled-exams");
 
 const FAQ_ITEMS = [
   {
@@ -35,7 +36,8 @@ const FAQ_ITEMS = [
 ];
 
 export default function BlogPostPage() {
-  const title = "Are Your Students Bored of the Same Recycled Exams?";
+  const editorial = BLOG_EDITORIAL["stop-recycled-exams"];
+  const title = editorial.title;
   const url = "https://imtihan.live/blog/stop-recycled-exams";
 
   return (
@@ -43,18 +45,8 @@ export default function BlogPostPage() {
       <BlogProgressBar />
       <SchemaOrg
         schema={[
-          {
-            "@context": "https://schema.org",
-            "@type": "Article",
-            headline: title,
-            description: metadata.description,
-            author: { "@type": "Organization", name: "Imtihan" },
-            publisher: {
-              "@type": "Organization",
-              name: "Imtihan",
-              logo: { "@type": "ImageObject", url: "https://imtihan.live/logo.png" },
-            },
-          },
+          buildBlogArticleSchema({ slug: "stop-recycled-exams", title, description: editorial.description, published: editorial.published, modified: BLOG_REFRESH_DATE, language: editorial.language, image: blogFigurePath(editorial.figure) }),
+          buildBlogBreadcrumbSchema("stop-recycled-exams", title),
           buildFaqSchema(FAQ_ITEMS),
         ]}
       />
@@ -79,6 +71,9 @@ export default function BlogPostPage() {
             {title}
           </h1>
 
+          <BlogArticleDates published={editorial.published} french={editorial.language === "fr"} />
+          <BlogArticleFigure kind={editorial.figure} french={editorial.language === "fr"} />
+
           <article className="prose prose-imtihan max-w-none text-[var(--text)] text-[1.1rem] leading-relaxed">
             <p className="text-xl text-[var(--text-secondary)] leading-relaxed mb-10 font-medium">
               Recycling the same past papers (Dawrat) year after year trains students to recognize questions instead of solving them — and the fix isn&apos;t writing a whole new exam from scratch, it&apos;s generating one fresh, same-difficulty &quot;sibling&quot; exercise for every past-paper question you&apos;d otherwise reuse unchanged.
@@ -86,11 +81,10 @@ export default function BlogPostPage() {
 
             <h2 id="dilemma" className="text-2xl font-bold text-[var(--text)] mt-12 mb-4 serif">The &quot;Dawrat&quot; Dilemma</h2>
             <p>
-              In Lebanon, the reliance on <em>as&apos;ilat dawrat</em> (past official exams, published by CRDP for every branch of the Bac) is both a blessing and a curse. While it prepares them for the format, it completely destroys the core purpose of an assessment: <strong>measuring actual understanding</strong>.
+              In Lebanon, the reliance on <em>as&apos;ilat dawrat</em> (past official exams, published by CRDP for every branch of the Bac) is both a blessing and a curse. Past papers are valuable for understanding the format. If students already know the answers, add unfamiliar questions to check whether they can apply the method independently.
             </p>
             <p>
-              There&apos;s a well-established reason this backfires. Cognitive scientists Henry Roediger and Jeffrey Karpicke found that repeated <em>testing</em> of material produces dramatically better long-term retention than repeated re-reading or re-solving the same problem — a finding known as the{" "}
-              <a href="https://www.retrievalpractice.org/strategies/2018/4/26/two-cognitive-scientists-you-need-to-know" target="_blank" rel="noopener noreferrer" className="text-[var(--accent)] underline underline-offset-2">testing effect</a>. In their experiments, one week after studying, students who had been repeatedly tested on new recall attempts remembered 61% of the material, compared to 40% for students who had simply re-read the same passage. A student solving a Dawrat question they&apos;ve already seen isn&apos;t retrieving — they&apos;re recognizing.
+              A useful classroom distinction is whether students can reproduce a remembered solution or explain a method in an unfamiliar context. Keep official past papers for format practice, and use fresh questions to ask students why a method works, which assumptions it needs and how the conclusion changes when the evidence changes.
             </p>
 
             <BlogCallout
@@ -100,7 +94,7 @@ export default function BlogPostPage() {
 
             <h2 id="burnout" className="text-2xl font-bold text-[var(--text)] mt-12 mb-4 serif">The Teacher's Burnout</h2>
             <p>
-              So, what is the alternative? Writing an exam entirely from scratch. For a standard 4-exercise exam, this takes upwards of 3 to 4 hours — time most teachers don&apos;t have between correcting the last exam and preparing the next.
+              So, what is the alternative? Writing an exam entirely from scratch. The work includes choosing contexts, checking values, solving the paper and preparing a marking guide. The time required depends on the topic and the review needed.
             </p>
 
             <h2 id="signs" className="text-2xl font-bold text-[var(--text)] mt-12 mb-4 serif">Signs Your Exams Are Too Recycled</h2>
@@ -123,6 +117,7 @@ export default function BlogPostPage() {
             <p>
               This doesn&apos;t mean retiring Dawrat from your teaching entirely — they're still the best reference for what the official exam's format and command-term vocabulary actually look like. The change is in what you hand students under exam conditions: a fresh, same-difficulty exercise for the actual test, with the familiar past paper kept for earlier practice and revision instead.
             </p>
+            <BlogPracticalExample slug="stop-recycled-exams" />
             <BlogFAQ items={FAQ_ITEMS} />
           </article>
 

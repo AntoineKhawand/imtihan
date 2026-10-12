@@ -1,4 +1,9 @@
-import type { Metadata } from "next";
+import { BlogArticleDates } from "@/components/blog/BlogArticleDates";
+import { BLOG_EDITORIAL, BLOG_REFRESH_DATE, blogFigurePath } from "@/data/blogEditorial";
+import { staticBlogMetadata } from "@/lib/blogMetadata";
+import { buildBlogArticleSchema, buildBlogBreadcrumbSchema } from "@/lib/blogSchema";
+import { BlogArticleFigure } from "@/components/blog/BlogArticleFigure";
+import { BlogPracticalExample } from "@/components/blog/BlogPracticalExample";
 import Link from "next/link";
 import { ArrowRight, ArrowLeft } from "lucide-react";
 import { Logo } from "@/components/ui/Logo";
@@ -13,11 +18,7 @@ import { BlogFAQ } from "@/components/blog/BlogFAQ";
 import { SchemaOrg } from "@/components/SchemaOrg";
 import { buildFaqSchema } from "@/components/landing/LandingFAQ";
 
-export const metadata: Metadata = {
-  title: "IB Mark Scheme Generator: Free Tool for IB Teachers | Imtihan Blog",
-  description: "Find out how to automatically generate detailed IB-compliant mark schemes for DP Physics and Chemistry using Imtihan's free AI tool.",
-  alternates: { canonical: "/blog/ib-mark-scheme-generator" },
-};
+export const metadata = staticBlogMetadata("ib-mark-scheme-generator");
 
 const FAQ_ITEMS = [
   {
@@ -26,7 +27,7 @@ const FAQ_ITEMS = [
   },
   {
     q: "What is Error Carried Forward (ECF) and why does it matter for grading fairness?",
-    a: "ECF means a student keeps every mark for correct method and logic in the steps after an early mistake, instead of losing all subsequent marks because one number was wrong. Imtihan's generated mark schemes map out each step separately so ECF can be applied consistently, rather than leaving it to an examiner's memory mid-grading.",
+    a: "Error carried forward may allow credit for subsequent valid reasoning after an earlier error. Whether it applies, and which marks remain available, depends on the subject and question. Check the current subject guide and official specimen marking guidance before using it in a generated draft.",
   },
   {
     q: "Can I edit the mark allocation after Imtihan generates it?",
@@ -35,7 +36,8 @@ const FAQ_ITEMS = [
 ];
 
 export default function IbMarkSchemeBlogPage() {
-  const title = "IB mark scheme generator: free tool for IB teachers";
+  const editorial = BLOG_EDITORIAL["ib-mark-scheme-generator"];
+  const title = editorial.title;
   const url = "https://imtihan.live/blog/ib-mark-scheme-generator";
 
   return (
@@ -43,18 +45,8 @@ export default function IbMarkSchemeBlogPage() {
       <BlogProgressBar />
       <SchemaOrg
         schema={[
-          {
-            "@context": "https://schema.org",
-            "@type": "Article",
-            headline: title,
-            description: metadata.description,
-            author: { "@type": "Organization", name: "Imtihan" },
-            publisher: {
-              "@type": "Organization",
-              name: "Imtihan",
-              logo: { "@type": "ImageObject", url: "https://imtihan.live/logo.png" },
-            },
-          },
+          buildBlogArticleSchema({ slug: "ib-mark-scheme-generator", title, description: editorial.description, published: editorial.published, modified: BLOG_REFRESH_DATE, language: editorial.language, image: blogFigurePath(editorial.figure) }),
+          buildBlogBreadcrumbSchema("ib-mark-scheme-generator", title),
           buildFaqSchema(FAQ_ITEMS),
         ]}
       />
@@ -74,9 +66,12 @@ export default function IbMarkSchemeBlogPage() {
           </Link>
           <h1 className="serif text-display-lg text-[var(--text)] leading-[1.1] mb-8 text-balance">{title}</h1>
 
+          <BlogArticleDates published={editorial.published} french={editorial.language === "fr"} />
+          <BlogArticleFigure kind={editorial.figure} french={editorial.language === "fr"} />
+
           <article className="prose prose-imtihan max-w-none text-[var(--text)] text-[1.1rem] leading-relaxed">
             <p className="text-xl text-[var(--text-secondary)] leading-relaxed mb-10 font-medium">
-              An IB-compliant mark scheme awards separate marks for each distinct step of reasoning — not just the final numeric answer — and applies error carried forward (ECF) so an early mistake doesn&apos;t zero out every mark that follows. Imtihan generates that structured mark scheme automatically alongside every DP Physics or Chemistry question it drafts.
+              An IB mark scheme generator can draft worked answers and separate criteria for reasoning, method and final results. Imtihan provides a starting point for teacher review; it does not certify an answer key as IB-approved, and error-carried-forward treatment must be checked for the subject and question.
             </p>
 
             <h2 id="importance" className="text-2xl font-bold text-[var(--text)] mt-12 mb-4 serif">Why IB Mark Schemes Are Crucial</h2>
@@ -94,10 +89,10 @@ export default function IbMarkSchemeBlogPage() {
 
             <BlogCallout
               title="Grading Secret"
-              content="When grading Chemistry Paper 2, remember that students are awarded marks for showing their work even if a previous calculation was wrong (Error Carried Forward - ECF). Your marking keys must clearly map these steps so that you can grade fairly."
+              content="Do not apply error carried forward as a blanket rule. Check the current subject guide and question-specific mark scheme, then document which criteria allow follow-through credit."
             />
 
-            <h2 id="ai-generation" className="text-2xl font-bold text-[var(--text)] mt-12 mb-4 serif">Generating Compliant Mark Schemes</h2>
+            <h2 id="ai-generation" className="text-2xl font-bold text-[var(--text)] mt-12 mb-4 serif">Drafting and Reviewing IB-Style Mark Schemes</h2>
             <p>
               Imtihan&apos;s built-in <strong>IB mark scheme generator</strong> automates this workflow. When you prompt the AI to generate a question, the platform simultaneously builds a matching correction grid.
             </p>
@@ -115,6 +110,7 @@ export default function IbMarkSchemeBlogPage() {
             <p>
               IB teachers can sign up on Imtihan and generate their first mock exam and mark scheme completely for free, no card required. After generation, you can edit individual questions, add custom prompts, and export the entire test and grading key to Microsoft Word or PDF for easy grading — or regenerate a single question without rebuilding the whole paper.
             </p>
+            <BlogPracticalExample slug="ib-mark-scheme-generator" />
             <BlogFAQ items={FAQ_ITEMS} />
           </article>
 

@@ -1,4 +1,9 @@
-import type { Metadata } from "next";
+import { BlogArticleDates } from "@/components/blog/BlogArticleDates";
+import { BLOG_EDITORIAL, BLOG_REFRESH_DATE, blogFigurePath } from "@/data/blogEditorial";
+import { staticBlogMetadata } from "@/lib/blogMetadata";
+import { buildBlogArticleSchema, buildBlogBreadcrumbSchema } from "@/lib/blogSchema";
+import { BlogArticleFigure } from "@/components/blog/BlogArticleFigure";
+import { BlogPracticalExample } from "@/components/blog/BlogPracticalExample";
 import Link from "next/link";
 import { ArrowRight, ArrowLeft } from "lucide-react";
 import { Logo } from "@/components/ui/Logo";
@@ -13,11 +18,7 @@ import { BlogFAQ } from "@/components/blog/BlogFAQ";
 import { SchemaOrg } from "@/components/SchemaOrg";
 import { buildFaqSchema } from "@/components/landing/LandingFAQ";
 
-export const metadata: Metadata = {
-  title: "Reclaiming Your Evenings: AI Exam Generators in Lebanon | Imtihan Blog",
-  description: "Explore how Lebanese educators are overcoming preparation fatigue and grading overhead using local-curriculum AI assessment tools.",
-  alternates: { canonical: "/blog/lebanese-teachers-ai-exam-generator" },
-};
+export const metadata = staticBlogMetadata("lebanese-teachers-ai-exam-generator");
 
 const FAQ_ITEMS = [
   {
@@ -35,7 +36,8 @@ const FAQ_ITEMS = [
 ];
 
 export default function LebaneseTeachersBlogPage() {
-  const title = "Reclaiming Your Evenings: The Power of AI Exam Generators for Lebanese Teachers";
+  const editorial = BLOG_EDITORIAL["lebanese-teachers-ai-exam-generator"];
+  const title = editorial.title;
   const url = "https://imtihan.live/blog/lebanese-teachers-ai-exam-generator";
 
   return (
@@ -43,18 +45,8 @@ export default function LebaneseTeachersBlogPage() {
       <BlogProgressBar />
       <SchemaOrg
         schema={[
-          {
-            "@context": "https://schema.org",
-            "@type": "Article",
-            headline: title,
-            description: metadata.description,
-            author: { "@type": "Organization", name: "Imtihan" },
-            publisher: {
-              "@type": "Organization",
-              name: "Imtihan",
-              logo: { "@type": "ImageObject", url: "https://imtihan.live/logo.png" },
-            },
-          },
+          buildBlogArticleSchema({ slug: "lebanese-teachers-ai-exam-generator", title, description: editorial.description, published: editorial.published, modified: BLOG_REFRESH_DATE, language: editorial.language, image: blogFigurePath(editorial.figure) }),
+          buildBlogBreadcrumbSchema("lebanese-teachers-ai-exam-generator", title),
           buildFaqSchema(FAQ_ITEMS),
         ]}
       />
@@ -74,6 +66,9 @@ export default function LebaneseTeachersBlogPage() {
           </Link>
           <h1 className="serif text-display-lg text-[var(--text)] leading-[1.1] mb-8 text-balance">{title}</h1>
 
+          <BlogArticleDates published={editorial.published} french={editorial.language === "fr"} />
+          <BlogArticleFigure kind={editorial.figure} french={editorial.language === "fr"} />
+
           <article className="prose prose-imtihan max-w-none text-[var(--text)] text-[1.1rem] leading-relaxed">
             <p className="text-xl text-[var(--text-secondary)] leading-relaxed mb-10 font-medium">
               Imtihan exists because Lebanese teachers routinely draft exams for two or three curricula at once, in two languages, with no extra hours in the week to do it — it turns a short description or an uploaded past exam into a curriculum-grounded exam and corrigé in minutes instead of an evening.
@@ -85,12 +80,12 @@ export default function LebaneseTeachersBlogPage() {
             </p>
             <p>
               Every new assessment requires hours of planning. Coordinating exam difficulty across classes, translating official terms, and typing out equations manually cuts deep into evenings and weekends. This isn't unique to Lebanon — internationally, the OECD's 2024 Teaching and Learning International Survey (TALIS) found that teaching itself accounts for only around{" "}
-              <a href="https://www.oecd.org/en/publications/results-from-talis-2024_90df6235-en/full-report/the-demands-of-teaching_0e941e2f.html" target="_blank" rel="noopener noreferrer" className="text-[var(--accent)] underline underline-offset-2">43% of a teacher&apos;s self-reported working time</a>, with planning, grading, and administration filling the rest. Lebanese teachers describe the same imbalance, compounded by preparing separate assessments for the Lebanese Baccalaureate, French Baccalaureate, and IB within the same week.
+              <a href="https://www.oecd.org/en/publications/results-from-talis-2024_90df6235-en/full-report/the-demands-of-teaching_0e941e2f.html" target="_blank" rel="noopener noreferrer" className="text-[var(--accent)] underline underline-offset-2">43% of a teacher&apos;s self-reported working time</a>, with planning, grading, and administration filling the rest. This is international survey context rather than a Lebanon-specific workload estimate or an Imtihan performance measurement.
             </p>
 
             <BlogCallout
               title="Time Management Tip"
-              content="Instead of starting your exam drafts from a blank document, use AI-generated baselines to establish structure. It is 10x faster to refine and edit a generated exercise than to compose it from scratch."
+              content="Instead of starting your exam drafts from a blank document, use AI-generated baselines to establish structure. Measure the drafting and review time in your own workflow before deciding where it helps most."
             />
 
             <h2 id="time-sinks" className="text-2xl font-bold text-[var(--text)] mt-12 mb-4 serif">What Actually Eats a Lebanese Teacher's Week</h2>
@@ -107,16 +102,17 @@ export default function LebaneseTeachersBlogPage() {
               Imtihan was designed specifically to address this friction. By leveraging AI models optimized for local Lebanese and international frameworks, teachers can automate the heavy lifting of assessment drafting.
             </p>
             <p>
-              Rather than searching through physical copies of past <em>Dawrat</em>, teachers can instruct the AI to build questions on kinetics or probability matching those standards. The platform's ability to generate Version A &amp; B prevents cheating in overcrowded classrooms without doubling the prep workload, and every exercise ships with a full worked corrigé, not just a final answer.
+              Rather than searching through physical copies of past <em>Dawrat</em>, teachers can instruct the AI to build questions on kinetics or probability matching those standards. Version A &amp; B can provide alternative practice papers, which still need a teacher to check comparability, and every exercise ships with a full worked corrigé, not just a final answer.
             </p>
 
             <h2 id="local-affordability" className="text-2xl font-bold text-[var(--text)] mt-12 mb-4 serif">Affordable and Accessible Locally</h2>
             <p>
-              We understand the financial constraints facing Lebanese educators. That is why Imtihan does not require international credit cards. With local integrations like <strong>WHISH Money</strong>, teachers can easily upgrade to Pro and get instant, unlimited access to exam templates and MS Word exports. Every account starts with one free generated exam, no card required, before any paywall applies.
+              Each account starts with one free generated exam. Review the current <Link href="/pricing" className="text-[var(--accent)] underline">pricing and access details</Link> before planning repeated use. Available subjects are mathematics, physics and chemistry, with French and English generation.
             </p>
             <p>
               None of this replaces a teacher's own review. Imtihan drafts the exam and corrigé; you still read through it, adjust the wording, and decide what actually goes in front of your class — the automation is in the drafting, not the judgment call.
             </p>
+            <BlogPracticalExample slug="lebanese-teachers-ai-exam-generator" />
             <BlogFAQ items={FAQ_ITEMS} />
           </article>
 

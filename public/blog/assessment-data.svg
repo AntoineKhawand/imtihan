@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" fill="none">
+<rect width="1200" height="630" fill="#F6F4ED"/><circle cx="1110" cy="70" r="220" fill="#E2EBDD"/>
+<g font-family="Arial,sans-serif"><text x="64" y="76" fill="#276044" font-size="17" font-weight="700" letter-spacing="3">IMTIHAN / SCIENTIFIC REASONING</text>
+<text x="64" y="144" fill="#192B24" font-size="44" font-weight="700">Let the evidence do the teaching</text>
+<text x="64" y="190" fill="#52655A" font-size="23">Give students usable measurements, then ask for an explanation.</text>
+<rect x="64" y="242" width="470" height="285" rx="22" fill="#FFFFFF" stroke="#CDD8CC"/>
+<text x="94" y="290" fill="#276044" font-size="21" font-weight="700">ILLUSTRATIVE MEASUREMENTS</text>
+<g fill="#52655A" font-size="22"><text x="94" y="339">Time (s)</text><text x="320" y="339">Distance (m)</text><text x="94" y="387">0</text><text x="320" y="387">0</text><text x="94" y="435">1</text><text x="320" y="435">2</text><text x="94" y="483">2</text><text x="320" y="483">4</text></g>
+<path d="M568 383H628M614 369L628 383L614 397" stroke="#276044" stroke-width="4" stroke-linecap="round"/>
+<rect x="662" y="242" width="474" height="285" rx="22" fill="#E7F0E6"/>
+<text x="694" y="292" fill="#276044" font-size="21" font-weight="700">ASK FOR REASONING</text>
+<g fill="#192B24" font-size="24"><text x="694" y="352">What pattern do you observe?</text><text x="694" y="405">Which model fits the data?</text><text x="694" y="458">What assumption is needed?</text></g>
+<text x="64" y="580" fill="#52655A" font-size="19">Synthetic teaching example · These values are not survey or product-performance statistics.</text></g></svg>

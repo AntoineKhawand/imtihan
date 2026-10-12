@@ -12,9 +12,8 @@ type SchemaOrgProps = {
 };
 
 export function SchemaOrg({ schema }: SchemaOrgProps) {
-  const json = Array.isArray(schema)
-    ? JSON.stringify(schema)
-    : JSON.stringify(schema);
+  // Prevent authored text containing </script> from ending the JSON-LD tag.
+  const json = JSON.stringify(schema).replace(/</g, "\\u003c");
 
   return (
     <script
