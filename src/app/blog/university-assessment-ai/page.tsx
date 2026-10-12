@@ -1,4 +1,9 @@
-import type { Metadata } from "next";
+import { BlogArticleDates } from "@/components/blog/BlogArticleDates";
+import { BLOG_EDITORIAL, BLOG_REFRESH_DATE, blogFigurePath } from "@/data/blogEditorial";
+import { staticBlogMetadata } from "@/lib/blogMetadata";
+import { buildBlogArticleSchema, buildBlogBreadcrumbSchema } from "@/lib/blogSchema";
+import { BlogArticleFigure } from "@/components/blog/BlogArticleFigure";
+import { BlogPracticalExample } from "@/components/blog/BlogPracticalExample";
 import Link from "next/link";
 import { ArrowRight, ArrowLeft } from "lucide-react";
 import { Logo } from "@/components/ui/Logo";
@@ -13,11 +18,7 @@ import { BlogFAQ } from "@/components/blog/BlogFAQ";
 import { SchemaOrg } from "@/components/SchemaOrg";
 import { buildFaqSchema } from "@/components/landing/LandingFAQ";
 
-export const metadata: Metadata = {
-  title: "Complex Assessments Simplified: AI for University Exams | Imtihan Blog",
-  description: "How university professors in Lebanon can streamline the creation of high-level assessments.",
-  alternates: { canonical: "/blog/university-assessment-ai" },
-};
+export const metadata = staticBlogMetadata("university-assessment-ai");
 
 const FAQ_ITEMS = [
   {
@@ -35,7 +36,8 @@ const FAQ_ITEMS = [
 ];
 
 export default function UniversityBlogPage() {
-  const title = "Complex Assessments Simplified: AI for University Exams";
+  const editorial = BLOG_EDITORIAL["university-assessment-ai"];
+  const title = editorial.title;
   const url = "https://imtihan.live/blog/university-assessment-ai";
 
   return (
@@ -43,18 +45,8 @@ export default function UniversityBlogPage() {
       <BlogProgressBar />
       <SchemaOrg
         schema={[
-          {
-            "@context": "https://schema.org",
-            "@type": "Article",
-            headline: title,
-            description: metadata.description,
-            author: { "@type": "Organization", name: "Imtihan" },
-            publisher: {
-              "@type": "Organization",
-              name: "Imtihan",
-              logo: { "@type": "ImageObject", url: "https://imtihan.live/logo.png" },
-            },
-          },
+          buildBlogArticleSchema({ slug: "university-assessment-ai", title, description: editorial.description, published: editorial.published, modified: BLOG_REFRESH_DATE, language: editorial.language, image: blogFigurePath(editorial.figure) }),
+          buildBlogBreadcrumbSchema("university-assessment-ai", title),
           buildFaqSchema(FAQ_ITEMS),
         ]}
       />
@@ -73,6 +65,9 @@ export default function UniversityBlogPage() {
             <ArrowLeft size={14} /> Back to Blog
           </Link>
           <h1 className="serif text-display-lg text-[var(--text)] leading-[1.1] mb-8 text-balance">{title}</h1>
+
+          <BlogArticleDates published={editorial.published} french={editorial.language === "fr"} />
+          <BlogArticleFigure kind={editorial.figure} french={editorial.language === "fr"} />
 
           <article className="prose prose-imtihan max-w-none text-[var(--text)] text-[1.1rem] leading-relaxed">
             <p className="text-xl text-[var(--text-secondary)] leading-relaxed mb-10 font-medium">
@@ -116,6 +111,7 @@ export default function UniversityBlogPage() {
             <p>
               In its current release, Imtihan generates university exams in Math, Physics, and Chemistry, in French or English. Arabic-language generation, Biology/SVT, and Informatique aren't part of the current version — they're on the roadmap, not something to expect from today's build. Spend less time on administrative drafting within that scope, and more time on the parts of teaching that actually need a professor.
             </p>
+            <BlogPracticalExample slug="university-assessment-ai" />
             <BlogFAQ items={FAQ_ITEMS} />
           </article>
 

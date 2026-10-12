@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" fill="none">
+<rect width="1200" height="630" fill="#F6F4ED"/><circle cx="1110" cy="70" r="220" fill="#E2EBDD"/>
+<g font-family="Arial,sans-serif"><text x="64" y="76" fill="#276044" font-size="17" font-weight="700" letter-spacing="3">IMTIHAN / MARKING EXAMPLE</text>
+<text x="64" y="144" fill="#192B24" font-size="44" font-weight="700">Make every mark explainable</text>
+<text x="64" y="190" fill="#52655A" font-size="23">A classroom illustration — adapt criteria to the question and subject.</text>
+<rect x="64" y="236" width="1072" height="292" rx="22" fill="#FFFFFF" stroke="#CDD8CC"/>
+<path d="M64 305H1136M64 377H1136M64 449H1136" stroke="#DDE4DA"/>
+<g fill="#276044" font-size="20" font-weight="700"><text x="94" y="279">CRITERION</text><text x="650" y="279">EVIDENCE IN THE ANSWER</text><text x="1020" y="279">MARK</text></g>
+<g fill="#192B24" font-size="23"><text x="94" y="350">Choose an appropriate method</text><text x="650" y="350">Relevant relation or strategy</text><text x="1042" y="350">1</text><text x="94" y="422">Apply the method correctly</text><text x="650" y="422">Coherent working and units</text><text x="1042" y="422">1</text><text x="94" y="494">Interpret the result</text><text x="650" y="494">A justified conclusion</text><text x="1042" y="494">1</text></g>
+<text x="64" y="580" fill="#52655A" font-size="19">Illustrative 3-mark rubric · Not an official board marking scheme.</text></g></svg>

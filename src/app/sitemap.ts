@@ -1,3 +1,5 @@
+import { BLOG_EDITORIAL, BLOG_REFRESH_DATE } from "@/data/blogEditorial";
+import { blogDateIso } from "@/lib/blogSchema";
 import type { MetadataRoute } from "next";
 import { adminDb } from "@/lib/firebase-admin";
 import { STATIC_SITEMAP_ROUTES } from "@/lib/seo/static-sitemap-routes";
@@ -19,19 +21,14 @@ const STATIC_BLOG_SLUGS = STATIC_SITEMAP_ROUTES.filter((r) => r.path.startsWith(
 // "the-may-marathon-...", isn't in STATIC_BLOG_SLUGS above). Query the same
 // collection src/app/blog/page.tsx reads from, so the sitemap always matches
 // what's actually browsable at /blog.
-async function getDynamicBlogSlugs(): Promise<{ slug: string; lastModified: Date }[]> {
+async function getDynamicBlogSlugs(): Promise<{ slug: string; lastModified: Date | undefined }[]> {
   try {
     const snapshot = await adminDb.collection("blog_posts").orderBy("createdAt", "desc").get();
     return snapshot.docs
       .map((doc) => {
         const data = doc.data();
-        const createdAt =
-          data.createdAt && typeof data.createdAt.toDate === "function"
-            ? data.createdAt.toDate()
-            : data.createdAt
-              ? new Date(data.createdAt)
-              : new Date();
-        return { slug: data.slug as string, lastModified: createdAt };
+        const modified = blogDateIso(data.updatedAt) ?? blogDateIso(data.createdAt);
+        return { slug: data.slug as string, lastModified: modified ? new Date(modified) : undefined };
       })
       .filter((p) => !!p.slug && !STATIC_BLOG_SLUGS.includes(p.slug));
   } catch (e) {
@@ -57,7 +54,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // sitemap the way they used to.
   const staticEntries: MetadataRoute.Sitemap = STATIC_SITEMAP_ROUTES.map((route) => ({
     url: route.path === "/" ? APP_URL : `${APP_URL}${route.path}`,
-    lastModified: now,
+    lastModified: BLOG_EDITORIAL[route.path.slice("/blog/".length)] && route.path.startsWith("/blog/") ? new Date(BLOG_REFRESH_DATE) : now,
     changeFrequency: route.changeFrequency,
     priority: route.priority,
   }));

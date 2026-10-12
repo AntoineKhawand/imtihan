@@ -1,4 +1,9 @@
-import type { Metadata } from "next";
+import { BlogArticleDates } from "@/components/blog/BlogArticleDates";
+import { BLOG_EDITORIAL, BLOG_REFRESH_DATE, blogFigurePath } from "@/data/blogEditorial";
+import { staticBlogMetadata } from "@/lib/blogMetadata";
+import { buildBlogArticleSchema, buildBlogBreadcrumbSchema } from "@/lib/blogSchema";
+import { BlogArticleFigure } from "@/components/blog/BlogArticleFigure";
+import { BlogPracticalExample } from "@/components/blog/BlogPracticalExample";
 import Link from "next/link";
 import { ArrowRight, ArrowLeft } from "lucide-react";
 import { Logo } from "@/components/ui/Logo";
@@ -13,11 +18,7 @@ import { BlogFAQ } from "@/components/blog/BlogFAQ";
 import { SchemaOrg } from "@/components/SchemaOrg";
 import { buildFaqSchema, buildHowToSchema } from "@/components/landing/LandingFAQ";
 
-export const metadata: Metadata = {
-  title: "How to generate a Bac Libanais chemistry exam in 5 minutes | Imtihan Blog",
-  description: "Learn how chemistry teachers in Lebanon can write comprehensive, curriculum-aligned Bac Libanais exam drafts and step-by-step correction keys using AI.",
-  alternates: { canonical: "/blog/generate-bac-libanais-chemistry" },
-};
+export const metadata = staticBlogMetadata("generate-bac-libanais-chemistry");
 
 const HOW_TO_STEPS = [
   {
@@ -54,7 +55,8 @@ const FAQ_ITEMS = [
 ];
 
 export default function BacLibanaisChemistryBlogPage() {
-  const title = "How to generate a Bac Libanais chemistry exam in 5 minutes";
+  const editorial = BLOG_EDITORIAL["generate-bac-libanais-chemistry"];
+  const title = editorial.title;
   const url = "https://imtihan.live/blog/generate-bac-libanais-chemistry";
 
   return (
@@ -62,18 +64,8 @@ export default function BacLibanaisChemistryBlogPage() {
       <BlogProgressBar />
       <SchemaOrg
         schema={[
-          {
-            "@context": "https://schema.org",
-            "@type": "Article",
-            headline: title,
-            description: metadata.description,
-            author: { "@type": "Organization", name: "Imtihan" },
-            publisher: {
-              "@type": "Organization",
-              name: "Imtihan",
-              logo: { "@type": "ImageObject", url: "https://imtihan.live/logo.png" },
-            },
-          },
+          buildBlogArticleSchema({ slug: "generate-bac-libanais-chemistry", title, description: editorial.description, published: editorial.published, modified: BLOG_REFRESH_DATE, language: editorial.language, image: blogFigurePath(editorial.figure) }),
+          buildBlogBreadcrumbSchema("generate-bac-libanais-chemistry", title),
           buildHowToSchema(
             "How to generate a Bac Libanais chemistry exam",
             "A step-by-step guide to creating a curriculum-aligned chemistry exam using Imtihan",
@@ -98,9 +90,12 @@ export default function BacLibanaisChemistryBlogPage() {
           </Link>
           <h1 className="serif text-display-lg text-[var(--text)] leading-[1.1] mb-8 text-balance">{title}</h1>
 
+          <BlogArticleDates published={editorial.published} french={editorial.language === "fr"} />
+          <BlogArticleFigure kind={editorial.figure} french={editorial.language === "fr"} />
+
           <article className="prose prose-imtihan max-w-none text-[var(--text)] text-[1.1rem] leading-relaxed">
             <p className="text-xl text-[var(--text-secondary)] leading-relaxed mb-10 font-medium">
-              The fastest way to draft a curriculum-aligned Bac Libanais chemistry exam is to describe your topics — kinetics, pH titration, organic reactions — to Imtihan and let it generate a print-ready test with LaTeX-formatted equations and a full step-by-step corrigé in about five minutes, instead of manually retyping problems from old CRDP sessions.
+              A Bac Libanais chemistry exam generator can help draft questions and a worked corrigé around selected chapters. Define your duration, data requirements and marks, then verify reaction equations, calculations and the composition before distributing the paper.
             </p>
 
             <h2 id="challenges" className="text-2xl font-bold text-[var(--text)] mt-12 mb-4 serif">The Challenges of Bac Libanais Chemistry</h2>
@@ -135,8 +130,9 @@ export default function BacLibanaisChemistryBlogPage() {
 
             <h2 id="grounded" className="text-2xl font-bold text-[var(--text)] mt-12 mb-4 serif">Staying Grounded in the Real CRDP Programme</h2>
             <p>
-              Imtihan validates every chapter you select against Lebanon&apos;s official CRDP programme before generating a single question. If a topic isn&apos;t part of the Terminale SV or SG chemistry syllabus, it simply isn&apos;t offered as an option, so an exam can&apos;t quietly drift into content your students were never actually taught.
+              Select the correct level and chapters, and check every generated exercise against what you taught. Chapter selection guides the draft, but cannot guarantee that every detail will be correct. Use current CRDP references for official conventions; chemistry compositions should be teacher-defined or grounded in an uploaded reference.
             </p>
+            <BlogPracticalExample slug="generate-bac-libanais-chemistry" />
             <BlogFAQ items={FAQ_ITEMS} />
           </article>
 

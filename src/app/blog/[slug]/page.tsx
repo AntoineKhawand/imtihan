@@ -1,3 +1,6 @@
+import { BLOG_EDITORIAL, blogFigurePath, inferBlogFigure } from "@/data/blogEditorial";
+import { blogDateIso, buildBlogArticleSchema, buildBlogBreadcrumbSchema } from "@/lib/blogSchema";
+import { BlogArticleFigure } from "@/components/blog/BlogArticleFigure";
 import { Metadata } from "next";
 import Link from "next/link";
 import { ArrowLeft, ArrowRight, Clock, Calendar, User } from "lucide-react";
@@ -68,7 +71,9 @@ interface BlogPost {
   author: string;
   date: string;
   published: boolean;
-  createdAt: any;
+  createdAt: unknown;
+  updatedAt?: unknown;
+  language?: string;
 }
 
 export async function getPost(slug: string): Promise<BlogPost | null> {
@@ -78,8 +83,8 @@ export async function getPost(slug: string): Promise<BlogPost | null> {
     return {
       id: "fallback",
       slug: slug,
-      title: isRecycled ? "Are Your Students Bored of the Same Recycled Exams?" : "Reclaiming Your Sundays: How Imtihan Automates Teacher Tasks",
-      description: isRecycled ? "Why using past papers (Dawrat) is hurting your students' engagement..." : "Learn how generative AI can save Lebanese teachers 10+ hours a week...",
+      title: BLOG_EDITORIAL[slug].title,
+      description: BLOG_EDITORIAL[slug].description,
       category: isRecycled ? "Teaching Strategies" : "Productivity",
       readTime: "4 min read",
       author: "Jean-Paul Mansour",
@@ -87,8 +92,8 @@ export async function getPost(slug: string): Promise<BlogPost | null> {
         ? "## The Dawrat Dilemma\n\nFor decades, the standard practice in Lebanese schools has been to recycle old official exams (Dawrat). While this prepares students for the format, it often leads to a 'memorization' culture rather than a 'understanding' culture.\n\n### Why Students Disengage\n\nWhen students recognize a problem from a past paper they've already seen, their brain shifts from analytical mode to recall mode. This hurts their ability to tackle truly novel problems in the future.\n\n### The AI Solution\n\nWith Imtihan, you can take a classic Dawrat problem and instantly generate a 'sibling' problem—same concept, same difficulty, but fresh values and a new scenario. This keeps students on their toes and ensures they've mastered the concept, not just the question."
         : "## The Sunday Night Stress\n\nWe've all been there: a mountain of corrections and three exams to draft for Monday morning. Sunday, which should be for rest, becomes the most stressful day of the week.\n\n### Automation is Here\n\nImtihan wasn't built to replace teachers; it was built to free them. By automating the repetitive parts of exam creation—like drafting scenarios, formatting tables, and generating keys—you can reclaim hours of your personal time.\n\n### 5 Ways to Save Time\n\n1. **Instant Scenarios**: No more searching for physics contexts.\n2. **Auto-Formatting**: Everything is perfectly spaced for printing.\n3. **Sync Key**: The corrigé is drafted as you build the questions.\n4. **Batch Generation**: Create versions A and B in seconds.\n5. **Curriculum Alignment**: No more double-checking against the Lebanese official standards.",
       published: true,
-      createdAt: { toDate: () => new Date() },
-      date: "May 1, 2026"
+      createdAt: new Date(BLOG_EDITORIAL[slug].published),
+      date: new Date(BLOG_EDITORIAL[slug].published).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric", timeZone: "UTC" })
     } as BlogPost;
   }
 
@@ -112,9 +117,11 @@ export async function getPost(slug: string): Promise<BlogPost | null> {
     author: data.author,
     published: data.published,
     createdAt: data.createdAt,
-    date: data.createdAt?.toDate?.()?.toLocaleDateString("en-US", {
-      month: "long", day: "numeric", year: "numeric"
-    }) || "Recently"
+    updatedAt: data.updatedAt,
+    language: data.language,
+    date: blogDateIso(data.createdAt) ? new Date(blogDateIso(data.createdAt)!).toLocaleDateString("en-US", {
+      month: "long", day: "numeric", year: "numeric", timeZone: "UTC",
+    }) : "Publication date unavailable"
   } as BlogPost;
 }
 
@@ -124,8 +131,10 @@ export async function generateMetadata({ params }: BlogPostProps): Promise<Metad
   
   if (!post) return { title: "Article Not Found | Imtihan" };
 
+  const published = blogDateIso(post.createdAt);
+  const modified = blogDateIso(post.updatedAt);
   return {
-    title: `${post.title} | Imtihan Blog`,
+    title: post.title,
     description: post.description,
     // Previously unset, so every dynamic post inherited the root layout's
     // canonical (the homepage) instead of pointing at itself — found via
@@ -135,6 +144,8 @@ export async function generateMetadata({ params }: BlogPostProps): Promise<Metad
       title: post.title,
       description: post.description,
       type: "article",
+      publishedTime: published,
+      modifiedTime: modified,
       url: `https://imtihan.live/blog/${slug}`,
       images: [{ url: `/blog/${slug}/opengraph-image`, width: 1200, height: 630, alt: post.title }],
     }
@@ -149,35 +160,17 @@ export default async function DynamicBlogPostPage({ params }: BlogPostProps) {
 
   const url = `https://imtihan.live/blog/${post.slug}`;
   const { body, items: faqItems } = extractFaqSection(post.content);
+  const figure = inferBlogFigure(post.title + " " + post.category);
+  const modified = blogDateIso(post.updatedAt);
 
   return (
     <div className="min-h-screen bg-[var(--bg)] flex flex-col">
       <BlogProgressBar />
       
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "Article",
-            "headline": post.title,
-            "description": post.description,
-            "author": {
-              "@type": "Person",
-              "name": post.author || "Imtihan AI Assistant"
-            },
-            "datePublished": post.createdAt?.toDate?.()?.toISOString() || new Date().toISOString(),
-            "publisher": {
-              "@type": "Organization",
-              "name": "Imtihan",
-              "logo": {
-                "@type": "ImageObject",
-                "url": "https://imtihan.live/logo.png"
-              }
-            }
-          })
-        }}
-      />
+      <SchemaOrg schema={[
+        buildBlogArticleSchema({ slug: post.slug, title: post.title, description: post.description, author: post.author || "Imtihan AI", published: post.createdAt, modified: post.updatedAt, language: post.language, image: blogFigurePath(figure) }),
+        buildBlogBreadcrumbSchema(post.slug, post.title),
+      ]} />
       {faqItems.length > 0 && <SchemaOrg schema={buildFaqSchema(faqItems)} />}
 
       <nav className="sticky top-0 left-0 right-0 z-50 flex items-center justify-between px-6 md:px-10 h-16 bg-[var(--bg)]/80 backdrop-blur-xl border-b border-[var(--border)]/60 transition-colors">
@@ -211,13 +204,15 @@ export default async function DynamicBlogPostPage({ params }: BlogPostProps) {
           <div className="flex items-center gap-8 mb-12 py-6 border-y border-[var(--border)]/60">
             <div className="flex items-center gap-2.5 text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wide">
               <Calendar size={16} className="text-[var(--accent)]" />
-              {post.date}
+              <span>{post.date}{modified && <span className="mt-1 block normal-case font-normal">Updated {new Date(modified).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric", timeZone: "UTC" })}</span>}</span>
             </div>
             <div className="flex items-center gap-2.5 text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wide">
               <User size={16} className="text-[var(--accent)]" />
               By {post.author || "Imtihan Editor"}
             </div>
           </div>
+
+          <BlogArticleFigure kind={figure} french={post.language === "French" || post.language === "fr"} />
 
           <article className="prose prose-imtihan max-w-none text-[var(--text)] text-[1.15rem] leading-relaxed mb-20 font-medium">
             <ReactMarkdown
@@ -237,13 +232,13 @@ export default async function DynamicBlogPostPage({ params }: BlogPostProps) {
 
           <BlogAuthor 
             name="Imtihan AI"
-            role="Educational Strategy Assistant"
+            role="AI-assisted educational guides"
             avatarText="IA"
-            bio="Our autonomous AI editor researches current trends in the Lebanese curriculum to provide teachers and parents with the most relevant insights and productivity tips."
+            bio="AI-assisted articles about exam preparation. Verify curriculum requirements, marking rules and generated examples with the current subject guide and your teaching experience."
           />
           
           <div className="mt-16 pt-16 border-t border-[var(--border)]/60">
-            <BlogRelated currentSlug={post.slug} />
+            <BlogRelated currentSlug={post.slug} title={post.title} />
           </div>
         </main>
 

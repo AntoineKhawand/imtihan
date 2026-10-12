@@ -1,3 +1,5 @@
+import { SchemaOrg } from "@/components/SchemaOrg";
+import { BLOG_EDITORIAL } from "@/data/blogEditorial";
 import type { Metadata } from "next";
 import { adminDb } from "@/lib/firebase-admin";
 import Link from "next/link";
@@ -42,8 +44,8 @@ const STATIC_ARTICLES: BlogPost[] = [
   {
     id: "static-1",
     slug: "stop-recycled-exams",
-    title: "Are Your Students Bored of the Same Recycled Exams?",
-    description: "Why using past papers (Dawrat) is hurting your students' engagement, and how AI can instantly solve the problem.",
+    title: BLOG_EDITORIAL["stop-recycled-exams"].title,
+    description: BLOG_EDITORIAL["stop-recycled-exams"].description,
     category: "Teaching Strategies",
     readTime: "4 min read",
     date: "May 1, 2026"
@@ -51,8 +53,8 @@ const STATIC_ARTICLES: BlogPost[] = [
   {
     id: "static-2",
     slug: "save-time-teaching",
-    title: "Reclaiming Your Sundays: How Imtihan Automates Teacher Tasks",
-    description: "Learn how generative AI can save Lebanese teachers 10+ hours a week by automating exam creation.",
+    title: BLOG_EDITORIAL["save-time-teaching"].title,
+    description: BLOG_EDITORIAL["save-time-teaching"].description,
     category: "Productivity",
     readTime: "4 min read",
     date: "April 30, 2026"
@@ -60,8 +62,8 @@ const STATIC_ARTICLES: BlogPost[] = [
   {
     id: "static-3",
     slug: "guide-for-parents",
-    title: "Is Your Child Ready for the Brevet? Mock Exams at Home",
-    description: "How parents can use Imtihan to generate mock sessions for their children and monitor progress without needing to know the subject matter.",
+    title: BLOG_EDITORIAL["guide-for-parents"].title,
+    description: BLOG_EDITORIAL["guide-for-parents"].description,
     category: "Parental Guides",
     readTime: "4 min read",
     date: "April 29, 2026"
@@ -69,8 +71,8 @@ const STATIC_ARTICLES: BlogPost[] = [
   {
     id: "static-4",
     slug: "exam-standardization",
-    title: "The Coordinator's Secret: Standardizing Exam Quality",
-    description: "How school coordinators can use AI to enforce consistent question quality and cognitive level distribution across all teachers.",
+    title: BLOG_EDITORIAL["exam-standardization"].title,
+    description: BLOG_EDITORIAL["exam-standardization"].description,
     category: "Exam Techniques",
     readTime: "5 min read",
     date: "April 28, 2026"
@@ -78,8 +80,8 @@ const STATIC_ARTICLES: BlogPost[] = [
   {
     id: "static-5",
     slug: "university-assessment-ai",
-    title: "Complex Assessments Simplified: AI for University Exams",
-    description: "How university professors can leverage AI to generate multi-part, high-difficulty assessments aligned with academic standards.",
+    title: BLOG_EDITORIAL["university-assessment-ai"].title,
+    description: BLOG_EDITORIAL["university-assessment-ai"].description,
     category: "Exam Techniques",
     readTime: "6 min read",
     date: "April 27, 2026"
@@ -87,8 +89,8 @@ const STATIC_ARTICLES: BlogPost[] = [
   {
     id: "static-6",
     slug: "generate-bac-libanais-chemistry",
-    title: "How to generate a Bac Libanais chemistry exam in 5 minutes",
-    description: "Learn how chemistry teachers in Lebanon can write comprehensive, curriculum-aligned Bac Libanais exam drafts and step-by-step correction keys using AI.",
+    title: BLOG_EDITORIAL["generate-bac-libanais-chemistry"].title,
+    description: BLOG_EDITORIAL["generate-bac-libanais-chemistry"].description,
     category: "Resources",
     readTime: "5 min read",
     date: "May 10, 2026"
@@ -96,8 +98,8 @@ const STATIC_ARTICLES: BlogPost[] = [
   {
     id: "static-7",
     slug: "ib-mark-scheme-generator",
-    title: "IB mark scheme generator: free tool for IB teachers",
-    description: "Find out how to automatically generate detailed IB-compliant mark schemes for DP Physics and Chemistry using Imtihan's free AI tool.",
+    title: BLOG_EDITORIAL["ib-mark-scheme-generator"].title,
+    description: BLOG_EDITORIAL["ib-mark-scheme-generator"].description,
     category: "Resources",
     readTime: "5 min read",
     date: "May 9, 2026"
@@ -105,8 +107,8 @@ const STATIC_ARTICLES: BlogPost[] = [
   {
     id: "static-8",
     slug: "generate-bac-francais-devoir",
-    title: "Générateur de devoir Bac Français : Gagnez des heures sur vos DS",
-    description: "Découvrez comment concevoir des Devoirs Surveillés (DS) de spécialité Physique-Chimie conformes au Baccalauréat Français (AEFE) en 5 minutes.",
+    title: BLOG_EDITORIAL["generate-bac-francais-devoir"].title,
+    description: BLOG_EDITORIAL["generate-bac-francais-devoir"].description,
     category: "Resources",
     readTime: "5 min read",
     date: "May 8, 2026"
@@ -114,8 +116,8 @@ const STATIC_ARTICLES: BlogPost[] = [
   {
     id: "static-9",
     slug: "lebanese-teachers-ai-exam-generator",
-    title: "Reclaiming Your Evenings: The Power of AI Exam Generators for Lebanese Teachers",
-    description: "Explore how Lebanese educators are overcoming preparation fatigue and grading overhead using local-curriculum AI assessment tools.",
+    title: BLOG_EDITORIAL["lebanese-teachers-ai-exam-generator"].title,
+    description: BLOG_EDITORIAL["lebanese-teachers-ai-exam-generator"].description,
     category: "Productivity",
     readTime: "6 min read",
     date: "May 7, 2026"
@@ -146,8 +148,8 @@ async function getArticles(category: string, page: number) {
       return {
         id: doc.id,
         slug: data.slug,
-        title: data.title,
-        description: data.description,
+        title: BLOG_EDITORIAL[data.slug]?.title ?? data.title,
+        description: BLOG_EDITORIAL[data.slug]?.description ?? data.description,
         category: data.category,
         readTime: data.readTime,
         date: displayDate
@@ -189,6 +191,14 @@ export default async function BlogPage({
 
   return (
     <div className="min-h-screen bg-[var(--bg)] flex flex-col">
+      <SchemaOrg schema={{
+        "@context": "https://schema.org", "@type": "CollectionPage", name: "Imtihan Journal",
+        url: "https://imtihan.live/blog", description: metadata.description,
+        mainEntity: { "@type": "ItemList", itemListElement: articles.map((article, index) => ({
+          "@type": "ListItem", position: (currentPage - 1) * 6 + index + 1,
+          name: article.title, url: `https://imtihan.live/blog/${article.slug}`,
+        })) },
+      }} />
       <nav className="sticky top-0 left-0 right-0 z-50 flex items-center justify-between px-6 md:px-10 h-16 bg-[var(--bg)]/80 backdrop-blur-xl border-b border-[var(--border)]/60">
         <Logo size={26} />
         <Link 

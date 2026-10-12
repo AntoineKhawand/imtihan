@@ -1,3 +1,4 @@
+import { blogReadTime } from "@/lib/blogQuality";
 import { NextRequest, NextResponse } from "next/server";
 import { adminDb, verifyIdToken } from "@/lib/firebase-admin";
 import { isAdmin } from "@/lib/admin";
@@ -56,8 +57,8 @@ export async function GET(request: NextRequest, { params }: RouteContext) {
 
 // PATCH: update an existing blog_posts document's editable fields
 // (title, description, content, category) by document id. Scoped
-// intentionally — not a full CMS. Does not touch slug/author/readTime/
-// published/createdAt, and never creates a document (existing-only), so a
+// intentionally — not a full CMS. Read time is derived when content changes.
+// Does not touch slug/author/published/createdAt, and never creates a document, so a
 // typo'd id can't silently create a stray post.
 export async function PATCH(request: NextRequest, { params }: RouteContext) {
   const uid = await verifyIdToken(request);
@@ -85,6 +86,7 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
 
     await ref.update({
       ...parsed.data,
+      ...(parsed.data.content !== undefined ? { readTime: blogReadTime(parsed.data.content) } : {}),
       updatedAt: new Date(),
     });
 

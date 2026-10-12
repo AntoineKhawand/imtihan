@@ -1,4 +1,9 @@
-import type { Metadata } from "next";
+import { BlogArticleDates } from "@/components/blog/BlogArticleDates";
+import { BLOG_EDITORIAL, BLOG_REFRESH_DATE, blogFigurePath } from "@/data/blogEditorial";
+import { staticBlogMetadata } from "@/lib/blogMetadata";
+import { buildBlogArticleSchema, buildBlogBreadcrumbSchema } from "@/lib/blogSchema";
+import { BlogArticleFigure } from "@/components/blog/BlogArticleFigure";
+import { BlogPracticalExample } from "@/components/blog/BlogPracticalExample";
 import Link from "next/link";
 import { ArrowRight, ArrowLeft } from "lucide-react";
 import { Logo } from "@/components/ui/Logo";
@@ -13,11 +18,7 @@ import { BlogFAQ } from "@/components/blog/BlogFAQ";
 import { SchemaOrg } from "@/components/SchemaOrg";
 import { buildFaqSchema } from "@/components/landing/LandingFAQ";
 
-export const metadata: Metadata = {
-  title: "Is Your Child Ready for the Brevet? Mock Exams at Home | Imtihan Blog",
-  description: "How Lebanese parents can use AI to create curriculum-aligned mock exams for their kids.",
-  alternates: { canonical: "/blog/guide-for-parents" },
-};
+export const metadata = staticBlogMetadata("guide-for-parents");
 
 const FAQ_ITEMS = [
   {
@@ -35,7 +36,8 @@ const FAQ_ITEMS = [
 ];
 
 export default function ParentsBlogPage() {
-  const title = "Is Your Child Ready for the Brevet? Mock Exams at Home";
+  const editorial = BLOG_EDITORIAL["guide-for-parents"];
+  const title = editorial.title;
   const url = "https://imtihan.live/blog/guide-for-parents";
 
   return (
@@ -43,18 +45,8 @@ export default function ParentsBlogPage() {
       <BlogProgressBar />
       <SchemaOrg
         schema={[
-          {
-            "@context": "https://schema.org",
-            "@type": "Article",
-            headline: title,
-            description: metadata.description,
-            author: { "@type": "Organization", name: "Imtihan" },
-            publisher: {
-              "@type": "Organization",
-              name: "Imtihan",
-              logo: { "@type": "ImageObject", url: "https://imtihan.live/logo.png" },
-            },
-          },
+          buildBlogArticleSchema({ slug: "guide-for-parents", title, description: editorial.description, published: editorial.published, modified: BLOG_REFRESH_DATE, language: editorial.language, image: blogFigurePath(editorial.figure) }),
+          buildBlogBreadcrumbSchema("guide-for-parents", title),
           buildFaqSchema(FAQ_ITEMS),
         ]}
       />
@@ -73,6 +65,9 @@ export default function ParentsBlogPage() {
             <ArrowLeft size={14} /> Back to Blog
           </Link>
           <h1 className="serif text-display-lg text-[var(--text)] leading-[1.1] mb-8 text-balance">{title}</h1>
+
+          <BlogArticleDates published={editorial.published} french={editorial.language === "fr"} />
+          <BlogArticleFigure kind={editorial.figure} french={editorial.language === "fr"} />
 
           <article className="prose prose-imtihan max-w-none text-[var(--text)] text-[1.1rem] leading-relaxed">
             <p className="text-xl text-[var(--text-secondary)] leading-relaxed mb-10 font-medium">
@@ -118,6 +113,7 @@ export default function ParentsBlogPage() {
             <p>
               You can download the exam and its corrigé as a formatted Word document or PDF, print them, and run the mock exam at the kitchen table exactly like exam day — no separate app, no login required for your child, just paper and a timer.
             </p>
+            <BlogPracticalExample slug="guide-for-parents" />
             <BlogFAQ items={FAQ_ITEMS} />
           </article>
 

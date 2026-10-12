@@ -81,7 +81,7 @@ Prompts live in `src/lib/prompts/` as versioned TypeScript files, not hardcoded 
 
 **Never** inline a prompt as a template literal inside a route handler. It makes prompts un-testable and un-versionable.
 
-Blog generation uses keyword briefs and recent-post context, with schema and structural checks before publication. Keywords are editorial seeds, not live Search Console data; factual review remains necessary. See [docs/BLOG_EDITORIAL_PLAN.md](docs/BLOG_EDITORIAL_PLAN.md).
+Blog generation uses keyword briefs and recent-post context, with schema and structural checks before publication. Keywords are editorial seeds, not live Search Console data; factual review remains necessary. See [docs/BLOG_EDITORIAL_PLAN.md](docs/BLOG_EDITORIAL_PLAN.md). Existing articles share image-backed BlogPosting/BreadcrumbList markup; static article metadata and practical examples live in `src/data/blogEditorial.ts`. Database body/title changes use the authenticated admin editor. See [docs/BLOG_EXISTING_REFRESH.md](docs/BLOG_EXISTING_REFRESH.md) for the existing-content audit and pending drafts.
 
 ## 6. Data Models
 

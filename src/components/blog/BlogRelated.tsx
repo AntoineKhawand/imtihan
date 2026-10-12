@@ -1,3 +1,4 @@
+import { BLOG_EDITORIAL } from "@/data/blogEditorial";
 import Link from "next/link";
 import { ArrowRight, Clock } from "lucide-react";
 
@@ -10,67 +11,77 @@ interface Article {
 
 interface BlogRelatedProps {
   currentSlug: string;
+  title?: string;
 }
 
 const ARTICLES: Article[] = [
   {
     slug: "stop-recycled-exams",
-    title: "Are Your Students Bored of the Same Recycled Exams?",
+    title: BLOG_EDITORIAL["stop-recycled-exams"].title,
     category: "Teaching Strategies",
     readTime: "4 min read"
   },
   {
     slug: "save-time-teaching",
-    title: "Reclaiming Your Sundays: 5 Ways Imtihan Automates Tasks",
+    title: BLOG_EDITORIAL["save-time-teaching"].title,
     category: "Productivity",
     readTime: "4 min read"
   },
   {
     slug: "guide-for-parents",
-    title: "Is Your Child Ready for the Brevet? Mock Exams at Home",
+    title: BLOG_EDITORIAL["guide-for-parents"].title,
     category: "Parental Guides",
     readTime: "5 min read"
   },
   {
     slug: "exam-standardization",
-    title: "The Coordinator’s Secret: Standardizing Exam Quality",
+    title: BLOG_EDITORIAL["exam-standardization"].title,
     category: "Leadership",
     readTime: "6 min read"
   },
   {
     slug: "university-assessment-ai",
-    title: "Complex Assessments Simplified: AI for University Exams",
+    title: BLOG_EDITORIAL["university-assessment-ai"].title,
     category: "Higher Ed",
     readTime: "5 min read"
   },
   {
     slug: "generate-bac-libanais-chemistry",
-    title: "How to generate a Bac Libanais chemistry exam in 5 minutes",
+    title: BLOG_EDITORIAL["generate-bac-libanais-chemistry"].title,
     category: "Resources",
     readTime: "5 min read"
   },
   {
     slug: "ib-mark-scheme-generator",
-    title: "IB mark scheme generator: free tool for IB teachers",
+    title: BLOG_EDITORIAL["ib-mark-scheme-generator"].title,
     category: "Resources",
     readTime: "5 min read"
   },
   {
     slug: "generate-bac-francais-devoir",
-    title: "Générateur de devoir Bac Français : Gagnez des heures sur vos DS",
+    title: BLOG_EDITORIAL["generate-bac-francais-devoir"].title,
     category: "Resources",
     readTime: "5 min read"
   },
   {
     slug: "lebanese-teachers-ai-exam-generator",
-    title: "Reclaiming Your Evenings: AI Exam Generators in Lebanon",
+    title: BLOG_EDITORIAL["lebanese-teachers-ai-exam-generator"].title,
     category: "Productivity",
     readTime: "6 min read"
   }
 ];
 
-export function BlogRelated({ currentSlug }: BlogRelatedProps) {
-  const related = ARTICLES.filter(a => a.slug !== currentSlug).slice(0, 2);
+export function BlogRelated({ currentSlug, title = "" }: BlogRelatedProps) {
+  const topic = `${currentSlug} ${title}`;
+  const preferred = /\bib\b|mark.scheme/i.test(topic) ? ["ib-mark-scheme-generator", "exam-standardization"]
+    : /chimi|chemi|phys/i.test(topic) ? ["generate-bac-libanais-chemistry", "generate-bac-francais-devoir"]
+    : /parent|brevet|revision/i.test(topic) ? ["guide-for-parents", "stop-recycled-exams"]
+    : /univers|entrance/i.test(topic) ? ["university-assessment-ai", "ib-mark-scheme-generator"]
+    : /standard|coordinat|diagnostic/i.test(topic) ? ["exam-standardization", "stop-recycled-exams"]
+    : ["save-time-teaching", "lebanese-teachers-ai-exam-generator"];
+  const ranked = [...preferred, ...ARTICLES.map(article => article.slug)];
+  const related = [...ARTICLES].filter(article => article.slug !== currentSlug)
+    .sort((a, b) => ranked.indexOf(a.slug) - ranked.indexOf(b.slug)).slice(0, 2);
 
   return (
     <div className="py-2">
