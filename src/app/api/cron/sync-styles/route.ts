@@ -8,7 +8,7 @@
  * Call this once to bootstrap profiles from published exam history, then
  * schedule it weekly via Vercel Cron (vercel.json) to keep profiles fresh.
  *
- * Security: requires CRON_SECRET header matching the env variable.
+ * Security: requires Vercel's Authorization: Bearer CRON_SECRET header.
  */
 
 import { NextRequest, NextResponse } from "next/server";
@@ -29,7 +29,7 @@ type StyleGroups = Map<string, ExamSummaryForStyle[]>;
 export async function GET(req: NextRequest) {
   // ── Auth ────────────────────────────────────────────────────────────────────
   const secret = process.env.CRON_SECRET;
-  if (secret && req.headers.get("x-cron-secret") !== secret) {
+  if (!secret || req.headers.get("authorization") !== `Bearer ${secret}`) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -84,17 +84,20 @@ export async function GET(req: NextRequest) {
 
     // ── 3. Compute style per group and write to Firestore ──────────────────
     let written = 0;
+    let failedGroups = 0;
     const writes: Promise<void>[] = [];
 
     for (const [key, exams] of groups) {
       const [uid, curriculumId, subject] = key.split("::");
       const style = buildStyleFromExams(exams);
       writes.push(
-        mergeAndSaveStyle(uid, curriculumId, subject, style).catch((err) =>
-          console.error(`[sync-styles] Failed for ${key}:`, err)
-        )
+        mergeAndSaveStyle(uid, curriculumId, subject, style)
+          .then(() => { written++; })
+          .catch((err) => {
+            failedGroups++;
+            console.error(`[sync-styles] Failed for ${key}:`, err);
+          })
       );
-      written++;
     }
 
     await Promise.all(writes);
@@ -106,7 +109,8 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({
       processed: snapshot.size,
       groups: written,
-    });
+      failedGroups,
+    }, { status: failedGroups > 0 ? 500 : 200 });
   } catch (err) {
     console.error("[sync-styles] Cron failed:", err);
     return NextResponse.json(
