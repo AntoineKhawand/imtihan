@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { PublicFooter } from "@/components/layout/PublicFooter";
+import { Logo } from "@/components/ui/Logo";
 
 export const metadata = {
   title: "Terms of Service — Imtihan",
@@ -37,12 +38,7 @@ export default function TermsPage() {
           <ArrowLeft size={16} aria-label="Back to home page" />
           <span className="text-sm hidden sm:block">Back</span>
         </Link>
-        <Link href="/" className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg bg-[var(--accent)] flex items-center justify-center">
-            <span className="text-white text-xs font-serif">إ</span>
-          </div>
-          <span className="font-semibold text-sm text-[var(--text)] tracking-tight">Imtihan</span>
-        </Link>
+        <Logo size={26} />
         <div className="w-20" />
       </header>
 
