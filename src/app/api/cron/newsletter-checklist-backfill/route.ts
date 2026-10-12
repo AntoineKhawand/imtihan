@@ -56,7 +56,8 @@ export async function GET(request: NextRequest) {
       if (!email) continue;
 
       try {
-        const result = await sendEmail({ to: email, subject: CHECKLIST_SUBJECT, html: CHECKLIST_HTML });
+        const result = await sendEmail({ to: email, subject: CHECKLIST_SUBJECT, html: CHECKLIST_HTML, purpose: "marketing" });
+        if (result.skipped) continue;
         if (result.ok) {
           await docSnap.ref.update({ checklistSentAt: Date.now() });
           sent++;

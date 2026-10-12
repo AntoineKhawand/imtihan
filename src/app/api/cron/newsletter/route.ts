@@ -182,7 +182,7 @@ function buildNewsletterHtml(firstName: string, month: string): string {
     <p style="color:#86868b;font-size:12px;margin:0;line-height:1.7">
       You're receiving this because you created an account on Imtihan.<br/>
       Imtihan · Beirut, Lebanon ·
-      <a href="${APP_URL}/contact" style="color:#86868b;text-decoration:underline">Unsubscribe</a>
+      <span>Manage promotional email preferences using the unsubscribe link below.</span>
     </p>
   </td></tr>
 
@@ -197,7 +197,7 @@ function buildNewsletterHtml(firstName: string, month: string): string {
 export async function GET(request: NextRequest) {
   const cronSecret = process.env.CRON_SECRET;
   const secret = request.headers.get("authorization")?.replace("Bearer ", "");
-  if (cronSecret && secret !== cronSecret) {
+  if (!cronSecret || secret !== cronSecret) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -225,7 +225,8 @@ export async function GET(request: NextRequest) {
       const html = buildNewsletterHtml(firstName, displayMonth);
 
       try {
-        const result = await sendEmail({ to: email, toName: data.displayName ?? email, subject, html });
+        const result = await sendEmail({ to: email, toName: data.displayName ?? email, subject, html, purpose: "marketing" });
+        if (result.skipped) continue;
         if (result.ok) {
           await doc.ref.update({ newsletterSentAt: now });
           sent++;

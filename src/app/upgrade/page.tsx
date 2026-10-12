@@ -335,6 +335,7 @@ export default function UpgradePage() {
                   <div><span className="serif text-3xl font-light text-[var(--text)]">${price.toFixed(2)}</span><span className="text-[var(--text-secondary)] ml-1">/mo</span></div>
                 </div>
 
+                <p className="text-xs leading-relaxed text-[var(--text-secondary)]">{plan === "yearly" ? `$${YEARLY_TOTAL.toFixed(2)} total for 12 months` : `$${MONTHLY_PRICE.toFixed(2)} total for one month`}. Manual payment only. This button requests payment instructions; it does not charge you. Access expires at the end of the paid period. No automatic renewal or recurring charge.</p>
                 <button type="submit" disabled={!isReady || loading}
                   className="w-full flex items-center justify-center gap-3 py-4 rounded-xl bg-[var(--accent)] text-white font-semibold text-base hover:bg-[var(--accent)]/90 active:scale-[0.98] transition-all shadow-lg shadow-[var(--accent)]/20 disabled:opacity-50 disabled:cursor-not-allowed group">
                   {loading

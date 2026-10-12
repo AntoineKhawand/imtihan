@@ -42,6 +42,7 @@ interface StudentAuthContextType {
     email: string,
     password: string,
     displayName: string,
+    ageConfirmed: boolean,
     schoolName?: string
   ) => Promise<void>;
   signOut: () => Promise<void>;
@@ -117,8 +118,10 @@ export function StudentAuthProvider({ children }: { children: ReactNode }) {
     email: string,
     password: string,
     displayName: string,
+    ageConfirmed: boolean,
     schoolName?: string
   ) {
+    if (!ageConfirmed) throw new Error("You must confirm that you are at least 18 years old.");
     const credential = await createUserWithEmailAndPassword(auth, email, password);
     const { uid } = credential.user;
 
@@ -139,6 +142,7 @@ export function StudentAuthProvider({ children }: { children: ReactNode }) {
     await setDoc(doc(db, "student_profiles", uid), {
       ...profileData,
       createdAt: serverTimestamp(),
+      age18ConfirmedAt: serverTimestamp(),
     });
 
     // Write a minimal users/{uid} record so the teacher AuthContext
@@ -149,6 +153,7 @@ export function StudentAuthProvider({ children }: { children: ReactNode }) {
       displayName,
       role: "student",
       createdAt: serverTimestamp(),
+      age18ConfirmedAt: serverTimestamp(),
       examsGenerated: 0,
       country: "LB",
       subscription: { status: "none", tier: "free" },

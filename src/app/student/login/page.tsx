@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { EligibilityConfirmation } from "@/components/auth/EligibilityConfirmation";
 import { useRouter } from "next/navigation";
 import { Logo } from "@/components/ui/Logo";
 import { Button } from "@/components/ui/Button";
@@ -21,6 +22,7 @@ export default function StudentLoginPage() {
   const [schoolName, setSchoolName] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [ageConfirmed, setAgeConfirmed] = useState(false);
 
   // Redirect if already signed in as a student
   useEffect(() => {
@@ -52,6 +54,7 @@ export default function StudentLoginPage() {
   async function handleSubmit() {
     setError(null);
     if (!email || !password) return;
+    if (mode === "register" && !ageConfirmed) return;
     if (mode === "register" && !displayName.trim()) {
       setError("Enter your name.");
       return;
@@ -62,7 +65,7 @@ export default function StudentLoginPage() {
         await signIn(email, password);
         router.replace("/student/dashboard");
       } else {
-        await register(email, password, displayName.trim(), schoolName.trim() || undefined);
+        await register(email, password, displayName.trim(), ageConfirmed, schoolName.trim() || undefined);
         router.replace("/student/dashboard");
       }
     } catch (err: unknown) {
@@ -157,6 +160,7 @@ export default function StudentLoginPage() {
           )}
         </div>
 
+        {mode === "register" && <EligibilityConfirmation checked={ageConfirmed} onChange={setAgeConfirmed} />}
         {/* Error */}
         {error && (
           <div className="flex items-start gap-2.5 p-3 rounded-xl bg-red-50 border border-red-100 text-[12px] text-red-600 leading-relaxed">
@@ -171,7 +175,7 @@ export default function StudentLoginPage() {
         <Button
           onClick={handleSubmit}
           loading={busy}
-          disabled={!email || !password}
+          disabled={!email || !password || (mode === "register" && !ageConfirmed)}
           size="lg"
           className="w-full rounded-xl font-semibold"
         >

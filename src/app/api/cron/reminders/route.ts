@@ -117,7 +117,7 @@ export async function GET(request: NextRequest) {
   // Verify Vercel cron secret
   const authHeader = request.headers.get("authorization");
   const cronSecret = process.env.CRON_SECRET;
-  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -165,8 +165,10 @@ export async function GET(request: NextRequest) {
         toName: displayName ?? undefined,
         subject,
         html,
+        purpose: "marketing",
       });
 
+      if (result.skipped) { skipped++; continue; }
       if (!result.ok) {
         console.error(`[cron/reminders] Brevo failed for ${email}:`, result.error);
         errors++;

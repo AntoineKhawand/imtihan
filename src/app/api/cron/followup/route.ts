@@ -188,7 +188,7 @@ function buildActivationEmail(name: string): { subject: string; html: string } {
 export async function GET(request: NextRequest) {
   const cronSecret = process.env.CRON_SECRET;
   const secret = request.headers.get("authorization")?.replace("Bearer ", "");
-  if (cronSecret && secret !== cronSecret) {
+  if (!cronSecret || secret !== cronSecret) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -212,14 +212,16 @@ export async function GET(request: NextRequest) {
 
       if (count < 1 && !data.activationFollowupSentAt) {
         const { subject, html } = buildActivationEmail(name);
-        const res = await sendEmail({ to: email, toName: name, subject, html });
+        const res = await sendEmail({ to: email, toName: name, subject, html, purpose: "marketing" });
+        if (res.skipped) continue;
         if (res.ok) {
           await doc.ref.update({ activationFollowupSentAt: now });
           activationSent++;
         } else errors++;
       } else if (count >= 1 && !data.engagementFollowupSentAt) {
         const { subject, html } = buildEngagementEmail(name, count);
-        const res = await sendEmail({ to: email, toName: name, subject, html });
+        const res = await sendEmail({ to: email, toName: name, subject, html, purpose: "marketing" });
+        if (res.skipped) continue;
         if (res.ok) {
           await doc.ref.update({ engagementFollowupSentAt: now });
           engagementSent++;

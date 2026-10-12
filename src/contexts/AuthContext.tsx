@@ -16,7 +16,7 @@ interface AuthContextType {
   user: User | null;
   profile: UserProfile | null;
   loading: boolean;
-  signInWithGoogle: () => Promise<void>;
+  signInWithGoogle: (ageConfirmed: boolean) => Promise<void>;
   signOut: () => Promise<void>;
   incrementUsage: () => Promise<void>;
 }
@@ -154,7 +154,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const signInWithGoogle = async () => {
+  const signInWithGoogle = async (ageConfirmed: boolean) => {
+    if (!ageConfirmed) throw new Error("Confirm that you are at least 18 before continuing with Google.");
     const provider = new GoogleAuthProvider();
     await signInWithPopup(auth, provider);
   };

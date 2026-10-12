@@ -29,6 +29,7 @@ export async function POST(request: NextRequest) {
     const { to, subject, message, fileBase64, fileName } = parsed.data;
 
     const result = await sendEmail({
+      purpose: "transactional",
       to,
       subject,
       html: buildHtmlBody(message ?? ""),

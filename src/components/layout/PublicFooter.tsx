@@ -11,7 +11,7 @@ export function PublicFooter() {
             {[{ href: "/about", label: "About" }, { href: "/pricing", label: "Pricing" }, { href: "/blog", label: "Blog" }].map(link => <Link key={link.href} href={link.href} className="block w-fit py-1 text-[var(--text-secondary)] transition-colors hover:text-[var(--accent)]">{link.label}</Link>)}
           </div>
           <div className="space-y-3"><p className="mb-4 text-xs font-semibold text-[var(--text)]">Help & legal</p>
-            {[{ href: "/contact", label: "Contact" }, { href: "/privacy", label: "Privacy" }, { href: "/terms", label: "Terms" }].map(link => <Link key={link.href} href={link.href} className="block w-fit py-1 text-[var(--text-secondary)] transition-colors hover:text-[var(--accent)]">{link.label}</Link>)}
+            {[{ href: "/contact", label: "Contact" }, { href: "/privacy", label: "Privacy" }, { href: "/terms", label: "Terms" }, { href: "/copyright", label: "Copyright" }].map(link => <Link key={link.href} href={link.href} className="block w-fit py-1 text-[var(--text-secondary)] transition-colors hover:text-[var(--accent)]">{link.label}</Link>)}
           </div>
         </nav>
       </div>

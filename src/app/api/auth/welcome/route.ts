@@ -276,7 +276,8 @@ export async function POST(request: NextRequest) {
     }
 
     const { subject, html } = buildWelcomeNewsletter(name);
-    const result = await sendEmail({ to: email, toName: name, subject, html });
+    const result = await sendEmail({ to: email, toName: name, subject, html, purpose: "marketing" });
+    if (result.skipped) return NextResponse.json({ ok: true, skipped: true });
 
     if (result.ok) {
       await userRef.update({ welcomeEmailSentAt: Date.now() });
@@ -292,7 +293,7 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   const secret = request.headers.get("authorization")?.replace("Bearer ", "");
-  const isAdmin = secret === process.env.CRON_SECRET;
+  const isAdmin = !!process.env.CRON_SECRET && secret === process.env.CRON_SECRET;
   const isTest = request.nextUrl.searchParams.get("test") === "1";
 
   if (!isAdmin || !isTest) {
@@ -301,7 +302,7 @@ export async function GET(request: NextRequest) {
 
   const testEmail = "antoinekhawand04@gmail.com";
   const { subject, html } = buildWelcomeNewsletter("Antoine");
-  const result = await sendEmail({ to: testEmail, toName: "Antoine", subject, html });
+  const result = await sendEmail({ to: testEmail, toName: "Antoine", subject, html, purpose: "marketing" });
 
   return NextResponse.json({ ok: result.ok, error: result.error });
 }
