@@ -62,6 +62,7 @@ export async function POST(request: NextRequest) {
       ? "It includes the complete corrigé."
       : "Exam questions only (no answer key).";
     const result = await sendEmail({
+      purpose: "transactional",
       to,
       subject,
       html: `

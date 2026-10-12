@@ -178,8 +178,10 @@ export async function POST(request: NextRequest) {
           continue;
       }
 
-      const res = await sendEmail({ to: email, toName: name || email, subject: finalSubject, html: finalHtml });
-      if (res.ok) {
+      const res = await sendEmail({ to: email, toName: name || email, subject: finalSubject, html: finalHtml, purpose: "marketing" });
+      if (res.skipped) {
+        results.push({ uid: targetUid, email, success: false, error: "Skipped: recipient opted out of promotional emails." });
+      } else if (res.ok) {
         successCount++;
         results.push({ uid: targetUid, email, success: true });
       } else {

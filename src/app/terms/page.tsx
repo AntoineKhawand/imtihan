@@ -61,7 +61,7 @@ export default function TermsPage() {
             <div className="mb-12">
               <p className="text-xs uppercase tracking-widest text-[var(--accent)] font-medium mb-3">Legal</p>
               <h1 className="serif text-display-lg text-[var(--text)] mb-3">Terms of Service</h1>
-              <p className="text-sm text-[var(--text-tertiary)]">Last updated: April 2025</p>
+              <p className="text-sm text-[var(--text-tertiary)]">Last updated: October 12, 2026</p>
             </div>
 
             <div className="space-y-10 text-sm leading-relaxed text-[var(--text-secondary)]">
@@ -127,6 +127,7 @@ export default function TermsPage() {
                 <p>
                   You may only upload documents that you have the right to use. Do not upload documents containing personal data of students or other individuals, confidential institutional materials, or content you do not have permission to share with third-party AI systems.
                 </p>
+                <p>For copyright concerns, use our <Link href="/copyright" className="text-[var(--accent)] underline">copyright reporting process</Link>. We may restrict access to infringing material or accounts that repeatedly infringe others’ rights.</p>
               </Section>
 
               <Section title="9. Disclaimers" id="disclaimers">

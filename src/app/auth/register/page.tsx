@@ -1,6 +1,7 @@
 "use client";
 
 import { Suspense, useState, useEffect } from "react";
+import { EligibilityConfirmation } from "@/components/auth/EligibilityConfirmation";
 import Link from "next/link";
 import {
   createUserWithEmailAndPassword,
@@ -46,6 +47,7 @@ function RegisterForm() {
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [ageConfirmed, setAgeConfirmed] = useState(false);
 
   useEffect(() => {
     const redirect = getExplicitRedirect();
@@ -56,7 +58,7 @@ function RegisterForm() {
   }, []);
 
   async function handleRegister() {
-    if (!email || !password) return;
+    if (!email || !password || !ageConfirmed) return;
     setLoading(true);
     setError(null);
     try {
@@ -101,6 +103,7 @@ function RegisterForm() {
           email: credential.user.email ?? "",
           displayName: displayName.trim() || "",
           createdAt: serverTimestamp(),
+          age18ConfirmedAt: serverTimestamp(),
           role,
           country: "LB",
           examsGenerated: 0,
@@ -138,6 +141,7 @@ function RegisterForm() {
   }
 
   async function handleGoogle() {
+    if (!ageConfirmed) return;
     setGoogleLoading(true);
     setError(null);
     try {
@@ -179,6 +183,7 @@ function RegisterForm() {
             email: credential.user.email ?? "",
             displayName: credential.user.displayName ?? "",
             createdAt: serverTimestamp(),
+          age18ConfirmedAt: serverTimestamp(),
             role,
             country: "LB",
             examsGenerated: 0,
@@ -242,11 +247,12 @@ function RegisterForm() {
         </p>
       </div>
 
+      <EligibilityConfirmation checked={ageConfirmed} onChange={setAgeConfirmed} />
       {/* Google button */}
       <button
         type="button"
         onClick={handleGoogle}
-        disabled={googleLoading}
+        disabled={googleLoading || loading || !ageConfirmed}
         className="w-full flex items-center justify-center gap-3 h-11 px-4 rounded-xl bg-white border border-gray-200 shadow-sm hover:shadow-md hover:border-gray-300 transition-all duration-200 text-[13px] font-semibold text-gray-700 disabled:opacity-60 disabled:cursor-not-allowed"
       >
         {googleLoading ? (
@@ -311,7 +317,7 @@ function RegisterForm() {
       <Button
         onClick={handleRegister}
         loading={loading}
-        disabled={!email || !password}
+        disabled={!email || !password || !ageConfirmed || googleLoading}
         size="lg"
         className="w-full h-11 rounded-xl font-semibold"
       >

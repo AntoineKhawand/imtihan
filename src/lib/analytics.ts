@@ -1,3 +1,4 @@
+import { hasAnalyticsConsent } from "@/lib/analyticsConsent";
 type AnalyticsParams = Record<string, unknown>;
 type PendingEvent = { name: string; params?: AnalyticsParams };
 type AnalyticsWindow = Window & {
@@ -7,7 +8,7 @@ type AnalyticsWindow = Window & {
 
 /** Queue early events until GA is configured; tracking must never break a real action. */
 export function trackEvent(name: string, params?: AnalyticsParams): void {
-  if (typeof window === "undefined") return;
+  if (!hasAnalyticsConsent()) return;
   const target = window as AnalyticsWindow;
   try {
     if (typeof target.gtag === "function") target.gtag("event", name, params);
@@ -26,7 +27,7 @@ export function trackEventAndWait(
   name: string,
   params?: AnalyticsParams,
 ): Promise<void> {
-  if (typeof window === "undefined") return Promise.resolve();
+  if (!hasAnalyticsConsent()) return Promise.resolve();
   return new Promise((resolve) => {
     const finish = () => {
       window.clearTimeout(timer);

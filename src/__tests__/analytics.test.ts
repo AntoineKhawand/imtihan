@@ -1,8 +1,11 @@
-import { describe, it, expect, vi, afterEach } from "vitest";
+import { describe, it, expect, vi, afterEach, beforeEach } from "vitest";
+import { ANALYTICS_CONSENT_KEY } from "@/lib/analyticsConsent";
 import { trackEvent, trackEventAndWait } from "@/lib/analytics";
 
 describe("trackEvent", () => {
+  beforeEach(() => localStorage.setItem(ANALYTICS_CONSENT_KEY, "accepted"));
   afterEach(() => {
+    localStorage.clear();
     // @ts-expect-error test cleanup of a global test double
     delete window.gtag;
     delete (window as unknown as { imtihanPendingEvents?: unknown })
@@ -17,6 +20,17 @@ describe("trackEvent", () => {
     trackEvent("sign_up", { method: "google" });
 
     expect(gtag).toHaveBeenCalledWith("event", "sign_up", { method: "google" });
+  });
+  it("does not send or queue events before consent or after rejection", async () => {
+    const gtag = vi.fn();
+    (window as unknown as { gtag: typeof gtag }).gtag = gtag;
+    localStorage.removeItem(ANALYTICS_CONSENT_KEY);
+    trackEvent("sign_up");
+    await trackEventAndWait("sign_up");
+    localStorage.setItem(ANALYTICS_CONSENT_KEY, "rejected");
+    trackEvent("exam_generated");
+    expect(gtag).not.toHaveBeenCalled();
+    expect((window as unknown as { imtihanPendingEvents?: unknown }).imtihanPendingEvents).toBeUndefined();
   });
 
   it("queues early events and flushes them only after GA configuration", async () => {

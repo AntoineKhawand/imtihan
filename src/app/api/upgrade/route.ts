@@ -178,10 +178,10 @@ export async function POST(request: NextRequest) {
     const confirmEmail = buildConfirmationEmail(data);
 
     // Notify admin
-    await sendEmail({ to: "hello@imtihan.live", toName: "Imtihan Admin", subject: adminEmail.subject, html: adminEmail.html });
+    await sendEmail({ to: "hello@imtihan.live", toName: "Imtihan Admin", subject: adminEmail.subject, html: adminEmail.html, purpose: "transactional" });
 
     // Confirm to user
-    await sendEmail({ to: data.email, toName: data.name, subject: confirmEmail.subject, html: confirmEmail.html });
+    await sendEmail({ to: data.email, toName: data.name, subject: confirmEmail.subject, html: confirmEmail.html, purpose: "transactional" });
 
     return NextResponse.json({ success: true }, { headers: createSecurityHeaders() });
   } catch (err) {

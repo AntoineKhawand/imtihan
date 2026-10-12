@@ -1,10 +1,8 @@
-import { ANALYTICS_BOOTSTRAP } from "@/lib/analytics-bootstrap";
+import { AnalyticsConsent } from "@/components/AnalyticsConsent";
 import type { Metadata, Viewport } from "next";
 import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
 import { Fraunces } from "next/font/google";
-import { Analytics } from "@vercel/analytics/next";
-import Script from "next/script";
 import { Toaster } from "sonner";
 import { ToastProvider } from "@/components/ui/Toast";
 import { AuthProvider } from "@/contexts/AuthContext";
@@ -142,25 +140,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta property="fb:app_id" content="1968562397881054" />
       </head>
       <body>
-        <Script
-          src="https://www.googletagmanager.com/gtag/js?id=G-7DZ1T3P599"
-          strategy="afterInteractive"
-        />
-        <Script id="google-analytics" strategy="afterInteractive">
-          {ANALYTICS_BOOTSTRAP}
-        </Script>
-        {/* Privacy-friendly analytics by Plausible — real embed from the imtihan.live Plausible account */}
-        <Script
-          async
-          src="https://plausible.io/js/pa-h5uHdOrIPNH5TEW_uzfof.js"
-          strategy="afterInteractive"
-        />
-        <Script id="plausible-init" strategy="afterInteractive">
-          {`
-            window.plausible=window.plausible||function(){(plausible.q=plausible.q||[]).push(arguments)},plausible.init=plausible.init||function(i){plausible.o=i||{}};
-            plausible.init()
-          `}
-        </Script>
+        <AnalyticsConsent />
         <AuthProvider>
           <ToastProvider>{children}</ToastProvider>
         </AuthProvider>
@@ -172,7 +152,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           app's own bottom-right ToastProvider above, so the two never overlap.
         */}
         <Toaster position="top-right" richColors closeButton />
-        <Analytics />
       </body>
     </html>
   );

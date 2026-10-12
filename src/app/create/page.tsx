@@ -498,6 +498,7 @@ function CreatePageContent() {
               Textbook chapter, course notes, or past exam PDF. Imtihan reads it to make exercises more relevant.
             </p>
             <Dropzone value={uploadedFile} onChange={setUploadedFile} />
+            <p className="mt-3 text-xs leading-relaxed text-[var(--text-secondary)]">Upload only documents you own or have permission to use. Remove student names, grades and other personal or confidential information. Selected source material is sent to our AI providers for processing. <Link href="/terms#uploads" className="underline">Upload terms</Link></p>
             {uploadedFile && <UploadIntentPicker value={uploadIntent} onChange={setUploadIntent} />}
           </div>
 

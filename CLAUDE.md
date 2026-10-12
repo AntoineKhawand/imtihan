@@ -85,6 +85,8 @@ Blog generation uses keyword briefs and recent-post context, with schema and str
 
 ## 6. Data Models
 
+Launch privacy/email controls: analytics scripts require opt-in; adult signup requires 18+ self-attestation. Every Brevo send declares marketing or transactional purpose. Marketing requires a real configured postal address and signed unsubscribe link, and checks the server-only suppression store. See [docs/LAUNCH_SAFEGUARDS.md](docs/LAUNCH_SAFEGUARDS.md) for configuration and the separate owner DMCA registration step.
+
 Core types live in `src/types/`:
 
 - `ExamContext` — the structured description of what to generate (curriculum, level, subject, chapters, language, etc.)

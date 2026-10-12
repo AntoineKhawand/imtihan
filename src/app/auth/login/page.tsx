@@ -1,6 +1,7 @@
 "use client";
 
 import { Suspense, useState, useEffect } from "react";
+import { EligibilityConfirmation } from "@/components/auth/EligibilityConfirmation";
 import Link from "next/link";
 import {
   signInWithEmailAndPassword,
@@ -42,6 +43,7 @@ function LoginForm() {
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [ageConfirmed, setAgeConfirmed] = useState(false);
 
   useEffect(() => {
     setDest(getRedirectDestination());
@@ -74,6 +76,7 @@ function LoginForm() {
   }
 
   async function handleGoogle() {
+    if (!ageConfirmed) return;
     setGoogleLoading(true);
     setError(null);
     try {
@@ -118,6 +121,7 @@ function LoginForm() {
           email: credential.user.email ?? "",
           displayName: credential.user.displayName ?? "",
           createdAt: serverTimestamp(),
+          age18ConfirmedAt: serverTimestamp(),
           role: "teacher",
           country: "LB",
           examsGenerated: 0,
@@ -165,11 +169,13 @@ function LoginForm() {
         </p>
       </div>
 
+      <p className="text-xs text-[var(--text-secondary)]">Google can create an account on your first visit. Confirm your eligibility before continuing with Google.</p>
+      <EligibilityConfirmation checked={ageConfirmed} onChange={setAgeConfirmed} />
       {/* Google button */}
       <button
         type="button"
         onClick={handleGoogle}
-        disabled={googleLoading}
+        disabled={googleLoading || !ageConfirmed}
         className="w-full flex items-center justify-center gap-3 h-11 px-4 rounded-xl bg-white border border-gray-200 shadow-sm hover:shadow-md hover:border-gray-300 transition-all duration-200 text-[13px] font-semibold text-gray-700 disabled:opacity-60 disabled:cursor-not-allowed"
       >
         {googleLoading ? (

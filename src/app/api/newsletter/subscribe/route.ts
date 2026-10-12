@@ -44,8 +44,9 @@ export async function POST(request: NextRequest) {
         to: normalizedEmail,
         subject: CHECKLIST_SUBJECT,
         html: CHECKLIST_HTML,
+        purpose: "marketing",
       });
-      if (result.ok) {
+      if (result.ok && !result.skipped) {
         // Absence of this field is exactly what
         // /api/cron/newsletter-checklist-backfill retries — never write it
         // on failure.
