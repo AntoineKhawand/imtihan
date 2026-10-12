@@ -81,6 +81,8 @@ Prompts live in `src/lib/prompts/` as versioned TypeScript files, not hardcoded 
 
 **Never** inline a prompt as a template literal inside a route handler. It makes prompts un-testable and un-versionable.
 
+Blog generation uses keyword briefs and recent-post context, with schema and structural checks before publication. Keywords are editorial seeds, not live Search Console data; factual review remains necessary. See [docs/BLOG_EDITORIAL_PLAN.md](docs/BLOG_EDITORIAL_PLAN.md).
+
 ## 6. Data Models
 
 Core types live in `src/types/`:
