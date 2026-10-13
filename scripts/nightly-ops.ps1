@@ -92,7 +92,7 @@ function Notify($title, $message) {
 }
 
 function RunGit {
-    param([Parameter(ValueFromRemainingArguments = $true)][string[]]$GitArgs)
+    param([Parameter(Mandatory = $true)][string[]]$GitArgs)
     $output = & git @GitArgs 2>&1
     $output | ForEach-Object { Log $_ }
     if ($LASTEXITCODE -ne 0) {
@@ -145,13 +145,13 @@ if ($PreflightOnly) {
 
 try {
     Log "git fetch origin"
-    RunGit @("fetch", "origin")
+    RunGit -GitArgs @("fetch", "origin")
 
     Log "git checkout master"
-    RunGit @("checkout", "master")
+    RunGit -GitArgs @("checkout", "master")
 
     Log "git pull --ff-only origin master"
-    RunGit @("pull", "--ff-only", "origin", "master")
+    RunGit -GitArgs @("pull", "--ff-only", "origin", "master")
 } catch {
     Log "ABORT: git sync failed: $_"
     Notify "Imtihan Nightly Ops - ABORTED" "git sync failed, run skipped. Check the log."
