@@ -5,6 +5,8 @@ import { adminDb, verifyIdToken } from "@/lib/firebase-admin";
 import { isAdmin } from "@/lib/admin";
 import { sendEmail } from "@/lib/brevo";
 import type { EmailSendResult } from "@/types/admin-email";
+import { z } from "zod";
+import { OutreachMessageSchema, outreachHtml, outreachIssues, type OutreachMessage } from "@/lib/outreach";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://imtihan.live";
 const LOGO_URL = `${APP_URL}/Imtihan-logo.png`;
@@ -101,6 +103,17 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { template, subject, html, targetUids }: { template: string; subject?: string; html?: string; targetUids: string[] } = body;
 
+    let outreachMessage: OutreachMessage | undefined;
+    if (template === "outreach") {
+      const parsed = OutreachMessageSchema.extend({
+        reviewed: z.literal(true), targetUids: z.array(z.string().min(1).max(128)).min(1).max(25),
+      }).safeParse({ subject, body: body.outreachBody, reviewed: body.reviewed, targetUids });
+      if (!parsed.success || outreachIssues(parsed.data).length || new Set(targetUids).size !== targetUids.length) {
+        return NextResponse.json({ error: "Review a valid plain-text outreach message and select 1–25 unique teacher accounts." }, { status: 400 });
+      }
+      outreachMessage = parsed.data;
+    }
+
     if (!targetUids || targetUids.length === 0) {
       return NextResponse.json({ error: "No users selected" }, { status: 400 });
     }
@@ -141,6 +154,10 @@ export async function POST(request: NextRequest) {
       let finalHtml = html ?? "";
 
       switch (template) {
+        case "outreach":
+          finalSubject = outreachMessage!.subject;
+          finalHtml = outreachHtml(outreachMessage!.body);
+          break;
         case "newsletter":
           finalSubject = "Imtihan Newsletter — Latest Updates";
           finalHtml = buildNewsletterHtml(firstName, "Teaching notes", APP_URL, "admin_outreach");

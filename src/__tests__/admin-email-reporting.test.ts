@@ -90,3 +90,30 @@ describe("admin batch outcomes", () => {
     expect((await POST(post(["first"]))).status).toBe(401); expect(mocks.send).not.toHaveBeenCalled();
   });
 });
+
+describe("reviewed outreach send gate", () => {
+  const valid = { template: "outreach", subject: "Maths practice", outreachBody: "Would an editable A & B example help?", reviewed: true, targetUids: ["teacher"] };
+  const outreachRequest = (body: unknown) => new NextRequest(url, { method: "POST", body: JSON.stringify(body) });
+  it.each([
+    { reviewed: false }, { reviewed: "true" }, { targetUids: [] }, { targetUids: ["same", "same"] },
+    { targetUids: Array.from({ length: 26 }, (_, i) => `teacher${i}`) }, { targetUids: [""] },
+    { subject: "Hello\nBcc: unwanted" }, { outreachBody: "ACT NOW" },
+    { outreachBody: "Hello {{name}}" }, { outreachBody: "<script>alert(1)</script>" },
+    { outreachBody: "word ".repeat(221) }, { outreachBody: "https://one.test https://two.test" },
+  ])("rejects invalid/unreviewed outreach before storage or sends: %j", async patch => {
+    expect((await POST(outreachRequest({ ...valid, ...patch }))).status).toBe(400);
+    expect(mocks.get).not.toHaveBeenCalled(); expect(mocks.send).not.toHaveBeenCalled();
+  });
+  it("sends reviewed plain text only through existing marketing path with escaped conversion", async () => {
+    const response = await POST(outreachRequest({ ...valid, html: "<script>ignored HTML</script>" }));
+    expect(response.status).toBe(200); expect((await response.json()).sent).toBe(1);
+    expect(mocks.send).toHaveBeenCalledOnce();
+    expect(mocks.send.mock.calls[0][0]).toMatchObject({ purpose: "marketing", subject: "Maths practice" });
+    const html = mocks.send.mock.calls[0][0].html;
+    expect(html).toContain("A &amp; B"); expect(html).not.toContain("ignored HTML");
+  });
+  it("allows exactly25 unique reviewed recipients without scheduling a sequence", async () => {
+    const response = await POST(outreachRequest({ ...valid, targetUids: Array.from({ length: 25 }, (_, i) => `teacher${i}`) }));
+    expect(response.status).toBe(200); expect((await response.json()).sent).toBe(25); expect(mocks.send).toHaveBeenCalledTimes(25);
+  });
+});

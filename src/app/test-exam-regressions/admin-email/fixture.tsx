@@ -2,14 +2,19 @@
 import { useState } from "react";
 import { EmailConfiguration } from "@/components/admin/EmailConfiguration";
 import { EmailSendReport } from "@/components/admin/EmailSendReport";
+import { OutreachAssistant } from "@/components/admin/OutreachAssistant";
+import type { OutreachMessage } from "@/lib/outreach";
 const user = { getIdToken: async () => "qa-not-a-real-token" };
 export function AdminEmailFixture() {
   const [show, setShow] = useState(true);
+  const [message, setMessage] = useState<OutreachMessage>({ subject: "", body: "" });
+  const [reviewed, setReviewed] = useState(false);
   return <main className="min-h-screen bg-[var(--bg)] p-4 text-[var(--text)]">
     <div className="mx-auto max-w-4xl space-y-6">
       <h1>Admin email QA — fixture data only</h1>
       <button onClick={() => { document.documentElement.classList.toggle("dark"); document.documentElement.setAttribute("data-theme", document.documentElement.classList.contains("dark") ? "dark" : "light"); }}>Toggle theme</button>
       <EmailConfiguration user={user} />
+      <OutreachAssistant user={user} message={message} onChange={setMessage} reviewed={reviewed} onReviewed={setReviewed} />
       {show && <EmailSendReport onDismiss={() => setShow(false)} result={{ sent: 1, failed: 2, skipped: 1, results: [
         { uid: "accepted", email: "accepted@example.test", success: true },
         { uid: "rejected", email: `${"long".repeat(20)}@example.test`, success: false, error: '<script>alert("fixture")</script> Provider rejected sender approval.' },
