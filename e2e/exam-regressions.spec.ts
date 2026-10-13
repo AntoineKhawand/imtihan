@@ -18,8 +18,9 @@ test.describe("Exam fixes — isolated browser acceptance", () => {
     await expect(page.getByRole("heading", { name: /Exam QA/ })).toBeVisible();
     const rejectAnalytics = page.getByRole("button", { name: "Reject analytics", exact: true });
     await expect(rejectAnalytics).toBeVisible();
-    await rejectAnalytics.click();
+    await Promise.all([page.waitForEvent("load"), rejectAnalytics.click()]);
     await expect(rejectAnalytics).toBeHidden();
+    await expect(page.locator("main")).toHaveAttribute("data-qa-ready", "true");
   });
   test.afterEach(() => expect(pageErrors, "uncaught browser exceptions").toEqual([]));
 

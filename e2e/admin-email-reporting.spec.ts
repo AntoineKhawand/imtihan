@@ -16,7 +16,9 @@ test.describe("Admin email diagnostics — isolated fixtures", () => {
       await page.goto("/test-exam-regressions/admin-email");
       await expect(page.getByRole("heading", { name: /Admin email QA/ })).toBeVisible();
       const reject = page.getByRole("button", { name: "Reject analytics", exact: true });
-      await expect(reject).toBeVisible(); await reject.click(); await expect(reject).toBeHidden();
+      await expect(reject).toBeVisible();
+      await Promise.all([page.waitForEvent("load"), reject.click()]);
+      await expect(reject).toBeHidden();
       await expect(page.getByText("Promotional email configuration is incomplete:")).toBeVisible();
       const initialChecks = requests.length;
       expect(initialChecks).toBeGreaterThan(0);
@@ -68,13 +70,19 @@ test.describe("Harvey outreach — reviewed component fixtures", () => {
       });
       await page.goto("/test-exam-regressions/admin-email");
       const reject = page.getByRole("button", { name: "Reject analytics", exact: true });
-      await expect(reject).toBeVisible(); await reject.click(); await expect(reject).toBeHidden();
+      await expect(reject).toBeVisible();
+      // Reject reloads the document. Hidden consent alone is not hydration
+      // readiness: SSR inputs can accept fills before React handles events.
+      await Promise.all([page.waitForEvent("load"), reject.click()]);
+      await expect(reject).toBeHidden();
+      await expect(page.getByRole("region", { name: "Email configuration" }).getByRole("status")).toContainText("Required settings are present.");
       const assistant = page.getByRole("region", { name: "Outreach assistant" });
       const generate = assistant.getByRole("button", { name: "Generate outreach drafts" });
       const reviewed = assistant.getByRole("checkbox");
       await expect(generate).toBeDisabled(); await expect(reviewed).toBeDisabled();
       await assistant.getByLabel("Audience", { exact: true }).fill("Maths teachers");
       await assistant.getByLabel("Public context", { exact: true }).fill("Public curriculum assessment needs.");
+      await expect(generate).toBeEnabled();
       await generate.click();
       await expect(assistant.getByRole("alert")).toContainText('<img src=x onerror="alert(1)">');
       await expect(assistant.locator("img,script")).toHaveCount(0);
