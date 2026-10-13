@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ExerciseCard } from "@/components/ui/ExerciseCard";
 import { Select } from "@/components/ui/WorkflowSelect";
 import type { Exercise } from "@/types/exam";
@@ -23,6 +23,8 @@ const initial: Exercise = {
 /** Development-only real component harness. AI/provider output is deterministic,
  * and deliberately does not call Firebase, generation APIs or real accounts. */
 export function ExamRegressionFixture() {
+  const [ready, setReady] = useState(false);
+  useEffect(() => setReady(true), []);
   const [exercise, setExercise] = useState(initial);
   const [selection, setSelection] = useState("french");
   const [request, setRequest] = useState("");
@@ -38,7 +40,7 @@ export function ExamRegressionFixture() {
     };
     setExercise((previous) => ({ ...previous, statement: previous.statement + output[mode] }));
   };
-  return <main className="min-h-screen bg-[var(--bg)] p-4 sm:p-8 text-[var(--text)]">
+  return <main data-qa-ready={ready} className="min-h-screen bg-[var(--bg)] p-4 sm:p-8 text-[var(--text)]">
     <div className="mx-auto max-w-4xl space-y-6">
       <h1>Exam QA — mocked provider, real components</h1>
       <button onClick={() => { const next = !dark; setDark(next); document.documentElement.classList.toggle("dark", next); document.documentElement.setAttribute("data-theme", next ? "dark" : "light"); }}>Toggle theme</button>

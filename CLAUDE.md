@@ -83,6 +83,8 @@ Prompts live in `src/lib/prompts/` as versioned TypeScript files, not hardcoded 
 
 Blog generation uses keyword briefs and recent-post context, with schema and structural checks before publication. Keywords are editorial seeds, not live Search Console data; factual review remains necessary. See [docs/BLOG_EDITORIAL_PLAN.md](docs/BLOG_EDITORIAL_PLAN.md). Existing articles share image-backed BlogPosting/BreadcrumbList markup; static article metadata and practical examples live in `src/data/blogEditorial.ts`. Database body/title changes use the authenticated admin editor. See [docs/BLOG_EXISTING_REFRESH.md](docs/BLOG_EXISTING_REFRESH.md) for the existing-content audit and pending drafts.
 
+Admin Email includes an outreach assistant adapting Harvey's MIT-licensed deterministic content checks. OpenAI drafts three messages from public audience context; admins review and send each message manually to 1–25 existing teacher accounts through the existing marketing sender. Drafts are temporary; no discovery, mailbox access or automatic sequences run. See [docs/HARVEY_OUTREACH.md](docs/HARVEY_OUTREACH.md) and THIRD_PARTY_NOTICES.md for scope and attribution.
+
 ## 6. Data Models
 
 Launch privacy/email controls: analytics scripts require opt-in; adult signup requires 18+ self-attestation. Every Brevo send declares marketing or transactional purpose. Marketing requires a real configured postal address and signed unsubscribe link, and checks the server-only suppression store. See [docs/LAUNCH_SAFEGUARDS.md](docs/LAUNCH_SAFEGUARDS.md) for configuration and the separate owner DMCA registration step.

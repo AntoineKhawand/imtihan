@@ -15,6 +15,8 @@ import { NewsletterPreview } from "@/components/admin/NewsletterPreview";
 import { NewsletterSubscribers } from "@/components/admin/NewsletterSubscribers";
 import { EmailSendReport } from "@/components/admin/EmailSendReport";
 import { EmailConfiguration } from "@/components/admin/EmailConfiguration";
+import { OutreachAssistant } from "@/components/admin/OutreachAssistant";
+import { outreachIssues, type OutreachMessage } from "@/lib/outreach";
 import type { EmailSendResult } from "@/types/admin-email";
 import { ReportMetric } from "@/components/admin/ReportUI";
 import { AnalyticsReport } from "@/components/admin/AnalyticsReport";
@@ -105,6 +107,7 @@ const EMAIL_TEMPLATES = [
   { id: "activation" as const, icon: "⚡", title: "Activation", desc: "No exams yet" },
   { id: "engagement" as const, icon: "💬", title: "Engagement", desc: "Active users follow-up" },
   { id: "custom" as const, icon: "✏️", title: "Custom HTML", desc: "Write your own" },
+  { id: "outreach" as const, icon: "📝", title: "Outreach assistant", desc: "Draft, review and send" },
 ];
 
 export default function AdminPage() {
@@ -122,7 +125,9 @@ export default function AdminPage() {
   const [showYearly, setShowYearly] = useState(false);
   const [isGeneratingBlog, setIsGeneratingBlog] = useState(false);
   const [selectedUids, setSelectedUids] = useState<Set<string>>(new Set());
-  const [emailTemplate, setEmailTemplate] = useState<"newsletter" | "activation" | "engagement" | "custom">("newsletter");
+  const [emailTemplate, setEmailTemplate] = useState<"newsletter" | "activation" | "engagement" | "custom" | "outreach">("newsletter");
+  const [outreachMessage, setOutreachMessage] = useState<OutreachMessage>({ subject: "", body: "" });
+  const [outreachReviewed, setOutreachReviewed] = useState(false);
   const [customSubject, setCustomSubject] = useState("");
   const [customHtml, setCustomHtml] = useState("");
   const [sendingEmails, setSendingEmails] = useState(false);
@@ -424,6 +429,10 @@ export default function AdminPage() {
 
   const handleSendEmails = async () => {
     if (!user || selectedUids.size === 0) return;
+    if (emailTemplate === "outreach" && (!outreachReviewed || outreachIssues(outreachMessage).length || selectedUids.size > 25)) {
+      toast.error("Review a valid outreach message and select at most 25 teacher accounts.");
+      return;
+    }
     setSendingEmails(true);
     setEmailResult(null);
     try {
@@ -435,6 +444,7 @@ export default function AdminPage() {
           template: emailTemplate,
           targetUids: Array.from(selectedUids),
           ...(emailTemplate === "custom" ? { subject: customSubject, html: customHtml } : {}),
+          ...(emailTemplate === "outreach" ? { subject: outreachMessage.subject, outreachBody: outreachMessage.body, reviewed: outreachReviewed } : {}),
         }),
       });
       const data = await res.json();
@@ -870,7 +880,7 @@ export default function AdminPage() {
             {/* Template Picker */}
             <section className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-5 sm:p-6" aria-label="Choose email template">
               <h3 className="mb-4 text-sm font-bold">1. Choose your message</h3>
-              <div className="grid grid-cols-1 min-[420px]:grid-cols-2 xl:grid-cols-4 gap-3">
+              <div className="grid grid-cols-1 min-[420px]:grid-cols-2 xl:grid-cols-5 gap-3">
                 {EMAIL_TEMPLATES.map(t => (
                   <button key={t.id} type="button" aria-pressed={emailTemplate === t.id} onClick={() => setEmailTemplate(t.id)}
                     className={cn(
@@ -891,6 +901,7 @@ export default function AdminPage() {
               </div>
             </section>
             {emailTemplate === "newsletter" && <NewsletterPreview />}
+            {emailTemplate === "outreach" && <OutreachAssistant user={user} message={outreachMessage} onChange={setOutreachMessage} reviewed={outreachReviewed} onReviewed={setOutreachReviewed} />}
 
             {/* Custom HTML Editor */}
             {emailTemplate === "custom" && (
@@ -1005,7 +1016,7 @@ export default function AdminPage() {
                 </div>
                 <button
                   onClick={handleSendEmails}
-                  disabled={sendingEmails || loading || selectedUids.size === 0 || (emailTemplate === "custom" && (!customSubject.trim() || !customHtml.trim()))}
+                  disabled={sendingEmails || loading || selectedUids.size === 0 || (emailTemplate === "custom" && (!customSubject.trim() || !customHtml.trim())) || (emailTemplate === "outreach" && (!outreachReviewed || outreachIssues(outreachMessage).length > 0 || selectedUids.size > 25))}
                   className="w-full sm:w-auto h-12 px-8 bg-emerald-700 hover:bg-emerald-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-2xl font-bold flex items-center justify-center gap-2 transition-all shadow-lg shadow-emerald-500/20 text-sm"
                 >
                   {sendingEmails ? <RefreshCw size={16} className="animate-spin" /> : <Send size={16} />}
@@ -1220,11 +1231,12 @@ export default function AdminPage() {
             <option value="activation" className="bg-emerald-950">⚡ Activation</option>
             <option value="engagement" className="bg-emerald-950">💬 Engagement</option>
             <option value="custom" className="bg-emerald-950">✏️ Custom</option>
+            <option value="outreach" className="bg-emerald-950">📝 Outreach assistant</option>
           </select>
-          <button onClick={handleSendEmails} disabled={sendingEmails}
+          <button onClick={() => { if (emailTemplate === "outreach") setActiveTab("email"); else void handleSendEmails(); }} disabled={sendingEmails}
             className="h-10 px-5 bg-emerald-500 hover:bg-emerald-400 text-white rounded-xl text-xs font-bold flex items-center gap-2 disabled:opacity-50 transition-all whitespace-nowrap shrink-0">
             {sendingEmails ? <RefreshCw size={13} className="animate-spin" /> : <Send size={13} />}
-            Send
+            {emailTemplate === "outreach" ? "Review outreach in Email" : "Send"}
           </button>
         </div>
       )}
