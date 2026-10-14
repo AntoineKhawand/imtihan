@@ -208,6 +208,9 @@ $env:CLAUDE_CODE_PRINT_BG_WAIT_CEILING_MS = "0"
 Log "Launching claude -p (model $Model, scoped allowedTools)"
 
 $ClaudeArgs = @("-p", $Prompt, "--model", $Model, "--allowedTools", $AllowedTools)
+# Optional machine-local observational hooks. No global settings or permissions change.
+$AgentRoomSettings = Join-Path $PSScriptRoot 'agent-room-hooks.settings.json'
+if (Test-Path -LiteralPath $AgentRoomSettings) { $ClaudeArgs += @('--settings', $AgentRoomSettings) }
 if ($McpConfig) { $ClaudeArgs += @("--strict-mcp-config", "--mcp-config", $McpConfig) }
 try {
     $LASTEXITCODE = 1

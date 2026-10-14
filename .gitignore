@@ -74,3 +74,4 @@ fix-git-lock.ps1
 # those are the shared automation definition, not this machine's output.
 logs/nightly/
 scripts/nightly-ops.local.json
+scripts/agent-room-hooks.settings.json
