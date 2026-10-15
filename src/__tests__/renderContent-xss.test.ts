@@ -48,3 +48,27 @@ describe("renderContent — stored XSS", () => {
     expect(html).toContain("katex");
   });
 });
+
+
+describe("renderContent — variation table label stored XSS", () => {
+  it.each(["VARIATION", "TABLE_VAR"])("escapes hostile %s labels while retaining table structure", (tag) => {
+    const label = '<img src=x onerror=alert(1)>';
+    const html = renderContent(`[${tag}: ${label}: 1,2\nf: 3,4]`);
+    const container = document.createElement("div");
+    container.innerHTML = html;
+    expect(container.querySelector("img, script, [onerror], [onload]")).toBeNull();
+    expect(container.querySelector("td")?.textContent).toBe(label);
+    expect(container.querySelectorAll("tr")).toHaveLength(2);
+    expect(container.querySelectorAll("td")).toHaveLength(6);
+    expect(html).toContain("&lt;img src=x onerror=alert(1)&gt;");
+  });
+
+  it("treats closing tags and SVG event markup as literal label text", () => {
+    const label = '</td><svg onload="alert(1)">';
+    const container = document.createElement("div");
+    container.innerHTML = renderContent(`[VARIATION: ${label}: 1,2\nf: 3,4]`);
+    expect(container.querySelector("svg, [onload]")).toBeNull();
+    expect(container.querySelector("td")?.textContent).toBe(label);
+    expect(container.querySelectorAll("tr")).toHaveLength(2);
+  });
+});

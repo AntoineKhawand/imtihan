@@ -21,8 +21,21 @@ Track issues here during development. Format:
 
 ---
 
-## BUG-062: `parseNakedMath()` in `renderContent.ts` has three real heuristic bugs — found while writing its first-ever unit tests, none fixed (out of scope for a test-writing dispatch)
-**Status:** Open — logged, not yet fixed
+## BUG-063: Variation-table row labels allowed stored HTML injection
+**Status:** Fixed 2026-10-15 — independent QA passed
+**Severity:** High
+**Area:** UI | Security
+**Reported:** 2026-10-15
+
+**Description:** Teacher/AI-authored `[VARIATION:]` or `[TABLE_VAR:]` labels were interpolated into generated `<td>` markup without escaping. An image `onerror` or SVG `onload` label could execute when a generated/shared exercise was rendered with `dangerouslySetInnerHTML`.
+**Fix:** Escape each row label with the shared `escapeHtml()` helper before HTML insertion; retain the existing raw-source attribute escaping and normal table composition.
+**Regression coverage:** Both tag aliases are parsed into actual DOM to verify malicious image/event labels remain literal text, closing-tag/SVG markup cannot escape its cell, and expected rows/cells remain intact. Independent QA must verify the final gate and browser fixture before push/deploy.
+**Found by:** independent security review during interrupted nightly recovery.
+
+---
+
+## BUG-062: `parseNakedMath()` in `renderContent.ts` correct variable-preserving derivatives, whole quantities, and chemistry recovery
+**Status:** Fixed 2026-10-15
 **Severity:** Medium
 **Area:** Generation | UI
 **Reported:** 2026-10-11
@@ -32,9 +45,15 @@ Track issues here during development. Format:
 **(a) Lazy-derivative heuristic always produces the wrong \\frac — for every input, not just edge cases.** For the non-squared case (`d<X>/d<Y>` lazy notation, e.g. `dx/dt`, `dv/dt`), the replacer takes `varMatch[varMatch.length - 1]` (the LAST letter in the whole match) as the numerator and `varMatch[0]` (always the literal `d`) as the denominator variable. Concretely: `dx/dt` — already-correct derivative notation a teacher might type — gets corrupted into `$\frac{dt}{dd}$` (nonsensical: numerator uses the wrong variable, denominator is literally "dd"). This is systemic, not an edge case: `renderContent("dv/dt")` and `renderContent("dx/dt")` produce byte-identical (wrong) output regardless of which variables are actually used. The squared case (`d2x/dt2`) has an analogous bug: the numerator variable is taken from the LAST letter in the match (the independent variable, e.g. "t") instead of the dependent one ("x"), and the denominator is hardcoded to `dt^2` regardless of input.
 **(b) Naked physics-equation heuristic's unit-gate is dead code — it wraps ANY "letter = short phrase" as math, including plain English prose.** The intended gate (only wrap `X = ...` as math when a recognized physics unit like `m`, `kg`, `N`, `T`, `Ω` appears) is implemented as `if (/[=|]/.test(match) || /\b(m|kg|s|...)\b/.test(match))` — but `match` is guaranteed to contain `=` by construction of the outer capturing regex, so the first half of the `||` is always true and the unit check never actually gates anything. Concrete false positive: `renderContent("Let x = the unknown value in the problem.")` wraps `"x = the"` in KaTeX math delimiters and renders it as literal math notation, even though it's ordinary English with zero physics content.
 **(c) Naked chemistry-formula heuristic can only ever match a SINGLE atom+digit or dash-separated atoms — it silently never fires for the common multi-atom formulas (H2O, CO2, NaCl, Fe2O3, C12H22O11) a teacher would actually type without internal dashes.** The regex's non-dash alternatives (`[A-Z][a-z]?\d+(?![a-z])` / `[A-Z][a-z]?\d{2,}`) have no repetition for a second atom, so for e.g. "H2O" the engine can only try matching "H2", which then fails the trailing `(?![$\w])` lookahead because "O" immediately follows. Verified: `renderContent("The substance is H2O in this reaction.")` leaves "H2O" completely untouched (no `\ce{}` wrapping at all) — same for CO2, NaCl, Fe2O3. The heuristic does work for a genuinely standalone atom+subscript at a word boundary (`"H2"` alone) or dash-chained atoms (`"C-H"`), just not for realistic formulas.
-**Why not fixed:** out of scope for this test-writing dispatch per its own instructions (document, don't fix, unless trivially safe and clearly in scope). All three are presentation-layer heuristics with a safe failure mode — worst case is a missed auto-wrap (chemistry) or an over-eager wrap of plain prose rendered as math notation (physics/derivative), not data loss or a crash; `renderKaTeX`'s own try/catch already falls back to a monospace text box if KaTeX can't parse whatever gets wrapped.
 **Regression tests documenting current (buggy) behavior, so a future fix has something to flip green:** `src/__tests__/renderContent-naked-math.test.ts` — `describe` blocks for each of (a)/(b)/(c), plus passing coverage for the heuristics' correct cases, the already-covered-by-BUG-006 bare-LaTeX safety net, and `splitMath`'s unclosed-delimiter handling (all previously untested too).
 **Found by:** `unit-tests` dispatch (2026-10-11), while adding `parseNakedMath()`'s first-ever test coverage.
+**Fix (2026-10-15, interrupted run recovered):**
+- Derivatives capture their actual numerator/denominator and preserve case/order, including legacy reversed notation. Unicode-aware whole-token boundaries prevent matches inside prose or identifiers; the literal differential is lowercase `d`.
+- Physics recovery requires a complete numeric value immediately followed by its own recognized unit (including g and Ω). Decimal commas/dots, signs and scientific notation are retained; `B = 0,5 T` is one math node rather than a misleading `$B = 0$` followed by plain text. Prose cannot borrow a unit later in the sentence. Unsupported compound units are left unchanged instead of partially wrapped.
+- Chemistry validates each atom against real element symbols and consumes a complete formula, including multi-digit subscripts and bond chains. Letter-only recovery uses a small familiar-formula allowlist (e.g. NaCl/HCl/NaOH) to avoid treating ordinary prose/acronyms as formulas; ambiguous formulas can be explicitly delimited with `\ce{...}`.
+- Bare LaTeX commands and balanced argument groups are excluded before all heuristics, and already-delimited expressions retain the existing protected path.
+**Engineering validation:** Focused renderer regressions cover corrected output, prose/identifier boundaries, preserved explicit LaTeX, complete units and real multi-atom formulas. Independent QA must run the final `verify:fix` gate before push/deploy; engineering's focused checks do not certify real provider behavior. No provider or production database request is needed for this deterministic renderer fix.
+**Fixed by:** engineering recovery (2026-10-15).
 
 ---
 

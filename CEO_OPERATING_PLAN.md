@@ -37,6 +37,10 @@ The product is feature-complete for MVP scope, and every founder decision on fil
 
 ## 2. Where We Stand — 2026-10-01 update
 
+**2026-10-15 recovery update:** The midnight Windows run was interrupted when the PC shut down/slept; its exit code was 0xC000013A, not a completed automation run. The owner requested interactive recovery. BUG-062 now preserves derivative variables, complete decimal quantities and conservative chemistry notation; review also found and repaired variation-table label HTML injection (BUG-063). Test-only PR #102 was independently reviewed, normally merged and successfully deployed. Final recovery verification and limitations are recorded in `docs/QA_NIGHTLY_RECOVERY_2026-10-15.md`.
+
+The existing task is enabled for 2026-10-16 00:00 Asia/Beirut, but wake/catch-up settings remain disabled because Windows denied registration changes. Keep the PC awake for this schedule. This recovery does not claim a full unattended/provider cycle succeeded. SEO/content metrics need current source access; no speculative marketing, curriculum, schema or unrelated design change was added.
+
 **The two decisions blocking full trust in this model are both closed.** Checked actual code before deciding (not a blanket policy): three of five flagged "unauthenticated AI-cost" routes had zero real callers anywhere in the app and were simply gated behind login; the one genuinely public demo (the scanner) got a real per-IP rate limiter; the one free, zero-cost proxy was left public with just an input cap. Version A/B's Free-plan copy now matches its Pro-only gate.
 
 **Security earned its keep twice more this week, on features engineering had already shipped and believed were correct:**
