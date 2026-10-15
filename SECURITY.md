@@ -1,5 +1,11 @@
 # Security — Imtihan
 
+## 2026-10-15 interrupted-run recovery review
+
+Manual independent review found a pre-existing stored-HTML injection in variation-table row labels (BUG-063). Both `[VARIATION:]` and `[TABLE_VAR:]` now escape labels before inserting table markup. DOM regressions cover image event handlers, closing-tag/SVG payloads, literal label text and intact table structure; independent browser acceptance covers non-execution.
+
+The final renderer diff retains `escapeHtml` and KaTeX `trust:false`; conservative notation recovery only interpolates validated tokens. Manual security review passed after the repair. The security-review skill was unavailable in this session, so this is not an automated-scanner verdict. Dependencies, auth and API routes were unchanged; no live attack, real provider request or credential use was performed. Full independent QA and GitHub checks remain the release gate; see the recovery QA report for final results.
+
 ## 2026-10-10 maintenance review
 
 GitHub currently reports six open CodeQL alerts (30, 26, 25: randomness; 14: incomplete sanitization; 7, 6: DOM XSS). These remain open upstream and require current-source/path review; the old dashboard count of fourteen is stale. This maintenance pass does not dismiss them or claim that dependency fixes resolve them.

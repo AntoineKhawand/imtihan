@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { ExerciseCard } from "@/components/ui/ExerciseCard";
 import { Select } from "@/components/ui/WorkflowSelect";
 import type { Exercise } from "@/types/exam";
+import { renderContent } from "@/lib/renderContent";
 
 const methodology = String.raw`Étape 6 (B.3) : Sens de variation et limite.
 
@@ -50,6 +51,12 @@ export function ExamRegressionFixture() {
       ]} />
       <output data-testid="selected-language">{selection}</output>
       <output data-testid="transform-request" className="block break-all">{request}</output>
+      <section aria-label="Recovered notation QA">
+        <div data-testid="recovered-notation" dangerouslySetInnerHTML={{ __html: renderContent("dx/dt; d2Y/dX2; B = 0,5 T; m = 100 g; H2O; Fe2O3; NaCl.") }} />
+        <div data-testid="preserved-prose" dangerouslySetInnerHTML={{ __html: renderContent("Chapter: let x = the unknown value in m. Chemistry, No, IB, AI and CNN are plain prose.") }} />
+        <div data-testid="preserved-explicit-math" dangerouslySetInnerHTML={{ __html: renderContent(String.raw`$\text{H2O and dx/dt}$`) }} />
+        <div data-testid="escaped-variation-label" dangerouslySetInnerHTML={{ __html: renderContent("[VARIATION:\nx: 0, 1\n<img src=x onerror=window.__variationXss=1>: +, -\n]") }} />
+      </section>
       <ExerciseCard exercise={exercise} index={0} language="french" subject="mathematics" defaultShowSolution onRegenerate={async () => undefined} onRemove={() => undefined} onUpdate={setExercise} onTransform={transform} />
     </div>
   </main>;

@@ -195,38 +195,79 @@ function parseLists(text: string): string {
   return result.join("\n");
 }
 
+// Heuristics operate on plain text only. Bare LaTeX is rendered later by the
+// existing safety net; never insert dollars inside its command arguments.
 function parseNakedMath(text: string): string {
-  // 1. Detect and fix "lazy" derivatives (e.g., d2x/dt2, dt2d2x, dx/dt) with optional whitespace
-  let processed = text.replace(/(d\^?2\s*[a-zA-Z]\/d\s*[a-zA-Z]\^?2|d\s*[a-zA-Z]\s*2\/d\s*[a-zA-Z]\s*2|d\s*t\s*2\s*d\s*2\s*[a-zA-Z]|dt2\s*d2[a-zA-Z])/gi, (match) => {
-    const varMatch = match.match(/[a-zA-Z]/g);
-    const x = varMatch ? varMatch[varMatch.length - 1] : "x";
-    return `$\\frac{d^2${x}}{dt^2}$`;
-  }).replace(/(d\s*[a-zA-Z]\/d\s*[a-zA-Z]|d\s*t\s*d\s*[a-zA-Z]|dtd[a-zA-Z])/gi, (match) => {
-    const varMatch = match.match(/[a-zA-Z]/g);
-    const num = varMatch ? varMatch[varMatch.length - 1] : "x";
-    const den = varMatch ? varMatch[0] : "t";
-    return `$\\frac{d${num}}{d${den}}$`;
-  });
-
-  // 2. Heuristic: Wrap isolated patterns like "B = 0,5 T" or "m = 100 g" in math if they aren't already
-  processed = processed.replace(/(?<![\$\w])(\(?[A-Za-z]\s*=\s*[^$\n,;!?.]{1,30}?\)?)(?![$\w])/g, (match) => {
-    if (/[=|]/.test(match) || /\b(m|kg|s|N|J|T|Ω|V|A|mol)\b/.test(match)) {
-      return `$${match}$`;
+  const command = /\\[A-Za-z]+\*?/g;
+  let result = "";
+  let cursor = 0;
+  let match: RegExpExecArray | null;
+  while ((match = command.exec(text))) {
+    result += parseNakedMathText(text.slice(cursor, match.index));
+    let end = command.lastIndex;
+    while (true) {
+      let start = end;
+      while (/[ \t]/.test(text[start] ?? "") && start < text.length) start++;
+      if (text[start] !== "{") break;
+      let depth = 1;
+      end = start + 1;
+      for (; end < text.length && depth; end++) {
+        if (text[end] === "\\") { end++; continue; }
+        if (text[end] === "{") depth++;
+        else if (text[end] === "}") depth--;
+      }
     }
-    return match;
-  });
+    result += text.slice(match.index, end);
+    cursor = end;
+    command.lastIndex = end;
+  }
+  return result + parseNakedMathText(text.slice(cursor));
+}
 
-  // 3. Chemistry Heuristic: Detect common patterns (CH3, H2O, COOH) and wrap in \ce{...}
-  // This catches things like CH3-CH2-OH, H2O, CO2, NaCl, etc.
-  return processed.replace(/(?<![\$\w\\])((\b[A-Z][a-z]?\d?)+([-=≡]\b[A-Z][a-z]?\d?)+|[A-Z][a-z]?\d+(?![a-z])|[A-Z][a-z]?\d{2,})(?![$\w])/g, (match) => {
-    // Avoid common acronyms (AI, IB, TV)
-    if (/^(AI|IB|TV|DC|AC|BC|AD)$/.test(match)) return match;
-    // If it looks like a formula (starts with C, H, O, N or has a number/dash)
-    if (/^[CHON]/.test(match) || /[\d-]/.test(match)) {
-      return `$\\ce{${match}}$`;
-    }
-    return match;
-  });
+const CHEMICAL_ELEMENTS = new Set((
+  "H He Li Be B C N O F Ne Na Mg Al Si P S Cl Ar K Ca Sc Ti V Cr Mn Fe Co Ni Cu Zn " +
+  "Ga Ge As Se Br Kr Rb Sr Y Zr Nb Mo Tc Ru Rh Pd Ag Cd In Sn Sb Te I Xe Cs Ba La Ce " +
+  "Pr Nd Pm Sm Eu Gd Tb Dy Ho Er Tm Yb Lu Hf Ta W Re Os Ir Pt Au Hg Tl Pb Bi Po At Rn " +
+  "Fr Ra Ac Th Pa U Np Pu Am Cm Bk Cf Es Fm Md No Lr Rf Db Sg Bh Hs Mt Ds Rg Cn Nh Fl Mc Lv Ts Og"
+).split(" "));
+// Letter-only tokens are ambiguous prose/acronyms. Recover only familiar
+// formulas here; other formulas can always be written explicitly as $\\ce{...}$.
+const LETTER_ONLY_FORMULAS = new Set(["NaCl", "KCl", "HCl", "NaOH", "KOH", "COOH", "OH"]);
+
+function parseNakedMathText(text: string): string {
+  // Capture variables explicitly, preserve their case, and require complete
+  // tokens. The legacy reversed forms dt2d2x / dtdx remain supported, but not
+  // sequences of unrelated words joined merely by whitespace.
+  let processed = text.replace(
+    /(?<![\p{L}\p{N}_\\$])(?:d\^?2[ \t]*([A-Za-z])[ \t]*\/[ \t]*d([A-Za-z])\^?2|d([A-Za-z])2[ \t]*\/[ \t]*d([A-Za-z])2|dt2[ \t]*d2([A-Za-z])|d([A-Za-z])[ \t]*\/[ \t]*d([A-Za-z])|dt[ \t]*d([A-Za-z]))(?![\p{L}\p{N}_\\^])/gu,
+    (_match, numA: string | undefined, denA: string | undefined, numB: string | undefined,
+      denB: string | undefined, numC: string | undefined, numD: string | undefined,
+      denD: string | undefined, numE: string | undefined) => {
+      const squared = numA !== undefined || numB !== undefined || numC !== undefined;
+      const num = numA ?? numB ?? numC ?? numD ?? numE;
+      const den = denA ?? denB ?? denD ?? "t";
+      return squared ? `$\\frac{d^2${num}}{d${den}^2}$` : `$\\frac{d${num}}{d${den}}$`;
+    },
+  );
+
+  // Recover a complete numeric quantity with its own unit, never a prose
+  // fragment or a value whose unit merely occurs later in the sentence.
+  processed = processed.replace(
+    /(?<![\p{L}\p{N}_\\$])([A-Za-z][ \t]*=[ \t]*[+-]?(?:\d+(?:[.,]\d+)?|[.,]\d+)(?:[eE][+-]?\d+)?[ \t]*(?:kg|mol|m|g|s|N|J|T|Ω|V|A))(?![\p{L}\p{N}_/^])/gu,
+    (match) => `$${match}$`,
+  );
+
+  // Tokenize whole formulas, then validate each atom. A loose capital-letter
+  // regex alone mistakes ordinary words (Chapter, No) and acronyms for atoms.
+  return processed.replace(
+    /(?<![\p{L}\p{N}_\\$])(?:[A-Z][a-z]?\d*)+(?:[-=≡](?:[A-Z][a-z]?\d*)+)*(?![\p{L}\p{N}_])/gu,
+    (formula) => {
+      const atoms = [...formula.matchAll(/([A-Z][a-z]?)(\d*)/g)];
+      if (!atoms.every((atom) => CHEMICAL_ELEMENTS.has(atom[1]) && (!atom[2] || /^[1-9]\d*$/.test(atom[2])))) return formula;
+      if (!/[\d-=≡]/.test(formula) && !LETTER_ONLY_FORMULAS.has(formula)) return formula;
+      return `$\\ce{${formula}}$`;
+    },
+  );
 }
 
 function renderCellMath(cell: string): string {
@@ -476,7 +517,7 @@ export function renderContent(raw: string): string {
     labels.forEach((label: string, lIdx: number) => {
       const values = data[label];
       tableHtml += `<tr class="${lIdx < labels.length - 1 ? 'border-b-2 border-[var(--text)]/20' : ''}">`;
-      tableHtml += `<td class="py-6 pr-8 font-bold italic text-lg border-r-2 border-[var(--text)]/20 w-20 text-center">${label}</td>`;
+      tableHtml += `<td class="py-6 pr-8 font-bold italic text-lg border-r-2 border-[var(--text)]/20 w-20 text-center">${escapeHtml(label)}</td>`;
       
       values.forEach((val: string) => {
         let displayVal = val;

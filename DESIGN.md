@@ -304,3 +304,7 @@ Validation: TypeScript and 13 existing mocked admin reporting/coverage boundary 
 - One shared newsletter HTML template serves scheduled sends, manual sends and a sandboxed Phone/Desktop preview. Fluid email tables, inline fallback styles, small-screen padding, a full-width mobile CTA and dark colour overrides replace the two drifting layouts. The checklist email also gains viewport/mobile styles.
 - Existing suppression checks, configured postal address requirement and signed unsubscribe footer remain in the delivery layer. No real emails were sent for verification.
 - TypeScript and mocked/DOM tests cover preview controls, subscriber filtering/retry interaction, recipient-text escaping and campaign links. Authenticated visual QA at 375/768/1440 and real inbox-client screenshots remain unverified because admin sign-in reports a network error and local/preview browser access is restricted.
+
+### 2026-10-15 — QA follow-up: variation-table dark contrast (open)
+
+During BUG-062/063 local browser acceptance, QA observed low-contrast row labels in dark mode. The pre-existing variation-table renderer in `src/lib/renderContent.ts` uses a hardcoded white surface with inherited theme text. Review the table's surface/text pair in light/dark at 375/768/1440px; preserve printable mathematical-table readability. This finding predates the notation/escaping changes and is not fixed or certified by this recovery. See `docs/QA_NIGHTLY_RECOVERY_2026-10-15.md` for scope and screenshot evidence.

@@ -34,6 +34,28 @@ test.describe("Exam fixes — isolated browser acceptance", () => {
     await expect(page.getByText("strictement croissante", { exact: false })).toBeVisible();
   });
 
+  test("BUG-062 notation recovery preserves variables, complete quantities and prose", async ({ page }) => {
+    const recovered = page.getByTestId("recovered-notation");
+    expect(await recovered.locator(".math-node").evaluateAll(nodes => nodes.map(node => node.getAttribute("data-raw"))))
+      .toEqual([String.raw`$\frac{dx}{dt}$`, String.raw`$\frac{d^2Y}{dX^2}$`, "$B = 0,5 T$", "$m = 100 g$", String.raw`$\ce{H2O}$`, String.raw`$\ce{Fe2O3}$`, String.raw`$\ce{NaCl}$`]);
+    await expect(recovered.locator(".katex")).toHaveCount(7);
+    await expect(recovered.locator(".katex-error")).toHaveCount(0);
+    const prose = page.getByTestId("preserved-prose");
+    await expect(prose).toHaveText("Chapter: let x = the unknown value in m. Chemistry, No, IB, AI and CNN are plain prose.");
+    await expect(prose.locator(".math-node")).toHaveCount(0);
+    await expect(page.getByTestId("preserved-explicit-math").locator(".math-node")).toHaveAttribute("data-raw", String.raw`$\text{H2O and dx/dt}$`);
+    await expect(page.getByTestId("preserved-explicit-math").locator(".katex-error")).toHaveCount(0);
+    await page.screenshot({ path: "test-results/bug062-recovered-notation.png", fullPage: true });
+  });
+
+  test("variation row labels render injected markup as text without execution", async ({ page }) => {
+    const variation = page.getByTestId("escaped-variation-label");
+    await expect(variation.locator("table")).toBeVisible();
+    await expect(variation.locator("tr").nth(1).locator("td").first()).toHaveText("<img src=x onerror=window.__variationXss=1>");
+    await expect(variation.locator("img,script,svg[onload]")).toHaveCount(0);
+    expect(await page.evaluate(() => (window as unknown as Record<string, unknown>).__variationXss)).toBeUndefined();
+  });
+
   for (const [label, mode, prompt] of [
     ["Add Math Plot (SVG)", "plot", "x^2"],
     ["Add Diagram (Mermaid)", "visual", "Suite croissante"],
@@ -67,7 +89,7 @@ test.describe("Exam fixes — isolated browser acceptance", () => {
     await page.getByLabel("Column headers (comma-separated)", { exact: true }).fill("n, u_n");
     await page.getByRole("button", { name: "Apply Table" }).click();
     await expect(page.getByTestId("transform-request")).toContainText('"mode":"table"');
-    await expect(page.locator("main table")).toBeVisible();
+    await expect(page.locator('[data-tutorial="exercise-card"] table')).toBeVisible();
     await page.getByRole("button", { name: "Exercise actions", exact: true }).click();
     await page.getByRole("button", { name: "Insert chart", exact: true }).click();
     await expect(page.getByTestId("transform-request")).toContainText('"mode":"insertPlot"');
