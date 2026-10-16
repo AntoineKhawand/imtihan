@@ -512,7 +512,7 @@ export function renderContent(raw: string): string {
     const labels = Object.keys(data);
     if (labels.length < 2) return _match;
 
-    let tableHtml = `<div class="my-8 overflow-hidden rounded-2xl border border-[var(--border)] bg-white shadow-xl max-w-full" data-raw="${escapeHtml(_match)}" contenteditable="false"><div class="bg-[var(--bg-subtle)] px-6 py-3 border-b border-[var(--border)] flex items-center justify-between"><span class="text-[10px] font-bold uppercase tracking-widest text-[var(--text-tertiary)]">Python Visualization Example</span><div class="flex gap-1.5"><div class="w-2 h-2 rounded-full bg-red-400/50"></div><div class="w-2 h-2 rounded-full bg-amber-400/50"></div><div class="w-2 h-2 rounded-full bg-emerald-400/50"></div></div></div><div class="p-8 overflow-x-auto"><table class="w-full border-collapse font-serif text-[var(--text)]">`;
+    let tableHtml = `<div class="my-8 overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-xl max-w-full" data-raw="${escapeHtml(_match)}" contenteditable="false"><div class="bg-[var(--bg-subtle)] px-6 py-3 border-b border-[var(--border)] flex items-center justify-between"><span class="text-[10px] font-bold uppercase tracking-widest text-[var(--text-tertiary)]">Python Visualization Example</span><div class="flex gap-1.5"><div class="w-2 h-2 rounded-full bg-red-400/50"></div><div class="w-2 h-2 rounded-full bg-amber-400/50"></div><div class="w-2 h-2 rounded-full bg-emerald-400/50"></div></div></div><div class="p-8 overflow-x-auto"><table class="w-full border-collapse font-serif text-[var(--text)]">`;
     
     labels.forEach((label: string, lIdx: number) => {
       const values = data[label];

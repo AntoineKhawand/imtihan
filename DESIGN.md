@@ -308,3 +308,10 @@ Validation: TypeScript and 13 existing mocked admin reporting/coverage boundary 
 ### 2026-10-15 — QA follow-up: variation-table dark contrast (open)
 
 During BUG-062/063 local browser acceptance, QA observed low-contrast row labels in dark mode. The pre-existing variation-table renderer in `src/lib/renderContent.ts` uses a hardcoded white surface with inherited theme text. Review the table's surface/text pair in light/dark at 375/768/1440px; preserve printable mathematical-table readability. This finding predates the notation/escaping changes and is not fixed or certified by this recovery. See `docs/QA_NIGHTLY_RECOVERY_2026-10-15.md` for scope and screenshot evidence.
+
+
+### 2026-10-16 - Fix: variation-table themed surface (Oct 15 contrast follow-up)
+
+Changed only the VARIATION/TABLE_VAR outer wrapper in `src/lib/renderContent.ts` from `bg-white` to `bg-[var(--surface)]`. Its existing table labels, values and SVG arrows use `--text`; pairing that text with the theme surface restores the intended light/dark contrast. No copy, layout, parsing or escaping changed. The print page already overrides `--surface` to white and `--text` to document ink, so printed mathematical tables retain their white-paper composition.
+
+The Oct 15 open finding has a narrow source fix; independent QA is verifying light/dark computed contrast at 375/768/1440px and print readability before release. Targeted renderer checks are recorded with the recovery QA results; this entry does not claim a live production check.
