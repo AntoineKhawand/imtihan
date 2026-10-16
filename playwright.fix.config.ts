@@ -3,7 +3,7 @@ import { defineConfig, devices } from "@playwright/test";
 // Deliberately excludes legacy auth helpers that mint real Firebase tokens.
 export default defineConfig({
   testDir: "./e2e",
-  testMatch: ["exam-regressions.spec.ts", "wysiwyg.spec.ts", "admin-email-reporting.spec.ts"],
+  testMatch: ["exam-regressions.spec.ts", "wysiwyg.spec.ts", "admin-email-reporting.spec.ts", "social-preview.spec.ts"],
   workers: 1,
   retries: 0,
   forbidOnly: true,

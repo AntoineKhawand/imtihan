@@ -15,7 +15,7 @@ export const metadata = {
     title: "Générateur de Devoir Bac Français — Imtihan",
     description: "Élaborez des contrôles et des grilles de correction conformes aux programmes officiels de l'Éducation Nationale française (AEFE).",
     url: "https://imtihan.live/bac-francais-exam-generator",
-    images: [{ url: "/opengraph-image", width: 1200, height: 630, alt: "Imtihan — AI Exam Generator" }],
+    images: [{ url: "/opengraph-image?v=20261016", width: 1200, height: 630, alt: "Imtihan — AI Exam Generator" }],
   },
 };
 

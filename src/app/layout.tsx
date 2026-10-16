@@ -96,7 +96,7 @@ export const metadata: Metadata = {
       "Create exams aligned with Bac Libanais, Bac Français, IB, and University curricula in seconds. Full answer key included.",
     images: [
       {
-        url: "/opengraph-image",
+        url: "/opengraph-image?v=20261016",
         width: 1200,
         height: 630,
         alt: "Imtihan — AI Exam Generator",
@@ -108,7 +108,7 @@ export const metadata: Metadata = {
     title: "Imtihan — AI Exam Generator for Teachers in Lebanon",
     description:
       "Generate Bac Libanais, Bac Français, IB, or University exams in seconds with AI. Full answer key included.",
-    images: ["/opengraph-image"],
+    images: ["/opengraph-image?v=20261016"],
   },
   manifest: "/manifest.json",
   icons: {

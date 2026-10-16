@@ -319,3 +319,7 @@ The Oct 15 open finding has a narrow source fix; independent QA is verifying lig
 Screenshot review also found that zero values were rendered as faint decorative hollow circles, including x-axis values. The final recovery uses a literal theme-colored numeral 0, preserving mathematical meaning and print readability. Independent QA repeats the full gate after this final product change and checks the actual zero text/descendant color.
 
 Final independent gate PASS after the zero repair: TypeScript, 804 unit/mocked tests and 27 Chromium cases. Reviewed responsive light/dark captures and actual print composition; measured literal zero contrast exceeds 16:1. Full evidence and provider limits: `docs/QA_NIGHTLY_RECOVERY_2026-10-16.md`.
+
+### 2026-10-16 - Link-sharing preview refresh
+
+The shared 1200x630 Open Graph image now uses the actual website logo, cream/emerald palette and local Fraunces/Geist fonts, with an editorial headline and an illustrative exam sheet. General-page OG/Twitter URLs carry an image revision query; article-specific blog previews remain separate. Assets render locally without external font/image services. Independent QA verifies actual crawler metadata and PNG rendering plus the full gate before release.

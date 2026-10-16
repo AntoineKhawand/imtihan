@@ -11,7 +11,7 @@ export const metadata: Metadata = {
     title: "Tarifs Imtihan — Générateur d'examens IA au Liban",
     description: "$5.99/mois pour générer 10 examens par mois, ou $47.88/an pour 20 examens par mois. Sans carte bancaire, paiement WhatsApp.",
     url: "https://imtihan.live/pricing",
-    images: [{ url: "/opengraph-image", width: 1200, height: 630, alt: "Imtihan — AI Exam Generator" }],
+    images: [{ url: "/opengraph-image?v=20261016", width: 1200, height: 630, alt: "Imtihan — AI Exam Generator" }],
   },
 };
 
