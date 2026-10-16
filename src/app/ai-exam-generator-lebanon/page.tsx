@@ -15,7 +15,7 @@ export const metadata = {
     title: "AI Exam Generator Lebanon — Imtihan",
     description: "Create customized exams in English or French, aligned to Lebanese, French, and IB standards. Perfect for Lebanese schools and tutors.",
     url: "https://imtihan.live/ai-exam-generator-lebanon",
-    images: [{ url: "/opengraph-image", width: 1200, height: 630, alt: "Imtihan — AI Exam Generator" }],
+    images: [{ url: "/opengraph-image?v=20261016", width: 1200, height: 630, alt: "Imtihan — AI Exam Generator" }],
   },
 };
 

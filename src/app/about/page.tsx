@@ -37,7 +37,7 @@ export const metadata = {
     title: "About Imtihan — Empowering Teachers with AI",
     description: "Learn how Imtihan is solving teacher burnout in Lebanon by automating curriculum-aligned exam drafts and marking keys.",
     url: "https://imtihan.live/about",
-    images: [{ url: "/opengraph-image", width: 1200, height: 630, alt: "Imtihan — AI Exam Generator" }],
+    images: [{ url: "/opengraph-image?v=20261016", width: 1200, height: 630, alt: "Imtihan — AI Exam Generator" }],
   },
 };
 

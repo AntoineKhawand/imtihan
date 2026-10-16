@@ -23,7 +23,7 @@ export const metadata: Metadata = {
     title: "Imtihan Blog",
     description: "Guides and insights on exam creation, curriculum coverage, and teaching in Lebanon.",
     url: "/blog",
-    images: [{ url: "/opengraph-image", width: 1200, height: 630, alt: "Imtihan — AI Exam Generator" }],
+    images: [{ url: "/opengraph-image?v=20261016", width: 1200, height: 630, alt: "Imtihan — AI Exam Generator" }],
   },
 };
 

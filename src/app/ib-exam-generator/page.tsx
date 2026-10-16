@@ -15,7 +15,7 @@ export const metadata = {
     title: "IB Test Maker – Free AI Exam Generator | Imtihan",
     description: "Create IB maths, physics and chemistry exams with worked solutions and mark schemes. Try your first exam free, then export to Word or PDF.",
     url: "https://imtihan.live/ib-exam-generator",
-    images: [{ url: "/opengraph-image", width: 1200, height: 630, alt: "Imtihan — AI Exam Generator" }],
+    images: [{ url: "/opengraph-image?v=20261016", width: 1200, height: 630, alt: "Imtihan — AI Exam Generator" }],
   },
 };
 
