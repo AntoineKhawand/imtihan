@@ -317,3 +317,5 @@ Changed only the VARIATION/TABLE_VAR outer wrapper in `src/lib/renderContent.ts`
 The Oct 15 open finding has a narrow source fix; independent QA is verifying light/dark computed contrast at 375/768/1440px and print readability before release. Targeted renderer checks are recorded with the recovery QA results; this entry does not claim a live production check.
 
 Screenshot review also found that zero values were rendered as faint decorative hollow circles, including x-axis values. The final recovery uses a literal theme-colored numeral 0, preserving mathematical meaning and print readability. Independent QA repeats the full gate after this final product change and checks the actual zero text/descendant color.
+
+Final independent gate PASS after the zero repair: TypeScript, 804 unit/mocked tests and 27 Chromium cases. Reviewed responsive light/dark captures and actual print composition; measured literal zero contrast exceeds 16:1. Full evidence and provider limits: `docs/QA_NIGHTLY_RECOVERY_2026-10-16.md`.
