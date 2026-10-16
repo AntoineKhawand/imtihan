@@ -305,7 +305,7 @@ Validation: TypeScript and 13 existing mocked admin reporting/coverage boundary 
 - Existing suppression checks, configured postal address requirement and signed unsubscribe footer remain in the delivery layer. No real emails were sent for verification.
 - TypeScript and mocked/DOM tests cover preview controls, subscriber filtering/retry interaction, recipient-text escaping and campaign links. Authenticated visual QA at 375/768/1440 and real inbox-client screenshots remain unverified because admin sign-in reports a network error and local/preview browser access is restricted.
 
-### 2026-10-15 — QA follow-up: variation-table dark contrast (open)
+### 2026-10-15 — QA follow-up: variation-table dark contrast (resolved 2026-10-16; see below)
 
 During BUG-062/063 local browser acceptance, QA observed low-contrast row labels in dark mode. The pre-existing variation-table renderer in `src/lib/renderContent.ts` uses a hardcoded white surface with inherited theme text. Review the table's surface/text pair in light/dark at 375/768/1440px; preserve printable mathematical-table readability. This finding predates the notation/escaping changes and is not fixed or certified by this recovery. See `docs/QA_NIGHTLY_RECOVERY_2026-10-15.md` for scope and screenshot evidence.
 
@@ -315,3 +315,5 @@ During BUG-062/063 local browser acceptance, QA observed low-contrast row labels
 Changed only the VARIATION/TABLE_VAR outer wrapper in `src/lib/renderContent.ts` from `bg-white` to `bg-[var(--surface)]`. Its existing table labels, values and SVG arrows use `--text`; pairing that text with the theme surface restores the intended light/dark contrast. No copy, layout, parsing or escaping changed. The print page already overrides `--surface` to white and `--text` to document ink, so printed mathematical tables retain their white-paper composition.
 
 The Oct 15 open finding has a narrow source fix; independent QA is verifying light/dark computed contrast at 375/768/1440px and print readability before release. Targeted renderer checks are recorded with the recovery QA results; this entry does not claim a live production check.
+
+Screenshot review also found that zero values were rendered as faint decorative hollow circles, including x-axis values. The final recovery uses a literal theme-colored numeral 0, preserving mathematical meaning and print readability. Independent QA repeats the full gate after this final product change and checks the actual zero text/descendant color.

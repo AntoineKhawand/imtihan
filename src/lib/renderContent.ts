@@ -533,7 +533,7 @@ export function renderContent(raw: string): string {
         } else if (val === "+" || val === "-") {
           displayVal = `<span class="font-bold text-xl opacity-80">${escapeHtml(val)}</span>`;
         } else if (val === "0") {
-          displayVal = `<div class="flex flex-col items-center gap-1"><span class="w-2 h-2 rounded-full border-2 border-[var(--text)]/40"></span></div>`;
+          displayVal = `<span class="font-medium">0</span>`;
         } else {
           displayVal = escapeHtml(displayVal);
         }

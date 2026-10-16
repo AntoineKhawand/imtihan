@@ -301,3 +301,5 @@
 - **2026-10-16** [engineering recovery]: Finished interrupted test-only KaTeX fallback regressions; actual exception paths now assert source preservation/escaping for inline and display, plus shallow success controls. Focused 4/4 pass. No production code change/new bug; @qa final independent gate required. Details: ROADMAP.md dated entry.
 
 - **2026-10-16** [design]: Fixed the Oct 15 variation-table dark contrast finding with one themed-surface class in `renderContent.ts` (VARIATION and TABLE_VAR share it). Existing `--text` labels/arrows and print-page white-surface/ink tokens are preserved; no parsing/copy/provider changes. @qa: source frozen for independent light/dark 375/768/1440 contrast and print verification plus final gate. DESIGN.md records scope; no live production claim.
+
+- **2026-10-16** [engineering/visual review]: Final screenshot review caught variation zero values rendered as faint hollow markers. Replaced them with literal 0 text; strengthened browser zero/descendant-color assertions and existing unit expectation. Source frozen again; independent QA repeats complete gate before publication.
