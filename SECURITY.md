@@ -1,5 +1,9 @@
 # Security — Imtihan
 
+## 2026-10-16 production dependency drift check
+
+Fresh `npm audit --omit=dev --json`: 12 findings (4 high, 8 moderate, zero critical/low), matching the October 10 maintenance baseline. The Firebase/Google SDK chains remain open review work; the audit still suggests major Firebase/Admin changes for several findings. No dependency files or risk-acceptance decisions were changed. This check does not claim a clean vulnerability audit or certify production credentials/provider behavior.
+
 ## 2026-10-15 interrupted-run recovery review
 
 Manual independent review found a pre-existing stored-HTML injection in variation-table row labels (BUG-063). Both `[VARIATION:]` and `[TABLE_VAR:]` now escape labels before inserting table markup. DOM regressions cover image event handlers, closing-tag/SVG payloads, literal label text and intact table structure; independent browser acceptance covers non-execution.

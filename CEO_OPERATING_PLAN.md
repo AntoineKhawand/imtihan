@@ -37,6 +37,10 @@ The product is feature-complete for MVP scope, and every founder decision on fil
 
 ## 2. Where We Stand — 2026-10-01 update
 
+**2026-10-16 interactive recovery:** The manual cycle launched at 06:41 Beirut and stopped around 06:55 without a completion footer, commit, PR or live process. Its unfinished test file was backed up before recovery. Rendering fallback tests now exercise real exception paths; Design also resolved the existing variation-table dark-surface mismatch. Independent final QA and publication evidence are recorded in `docs/QA_NIGHTLY_RECOVERY_2026-10-16.md`.
+
+The separate Agent Command monitor had rejected Windows result 2147946720 because its formatter used Int32. The one-token Int64 repair passed boundary/JSON/atomic-write/agent-state regressions, was published as Site source `3b27919f5a6353c8fe88254703f35ea6ede603a6`, and its restarted local monitor now refreshes reports. This restores observation, not Windows task launch permissions. Windows recorded 0x800710E0 (operator/administrator refused request) for the scheduled attempt; wake and catch-up remain disabled. No successful unattended cycle is claimed.
+
 **2026-10-15 recovery update:** The midnight Windows run was interrupted when the PC shut down/slept; its exit code was 0xC000013A, not a completed automation run. The owner requested interactive recovery. BUG-062 now preserves derivative variables, complete decimal quantities and conservative chemistry notation; review also found and repaired variation-table label HTML injection (BUG-063). Test-only PR #102 was independently reviewed, normally merged and successfully deployed. Final recovery verification and limitations are recorded in `docs/QA_NIGHTLY_RECOVERY_2026-10-15.md`.
 
 The existing task is enabled for 2026-10-16 00:00 Asia/Beirut, but wake/catch-up settings remain disabled because Windows denied registration changes. Keep the PC awake for this schedule. This recovery does not claim a full unattended/provider cycle succeeded. SEO/content metrics need current source access; no speculative marketing, curriculum, schema or unrelated design change was added.

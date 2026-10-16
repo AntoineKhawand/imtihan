@@ -1,5 +1,11 @@
 # Roadmap — Imtihan
 
+## Rendering fallback regressions — 2026-10-16
+
+- Recovered the interrupted test-only nightly work. Four regressions exercise real KaTeX exceptions from excessive brace nesting for inline and display math, checking the existing fallback's exact editable source, escaped HTML characters, intact surrounding prose, and absence of injected elements. Ordinary shallow inline/display expressions remain on the successful KaTeX path.
+- Corrected an unfinished test that claimed fallback coverage while using a shallow success-path input. No production code or behavior was changed, and no new product bug was found.
+- Engineering validation: focused Vitest file passed 4/4. Independent QA must run the final repository gate before push/deploy; no real provider, production API or Admin credential was used.
+
 ## OpenAI provider migration — 2026-10-12
 
 - Replaced every Gemini runtime caller with a server-only OpenAI Responses adapter; Claude stays primary for existing analysis, generation, Version B, exam translation and blog workflows. OpenAI handles the former fallback and direct scanner/rubric/translation calls.

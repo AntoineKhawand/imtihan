@@ -1,5 +1,18 @@
 import { expect, test } from "@playwright/test";
 
+function contrastRatio(foreground: string, background: string): number {
+  const luminance = (color: string) => {
+    const channels = (color.match(/[\d.]+/g) ?? []).slice(0, 3).map(Number).map(value => {
+      const normalized = value / 255;
+      return normalized <= 0.04045 ? normalized / 12.92 : ((normalized + 0.055) / 1.055) ** 2.4;
+    });
+    if (channels.length !== 3) throw new Error(`Unexpected computed RGB color: ${color}`);
+    return channels[0] * 0.2126 + channels[1] * 0.7152 + channels[2] * 0.0722;
+  };
+  const [a, b] = [luminance(foreground), luminance(background)];
+  return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+}
+
 // Isolated real component tests. The route is disabled in production; its AI
 // callback and image response are fixtures, not evidence of provider health.
 test.describe("Exam fixes — isolated browser acceptance", () => {
@@ -54,6 +67,53 @@ test.describe("Exam fixes — isolated browser acceptance", () => {
     await expect(variation.locator("tr").nth(1).locator("td").first()).toHaveText("<img src=x onerror=window.__variationXss=1>");
     await expect(variation.locator("img,script,svg[onload]")).toHaveCount(0);
     expect(await page.evaluate(() => (window as unknown as Record<string, unknown>).__variationXss)).toBeUndefined();
+  });
+
+  for (const width of [375, 768, 1440]) {
+    test(`variation table text contrasts with its surface in both themes at ${width}px`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 812 });
+      const variation = page.getByTestId("escaped-variation-label");
+      const surface = variation.locator("[data-raw]");
+      const backgrounds: string[] = [];
+      for (const theme of ["light", "dark"]) {
+        if (theme === "dark") await page.getByRole("button", { name: "Toggle theme" }).click();
+        // Let the existing theme transition settle before measuring actual pixels/styles.
+        await page.waitForTimeout(400);
+        const background = await surface.evaluate(element => getComputedStyle(element).backgroundColor);
+        expect(background).not.toBe("rgba(0, 0, 0, 0)");
+        backgrounds.push(background);
+        const zero = variation.locator("tr").first().locator("td").nth(1);
+        await expect(zero).toHaveText("0");
+        const colors = await variation.locator("td, td span").evaluateAll(cells => cells.filter(cell => cell.textContent?.trim()).map(cell => getComputedStyle(cell).color));
+        const ratios = colors.map(color => contrastRatio(color, background));
+        for (const ratio of ratios) expect(ratio).toBeGreaterThanOrEqual(4.5);
+        console.log("Variation contrast", JSON.stringify({ width, theme, background, colors, ratios }));
+        expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+        await variation.screenshot({ path: `test-results/variation-${width}-${theme}.png` });
+      }
+      expect(backgrounds[1]).not.toBe(backgrounds[0]);
+    });
+  }
+
+  test("real print composition retains a white variation surface and dark ink under dark app theme", async ({ page }) => {
+    await page.addInitScript(() => {
+      window.print = () => undefined;
+      sessionStorage.setItem("imtihan_context", JSON.stringify({ curriculumId: "bac-libanais", levelId: "terminale-gs", subject: "mathematics", chapterIds: [], language: "french", examType: "practice", duration: 30, exerciseCount: 1, totalPoints: 5, pointsPerExercise: [5], difficultyMix: { easy: 0, medium: 0, hard: 1 } }));
+      sessionStorage.setItem("imtihan_exercises", JSON.stringify([{ id: "qa-print-variation", number: 1, type: "problem_solving", difficulty: "hard", points: 5, chapterIds: [], estimatedMinutes: 10, statement: "[VARIATION:\nx: 0, 1\nf: +, -\n]", solution: { finalAnswer: "Reviewed practice", methodology: "Read the variation table." } }]));
+    });
+    await page.goto("/print");
+    const table = page.locator('.exam-document [data-raw^="[VARIATION:"]');
+    await expect(table).toBeVisible();
+    await page.evaluate(() => { document.documentElement.classList.add("dark"); document.documentElement.setAttribute("data-theme", "dark"); });
+    await page.emulateMedia({ media: "print" });
+    const background = await table.evaluate(element => getComputedStyle(element).backgroundColor);
+    const zero = table.locator("tr").first().locator("td").nth(1);
+    await expect(zero).toHaveText("0");
+    const color = await zero.locator("span").evaluate(element => getComputedStyle(element).color);
+    expect(background).toBe("rgb(255, 255, 255)");
+    expect(contrastRatio(color, background)).toBeGreaterThanOrEqual(7);
+    console.log("Variation print contrast", JSON.stringify({ background, color, ratio: contrastRatio(color, background) }));
+    await page.screenshot({ path: "test-results/variation-print-dark-app.png", fullPage: true });
   });
 
   for (const [label, mode, prompt] of [

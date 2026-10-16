@@ -99,7 +99,7 @@ describe("renderContent — [VARIATION:]/[TABLE_VAR:] tables", () => {
     expect((html.match(/bg-red-400\/60/g) ?? []).length).toBeGreaterThanOrEqual(2);
   });
 
-  it("renders '+' / '-' cells as styled spans and '0' as a hollow-circle marker", () => {
+  it("renders '+' / '-' cells as styled spans and '0' as a readable numeral", () => {
     const md = "[VARIATION:\nf'(x): +, 0, -\n]";
     // A single labeled row is below the 2-row minimum on its own, so pair it
     // with a second row to actually trigger table rendering.
@@ -108,7 +108,7 @@ describe("renderContent — [VARIATION:]/[TABLE_VAR:] tables", () => {
     expect(html).toContain("<table");
     expect(html).toContain(`<span class="font-bold text-xl opacity-80">+</span>`);
     expect(html).toContain(`<span class="font-bold text-xl opacity-80">-</span>`);
-    expect(html).toContain('rounded-full border-2');
+    expect(html).toContain('<span class="font-medium">0</span>');
     void md;
   });
 
